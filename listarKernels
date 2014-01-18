@@ -1,0 +1,9 @@
+#!/bin/sh
+echo "-------------------"
+echo "Kernels disponibles"
+echo "-------------------"
+dpkg --get-selections linux-image* | grep -v deinstall
+echo "-------------"
+echo "Kernel en uso"
+echo "-------------"
+uname -r
