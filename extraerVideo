@@ -1,0 +1,36 @@
+#!/bin/sh
+
+# Basado en http://www.atareao.es/ubuntu/dividir-un-video-desde-el-terminal-de-ubuntu/
+# No se controla la validez de los parámetros, sólo su existencia
+
+VIDEO_IN=$1
+VIDEO_OUT=$2
+COMIENZO=$3
+DURACION=$4
+
+if ["$DURACION" = ""]
+then
+	echo "Hace falta especificar duración (hh:mm:ss)"
+	exit
+fi
+
+if ["$COMIENZO" = ""] 
+then
+	echo "Hace falta especificar comienzo (hh:mm:ss)"
+	exit
+fi
+
+if ["$VIDEO_IN" = ""]
+then
+	echo "Hace falta especificar un vídeo"
+	exit 
+fi
+
+if ["$VIDEO_OUT" = ""] 
+then
+	echo "Hace falta especificar donde poner el resultado"
+	exit
+fi
+
+
+mencoder -ss 01:00:00 -endpos 02:00:00 -oac copy -ovc copy video.avi -o fragmento.avi
