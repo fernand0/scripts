@@ -44,28 +44,24 @@ def seek():                        # defines a function to analize the network
     for addresses in hosts_list:
         count = count + 1
 	try:
-        	print "MAC: ", addresses['mac'], "IP: ", addresses['ipv4']
-		if ipList.has_key(addresses['mac']):
-			print "Seen before!\n"
-		else:
+		if not ipList.has_key(addresses['mac']):
 			ipList[addresses['mac']] = addresses['ipv4']
 		
 	except:
-		print "No MAC", addresses['ipv4']
+		pass
 
     return count                   # returns the host number
 
-def beep():                        # no sound dependency
-    print ('\a')            
-    
 if __name__ == '__main__':
-    count = 0
+    count = 1
 
     # check if the number of addresses is still the same
-    while (count < 10):
-        new_count = seek()
+    while (count <= 10):
+        print "Pass: ",count, "Found: ", seek(), "Total: ", len(ipList)
         time.sleep(1)
         count = count + 1
 
     print "========= So .... =======\n"
     print ipList
+
+    name()
