@@ -22,6 +22,7 @@ import os
 import sys
 import nmap                         # import nmap.py
 import time
+import pickle
 
 try:
     nm = nmap.PortScanner()         # creates an'instance of nmap.PortScanner
@@ -52,6 +53,12 @@ def seek():                        # defines a function to analize the network
 
     return count                   # returns the host number
 
+def name():                        # defines a function to analize the network
+    for mac in ipList.keys():
+	name = raw_input(mac+" Name? ")
+	print mac, name
+	ipList[mac]=(name, ipList[mac])
+    
 if __name__ == '__main__':
     count = 1
 
@@ -65,3 +72,6 @@ if __name__ == '__main__':
     print ipList
 
     name()
+    print ipList
+    fIP = open("ipList.txt","w")
+    pickle.dump(ipList,fIP)
