@@ -5,7 +5,7 @@ This program tries to be a Fing-like tool
 https://play.google.com/store/apps/details?id=com.overlook.android.fing&hl=en 
 It scans your Wi-Fi network, and discovers which devices are connected.
 
-Author: Fernando Tricas García (fernand0@elmundoesimperfecto.com) 
+Author: Fernando Tricas Garcia (fernand0@elmundoesimperfecto.com) 
 Based on a work of pescimoro.mattia@gmail.com that can be found at:
 https://github.com/mpescimoro/WiFinder
 
