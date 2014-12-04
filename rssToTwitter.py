@@ -45,7 +45,7 @@ def stripAllTags( html ):
 
 feed = feedparser.parse(rssFeed)
 
-i = 0 # Publicar la última entrada
+i = 0 # It will publish the last added item
 
 theTitle = feed.entries[i].title
 theLink =  feed.entries[i].link
