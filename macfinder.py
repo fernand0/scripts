@@ -31,6 +31,7 @@ import nmap                         # import nmap.py
 import pwd, grp
 import time
 import pickle
+import pprint
 
 # File used to store data
 fileName=os.path.expanduser('~')+'/.ipList.txt'
@@ -90,12 +91,15 @@ def seek():                        # defines a function to analize the network
 
     hosts_list = [(nm[x]['addresses']) for x in nm.all_hosts()]
     # saves the host list
+    pprint.pprint(hosts_list)
 
     for addresses in hosts_list:
         count = count + 1
 	try:
 		if not ipList.has_key(addresses['mac']):
 			ipList[addresses['mac']] = ("", addresses['ipv4'])
+
+
 		
 	except:
 		pass
@@ -112,6 +116,9 @@ if __name__ == '__main__':
     count = 1
 
     ipList=loadData()
+    if (len(sys.argv)>1 and (sys.argv[1] == "-l")):
+        pprint.pprint(ipList)
+        sys.exit()
     # check if the number of addresses is still the same
     while (count <= 10):
         print "Pass: ",count, "Found: ", seek(), "Total: ", len(ipList)
@@ -124,7 +131,7 @@ if __name__ == '__main__':
     print(os.getresuid())
 
     print "========= So .... =======\n"
-    print ipList
+    pprint.pprint(ipList)
 
     name()
     print ipList
