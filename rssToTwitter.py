@@ -46,7 +46,7 @@ soup = BeautifulSoup(feed.entries[i].title)
 theTitle = soup.get_text()
 theLink =  feed.entries[i].link
 
-statusTxt = theTitle+" "+theLink
+statusTxt = "Publicado: "+theTitle+" "+theLink
 print(statusTxt)
 
 t = Twitter(
