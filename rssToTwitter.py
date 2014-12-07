@@ -20,13 +20,13 @@
 import ConfigParser, os
 from twitter import *
 import feedparser
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 
 config = ConfigParser.ConfigParser()
 
 config.read([os.path.expanduser('~/.rssBlogs')])
-rssFeed = config.get("Blog1", "rssFeed")
-twitterAc = config.get("Blog1", "twitterAc")
+rssFeed = config.get("Blog2", "rssFeed")
+twitterAc = config.get("Blog2", "twitterAc")
 
 
 config.read([os.path.expanduser('~/.rssTwitter')])
@@ -38,19 +38,16 @@ TOKEN_SECRET = config.get(twitterAc, "TOKEN_SECRET")
 
 print rssFeed
 
-def stripAllTags( html ):
-        if html is None:
-                return None
-        return ''.join( BeautifulSoup( html ).findAll( text = True ) ) 
-
 feed = feedparser.parse(rssFeed)
 
 i = 0 # It will publish the last added item
 
-theTitle = feed.entries[i].title
+soup = BeautifulSoup(feed.entries[i].title)
+theTitle = soup.get_text()
 theLink =  feed.entries[i].link
-theSummary =  stripAllTags(feed.entries[i].summary)
-
+soup = BeautifulSoup(feed.entries[i].summary)
+print soup
+theSummary = soup.get_text()
 
 statusTxt = theTitle+" "+theLink
 print(statusTxt)
