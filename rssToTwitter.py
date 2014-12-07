@@ -25,8 +25,8 @@ from bs4 import BeautifulSoup
 config = ConfigParser.ConfigParser()
 
 config.read([os.path.expanduser('~/.rssBlogs')])
-rssFeed = config.get("Blog2", "rssFeed")
-twitterAc = config.get("Blog2", "twitterAc")
+rssFeed = config.get("Blog1", "rssFeed")
+twitterAc = config.get("Blog1", "twitterAc")
 
 
 config.read([os.path.expanduser('~/.rssTwitter')])
@@ -45,9 +45,6 @@ i = 0 # It will publish the last added item
 soup = BeautifulSoup(feed.entries[i].title)
 theTitle = soup.get_text()
 theLink =  feed.entries[i].link
-soup = BeautifulSoup(feed.entries[i].summary)
-print soup
-theSummary = soup.get_text()
 
 statusTxt = theTitle+" "+theLink
 print(statusTxt)
