@@ -13,6 +13,7 @@ from bs4 import NavigableString
 from bs4 import Tag
 
 url='https://github.com/fernand0.atom'
+url='http://fernand0.tumblr.com/rss'
 
 feed = feedparser.parse(url)
 
