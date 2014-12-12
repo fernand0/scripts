@@ -21,12 +21,13 @@ import ConfigParser, os
 from twitter import *
 import feedparser
 from BeautifulSoup import BeautifulSoup
+from BeautifulSoup import BeautifulStoneSoup
 
 config = ConfigParser.ConfigParser()
 
 config.read([os.path.expanduser('~/.rssBlogs')])
-rssFeed = config.get("Blog1", "rssFeed")
-twitterAc = config.get("Blog1", "twitterAc")
+rssFeed = config.get("Blog2", "rssFeed")
+twitterAc = config.get("Blog2", "twitterAc")
 
 
 config.read([os.path.expanduser('~/.rssTwitter')])
@@ -47,13 +48,14 @@ feed = feedparser.parse(rssFeed)
 
 i = 0 # It will publish the last added item
 
-theTitle = feed.entries[i].title
+theTitle = BeautifulStoneSoup(feed.entries[i].title, convertEntities=BeautifulStoneSoup.ALL_ENTITIES)
 theLink =  feed.entries[i].link
 theSummary =  stripAllTags(feed.entries[i].summary)
 
 
-statusTxt = theTitle+" "+theLink
-print(statusTxt)
+print theTitle
+print theTitle.contents
+statusTxt = "Publicado: "+theTitle.contents[0]+" "+theLink
 
 t = Twitter(
     auth=OAuth(TOKEN_KEY, TOKEN_SECRET, CONSUMER_KEY, CONSUMER_SECRET))

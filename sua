@@ -20,6 +20,7 @@ fi
 
 sudo aptitude update $YES && echo "" && \
 sudo aptitude safe-upgrade $YES&& echo "" && \
+#sudo apt-get autoremove $YES && echo "" && \
 sudo localepurge && echo "" && \
 sudo deborphan | xargs sudo apt-get remove $YES --purge && echo "" && \
 sudo aptitude autoclean $YES && echo "" && \
