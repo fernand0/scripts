@@ -45,9 +45,12 @@ print "You have chosen ", config.get("Blog"+str(i), "rssFeed")
 
 rssFeed = config.get("Blog"+str(i), "rssFeed")
 pageFB = config.get("Blog"+str(i), "pageFB")
+if (config.has_option("Blog"+str(i), "linksToAvoid")):
+	linksToAvoid = config.get("Blog"+str(i), "linksToAvoid")
+else:
+	linksToAvoid = ""
 
-
-print "*"+rssFeed+"*"
+print linksToAvoid
 
 feed = feedparser.parse(rssFeed)
 
@@ -68,11 +71,11 @@ soup = BeautifulSoup(feed.entries[i].summary)
 j = 0
 linksTxt = ""
 for link in soup("a"):
-	# print type(link.contents[0])
 	if not isinstance(link.contents[0], Tag):
 		# We want to avoid embdeded tags (mainly <img ... )
-		if not re.search(r"delicious.*fernand0.*rei", link['href']):
-			# We want to avoid tags in fernand0.blogalia.com
+		if ((linksToAvoid =="") 
+			or (not re.search(re.escape(linksToAvoid), 
+				link['href']))):
 			link.append(" ["+str(j)+"]")
 			j =  j + 1
 			linksTxt = linksTxt + "["+str(j)+"] " + link.contents[0] + "\n"
@@ -87,7 +90,6 @@ if linksTxt != "":
 theSummary = theSummary+"\n\n"
 
 print theSummary
-
 
 config.read([os.path.expanduser('~/.rssFacebook')])
 oauth_access_token= config.get("Facebook", "oauth_access_token")
