@@ -1,4 +1,17 @@
 #!/usr/bin/python
+# encoding: utf-8
+#
+# Very simple Python program to publish the last RSS entry of a feed in 
+# a Facebook Page. It shows the blogs available and allows to select 
+# one of them.
+# 
+# It has a configuration file with a number of blogs with:
+#	- The RSS feed of the blog
+#	- The Twitter account where the news will be published
+#	- The Facebook page where the news will be published
+# It uses a configuration file that has two sections:
+#  	- The oauth access token
+#
 
 import ConfigParser, os, re
 import facebook
