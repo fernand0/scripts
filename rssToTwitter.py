@@ -59,4 +59,4 @@ t = Twitter(
     auth=OAuth(TOKEN_KEY, TOKEN_SECRET, CONSUMER_KEY, CONSUMER_SECRET))
 
 t.statuses.update(status=statusTxt)
-    
+
