@@ -54,10 +54,7 @@ print linksToAvoid
 
 feed = feedparser.parse(rssFeed)
 
-print feed
-
 i = 0
-
 
 
 soup = BeautifulSoup(feed.entries[i].title)
@@ -89,7 +86,7 @@ if linksTxt != "":
 	theSummary = theSummary + linksTxt
 theSummary = theSummary+"\n\n"
 
-print theSummary
+print theSummary.encode('utf-8')
 
 config.read([os.path.expanduser('~/.rssFacebook')])
 oauth_access_token= config.get("Facebook", "oauth_access_token")
