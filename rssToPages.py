@@ -14,12 +14,12 @@
 #
 
 import ConfigParser, os, re
-import facebook
 import pprint
 import feedparser
 from bs4 import BeautifulSoup
 from bs4 import NavigableString
 from bs4 import Tag
+import facebook
 
 
 
@@ -54,7 +54,6 @@ print linksToAvoid
 
 feed = feedparser.parse(rssFeed)
 
-print feed
 
 i = 0
 
@@ -89,7 +88,7 @@ if linksTxt != "":
 	theSummary = theSummary + linksTxt
 theSummary = theSummary+"\n\n"
 
-print theSummary
+print theSummary.encode('utf-8')
 
 config.read([os.path.expanduser('~/.rssFacebook')])
 oauth_access_token= config.get("Facebook", "oauth_access_token")
@@ -106,5 +105,6 @@ for i in range(len(pages['data'])):
 			link=theLink, 
 			#picture = 'http://fernand0.github.io/', 
 			# You could select a picture
-			name=theTitle, caption='', description=theSummary)
-		
+			name=theTitle, caption='',
+			description=theSummary.encode('utf-8'))
+
