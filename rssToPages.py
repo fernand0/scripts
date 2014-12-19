@@ -54,9 +54,7 @@ print linksToAvoid
 
 feed = feedparser.parse(rssFeed)
 
-
 i = 0
-
 
 
 soup = BeautifulSoup(feed.entries[i].title)
