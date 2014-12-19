@@ -60,12 +60,12 @@ feed = feedparser.parse(rssFeed)
 
 i = 0 # It will publish the last added item
 
-theTitle = BeautifulStoneSoup(feed.entries[i].title, convertEntities=BeautifulStoneSoup.ALL_ENTITIES)
+theTitle = BeautifulSoup(feed.entries[i].title) #, convertEntities=BeautifulStoneSoup.ALL_ENTITIES)
 theLink =  feed.entries[i].link
 
 print theTitle
 print theTitle.contents
-statusTxt = "Publicado: "+theTitle.contents[0]+" "+theLink
+statusTxt = "Publicado: "+theTitle.contents[0].get_text()+" "+theLink
 
 t = Twitter(
     auth=OAuth(TOKEN_KEY, TOKEN_SECRET, CONSUMER_KEY, CONSUMER_SECRET))
