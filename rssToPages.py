@@ -14,12 +14,12 @@
 #
 
 import ConfigParser, os, re
-import facebook
 import pprint
 import feedparser
 from bs4 import BeautifulSoup
 from bs4 import NavigableString
 from bs4 import Tag
+import facebook
 
 
 
