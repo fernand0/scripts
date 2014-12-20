@@ -50,7 +50,7 @@ if (config.has_option("Blog"+str(i), "linksToAvoid")):
 else:
 	linksToAvoid = ""
 
-print linksToAvoid
+
 
 feed = feedparser.parse(rssFeed)
 
@@ -70,13 +70,18 @@ linksTxt = ""
 for link in soup("a"):
 	if not isinstance(link.contents[0], Tag):
 		# We want to avoid embdeded tags (mainly <img ... )
+		
+		print linksToAvoid
+		print re.escape(linksToAvoid)
+		print link['href']
+		print re.search(linksToAvoid, link['href'])
 		if ((linksToAvoid =="") 
-			or (not re.search(re.escape(linksToAvoid), 
-				link['href']))):
+			or (not re.search(linksToAvoid, link['href']))):
 			link.append(" ["+str(j)+"]")
 			j =  j + 1
 			linksTxt = linksTxt + "["+str(j)+"] " + link.contents[0] + "\n"
 			linksTxt = linksTxt + "    " + link['href'] + "\n"
+
 
 theSummary = theTitle+"\n"
 theSummary = theSummary + soup.get_text()
