@@ -93,6 +93,13 @@ theSummary = theSummary+"\n\n"
 
 print theSummary.encode('utf-8')
 
+pageImage = soup.findAll("img")
+#  Only the first one
+if len(pageImage) > 0:
+	imageLink = (pageImage[0]["src"])
+else:
+	imageLine = ""
+
 config.read([os.path.expanduser('~/.rssFacebook')])
 oauth_access_token= config.get("Facebook", "oauth_access_token")
 
@@ -106,8 +113,7 @@ for i in range(len(pages['data'])):
 		graph2.put_object(pages['data'][i]['id'], 
 			"feed", message = 'Nueva entrada:\n\n'+theSummary, 
 			link=theLink, 
-			#picture = 'http://fernand0.github.io/', 
-			# You could select a picture
+			picture = imageLink, 
 			name=theTitle, caption='',
 			description=theSummary.encode('utf-8'))
 
