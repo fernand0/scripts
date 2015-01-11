@@ -78,9 +78,9 @@ for link in soup("a"):
 		if ((linksToAvoid =="") 
 			or (not re.search(linksToAvoid, link['href']))):
 			link.append(" ["+str(j)+"]")
-			j =  j + 1
 			linksTxt = linksTxt + "["+str(j)+"] " + link.contents[0] + "\n"
 			linksTxt = linksTxt + "    " + link['href'] + "\n"
+			j =  j + 1
 
 
 theSummary = theTitle+"\n"
