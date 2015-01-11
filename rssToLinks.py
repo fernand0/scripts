@@ -26,13 +26,9 @@ for i in range(len(feed.entries)):
 		if not isinstance(link.contents[0], Tag):
 			# We want to avoid embdeded tags (mainly <img ... )
 			link.append(" ["+str(j)+"]")
+			linksTxt = linksTxt + "["+str(j)+"] " + link.contents[0] + "\n"
+			linksTxt = linksTxt + "    " + link['href'] + "\n"
 			j =  j + 1
-			linksTxt = linksTxt 
-				+ "["+str(j)+"] " 
-				+ link.contents[0] + "\n"
-			linksTxt = linksTxt 
-				+ "    " 
-				+ link['href'] + "\n"
 	print "Entry "+str(i)+":"
 	print soup.get_text()
 	if linksTxt != "":
