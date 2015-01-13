@@ -90,7 +90,7 @@ api = API(client_id=clientId,
 # We can put as many items as the service with most items allow
 # The limit is ten.
 # Get all pending updates of a social network profile
-serviceList=['linkedin','twitter','facebook']
+serviceList=['twitter','facebook','linkedin']
 profileList={}
 
 lenMax=0
