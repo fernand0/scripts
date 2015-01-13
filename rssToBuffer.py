@@ -42,9 +42,9 @@ from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 
 import time, sys
-	import urllib
-	reload(sys)
-	sys.setdefaultencoding("UTF-8")
+import urllib
+reload(sys)
+sys.setdefaultencoding("UTF-8")
 config = ConfigParser.ConfigParser()
 config.read([os.path.expanduser('~/.rssBlogs')])
 
