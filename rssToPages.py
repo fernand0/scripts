@@ -20,6 +20,11 @@ from bs4 import BeautifulSoup
 from bs4 import NavigableString
 from bs4 import Tag
 import facebook
+import sys
+
+
+reload(sys)
+sys.setdefaultencoding("UTF-8")
 
 
 
@@ -73,7 +78,7 @@ for link in soup("a"):
 		
 		print linksToAvoid
 		print re.escape(linksToAvoid)
-		print link['href']
+		print str(link['href'])
 		print re.search(linksToAvoid, link['href'])
 		if ((linksToAvoid =="") 
 			or (not re.search(linksToAvoid, link['href']))):

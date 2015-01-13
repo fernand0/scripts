@@ -41,8 +41,10 @@ from buffpy.api import API
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 
-import time
-
+import time, sys
+	import urllib
+	reload(sys)
+	sys.setdefaultencoding("UTF-8")
 config = ConfigParser.ConfigParser()
 config.read([os.path.expanduser('~/.rssBlogs')])
 
@@ -135,10 +137,7 @@ for j in range(i,iFin, -1):
 	print len(re.sub('\n+',' ', theTitle) + " " + theLink)
 	
 
-	import sys
-	import urllib
-	reload(sys)
-	sys.setdefaultencoding("UTF-8")
+	
 	post=re.sub('\n+',' ', theTitle) +" "+theLink
 	# Sometimes there are newlines and unnecessary spaces
 	#print "post", post
