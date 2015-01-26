@@ -116,8 +116,7 @@ for i in range(len(pages['data'])):
 		print "Writing in... ", pages['data'][i]['name']
 		graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
 		graph2.put_object(pages['data'][i]['id'], 
-			"feed", message = 'Nueva entrada:\n\n'+theSummary, 
-			link=theLink, 
+			"feed", message = theSummary, link=theLink, 
 			picture = imageLink, 
 			name=theTitle, caption='',
 			description=theSummary.encode('utf-8'))
