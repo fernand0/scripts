@@ -68,11 +68,14 @@ urlFile = open(os.path.expanduser("~/.rssBuffer.last"),"r")
 
 linkLast = urlFile.read().rstrip() # Last published
 
-print "*%s*"%linkLast
-
-for i in range(len(feed.entries)-1,0, -1):
+for i in range(len(feed.entries)-1,-1, -1):
 	if (feed.entries[i].link==linkLast):
 		break
+
+if (i==0):
+	print "No new items"
+	sys.exit()
+
 
 config.read([os.path.expanduser('~/.rssBuffer')])
 
@@ -96,25 +99,25 @@ serviceList=['twitter','facebook','linkedin']
 profileList={}
 
 lenMax=0
+print "Checking services..."
+
 for service in serviceList:
-	print "Checking %s service\n"%service
+	print "  %s"%service,
 	profileList[service] = Profiles(api=api).filter(service=service)[0]
 	if (len(profileList[service].updates.pending)>lenMax):
 		lenMax=len(profileList[service].updates.pending)
+	print "  ok"
 
 print "There are", lenMax, "in some buffer, we can put", 10-lenMax
-
-
-print "i", i
 
 if (i > 10 - lenMax):
 	iFin = i - (10 - lenMax)
 else:
-	iFin = 0
+	iFin = -1
 	
-for j in range(i,iFin, -1):
+for j in range(i-1,iFin, -1):
 
-	soup = BeautifulSoup(feed.entries[j-1].summary)
+	soup = BeautifulSoup(feed.entries[j].summary)
 
 	pageImage = soup.findAll("img")
 	pageLink  = soup.findAll("a")
@@ -124,16 +127,16 @@ for j in range(i,iFin, -1):
 		theTitle = pageLink[0].get_text()
 		if len(re.findall(r'\w+', theTitle)) == 1:
 			print "Una palabra, probamos con el titulo"
-			theTitle = feed.entries[j-1].title
+			theTitle = feed.entries[j].title
 	else:
 		# Some entries do not have a proper link and the rss contains
 		# the video, image, ... in the description.
 		# In this case we use the title and the link of the entry.
-		theLink   = feed.entries[j-1].link
-		theTitle  = feed.entries[j-1].title
+		theLink   = feed.entries[j].link
+		theTitle  = feed.entries[j].title
 
 	
-	print j-1, ": ", re.sub('\n+',' ', theTitle) + " " + theLink
+	print j, ": ", re.sub('\n+',' ', theTitle) + " " + theLink
 	print len(re.sub('\n+',' ', theTitle) + " " + theLink)
 	
 
@@ -141,16 +144,15 @@ for j in range(i,iFin, -1):
 	post=re.sub('\n+',' ', theTitle) +" "+theLink
 	# Sometimes there are newlines and unnecessary spaces
 	#print "post", post
+	print "Publishing..."
 	for service in serviceList:
-		print "Publishing in %s service\n"%service
+		print "  %s service"%service,
 		profile=profileList[service]
 		profile.updates.new(post)
+		print "  ok"
 		time.sleep(3)
-
-
 
 if (i>=1):
 	urlFile = open(os.path.expanduser("~/.rssBuffer.last"),"w")
-	urlFile.write(feed.entries[j-1].link)
+	urlFile.write(feed.entries[j].link)
 	urlFile.close()
-	
