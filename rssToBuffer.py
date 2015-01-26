@@ -104,13 +104,14 @@ for service in serviceList:
 
 print "There are", lenMax, "in some buffer, we can put", 10-lenMax
 
-
 print "i", i
 
 if (i > 10 - lenMax):
 	iFin = i - (10 - lenMax)
 else:
 	iFin = 0
+
+print "We are sending", i-iFin+1
 	
 for j in range(i,iFin, -1):
 
