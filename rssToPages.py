@@ -103,7 +103,7 @@ pageImage = soup.findAll("img")
 if len(pageImage) > 0:
 	imageLink = (pageImage[0]["src"])
 else:
-	imageLine = ""
+	imageLink = ""
 
 config.read([os.path.expanduser('~/.rssFacebook')])
 oauth_access_token= config.get("Facebook", "oauth_access_token")
