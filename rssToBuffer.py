@@ -68,14 +68,18 @@ urlFile = open(os.path.expanduser("~/.rssBuffer.last"),"r")
 
 linkLast = urlFile.read().rstrip() # Last published
 
-for i in range(len(feed.entries)-1,-1, -1):
+
+for i in range(len(feed.entries)):
 	if (feed.entries[i].link==linkLast):
 		break
 
-if (i==0):
+if ((i==0) and (feed.entries[i].link==linkLast)):
 	print "No new items"
 	sys.exit()
-
+else:
+	if (i==0):
+		print "All are new"
+		i = len(feed.entries)-1
 
 config.read([os.path.expanduser('~/.rssBuffer')])
 
@@ -110,16 +114,10 @@ for service in serviceList:
 
 print "There are", lenMax, "in some buffer, we can put", 10-lenMax
 
-print "i", i
+for j in range(10-lenMax,0,-1):
 
-if (i > 10 - lenMax):
-	iFin = i - (10 - lenMax)
-else:
-	iFin = -1
-
-for j in range(i-1,iFin, -1):
-
-	soup = BeautifulSoup(feed.entries[j].summary)
+	i = i - 1
+	soup = BeautifulSoup(feed.entries[i].summary)
 
 	pageImage = soup.findAll("img")
 	pageLink  = soup.findAll("a")
@@ -134,14 +132,12 @@ for j in range(i-1,iFin, -1):
 		# Some entries do not have a proper link and the rss contains
 		# the video, image, ... in the description.
 		# In this case we use the title and the link of the entry.
-		theLink   = feed.entries[j].link
-		theTitle  = feed.entries[j].title
+		theLink   = feed.entries[i].link
+		theTitle  = feed.entries[i].title
 
 	
-	print j, ": ", re.sub('\n+',' ', theTitle) + " " + theLink
+	print i, ": ", re.sub('\n+',' ', theTitle) + " " + theLink
 	print len(re.sub('\n+',' ', theTitle) + " " + theLink)
-	
-
 	
 	post=re.sub('\n+',' ', theTitle) +" "+theLink
 	# Sometimes there are newlines and unnecessary spaces
@@ -154,7 +150,6 @@ for j in range(i-1,iFin, -1):
 		print "  ok"
 		time.sleep(3)
 
-if (i>=1):
-	urlFile = open(os.path.expanduser("~/.rssBuffer.last"),"w")
-	urlFile.write(feed.entries[j].link)
-	urlFile.close()
+urlFile = open(os.path.expanduser("~/.rssBuffer.last"),"w")
+urlFile.write(feed.entries[i].link)
+urlFile.close()
