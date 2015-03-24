@@ -149,6 +149,8 @@ for j in range(10-lenMax,0,-1):
 		profile.updates.new(post)
 		print "  ok"
 		time.sleep(3)
+	if (i==0):
+		break
 
 urlFile = open(os.path.expanduser("~/.rssBuffer.last"),"w")
 urlFile.write(feed.entries[i].link)
