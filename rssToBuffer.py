@@ -113,9 +113,12 @@ for service in serviceList:
 	print "  ok"
 
 print "There are", lenMax, "in some buffer, we can put", 10-lenMax
+print "We have", i, "items to post"
 
 for j in range(10-lenMax,0,-1):
 
+	if (i==0):
+		break
 	i = i - 1
 	soup = BeautifulSoup(feed.entries[i].summary)
 
@@ -149,8 +152,6 @@ for j in range(10-lenMax,0,-1):
 		profile.updates.new(post)
 		print "  ok"
 		time.sleep(3)
-	if (i==0):
-		break
 
 urlFile = open(os.path.expanduser("~/.rssBuffer.last"),"w")
 urlFile.write(feed.entries[i].link)
