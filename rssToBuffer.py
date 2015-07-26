@@ -130,7 +130,7 @@ for j in range(10-lenMax,0,-1):
 		theTitle = pageLink[0].get_text()
 		if len(re.findall(r'\w+', theTitle)) == 1:
 			print "Una palabra, probamos con el titulo"
-			theTitle = feed.entries[j].title
+			theTitle = feed.entries[i].title
 	else:
 		# Some entries do not have a proper link and the rss contains
 		# the video, image, ... in the description.
@@ -149,9 +149,13 @@ for j in range(10-lenMax,0,-1):
 	for service in serviceList:
 		print "  %s service"%service,
 		profile=profileList[service]
-		profile.updates.new(post)
-		print "  ok"
-		time.sleep(3)
+		try:
+			profile.updates.new(post)
+			print "  ok"
+			time.sleep(3)
+		except:
+			failFile = open(os.path.expanduser("~/.rssBuffer.fail"),"w")
+			failFile.write(post)
 
 urlFile = open(os.path.expanduser("~/.rssBuffer.last"),"w")
 urlFile.write(feed.entries[i].link)
