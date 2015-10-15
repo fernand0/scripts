@@ -88,8 +88,8 @@ for link in soup("a"):
 			j =  j + 1
 
 
-theSummary = theTitle+"\n"
-theSummary = theSummary + soup.get_text()
+#theSummary = theTitle+"\n"
+theSummary = soup.get_text()
 theSummary = theSummary+"\n\n"
 
 if linksTxt != "":
