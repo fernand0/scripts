@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # encoding: utf-8
 #
-# Very simple Python program to publish the last RSS entry of a feed in 
-# a Facebook Page. It shows the blogs available and allows to select 
-# one of them.
+# Very simple Python program to publish the last RSS entry of a feed
+# in a Facebook Page. It shows the blogs available and allows to
+# select one of them.
 # 
 # It has a configuration file with a number of blogs with:
 #	- The RSS feed of the blog
@@ -12,25 +12,26 @@
 # It uses a configuration file that has two sections:
 #  	- The oauth access token
 #
+#
+#
+#
+#
+#
 
-import ConfigParser, os, re
-import pprint
+import ConfigParser, os
 import feedparser
+import facebook
+import re, sys
 from bs4 import BeautifulSoup
 from bs4 import NavigableString
 from bs4 import Tag
-import facebook
-import sys
-
 
 reload(sys)
 sys.setdefaultencoding("UTF-8")
 
-
-
 config = ConfigParser.ConfigParser()
-
 config.read([os.path.expanduser('~/.rssBlogs')])
+pageFB = config.get("Blog"+str(i), "pageFB")
 
 print "Configured blogs:"
 
@@ -46,27 +47,22 @@ else:
 
 print "You have chosen ", config.get("Blog"+str(i), "rssFeed")
 
-
-
 rssFeed = config.get("Blog"+str(i), "rssFeed")
-pageFB = config.get("Blog"+str(i), "pageFB")
+feed = feedparser.parse(rssFeed)
+
+i = 0 # It will publish the last added item
+
+soup = BeautifulSoup(feed.entries[i].title)
+theTitle = soup.get_text()
+theLink  = feed.entries[i].link
+
+
+soup = BeautifulSoup(feed.entries[i].summary)
+
 if (config.has_option("Blog"+str(i), "linksToAvoid")):
 	linksToAvoid = config.get("Blog"+str(i), "linksToAvoid")
 else:
 	linksToAvoid = ""
-
-
-
-feed = feedparser.parse(rssFeed)
-
-i = 0
-
-
-soup = BeautifulSoup(feed.entries[i].title)
-theTitle = soup.get_text()
-theLink =  feed.entries[i].link
-
-soup = BeautifulSoup(feed.entries[i].summary)
 
 # Now the links
 
@@ -106,7 +102,12 @@ else:
 	imageLink = ""
 
 config.read([os.path.expanduser('~/.rssFacebook')])
+
 oauth_access_token= config.get("Facebook", "oauth_access_token")
+
+
+
+
 
 graph = facebook.GraphAPI(oauth_access_token)
 pages = graph.get_connections("me", "accounts")
