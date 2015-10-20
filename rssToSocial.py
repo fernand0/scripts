@@ -117,10 +117,10 @@ def selectBlog(sel='a'):
 	theFbPage = config.get("Blog"+str(recentIndex), "pageFB")
 
 	print "Results: "
-	print theTitle
+	print theTitle.encode('utf-8')
 	print theLink
-	print theSummary
-	print theSummaryLinks
+	print theSummary.encode('utf-8')
+	print theSummaryLinks.encode('utf-8')
 	print theImage
 	print theTwitter
 	print theFbPage
@@ -195,21 +195,28 @@ def publishLinkedin(title, link, summary, image):
 def main():
 	index, title,link,summary, summaryLinks, image, twitter, fbPage =  selectBlog()
 	
+	print "Twitter...\n"
 	if twitter:
 		try:
 			publishTwitter(index, title, link, twitter)
 		except:
 			print "Twitter posting failed!\n"
+			print "Unexpected error:", sys.exc_info()[0]
 
+	print "Facebook...\n"
 	if fbPage:
 		try:
 			publishFacebook(index, title, link, summaryLinks, image, fbPage)
 		except:
 			print "Facebook posting failed!\n"
+			print "Unexpected error:", sys.exc_info()[0]
+
+	print "Linkedin...\n"
 	try:
 		publishLinkedin(title, link, summary, image)
 	except:
 		print "Linkedin posting failed!\n"
+		print "Unexpected error:", sys.exc_info()[0]
 	
 	# Now we can publish it in some social network
 
