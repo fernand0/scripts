@@ -116,7 +116,9 @@ def selectBlog(sel='a'):
 	theTwitter = config.get("Blog"+str(recentIndex), "twitterAC")
 	theFbPage = config.get("Blog"+str(recentIndex), "pageFB")
 
-	print "Results: "
+	print "============================================================\n"
+	print "Results: \n"
+	print "============================================================\n"
 	print theTitle.encode('utf-8')
 	print theLink
 	print theSummary.encode('utf-8')
@@ -124,6 +126,7 @@ def selectBlog(sel='a'):
 	print theImage
 	print theTwitter
 	print theFbPage
+	print "============================================================\n"
 
 	return (recentIndex, theTitle, theLink, theSummary, theSummaryLinks, theImage, theTwitter, theFbPage)
 
@@ -195,6 +198,7 @@ def publishLinkedin(title, link, summary, image):
 def main():
 	index, title,link,summary, summaryLinks, image, twitter, fbPage =  selectBlog()
 	
+	print "\n\n"
 	print "Twitter...\n"
 	if twitter:
 		try:
@@ -203,6 +207,7 @@ def main():
 			print "Twitter posting failed!\n"
 			print "Unexpected error:", sys.exc_info()[0]
 
+	print "\n\n"
 	print "Facebook...\n"
 	if fbPage:
 		try:
@@ -211,6 +216,7 @@ def main():
 			print "Facebook posting failed!\n"
 			print "Unexpected error:", sys.exc_info()[0]
 
+	print "\n\n"
 	print "Linkedin...\n"
 	try:
 		publishLinkedin(title, link, summary, image)
