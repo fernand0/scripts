@@ -24,7 +24,7 @@ import facebook
 from linkedin import linkedin
 from twitter import *
 import re, sys
-import datetime
+import time,datetime
 from bs4 import BeautifulSoup
 from bs4 import NavigableString
 from bs4 import Tag
@@ -75,10 +75,10 @@ def selectBlog(sel='a'):
 	i = 1
 
 	for section in config.sections():
-		print str(i), ')', section, config.get(section, "rssFeed")
 		rssFeed = config.get("Blog"+str(i), "rssFeed")
 		feed = feedparser.parse(rssFeed)
 		lastPost = feed.entries[0]
+		print str(i), ')', section, config.get(section, "rssFeed"), '(', time.strftime('%Y-%m-%d %H:%M:%SZ', lastPost['published_parsed']), ')'
 		if (i == 1) or (recentDate < lastPost['published_parsed']):
 			recentDate = lastPost['published_parsed']
 			recentIndex = i
