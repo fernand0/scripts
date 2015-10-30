@@ -162,7 +162,7 @@ def publishFacebook(index, title, link, summaryLinks, image, fbPage):
 
 	for i in range(len(pages['data'])):
 		if (pages['data'][i]['name'] == fbPage):
-			print "Writing in... ", pages['data'][i]['name']
+			print "\tWriting in... ", pages['data'][i]['name'],"\n"
 			graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
 			graph2.put_object(pages['data'][i]['id'], 
 				"feed", message = title+" \n"+ summaryLinks, link=link, 
@@ -198,7 +198,6 @@ def publishLinkedin(title, link, summary, image):
 def main():
 	index, title,link,summary, summaryLinks, image, twitter, fbPage =  selectBlog()
 	
-	print "\n\n"
 	print "Twitter...\n"
 	if twitter:
 		try:
@@ -207,7 +206,6 @@ def main():
 			print "Twitter posting failed!\n"
 			print "Unexpected error:", sys.exc_info()[0]
 
-	print "\n\n"
 	print "Facebook...\n"
 	if fbPage:
 		try:
@@ -216,7 +214,6 @@ def main():
 			print "Facebook posting failed!\n"
 			print "Unexpected error:", sys.exc_info()[0]
 
-	print "\n\n"
 	print "Linkedin...\n"
 	try:
 		publishLinkedin(title, link, summary, image)
