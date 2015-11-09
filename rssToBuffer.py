@@ -45,6 +45,7 @@ import time, sys
 import urllib
 reload(sys)
 sys.setdefaultencoding("UTF-8")
+
 config = ConfigParser.ConfigParser()
 config.read([os.path.expanduser('~/.rssBlogs')])
 
@@ -131,12 +132,15 @@ for j in range(10-lenMax,0,-1):
 		if len(re.findall(r'\w+', theTitle)) == 1:
 			print "Una palabra, probamos con el titulo"
 			theTitle = feed.entries[i].title
+		if (theLink[:22] == "https://instagram.com/") and (theTitle[:17] == "A video posted by"):
+			#exception for Instagram videos
+			theTitle = feed.entries[i].title
 	else:
 		# Some entries do not have a proper link and the rss contains
 		# the video, image, ... in the description.
 		# In this case we use the title and the link of the entry.
 		theLink   = feed.entries[i].link
-		theTitle  = feed.entries[i].title
+		theTitle  = feed.entries[i].title.encode('utf-8')
 
 	
 	print i, ": ", re.sub('\n+',' ', theTitle) + " " + theLink
