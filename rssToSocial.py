@@ -75,7 +75,7 @@ def selectBlog(sel='a'):
 	i = 1
 
 	for section in config.sections():
-		rssFeed = config.get("Blog"+str(i), "rssFeed")
+		rssFeed = config.get(section, "rssFeed")
 		feed = feedparser.parse(rssFeed)
 		lastPost = feed.entries[0]
 		print str(i), ')', section, config.get(section, "rssFeed"), '(', time.strftime('%Y-%m-%d %H:%M:%SZ', lastPost['published_parsed']), ')'
