@@ -59,13 +59,19 @@ if (int(i)>0):
 
 
 if i>0:
-	print "Selected ", config.get("Blog"+str(i), "rssFeed")
+	selectedBlog=config.get("Blog"+str(i), "rssFeed")
+	ini=selectedBlog.find('/')+2
+	fin=selectedBlog[ini:].find('.')
+	identifier=selectedBlog[ini:ini+fin]+"_"+selectedBlog[ini+fin+1:ini+fin+7]
+	print "Selected ", selectedBlog
 else:
 	sys.exit()
 
+PREFIX=".rssBuffer_"
+POSFIX=".last"
 
-feed = feedparser.parse(config.get("Blog"+str(i), "rssFeed"))
-urlFile = open(os.path.expanduser("~/.rssBuffer.last"),"r")
+feed = feedparser.parse(selectedBlog)
+urlFile = open(os.path.expanduser("~/"+PREFIX+identifier+POSFIX),"r")
 
 linkLast = urlFile.read().rstrip() # Last published
 
@@ -121,7 +127,12 @@ for j in range(10-lenMax,0,-1):
 	if (i==0):
 		break
 	i = i - 1
-	soup = BeautifulSoup(feed.entries[i].summary)
+	if (selectedBlog.find('tumblr') > 0):
+		soup = BeautifulSoup(feed.entries[i].summary)
+	elif (selectedBlog.find('wordpress') > 0):
+		soup = BeautifulSoup(feed.entries[i].content[0].value)
+	else:
+		print "I don't know what to do!"
 
 	pageImage = soup.findAll("img")
 	pageLink  = soup.findAll("a")
@@ -135,6 +146,8 @@ for j in range(10-lenMax,0,-1):
 		if (theLink[:22] == "https://instagram.com/") and (theTitle[:17] == "A video posted by"):
 			#exception for Instagram videos
 			theTitle = feed.entries[i].title
+		if (theLink[:22] == "https://instagram.com/") and (theTitle.find("(en")>0):
+			theTitle = theTitle[:theTitle.find("(3n")-1]
 	else:
 		# Some entries do not have a proper link and the rss contains
 		# the video, image, ... in the description.
@@ -158,9 +171,9 @@ for j in range(10-lenMax,0,-1):
 			print "  ok"
 			time.sleep(3)
 		except:
-			failFile = open(os.path.expanduser("~/.rssBuffer.fail"),"w")
+			failFile = open(os.path.expanduser("~/"+PREFIX+identifier+".fail"),"w")
 			failFile.write(post)
 
-urlFile = open(os.path.expanduser("~/.rssBuffer.last"),"w")
+urlFile = open(os.path.expanduser("~/"+PREFIX+identifier+POSFIX),"w")
 urlFile.write(feed.entries[i].link)
 urlFile.close()
