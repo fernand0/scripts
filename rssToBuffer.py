@@ -129,31 +129,33 @@ for j in range(10-lenMax,0,-1):
 	i = i - 1
 	if (selectedBlog.find('tumblr') > 0):
 		soup = BeautifulSoup(feed.entries[i].summary)
+		pageLink  = soup.findAll("a")
+		if pageLink:
+			theLink  = pageLink[0]["href"]
+			theTitle = pageLink[0].get_text()
+			if len(re.findall(r'\w+', theTitle)) == 1:
+				print "Una palabra, probamos con el titulo"
+				theTitle = feed.entries[i].title
+			if (theLink[:22] == "https://instagram.com/") and (theTitle[:17] == "A video posted by"):
+				#exception for Instagram videos
+				theTitle = feed.entries[i].title
+			if (theLink[:22] == "https://instagram.com/") and (theTitle.find("(en")>0):
+				theTitle = theTitle[:theTitle.find("(3n")-1]
+		else:
+			# Some entries do not have a proper link and the rss contains
+			# the video, image, ... in the description.
+			# In this case we use the title and the link of the entry.
+			theLink   = feed.entries[i].link
+			theTitle  = feed.entries[i].title.encode('utf-8')
 	elif (selectedBlog.find('wordpress') > 0):
 		soup = BeautifulSoup(feed.entries[i].content[0].value)
+		theTitle = feed.entries[i].title	
+		theLink  = feed.entries[i].link	
 	else:
 		print "I don't know what to do!"
 
-	pageImage = soup.findAll("img")
-	pageLink  = soup.findAll("a")
+	#pageImage = soup.findAll("img")
 
-	if pageLink:
-		theLink  = pageLink[0]["href"]
-		theTitle = pageLink[0].get_text()
-		if len(re.findall(r'\w+', theTitle)) == 1:
-			print "Una palabra, probamos con el titulo"
-			theTitle = feed.entries[i].title
-		if (theLink[:22] == "https://instagram.com/") and (theTitle[:17] == "A video posted by"):
-			#exception for Instagram videos
-			theTitle = feed.entries[i].title
-		if (theLink[:22] == "https://instagram.com/") and (theTitle.find("(en")>0):
-			theTitle = theTitle[:theTitle.find("(3n")-1]
-	else:
-		# Some entries do not have a proper link and the rss contains
-		# the video, image, ... in the description.
-		# In this case we use the title and the link of the entry.
-		theLink   = feed.entries[i].link
-		theTitle  = feed.entries[i].title.encode('utf-8')
 
 	
 	print i, ": ", re.sub('\n+',' ', theTitle) + " " + theLink
