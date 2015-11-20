@@ -157,9 +157,8 @@ for j in range(10-lenMax,0,-1):
 	#pageImage = soup.findAll("img")
 
 
-	
-	print i, ": ", re.sub('\n+',' ', theTitle) + " " + theLink
-	print len(re.sub('\n+',' ', theTitle) + " " + theLink)
+	#print i, ": ", re.sub('\n+',' ', theTitle.encode('iso-8859-1','ignore')) + " " + theLink
+	#print len(re.sub('\n+',' ', theTitle.encode('iso-8859-1','ignore')) + " " + theLink)
 	
 	post=re.sub('\n+',' ', theTitle) +" "+theLink
 	# Sometimes there are newlines and unnecessary spaces
