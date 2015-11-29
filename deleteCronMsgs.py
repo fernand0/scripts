@@ -3,6 +3,8 @@
 # This program deletes 'Cron Daemon' messages from some backup mail account 
 # defined in ~/IMAP.cfg
 #
+# The code is multithreaded, in order to avoid waiting
+#
 # It will do the operations in the configured accounts
 #
 # The config file should look like this:
@@ -28,18 +30,20 @@
 
 import ConfigParser
 import os, sys, getpass, imaplib
+import threading
 
 config = ConfigParser.ConfigParser()
 config.read([os.path.expanduser('~/IMAP.cfg')])
 
 
-for section in config.sections():
-	SERVER = config.get(section, 'server')
-	USER   = config.get(section, 'user')
+def mailFolder(server, user, password):
+	SERVER = server
+	USER   = user
+	PASSWORD = password
 
 	print SERVER
 	M = imaplib.IMAP4_SSL(SERVER)
-	M.login(USER , getpass.getpass())
+	M.login(USER , password)
 	M.select()
 	typ,data = M.search(None,'FROM', 'Cron Daemon')
 	i = 0
@@ -47,8 +51,28 @@ for section in config.sections():
 		for num in data[0].split():
 			M.store(num, '+FLAGS', '\\Deleted')
 			if (i%10 == 0):
-				print i
+				print "SERVER: ", SERVER, " ", i
 			i = i + 1
-	print "END\n\n%d messages have been deleted\n" % i
+	print "SERVER: %s END\n\n%d messages have been deleted\n" % (SERVER, i)
 	M.close()
 	M.logout()
+
+threads=[]
+
+for section in config.sections():
+	SERVER = config.get(section, 'server')
+	USER   = config.get(section, 'user')
+
+	print SERVER
+	PASSWORD = getpass.getpass()
+	
+	t = threading.Thread(target=mailFolder, args=(SERVER, USER, PASSWORD))
+	threads.append(t)
+
+for t in threads:
+	t.start()
+
+for t in threads:
+	t.join()
+
+print "The end!"
