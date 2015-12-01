@@ -36,7 +36,7 @@ config = ConfigParser.ConfigParser()
 config.read([os.path.expanduser('~/IMAP.cfg')])
 
 
-def mailFolder(server, user, password):
+def mailFolder(server, user, password,space):
 	SERVER = server
 	USER   = user
 	PASSWORD = password
@@ -51,13 +51,15 @@ def mailFolder(server, user, password):
 		for num in data[0].split():
 			M.store(num, '+FLAGS', '\\Deleted')
 			if (i%10 == 0):
-				print "SERVER: ", SERVER, " ", i
+				print space+"SERVER: ", SERVER, " ", i
 			i = i + 1
 	print "SERVER: %s END\n\n%d messages have been deleted\n" % (SERVER, i)
 	M.close()
 	M.logout()
 
+space="                             "
 threads=[]
+i=0
 
 for section in config.sections():
 	SERVER = config.get(section, 'server')
@@ -66,8 +68,9 @@ for section in config.sections():
 	print SERVER
 	PASSWORD = getpass.getpass()
 	
-	t = threading.Thread(target=mailFolder, args=(SERVER, USER, PASSWORD))
+	t = threading.Thread(target=mailFolder, args=(SERVER, USER, PASSWORD,space*i))
 	threads.append(t)
+	i = i + 1
 
 for t in threads:
 	t.start()
