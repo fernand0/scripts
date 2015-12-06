@@ -3,7 +3,9 @@
 # This program deletes 'Cron Daemon' messages from some backup mail account 
 # defined in ~/IMAP.cfg
 #
-# The code is multithreaded, in order to avoid waiting
+# The code is multithreaded, in order to avoid waiting. The result of
+# paralelism is not very interesting. It would be enough to get the passwords
+# and delete messages sequentially.
 #
 # It will do the operations in the configured accounts
 #
@@ -44,6 +46,8 @@ def mailFolder(server, user, password,space):
 	print SERVER
 	M = imaplib.IMAP4_SSL(SERVER)
 	M.login(USER , password)
+	password = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+	# We do not want passwords in memory when not needed
 	M.select()
 	typ,data = M.search(None,'FROM', 'Cron Daemon')
 	i = 0
@@ -53,7 +57,7 @@ def mailFolder(server, user, password,space):
 			if (i%10 == 0):
 				print space+"SERVER: ", SERVER, " ", i
 			i = i + 1
-	print "SERVER: %s END\n\n%d messages have been deleted\n" % (SERVER, i)
+	print space+"SERVER %s: %d messages have been deleted END\n" % (SERVER, i)
 	M.close()
 	M.logout()
 
@@ -69,6 +73,8 @@ for section in config.sections():
 	PASSWORD = getpass.getpass()
 	
 	t = threading.Thread(target=mailFolder, args=(SERVER, USER, PASSWORD,space*i))
+	PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+	# We do not want passwords in memory when not needed
 	threads.append(t)
 	i = i + 1
 
