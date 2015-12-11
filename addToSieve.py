@@ -4,8 +4,9 @@ import sievelib,time,getpass
 from sievelib.managesieve import Client
 from sievelib.parser import Parser
 from sievelib.factory import FiltersSet
-import imaplib
+import imaplib, email
 
+msgHeaders=['List-Id', 'From', 'Sender','Subject','To', 'X-Original-To']
 headers=["address","header"] 
 keyWords={"address": ["From","To"],
 	  "header":  ["subject","Sender","X-Original-To","List-Id"]
@@ -13,15 +14,17 @@ keyWords={"address": ["From","To"],
 
 SERVER="ra-amon.cps.unizar.es"
 USER="f.tricas@ra-amon.lan"
-PASSWORD="" 
+c = Client(SERVER)
+PASSWORD=getpass.getpass()
+c.connect(USER,PASSWORD, starttls=True, authmech="PLAIN")
+M = imaplib.IMAP4_SSL(SERVER)
+M.login(USER , PASSWORD)
 
-def doFolderExist(folder):
-	M = imaplib.IMAP4_SSL(SERVER)
-	M.login(USER , PASSWORD)
+def doFolderExist(folder,M):
 	return (M.select(folder))
 
 
-def selectAction():
+def selectAction(p,M): #header="", textHeader=""):
 	i = 1
 	for r in p.result:
 		#print r.children
@@ -72,7 +75,7 @@ def selectAction():
 	elif (int(option) == len(p.result)+1):
 		folder= raw_input("Name of the folder: ")
 		print "Name ", folder
-		if (doFolderExist(folder)[0]!='OK'):
+		if (doFolderExist(folder,M)[0]!='OK'):
 			print "Folder ",folder," does not exist"
 			sys.exit()
 		else:
@@ -109,33 +112,84 @@ def selectKeyword(header):
 		i = i + 1
 	return keyWords[header][int(raw_input("Select header: "))-1]
 	
-c = Client(SERVER)
+def selectMail(M):
+	M.select()
+	data=M.sort('ARRIVAL', 'UTF-8', 'ALL')
+	if (data[0]=='OK'):
+		j=0
+		msg_data=[]
+		messages=data[1][0].split(' ')
+		for i in messages[-15:]:
+			typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[HEADER.FIELDS (From Sender To Subject List-Id)])')
+			for response_part in msg_data_fetch:
+				if isinstance(response_part, tuple):
+					msg = email.message_from_string(response_part[1])
+					msg_data.append(msg)
+					print "%2d) %4s %20s %40s" %(j,i,msg['From'][:20],msg['Subject'][:40])
+					j=j+1
+		msg_number = raw_input("Which message? ")
+		return msg_data[int(msg_number)] #messages[-10+int(msg_number)-1]
+	else:	
+		return 0
 
-PASSWORD=getpass.getpass()
-c.connect(USER,PASSWORD, starttls=True, authmech="PLAIN")
+def selectHeaderAuto(M, msg):
+	i=1
+	if msg.has_key('List-Id'): 
+		return ('List-Id', msg['List-Id'][msg['List-Id'].find('<')+1:-1])
+	else:
+		for header in msgHeaders:
+			if msg.has_key(header):
+				print i," ) ", header, msg[header]
+			i = i + 1
+		header_num=raw_input("Select header: ")
+		
+		header=msgHeaders[int(header_num)-1]
+		textHeader=msg[msgHeaders[int(header_num)-1]]
+		pos = textHeader.find('<')
+		if (pos>=0):
+			textHeader=textHeader[pos+1:textHeader.find('>',pos+1)]
+		else:
+			pos = textHeader.find('[')
+			textHeader=textHeader[pos+1:textHeader.find(']',pos+1)]
+		return (header, textHeader)
+
+	
+
+	
+
+
+
+
 
 script = c.getscript('sogo')
 
-# Let's do a backup
-name = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
-c.putscript(name+'sogo',script)
+msg=selectMail(M)
+(header, textHeader) =selectHeaderAuto(M, msg)
+
+print header, textHeader
 
 p = Parser()
 p.parse(script)
 
-actions = selectAction()
-header= selectHeader()
-keyword = selectKeyword(header)
+actions = selectAction(p,M)#, header,textHeader)
+#header= selectHeader()
+#keyword = selectKeyword(header)
 
-print actions, header, keyword
+keyword=header
+header='header'
+print actions 
+print "Text selected: ", textHeader
 
-filterCond= raw_input("Text for selection: ")
+filterCond= raw_input("Text for selection (empty for all): ")
+
+if not filterCond:
+	filterCond = textHeader
 
 conditions=[]
 conditions.append((keyword, ":contains", filterCond))
 
-print "cond ", conditions, actions, header, keyword
-
+print "keyword", keyword
+print "cond ", conditions, actions, keyword
 
 fs = FiltersSet("test")
 #fs.addfilter("rule1",
@@ -166,6 +220,11 @@ for r in p.result:
 
 fSieve.close()
 fSieve=open('/tmp/kkSieve','r')
+
+# Let's do a backup
+name = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
+c.putscript(name+'sogo',script)
+
 
 if not c.putscript('sogo',fSieve.read()):
 	print "fail!"
