@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import ConfigParser, os
 import sievelib,time,getpass
 from sievelib.managesieve import Client
 from sievelib.parser import Parser
@@ -11,14 +12,6 @@ headers=["address","header"]
 keyWords={"address": ["From","To"],
 	  "header":  ["subject","Sender","X-Original-To","List-Id"]
 	}
-
-SERVER="ra-amon.cps.unizar.es"
-USER="f.tricas@ra-amon.lan"
-c = Client(SERVER)
-PASSWORD=getpass.getpass()
-c.connect(USER,PASSWORD, starttls=True, authmech="PLAIN")
-M = imaplib.IMAP4_SSL(SERVER)
-M.login(USER , PASSWORD)
 
 def doFolderExist(folder,M):
 	return (M.select(folder))
@@ -112,7 +105,7 @@ def selectKeyword(header):
 		i = i + 1
 	return keyWords[header][int(raw_input("Select header: "))-1]
 	
-def selectMail(M):
+def selectMessage(M):
 	M.select()
 	data=M.sort('ARRIVAL', 'UTF-8', 'ALL')
 	if (data[0]=='OK'):
@@ -153,86 +146,92 @@ def selectHeaderAuto(M, msg):
 			textHeader=textHeader[pos+1:textHeader.find(']',pos+1)]
 		return (header, textHeader)
 
+def main():
 	
+	print "aqui"
 
-	
+	config = ConfigParser.ConfigParser()
+	config.read([os.path.expanduser('~/.rssImap')])
 
+	SERVER = config.get("IMAP1","server")
+	USER   = config.get("IMAP1","user")
 
-
-
-
-script = c.getscript('sogo')
-
-msg=selectMail(M)
-(header, textHeader) =selectHeaderAuto(M, msg)
-
-print header, textHeader
-
-p = Parser()
-p.parse(script)
-
-actions = selectAction(p,M)#, header,textHeader)
-#header= selectHeader()
-#keyword = selectKeyword(header)
-
-keyword=header
-header='header'
-print actions 
-print "Text selected: ", textHeader
-
-filterCond= raw_input("Text for selection (empty for all): ")
-
-if not filterCond:
-	filterCond = textHeader
-
-conditions=[]
-conditions.append((keyword, ":contains", filterCond))
-
-print "keyword", keyword
-print "cond ", conditions, actions, keyword
-
-fs = FiltersSet("test")
-#fs.addfilter("rule1",
-#                 [("Sender", ":is", "toto@toto.com"), ],
-#                 [("fileinto", "Toto"), ("stop",)])
-#print fs
-print script
-fs.addfilter("",conditions,actions)
-
-print "---->"
-print fs.tosieve(open('/tmp/kkSieve','w'))
-print "----"
-print type(fs.tosieve())
-print "----"
-
-p2=Parser()
-p2.parse(open('/tmp/kkSieve','r').read())
-print type(p2.result)
-lenP2 = len(p2.result)
-print p2.result[lenP2-1]
-p.result.append(p2.result[lenP2-1])
-
-#kk=kk+"\n"+open('/tmp/kkSieve','r').read()
-
-fSieve=open('/tmp/kkSieve','w')
-for r in p.result:
-	r.tosieve(0,fSieve)
-
-fSieve.close()
-fSieve=open('/tmp/kkSieve','r')
-
-# Let's do a backup
-name = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
-c.putscript(name+'sogo',script)
+	# Make connections 
+	c = Client(SERVER)
+	PASSWORD=getpass.getpass()
+	c.connect(USER,PASSWORD, starttls=True, authmech="PLAIN")
+	M = imaplib.IMAP4_SSL(SERVER)
+	M.login(USER , PASSWORD)
+	PASSWORD="@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" 
 
 
-if not c.putscript('sogo',fSieve.read()):
-	print "fail!"
-#print p.dump
+	msg = selectMessage(M)
+	(keyword, textHeader) = selectHeaderAuto(M, msg)
+
+	script = c.getscript('sogo')
+	p = Parser()
+	p.parse(script)
+
+	actions = selectAction(p,M)#, header,textHeader)
+	# For a manual selection option?
+	#header= selectHeader()
+	#keyword = selectKeyword(header)
+
+	header='header'
+
+	filterCond = raw_input("Text for selection (empty for all): ")
+
+	if not filterCond:
+		filterCond = textHeader
+
+	conditions=[]
+	conditions.append((keyword, ":contains", filterCond))
+
+	print "cond ", conditions, actions, keyword
+
+	fs = FiltersSet("test")
+	#fs.addfilter("rule1",
+	#                 [("Sender", ":is", "toto@toto.com"), ],
+	#                 [("fileinto", "Toto"), ("stop",)])
+	#print fs
+	print script
+	fs.addfilter("",conditions,actions)
+
+	print "---->"
+	print fs.tosieve(open('/tmp/kkSieve','w'))
+	print "----"
+	print type(fs.tosieve())
+	print "----"
+
+	p2=Parser()
+	p2.parse(open('/tmp/kkSieve','r').read())
+	print type(p2.result)
+	lenP2 = len(p2.result)
+	print p2.result[lenP2-1]
+	p.result.append(p2.result[lenP2-1])
+
+	#kk=kk+"\n"+open('/tmp/kkSieve','r').read()
+
+	fSieve=open('/tmp/kkSieve','w')
+	for r in p.result:
+		r.tosieve(0,fSieve)
+
+	fSieve.close()
+	fSieve=open('/tmp/kkSieve','r')
+
+	# Let's do a backup
+	name = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
+	c.putscript(name+'sogo',script)
+
+
+	if not c.putscript('sogo',fSieve.read()):
+		print "fail!"
+	#print p.dump
 
 
 
-
+if __name__ == "__main__":
+	main()
 
 
 
@@ -317,5 +316,4 @@ if not c.putscript('sogo',fSieve.read()):
 #	match=cond.arguments['match-type']
 #	print header, key, match
 #	conditions.append([header,key,match])
-
 
