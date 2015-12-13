@@ -16,13 +16,10 @@ keyWords={"address": ["From","To"],
 def doFolderExist(folder,M):
 	return (M.select(folder))
 
-
 def selectAction(p,M): #header="", textHeader=""):
 	i = 1
 	for r in p.result:
-		#print r.children
 		if r.children:
-			#print type(r.children[0])
 			if (type(r.children[0]) == sievelib.commands.FileintoCommand):
 				print i, ") Folder   ", r.children[0]['mailbox']
 			elif (type(r.children[0]) == sievelib.commands.RedirectCommand):
@@ -45,14 +42,9 @@ def selectAction(p,M): #header="", textHeader=""):
 	actions=[]
 
 	if (int(option) <= len(p.result)):
-		print p.result[int(option)-1].arguments
-		print p.result[int(option)-1].dump()
-		print "child ", p.result[int(option)-1].children
-
 		action=p.result[int(option)-1].children
 
 		for i in action:
-			print i.arguments
 			if i.arguments.has_key('mailbox'):
 				actions.append(("fileinto",i.arguments['mailbox']))
 			elif i.arguments.has_key('address'):
@@ -88,8 +80,6 @@ def selectAction(p,M): #header="", textHeader=""):
 			actions.append(("stop",))
 
 	return actions
-
-
 
 def selectHeader():
 	i = 1
@@ -148,23 +138,24 @@ def selectHeaderAuto(M, msg):
 
 def main():
 	
-	print "aqui"
-
 	config = ConfigParser.ConfigParser()
 	config.read([os.path.expanduser('~/.rssImap')])
 
 	SERVER = config.get("IMAP1","server")
 	USER   = config.get("IMAP1","user")
-
-	# Make connections 
-	c = Client(SERVER)
 	PASSWORD=getpass.getpass()
+
+	# Make connections to server
+	# Sieve client connection
+	c = Client(SERVER)
 	c.connect(USER,PASSWORD, starttls=True, authmech="PLAIN")
+	# IMAP client connection
 	M = imaplib.IMAP4_SSL(SERVER)
 	M.login(USER , PASSWORD)
+
 	PASSWORD="@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" 
 
-
+	# We are going to filter based on one message
 	msg = selectMessage(M)
 	(keyword, textHeader) = selectHeaderAuto(M, msg)
 
@@ -172,13 +163,14 @@ def main():
 	p = Parser()
 	p.parse(script)
 
-	actions = selectAction(p,M)#, header,textHeader)
+	actions = selectAction(p,M)
 	# For a manual selection option?
 	#header= selectHeader()
 	#keyword = selectKeyword(header)
 
 	header='header'
 
+	print "Filter: (header) ", keyword,", (text) ", textHeader
 	filterCond = raw_input("Text for selection (empty for all): ")
 
 	if not filterCond:
@@ -197,15 +189,10 @@ def main():
 	print script
 	fs.addfilter("",conditions,actions)
 
-	print "---->"
-	print fs.tosieve(open('/tmp/kkSieve','w'))
-	print "----"
-	print type(fs.tosieve())
-	print "----"
+	fs.tosieve(open('/tmp/kkSieve','w'))
 
 	p2=Parser()
 	p2.parse(open('/tmp/kkSieve','r').read())
-	print type(p2.result)
 	lenP2 = len(p2.result)
 	print p2.result[lenP2-1]
 	p.result.append(p2.result[lenP2-1])
@@ -217,16 +204,16 @@ def main():
 		r.tosieve(0,fSieve)
 
 	fSieve.close()
-	fSieve=open('/tmp/kkSieve','r')
 
 	# Let's do a backup
 	name = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
 	c.putscript(name+'sogo',script)
 
 
+	# Now we can put the new sieve filters in place
+	fSieve=open('/tmp/kkSieve','r')
 	if not c.putscript('sogo',fSieve.read()):
 		print "fail!"
-	#print p.dump
 
 
 
