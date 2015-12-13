@@ -38,26 +38,31 @@ config = ConfigParser.ConfigParser()
 config.read([os.path.expanduser('~/IMAP.cfg')])
 
 
-def mailFolder(server, user, password,space):
+DELETE =[['FROM', 'Cron Daemon'],
+	 ['SUBJECT', 'A problem with your document']] 
+
+def mailFolder(server, user, password, space):
 	SERVER = server
 	USER   = user
 	PASSWORD = password
 
 	print SERVER
 	M = imaplib.IMAP4_SSL(SERVER)
-	M.login(USER , password)
+	M.login(USER , PASSWORD)
 	password = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 	# We do not want passwords in memory when not needed
 	M.select()
-	typ,data = M.search(None,'FROM', 'Cron Daemon')
 	i = 0
-	if data[0]: 
-		for num in data[0].split():
-			M.store(num, '+FLAGS', '\\Deleted')
-			if (i%10 == 0):
-				print space+"SERVER: ", SERVER, " ", i
-			i = i + 1
-	print space+"SERVER %s: %d messages have been deleted END\n" % (SERVER, i)
+	for action in DELETE:
+		print action[0], action[1]
+		typ,data = M.search(None,action[0], action[1])
+		if data[0]: 
+			for num in data[0].split():
+				M.store(num, '+FLAGS', '\\Deleted')
+				if (i%10 == 0):
+					print space+"SERVER: ", SERVER, " ", i
+				i = i + 1
+		print space+"SERVER %s: %d messages have been deleted END\n" % (SERVER, i)
 	M.close()
 	M.logout()
 
