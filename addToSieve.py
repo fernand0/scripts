@@ -7,7 +7,7 @@ from sievelib.parser import Parser
 from sievelib.factory import FiltersSet
 import imaplib, email
 
-msgHeaders=['List-Id', 'From', 'Sender','Subject','To', 'X-Original-To']
+msgHeaders=['List-Id', 'From', 'Sender','Subject','To', 'X-Original-To', 'X-Envelope-From']
 headers=["address","header"] 
 keyWords={"address": ["From","To"],
 	  "header":  ["subject","Sender","X-Original-To","List-Id"]
@@ -103,7 +103,8 @@ def selectMessage(M):
 		msg_data=[]
 		messages=data[1][0].split(' ')
 		for i in messages[-15:]:
-			typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[HEADER.FIELDS (From Sender To Subject List-Id)])')
+			typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[])')
+			#print msg_data_fetch
 			for response_part in msg_data_fetch:
 				if isinstance(response_part, tuple):
 					msg = email.message_from_string(response_part[1])
@@ -133,7 +134,10 @@ def selectHeaderAuto(M, msg):
 			textHeader=textHeader[pos+1:textHeader.find('>',pos+1)]
 		else:
 			pos = textHeader.find('[')
-			textHeader=textHeader[pos+1:textHeader.find(']',pos+1)]
+			if (pos>=0):
+				textHeader=textHeader[pos+1:textHeader.find(']',pos+1)]
+			else:
+				textHeader=textHeader
 		return (header, textHeader)
 
 def main():
