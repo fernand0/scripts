@@ -21,13 +21,13 @@ def selectAction(p,M): #header="", textHeader=""):
 	for r in p.result:
 		if r.children:
 			if (type(r.children[0]) == sievelib.commands.FileintoCommand):
-				print i, ") Folder   ", r.children[0]['mailbox']
+				print "%2d) Folder %s" %(i,r.children[0]['mailbox'])
 			elif (type(r.children[0]) == sievelib.commands.RedirectCommand):
-				print i, ") Redirect ", r.children[0]['address']
+				print "%2d) Address %s\n" %(i,r.children[0]['address'])
 			else:
-				print i, ") Not implented ", type(r.children[0])
+				print "%2d) Not implemented %s\n" %(i,type(r.children[0]))
 		else:
-			print  i, ") Not implented ", type(r)
+			print "%2d) Not implemented %s\n" %(i,type(r))
 			
 		i = i + 1
 	print i, ") New folder "
@@ -159,65 +159,68 @@ def main():
 
 	PASSWORD="@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" 
 
-	# We are going to filter based on one message
-	msg = selectMessage(M)
-	(keyword, textHeader) = selectHeaderAuto(M, msg)
+	end=""
+	while (not end):
+		# We are going to filter based on one message
+		msg = selectMessage(M)
+		(keyword, textHeader) = selectHeaderAuto(M, msg)
 
-	script = c.getscript('sogo')
-	p = Parser()
-	p.parse(script)
+		script = c.getscript('sogo')
+		p = Parser()
+		p.parse(script)
 
-	actions = selectAction(p,M)
-	# For a manual selection option?
-	#header= selectHeader()
-	#keyword = selectKeyword(header)
+		actions = selectAction(p,M)
+		# For a manual selection option?
+		#header= selectHeader()
+		#keyword = selectKeyword(header)
 
-	header='header'
+		header='header'
 
-	print "Filter: (header) ", keyword,", (text) ", textHeader
-	filterCond = raw_input("Text for selection (empty for all): ")
+		print "Filter: (header) ", keyword,", (text) ", textHeader
+		filterCond = raw_input("Text for selection (empty for all): ")
 
-	if not filterCond:
-		filterCond = textHeader
+		if not filterCond:
+			filterCond = textHeader
 
-	conditions=[]
-	conditions.append((keyword, ":contains", filterCond))
+		conditions=[]
+		conditions.append((keyword, ":contains", filterCond))
 
-	print "cond ", conditions, actions, keyword
+		print "cond ", conditions, actions, keyword
 
-	fs = FiltersSet("test")
-	#fs.addfilter("rule1",
-	#                 [("Sender", ":is", "toto@toto.com"), ],
-	#                 [("fileinto", "Toto"), ("stop",)])
-	#print fs
-	print script
-	fs.addfilter("",conditions,actions)
+		fs = FiltersSet("test")
+		#fs.addfilter("rule1",
+		#                 [("Sender", ":is", "toto@toto.com"), ],
+		#                 [("fileinto", "Toto"), ("stop",)])
+		#print fs
+		print script
+		fs.addfilter("",conditions,actions)
 
-	fs.tosieve(open('/tmp/kkSieve','w'))
+		fs.tosieve(open('/tmp/kkSieve','w'))
 
-	p2=Parser()
-	p2.parse(open('/tmp/kkSieve','r').read())
-	lenP2 = len(p2.result)
-	print p2.result[lenP2-1]
-	p.result.append(p2.result[lenP2-1])
+		p2=Parser()
+		p2.parse(open('/tmp/kkSieve','r').read())
+		lenP2 = len(p2.result)
+		print p2.result[lenP2-1]
+		p.result.append(p2.result[lenP2-1])
 
-	#kk=kk+"\n"+open('/tmp/kkSieve','r').read()
+		#kk=kk+"\n"+open('/tmp/kkSieve','r').read()
 
-	fSieve=open('/tmp/kkSieve','w')
-	for r in p.result:
-		r.tosieve(0,fSieve)
+		fSieve=open('/tmp/kkSieve','w')
+		for r in p.result:
+			r.tosieve(0,fSieve)
 
-	fSieve.close()
+		fSieve.close()
 
-	# Let's do a backup
-	name = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
-	c.putscript(name+'sogo',script)
+		# Let's do a backup
+		name = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
+		c.putscript(name+'sogo',script)
 
 
-	# Now we can put the new sieve filters in place
-	fSieve=open('/tmp/kkSieve','r')
-	if not c.putscript('sogo',fSieve.read()):
-		print "fail!"
+		# Now we can put the new sieve filters in place
+		fSieve=open('/tmp/kkSieve','r')
+		if not c.putscript('sogo',fSieve.read()):
+			print "fail!"
+		end=raw_input("More rules? (empty to continue) ")
 
 
 
