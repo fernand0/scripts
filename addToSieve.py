@@ -21,17 +21,17 @@ def selectAction(p,M): #header="", textHeader=""):
 	for r in p.result:
 		if r.children:
 			if (type(r.children[0]) == sievelib.commands.FileintoCommand):
-				print "%2d) Folder %s" %(i,r.children[0]['mailbox'])
+				print "%2d) Folder  %s" %(i,r.children[0]['mailbox'])
 			elif (type(r.children[0]) == sievelib.commands.RedirectCommand):
-				print "%2d) Address %s\n" %(i,r.children[0]['address'])
+				print "%2d) Address %s" %(i,r.children[0]['address'])
 			else:
-				print "%2d) Not implemented %s\n" %(i,type(r.children[0]))
+				print "%2d) Not implemented %s" %(i,type(r.children[0]))
 		else:
-			print "%2d) Not implemented %s\n" %(i,type(r))
+			print "%2d) Not implemented %s" %(i,type(r))
 			
 		i = i + 1
-	print i, ") New folder "
-	print i+1, ") New redirection"
+	print "%2d) New folder "%i
+	print "%2d) New redirection"%(i+1)
 		
 
 
@@ -102,6 +102,7 @@ def selectMessage(M):
 		j=0
 		msg_data=[]
 		messages=data[1][0].split(' ')
+		lenId=len(str(messages[-1]))
 		for i in messages[-15:]:
 			typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[])')
 			#print msg_data_fetch
@@ -109,7 +110,9 @@ def selectMessage(M):
 				if isinstance(response_part, tuple):
 					msg = email.message_from_string(response_part[1])
 					msg_data.append(msg)
-					print "%2d) %4s %20s %40s" %(j,i,msg['From'][:20],msg['Subject'][:40])
+					# Variable length format
+					format = "%2s) %"+str(lenId)+"s %-20s %-40s"
+					print format %(j,i,email.Header.decode_header(msg['From'])[0][0][:20],email.Header.decode_header(msg['Subject'])[0][0][:40])
 					j=j+1
 		msg_number = raw_input("Which message? ")
 		return msg_data[int(msg_number)] #messages[-10+int(msg_number)-1]
