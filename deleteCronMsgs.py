@@ -13,6 +13,9 @@
 # [IMAP1]
 # server:imap.server.com
 # user:user@imap.server.com
+# rules:'FROM','Cron Daemon'
+#      'SUBJECT','A problem with your document'
+# 
 # [IMAP2]
 # server:...
 #
