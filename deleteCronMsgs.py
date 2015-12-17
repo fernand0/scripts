@@ -35,7 +35,7 @@ import os, sys, getpass, imaplib
 import threading
 
 config = ConfigParser.ConfigParser()
-config.read([os.path.expanduser('~/IMAP.cfg')])
+config.read([os.path.expanduser('~/.IMAP.cfg')])
 
 
 DELETE =[['FROM', 'Cron Daemon'],
