@@ -36,10 +36,7 @@ import threading
 
 config = ConfigParser.ConfigParser()
 config.read([os.path.expanduser('~/.IMAP.cfg')])
-
-
-DELETE =[['FROM', 'Cron Daemon'],
-	 ['SUBJECT', 'A problem with your document']] 
+DELETE = config.get('IMAP1','rules').split('\n')
 
 def mailFolder(server, user, password, space):
 	SERVER = server
@@ -53,9 +50,12 @@ def mailFolder(server, user, password, space):
 	# We do not want passwords in memory when not needed
 	M.select()
 	i = 0
-	for action in DELETE:
-		print action[0], action[1]
-		typ,data = M.search(None,action[0], action[1])
+	for actions in DELETE:
+		action=actions.split(',')
+		header  = action[0][1:-1]
+		content = action[1][1:-1]
+		print "Rule: ", header, content
+		typ,data = M.search(None,header,content)
 		if data[0]: 
 			for num in data[0].split():
 				M.store(num, '+FLAGS', '\\Deleted')
