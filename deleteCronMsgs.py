@@ -30,7 +30,7 @@
 # [IMAP1]
 # server:imap.server.com
 # user:user@imap.server.com
-# delete:Cron Daemon
+# rules:Cron Daemon
  
 
 import ConfigParser
@@ -39,7 +39,7 @@ import threading
 
 config = ConfigParser.ConfigParser()
 config.read([os.path.expanduser('~/.IMAP.cfg')])
-DELETE = config.get('IMAP1','rules').split('\n')
+RULES = config.get('IMAP1','rules').split('\n')
 
 def mailFolder(server, user, password, space):
 	SERVER = server
@@ -53,20 +53,36 @@ def mailFolder(server, user, password, space):
 	# We do not want passwords in memory when not needed
 	M.select()
 	i = 0
-	for actions in DELETE:
-		action=actions.split(',')
+	msgs = []
+	for rule in RULES:
+		action=rule.split(',')
 		header  = action[0][1:-1]
 		content = action[1][1:-1]
 		print "Rule: ", header, content
 		typ,data = M.search(None,header,content)
 		if data[0]: 
-			for num in data[0].split():
-				flag='\\Deleted'
-				M.store(num, '+FLAGS', flag)
-				if (i%10 == 0):
-					print space+"SERVER: ", SERVER, " ", i
-				i = i + 1
+			if msgs:
+				msgs[0] = msgs[0] +' '+ data[0]
+			else: 
+				msgs=data
+		print msgs
+
+	if not msgs:
+		print "Nothing to do"
+		sys.exit()
+	msgs=msgs[0].replace(" ",",")
+	i=msgs.count(',')+1			
+	# M.store needs a set of comma-separated mesages, we have a list with a
+	# string
+	
+	print msgs
+	
+	flag='\\Deleted'
+	result = M.store(msgs,'+FLAGS',flag)
+	if result[0] == 'OK': 
 		print space+"SERVER %s: %d messages have been deleted END\n" % (SERVER, i)
+	else:	
+		print "Couldn't delete messages!"
 	M.close()
 	M.logout()
 
