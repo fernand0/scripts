@@ -61,7 +61,8 @@ def mailFolder(server, user, password, space):
 		typ,data = M.search(None,header,content)
 		if data[0]: 
 			for num in data[0].split():
-				M.store(num, '+FLAGS', '\\Deleted')
+				flag='\\Deleted'
+				M.store(num, '+FLAGS', flag)
 				if (i%10 == 0):
 					print space+"SERVER: ", SERVER, " ", i
 				i = i + 1
