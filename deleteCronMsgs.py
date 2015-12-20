@@ -9,12 +9,17 @@
 #
 # It will do the operations in the configured accounts
 #
+# We can now add an optional field called move. If present, messages selected
+# following the rules will be moved to the folder and then they will be
+# deleted.
+#
 # The config file should look like this:
 # [IMAP1]
 # server:imap.server.com
 # user:user@imap.server.com
 # rules:'FROM','Cron Daemon'
 #      'SUBJECT','A problem with your document'
+# move:Twitter
 # 
 # [IMAP2]
 # server:...
@@ -24,13 +29,6 @@
 #      (typ,data = M.search(None,'FROM', 'Cron Daemon') )
 # - Evaluate the way to include the password or some alternative 
 #   identification method?
-# - Leave the account unchanged for messages not deleted (it can mark as read
-#   the messages, and this is not convenient in some cases).
-#
-# [IMAP1]
-# server:imap.server.com
-# user:user@imap.server.com
-# rules:Cron Daemon
  
 
 import ConfigParser
