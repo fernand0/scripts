@@ -37,14 +37,12 @@ import ConfigParser
 import os, sys, getpass, imaplib
 import threading
 
-config = ConfigParser.ConfigParser()
-config.read([os.path.expanduser('~/.IMAP.cfg')])
-RULES = config.get('IMAP1','rules').split('\n')
-
-def mailFolder(server, user, password, space):
+def mailFolder(server, user, password, rules, folder):
 	SERVER = server
 	USER   = user
 	PASSWORD = password
+	RULES  = rules
+	FOLDER = folder
 
 	print SERVER
 	M = imaplib.IMAP4_SSL(SERVER)
@@ -58,55 +56,70 @@ def mailFolder(server, user, password, space):
 		action=rule.split(',')
 		header  = action[0][1:-1]
 		content = action[1][1:-1]
-		print "Rule: ", header, content
+		print "[",SERVER,USER,"]","Rule: ", header, content
 		typ,data = M.search(None,header,content)
 		if data[0]: 
 			if msgs:
 				msgs[0] = msgs[0] +' '+ data[0]
 			else: 
 				msgs=data
-		print msgs
 
 	if not msgs:
-		print "Nothing to do"
+		print "[",SERVER,USER,"]","Nothing to do"
 		sys.exit()
 	msgs=msgs[0].replace(" ",",")
+	status='OK'
+	if FOLDER:
+		# M.copy needs a set of comma-separated mesages, we have a list with a string
+		result = M.copy(msgs,'INBOX.'+FOLDER) 
+		status=result[0]
 	i=msgs.count(',')+1			
 	# M.store needs a set of comma-separated mesages, we have a list with a
 	# string
-	
-	print msgs
-	
-	flag='\\Deleted'
-	result = M.store(msgs,'+FLAGS',flag)
-	if result[0] == 'OK': 
-		print space+"SERVER %s: %d messages have been deleted END\n" % (SERVER, i)
+	if status == 'OK':
+		flag='\\Deleted'
+		result = M.store(msgs,'+FLAGS',flag)
+		if result[0] == 'OK': 
+			print "[",SERVER,USER,"]","SERVER %s: %d messages have been deleted END\n" % (SERVER, i)
+		else:	
+			print "[",SERVER,USER,"]","Couldn't delete messages!"
 	else:	
-		print "Couldn't delete messages!"
+		print "[",SERVER,USER,"]","Couldn't move messages!"
 	M.close()
 	M.logout()
 
-space="                             "
-threads=[]
-i=0
+def main():
+	config = ConfigParser.ConfigParser()
+	config.read([os.path.expanduser('~/.IMAP.cfg')])
 
-for section in config.sections():
-	SERVER = config.get(section, 'server')
-	USER   = config.get(section, 'user')
+	threads=[]
+	i=0
 
-	print SERVER
-	PASSWORD = getpass.getpass()
-	
-	t = threading.Thread(target=mailFolder, args=(SERVER, USER, PASSWORD,space*i))
-	PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-	# We do not want passwords in memory when not needed
-	threads.append(t)
-	i = i + 1
+	for section in config.sections():
+		SERVER = config.get(section, 'server')
+		USER   = config.get(section, 'user')
+		RULES  = config.get(section, 'rules').split('\n')
+		if config.has_option(section, 'move'):
+			FOLDER = config.get(section,"move")
+		else:	
+			FOLDER = ""
 
-for t in threads:
-	t.start()
+		print SERVER,USER
+		PASSWORD = getpass.getpass()
+		
+		t = threading.Thread(target=mailFolder, args=(SERVER, USER, PASSWORD, RULES, FOLDER))
+		PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+		# We do not want passwords in memory when not needed
+		threads.append(t)
+		i = i + 1
 
-for t in threads:
-	t.join()
+	for t in threads:
+		t.start()
 
-print "The end!"
+	for t in threads:
+		t.join()
+
+	print "The end!"
+
+if __name__ == '__main__':
+   main()
