@@ -93,6 +93,7 @@ def main():
 	threads=[]
 	i=0
 
+	accounts={}
 	for section in config.sections():
 		SERVER = config.get(section, 'server')
 		USER   = config.get(section, 'user')
@@ -103,13 +104,19 @@ def main():
 			FOLDER = ""
 
 		print SERVER,USER
-		PASSWORD = getpass.getpass()
+		if not accounts.has_key(USER):
+			PASSWORD = getpass.getpass()
+			accounts[USER]=PASSWORD
+		else:
+			PASSWORD = accounts[USER]
 		
 		t = threading.Thread(target=mailFolder, args=(SERVER, USER, PASSWORD, RULES, FOLDER))
 		PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 		# We do not want passwords in memory when not needed
 		threads.append(t)
 		i = i + 1
+	for user in accounts.keys():
+		accounts[user]="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
 	for t in threads:
 		t.start()
