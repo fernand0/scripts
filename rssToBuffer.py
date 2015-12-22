@@ -140,7 +140,7 @@ for j in range(10-lenMax,0,-1):
 				#exception for Instagram videos
 				theTitle = feed.entries[i].title
 			if (theLink[:22] == "https://instagram.com/") and (theTitle.find("(en")>0):
-				theTitle = theTitle[:theTitle.find("(3n")-1]
+				theTitle = theTitle[:theTitle.find("(en")-1]
 		else:
 			# Some entries do not have a proper link and the rss contains
 			# the video, image, ... in the description.
@@ -163,6 +163,8 @@ for j in range(10-lenMax,0,-1):
 	post=re.sub('\n+',' ', theTitle) +" "+theLink
 	# Sometimes there are newlines and unnecessary spaces
 	#print "post", post
+
+	# There are problems with &
 	print "Publishing..."
 	for service in serviceList:
 		print "  %s service"%service,

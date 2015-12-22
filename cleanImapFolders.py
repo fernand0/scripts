@@ -69,7 +69,7 @@ def mailFolder(server, user, password, rules, folder):
 	status='OK'
 	if FOLDER:
 		# M.copy needs a set of comma-separated mesages, we have a list with a string
-		result = M.copy(msgs,'INBOX.'+FOLDER) 
+		result = M.copy(msgs,FOLDER) 
 		status=result[0]
 	i=msgs.count(',')+1			
 	# M.store needs a set of comma-separated mesages, we have a list with a
@@ -109,6 +109,7 @@ def main():
 			accounts[USER]=PASSWORD
 		else:
 			PASSWORD = accounts[USER]
+			print "Known password!"
 		
 		t = threading.Thread(target=mailFolder, args=(SERVER, USER, PASSWORD, RULES, FOLDER))
 		PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
