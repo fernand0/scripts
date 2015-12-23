@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # 
-# This program deletes 'Cron Daemon' messages from some backup mail account 
+# This program deletes and moves some messages from some mail account using
+# IMAP
+#
 # defined in ~/.IMAP.cfg
 #
 # The code is multithreaded, in order to avoid waiting. The result of
