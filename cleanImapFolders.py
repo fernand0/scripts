@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # 
 # This program deletes 'Cron Daemon' messages from some backup mail account 
-# defined in ~/IMAP.cfg
+# defined in ~/.IMAP.cfg
 #
 # The code is multithreaded, in order to avoid waiting. The result of
 # paralelism is not very interesting. It would be enough to get the passwords
