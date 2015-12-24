@@ -26,16 +26,29 @@
 # [IMAP2]
 # server:...
 #
+# Now the program uses the keyring system for storing passwords. When a new
+# account is added it will ask for the password and it will store it. There is
+# no code for changes of passwords and so on.
+#
 # Future plans:
 # - Include the  deletion rule in the config file
 #      (typ,data = M.search(None,'FROM', 'Cron Daemon') )
-# - Evaluate the way to include the password or some alternative 
-#   identification method?
  
 
 import ConfigParser
-import os, sys, getpass, imaplib
+import os, sys, imaplib
+import keyring, getpass
 import threading
+
+
+def getPassword(server, user):
+	# Para borrar keyring.delete_password(server, user)
+	password = keyring.get_password(server, user)
+	if not password:
+		print "New account. Setting password"
+		password = getpass.getpass()
+		keyring.set_password(server, user, password)
+	return password
 
 def mailFolder(server, user, password, rules, folder):
 	SERVER = server
@@ -107,7 +120,7 @@ def main():
 
 		print SERVER,USER
 		if not accounts.has_key(USER):
-			PASSWORD = getpass.getpass()
+			PASSWORD = getPassword(SERVER, USER)
 			accounts[USER]=PASSWORD
 		else:
 			PASSWORD = accounts[USER]
