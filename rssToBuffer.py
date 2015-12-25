@@ -149,12 +149,13 @@ for j in range(10-lenMax,0,-1):
 			theTitle  = feed.entries[i].title.encode('utf-8')
 	elif (selectedBlog.find('wordpress') > 0):
 		soup = BeautifulSoup(feed.entries[i].content[0].value)
-		theTitle = feed.entries[i].title	
+		theTitle = feed.entries[i].title
 		theLink  = feed.entries[i].link	
 	else:
 		print "I don't know what to do!"
 
 	#pageImage = soup.findAll("img")
+	theTitle = urllib.quote(theTitle)
 
 
 	#print i, ": ", re.sub('\n+',' ', theTitle.encode('iso-8859-1','ignore')) + " " + theLink
