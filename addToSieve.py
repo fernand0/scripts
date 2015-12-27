@@ -225,7 +225,5 @@ def main():
 			print "fail!"
 		end=raw_input("More rules? (empty to continue) ")
 
-
-
 if __name__ == "__main__":
 	main()

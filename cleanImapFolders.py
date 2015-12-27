@@ -57,7 +57,6 @@ def mailFolder(server, user, password, rules, folder):
 	RULES  = rules
 	FOLDER = folder
 
-	print SERVER
 	M = imaplib.IMAP4_SSL(SERVER)
 	M.login(USER , PASSWORD)
 	password = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -69,17 +68,20 @@ def mailFolder(server, user, password, rules, folder):
 		action=rule.split(',')
 		header  = action[0][1:-1]
 		content = action[1][1:-1]
-		print "[",SERVER,USER,"]","Rule: ", header, content
+		msg = "["+SERVER+","+ USER + "] Rule: "+ header+" "+ content
 		typ,data = M.search(None,header,content)
 		if data[0]: 
 			if msgs:
 				msgs[0] = msgs[0] +' '+ data[0]
 			else: 
 				msgs=data
+		else:
+			print msg + " -> No messages matching"
 
 	if not msgs:
-		print "[",SERVER,USER,"]","Nothing to do"
+		print "["+SERVER+","+USER+"]"+" -> Nothing to do"
 		sys.exit()
+	print "["+SERVER+","+USER+"]"+" -> Let's go!"
 	msgs=msgs[0].replace(" ",",")
 	status='OK'
 	if FOLDER:
