@@ -155,7 +155,7 @@ for j in range(10-lenMax,0,-1):
 		print "I don't know what to do!"
 
 	#pageImage = soup.findAll("img")
-	theTitle = urllib.quote(theTitle)
+	theTitle = urllib.quote(theTitle.encode('utf-8'))
 
 
 	#print i, ": ", re.sub('\n+',' ', theTitle.encode('iso-8859-1','ignore')) + " " + theLink
