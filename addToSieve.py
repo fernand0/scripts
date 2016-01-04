@@ -219,7 +219,7 @@ def main():
 
 		actions = selectAction(p,M)
 		# actions[0][1] contains the rule selector
-		print actions[0][1]
+		print "actions ", actions[0][1]
 		print rules[actions[0][1]]
 
 		# For a manual selection option?
@@ -235,23 +235,21 @@ def main():
 			filterCond = textHeader
 
 		conditions=[]
-		#conditions.append((keyword, ":contains", filterCond))
+		conditions.append((keyword, ":contains", filterCond))
 		rule = rules[actions[0][1]]
-		print rule
-		for i in range(len(rule[1])):
-			print rule[0],rule[1][i]#, dir(rule[1][i])
-			for keys in rule[1][i].arguments.keys():
-				print rule[1][i][keys]
 				
-		rules[actions[0][1]].append((keyword, ":contains", filterCond))
+		# Is there a better way to do this?
+		cmd = sievelib.factory.get_command_instance("header", rules[actions[0][1]])
+		cmd.check_next_arg("tag", ":contains")
+		# __quote_if_necessary
+		if not keyword.startswith(('"', "'")):
+			keyword='"%s"'%keyword
+		cmd.check_next_arg("string", keyword)
+		if not filterCond.startswith(('"', "'")):
+			filterCond='"%s"'%filterCond
+		cmd.check_next_arg("string", filterCond)
+		rules[actions[0][1]][1].append(cmd)
 
-		print "cond ", conditions, actions, keyword
-		print rules[actions[0][1]]
-		print "-----------------------"
-		for i in range(len(rule[1])):
-			print rule[0],rule[1][i]#, dir(rule[1][i])
-			for keys in rule[1][i].arguments.keys():
-				print rule[1][i][keys]
 		sys.exit()
 
 
