@@ -13,6 +13,48 @@ keyWords={"address": ["From","To"],
 	  "header":  ["subject","Sender","X-Original-To","List-Id"]
 	}
 
+def extractActions(p):
+	i = 1
+	rules={}
+	more ={}
+	for r in p.result:
+		#print r.children
+		if r.children:
+			#print type(r.children[0])
+			key=r.children[0]
+			if len(r.children)>2:
+				# If there are more actions (just one more
+				# action, in fact), we will store it in more
+				more[key['address']]=[]
+				more[key['address']].append(r.children[1]['address'])
+			if (type(key) == sievelib.commands.FileintoCommand):
+				print i, ") Folder   ", key['mailbox']
+				tests = r.arguments['test'].arguments['tests']
+				if rules.has_key(key['mailbox']):
+					rules[key['mailbox']][1] = rules[key['mailbox']][1] + tests 
+				else:
+					rules[key['mailbox']] = []
+					rules[key['mailbox']].append("fileinto")
+					rules[key['mailbox']].append(tests)
+			elif (type(key) == sievelib.commands.RedirectCommand):
+				print i, ") Redirect ", key['address']
+				tests = r.arguments['test'].arguments['tests']
+				if rules.has_key(key['address']):
+					rules[key['address']][1] = rules[key['address']][1] + tests 
+				else:
+					rules[key['address']] = []
+					rules[key['address']].append("redirect")
+					rules[key['address']].append(tests)
+			else:
+				print i, ") Not implented ", type(key)
+		else:
+			print  i, ") Not implented ", type(r)
+			
+		i = i + 1
+		
+	return (rules, more)
+
+
 def doFolderExist(folder,M):
 	return (M.select(folder))
 
@@ -162,17 +204,24 @@ def main():
 
 	PASSWORD="@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" 
 
+	
 	end=""
 	while (not end):
+		# Could we move this parsing part out of the while?
+		script = c.getscript('sogo')
+		p = Parser()
+		p.parse(script)
+		(rules,more) = extractActions(p)
+
 		# We are going to filter based on one message
 		msg = selectMessage(M)
 		(keyword, textHeader) = selectHeaderAuto(M, msg)
 
-		script = c.getscript('sogo')
-		p = Parser()
-		p.parse(script)
-
 		actions = selectAction(p,M)
+		# actions[0][1] contains the rule selector
+		print actions[0][1]
+		print rules[actions[0][1]]
+
 		# For a manual selection option?
 		#header= selectHeader()
 		#keyword = selectKeyword(header)
@@ -186,9 +235,25 @@ def main():
 			filterCond = textHeader
 
 		conditions=[]
-		conditions.append((keyword, ":contains", filterCond))
+		#conditions.append((keyword, ":contains", filterCond))
+		rule = rules[actions[0][1]]
+		print rule
+		for i in range(len(rule[1])):
+			print rule[0],rule[1][i]#, dir(rule[1][i])
+			for keys in rule[1][i].arguments.keys():
+				print rule[1][i][keys]
+				
+		rules[actions[0][1]].append((keyword, ":contains", filterCond))
 
 		print "cond ", conditions, actions, keyword
+		print rules[actions[0][1]]
+		print "-----------------------"
+		for i in range(len(rule[1])):
+			print rule[0],rule[1][i]#, dir(rule[1][i])
+			for keys in rule[1][i].arguments.keys():
+				print rule[1][i][keys]
+		sys.exit()
+
 
 		fs = FiltersSet("test")
 		#fs.addfilter("rule1",
