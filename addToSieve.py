@@ -7,7 +7,7 @@ from sievelib.parser import Parser
 from sievelib.factory import FiltersSet
 import imaplib, email
 
-msgHeaders=['List-Id', 'From', 'Sender','Subject','To', 'X-Original-To', 'X-Envelope-From']
+msgHeaders=['List-Id', 'From', 'Sender','Subject','To', 'X-Original-To', 'X-Envelope-From','X-Spam-Flag']
 headers=["address","header"] 
 keyWords={"address": ["From","To"],
 	  "header":  ["subject","Sender","X-Original-To","List-Id"]
@@ -146,7 +146,7 @@ def selectHeaderAuto(M, msg):
 def main():
 	
 	config = ConfigParser.ConfigParser()
-	config.read([os.path.expanduser('~/.rssImap')])
+	config.read([os.path.expanduser('~/.IMAP.cfg')])
 
 	SERVER = config.get("IMAP1","server")
 	USER   = config.get("IMAP1","user")

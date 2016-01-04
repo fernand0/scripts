@@ -122,6 +122,7 @@ def mailFolder(server, user, password, rules, folder):
 	# M.store needs a set of comma-separated mesages, we have a list with a
 	# string
 	if status == 'OK':
+		# If the list of messages is too long it won't work
 		flag='\\Deleted'
 		result = M.store(msgs,'+FLAGS',flag)
 		if result[0] == 'OK': 
