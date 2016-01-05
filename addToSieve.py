@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import ConfigParser, os
 import sievelib,time,getpass
@@ -12,6 +12,18 @@ headers=["address","header"]
 keyWords={"address": ["From","To"],
 	  "header":  ["subject","Sender","X-Original-To","List-Id"]
 	}
+FILE_SIEVE="/tmp/sieveTmp'
+
+def printRule(rule):
+	print "rule "
+	for cond in rule[1]:
+		print cond.tosieve()
+	
+
+def printRules(listRules):
+	# For debugging
+	for rule in listRules.keys():
+		printRule(listRules[rule])	
 
 def extractActions(p):
 	i = 1
@@ -53,6 +65,54 @@ def extractActions(p):
 		i = i + 1
 		
 	return (rules, more)
+
+def constructActions(rules,more):
+	actions=[]
+	for rule in rules.keys():
+		action=[]
+		#print "----------------------------"
+		#print rules[rule]
+		#print rule
+		#print "-----"
+		#print rules[rule][0]
+		#act=[]
+		if more.has_key(rule):
+			action.append((rules[rule][0], (rule,more[rule][0]), rules[rule][1]))
+		else:
+			action.append((rules[rule][0], (rule,), rules[rule][1]))
+		#action.append(act)
+
+		actions.append(action)
+	#print "actions, ", actions
+	return actions
+
+def constructFilterSet(actions):
+	fs = FiltersSet("test")
+	for action in actions:
+		#print "-> ", action
+		conditions = action[0][2]
+		#print "-> ", conditions
+		cond=[]
+		for condition in conditions:
+			#print "condition -> ", condition
+			#print type(condition)
+			#print condition.arguments 
+			head=()
+			(key1, key2, key3) = condition.arguments.keys()
+			head=head+(condition.arguments[key1],condition.arguments[key3],condition.arguments[key2])
+			cond.append(head)
+		
+		#print "cond ->", cond
+		act = []
+		for i in range(len(action[0][1])):
+			act.append((action[0][0],action[0][1][i]))
+		act.append(("stop",))
+		#print "act ->", act
+		fs.addfilter("", cond, act)
+		#print "added!"
+
+	fs.tosieve(open(FILE_SIEVE,'w'))
+
 
 
 def doFolderExist(folder,M):
@@ -236,7 +296,9 @@ def main():
 
 		conditions=[]
 		conditions.append((keyword, ":contains", filterCond))
+		printRules(rules)
 		rule = rules[actions[0][1]]
+		printRule(rule)
 				
 		# Is there a better way to do this?
 		cmd = sievelib.factory.get_command_instance("header", rules[actions[0][1]])
@@ -250,32 +312,13 @@ def main():
 		cmd.check_next_arg("string", filterCond)
 		rules[actions[0][1]][1].append(cmd)
 
-		sys.exit()
-
-
-		fs = FiltersSet("test")
-		#fs.addfilter("rule1",
-		#                 [("Sender", ":is", "toto@toto.com"), ],
-		#                 [("fileinto", "Toto"), ("stop",)])
-		#print fs
-		print script
-		fs.addfilter("",conditions,actions)
-
-		fs.tosieve(open('/tmp/kkSieve','w'))
-
-		p2=Parser()
-		p2.parse(open('/tmp/kkSieve','r').read())
-		lenP2 = len(p2.result)
-		print p2.result[lenP2-1]
-		p.result.append(p2.result[lenP2-1])
-
-		#kk=kk+"\n"+open('/tmp/kkSieve','r').read()
-
-		fSieve=open('/tmp/kkSieve','w')
-		for r in p.result:
-			r.tosieve(0,fSieve)
-
-		fSieve.close()
+		print "--------------------"
+		printRule(rules[actions[0][1]])
+		print "--------------------"
+		print rules[actions[0][1]]
+		newActions=constructActions(rules,more)
+		
+		constructFilterSet(newActions)
 
 		# Let's do a backup
 		name = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
@@ -283,7 +326,7 @@ def main():
 
 
 		# Now we can put the new sieve filters in place
-		fSieve=open('/tmp/kkSieve','r')
+		fSieve=open(FILE_SIEVE, 'r')
 		if not c.putscript('sogo',fSieve.read()):
 			print "fail!"
 		end=raw_input("More rules? (empty to continue) ")
