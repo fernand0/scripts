@@ -43,7 +43,7 @@ def extractActions(p):
             if (type(key) == sievelib.commands.FileintoCommand):
                 print i, ") Folder   ", key['mailbox']
                 tests = r.arguments['test'].arguments['tests']
-                if rules.has_key(key['mailbox']):
+                if key['mailbox'] in rules:
                     rules[key['mailbox']][1] = rules[key['mailbox']][1] + tests 
                 else:
                     rules[key['mailbox']] = []
@@ -52,7 +52,7 @@ def extractActions(p):
             elif (type(key) == sievelib.commands.RedirectCommand):
                 print i, ") Redirect ", key['address']
                 tests = r.arguments['test'].arguments['tests']
-                if rules.has_key(key['address']):
+                if key['address'] in rules:
                     rules[key['address']][1] = rules[key['address']][1] + tests 
                 else:
                     rules[key['address']] = []
@@ -77,7 +77,7 @@ def constructActions(rules, more):
         #print "-----"
         #print rules[rule][0]
         #act = []
-        if more.has_key(rule):
+        if rule in more:
             action.append((rules[rule][0], 
                           (rule, more[rule][0]), rules[rule][1]))
         else:
@@ -126,9 +126,9 @@ def selectAction(p, M): #header="", textHeader=""):
     for r in p.result:
         if r.children:
             if (type(r.children[0]) == sievelib.commands.FileintoCommand):
-                print "%2d) Folder  %s" % i, r.children[0]['mailbox'])
+                print "%2d) Folder  %s" % (i, r.children[0]['mailbox'])
             elif (type(r.children[0]) == sievelib.commands.RedirectCommand):
-                print "%2d) Address %s" % i, r.children[0]['address'])
+                print "%2d) Address %s" % (i, r.children[0]['address'])
             else:
                 print "%2d) Not implemented %s" % (i, type(r.children[0]))
         else:
@@ -150,9 +150,9 @@ def selectAction(p, M): #header="", textHeader=""):
         action = p.result[int(option)-1].children
 
         for i in action:
-            if i.arguments.has_key('mailbox'):
+            if 'mailbox' in i.arguments:
                 actions.append(("fileinto", i.arguments['mailbox']))
-            elif i.arguments.has_key('address'):
+            elif 'address'in i.arguments:
                 actions.append(("redirect", i.arguments['address']))
             else:    
                 actions.append(("stop",))
@@ -228,15 +228,15 @@ def selectMessage(M):
 
 def selectHeaderAuto(M, msg):
     i = 1
-    if msg.has_key('List-Id'): 
+    if 'List-Id' in msg): 
         return ('List-Id', msg['List-Id'][msg['List-Id'].find('<')+1:-1])
     else:
         for header in msgHeaders:
-            if msg.has_key(header):
+            if header in msg: 
                 print i, " ) ", header, msg[header]
             i = i + 1
         header_num = raw_input("Select header: ")
-        
+
         header = msgHeaders[int(header_num)-1]
         textHeader = msg[msgHeaders[int(header_num)-1]]
         pos = textHeader.find('<')
@@ -250,13 +250,14 @@ def selectHeaderAuto(M, msg):
                 textHeader = textHeader
         return (header, textHeader)
 
+
 def main():
-    
+
     config = ConfigParser.ConfigParser()
     config.read([os.path.expanduser('~/.IMAP.cfg')])
 
     SERVER = config.get("IMAP1", "server")
-    USER   = config.get("IMAP1", "user")
+    USER = config.get("IMAP1", "user")
     PASSWORD = getpass.getpass()
 
     # Make connections to server
@@ -289,8 +290,6 @@ def main():
         # For a manual selection option?
         # header= selectHeader()
         # keyword = selectKeyword(header)
-
-        header = 'header'
 
         print "Filter: (header) ", keyword, ", (text) ", textHeader
         filterCond = raw_input("Text for selection (empty for all): ")
@@ -329,9 +328,8 @@ def main():
         name = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
         c.putscript(name+'sogo', script)
 
-
         # Now we can put the new sieve filters in place
-        fSieve=open(FILE_SIEVE, 'r')
+        fSieve = open(FILE_SIEVE, 'r')
         if not c.putscript('sogo', fSieve.read()):
             print "fail!"
         end = raw_input("More rules? (empty to continue) ")
