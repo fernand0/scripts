@@ -12,7 +12,7 @@ headers=["address","header"]
 keyWords={"address": ["From","To"],
 	  "header":  ["subject","Sender","X-Original-To","List-Id"]
 	}
-FILE_SIEVE="/tmp/sieveTmp'
+FILE_SIEVE="/tmp/sieveTmp"
 
 def printRule(rule):
 	print "rule "
