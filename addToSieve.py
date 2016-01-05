@@ -1,39 +1,47 @@
 #!/usr/bin/env python
 
-import ConfigParser, os
-import sievelib, time, getpass
+import ConfigParser
+import os
+import sys
+import sievelib
+import time
+import getpass
+import imaplib
+import email
+from email import Header
 from sievelib.managesieve import Client
 from sievelib.parser import Parser
 from sievelib.factory import FiltersSet
-import imaplib, email
 
 msgHeaders = ['List-Id', 'From', 'Sender', 'Subject', 'To',
               'X-Original-To', 'X-Envelope-From', 'X-Spam-Flag']
-headers = ["address", "header"] 
+headers = ["address", "header"]
 keyWords = {"address": ["From", "To"],
-      "header":  ["subject", "Sender", "X-Original-To", "List-Id"]
-    }
+            "header":  ["subject", "Sender", "X-Original-To", "List-Id"]
+            }
 FILE_SIEVE = "/tmp/sieveTmp"
+
 
 def printRule(rule):
     print "rule "
     for cond in rule[1]:
         print cond.tosieve()
-    
+
 
 def printRules(listRules):
     # For debugging
     for rule in listRules.keys():
-        printRule(listRules[rule])    
+        printRule(listRules[rule])
+
 
 def extractActions(p):
     i = 1
     rules = {}
     more = {}
     for r in p.result:
-        #print r.children
+        # print r.children
         if r.children:
-            #print type(r.children[0])
+            # print type(r.children[0])
             key = r.children[0]
             if len(r.children) > 2:
                 # If there are more actions (just one more
@@ -44,7 +52,7 @@ def extractActions(p):
                 print i, ") Folder   ", key['mailbox']
                 tests = r.arguments['test'].arguments['tests']
                 if key['mailbox'] in rules:
-                    rules[key['mailbox']][1] = rules[key['mailbox']][1] + tests 
+                    rules[key['mailbox']][1] = rules[key['mailbox']][1] + tests
                 else:
                     rules[key['mailbox']] = []
                     rules[key['mailbox']].append("fileinto")
@@ -53,7 +61,7 @@ def extractActions(p):
                 print i, ") Redirect ", key['address']
                 tests = r.arguments['test'].arguments['tests']
                 if key['address'] in rules:
-                    rules[key['address']][1] = rules[key['address']][1] + tests 
+                    rules[key['address']][1] = rules[key['address']][1] + tests
                 else:
                     rules[key['address']] = []
                     rules[key['address']].append("redirect")
@@ -61,67 +69,70 @@ def extractActions(p):
             else:
                 print i, ") Not implented ", type(key)
         else:
-            print  i, ") Not implented ", type(r)
-            
+            print i, ") Not implented ", type(r)
+
         i = i + 1
-        
+
     return (rules, more)
+
 
 def constructActions(rules, more):
     actions = []
     for rule in rules.keys():
         action = []
-        #print "----------------------------"
-        #print rules[rule]
-        #print rule
-        #print "-----"
-        #print rules[rule][0]
-        #act = []
+        # print "----------------------------"
+        # print rules[rule]
+        # print rule
+        # print "-----"
+        # print rules[rule][0]
+        # act = []
         if rule in more:
-            action.append((rules[rule][0], 
+            action.append((rules[rule][0],
                           (rule, more[rule][0]), rules[rule][1]))
         else:
             action.append((rules[rule][0], (rule,), rules[rule][1]))
-        #action.append(act)
+        # action.append(act)
 
         actions.append(action)
-    #print "actions, ", actions
+    # print "actions, ", actions
     return actions
+
 
 def constructFilterSet(actions):
     fs = FiltersSet("test")
     for action in actions:
-        #print "-> ", action
+        # print "-> ", action
         conditions = action[0][2]
-        #print "-> ", conditions
+        # print "-> ", conditions
         cond = []
         for condition in conditions:
-            #print "condition -> ", condition
-            #print type(condition)
-            #print condition.arguments 
+            # print "condition -> ", condition
+            # print type(condition)
+            # print condition.arguments
             head = ()
             (key1, key2, key3) = condition.arguments.keys()
-            head = head+(condition.arguments[key1], 
-                         condition.arguments[key3], condition.arguments[key2])
+            head = head + (condition.arguments[key1],
+                           condition.arguments[key3],
+                           condition.arguments[key2])
             cond.append(head)
-        
-        #print "cond ->", cond
+
+        # print "cond ->", cond
         act = []
         for i in range(len(action[0][1])):
             act.append((action[0][0], action[0][1][i]))
         act.append(("stop",))
-        #print "act ->", act
+        # print "act ->", act
         fs.addfilter("", cond, act)
-        #print "added!"
+        # print "added!"
 
     fs.tosieve(open(FILE_SIEVE, 'w'))
-
 
 
 def doFolderExist(folder, M):
     return (M.select(folder))
 
-def selectAction(p, M): #header="", textHeader=""):
+
+def selectAction(p, M):  # header="", textHeader=""):
     i = 1
     for r in p.result:
         if r.children:
@@ -133,12 +144,10 @@ def selectAction(p, M): #header="", textHeader=""):
                 print "%2d) Not implemented %s" % (i, type(r.children[0]))
         else:
             print "%2d) Not implemented %s" % (i, type(r))
-            
+
         i = i + 1
     print "%2d) New folder " % i
     print "%2d) New redirection" % (i+1)
-        
-
 
     option = raw_input("Select one: ")
 
@@ -154,10 +163,9 @@ def selectAction(p, M): #header="", textHeader=""):
                 actions.append(("fileinto", i.arguments['mailbox']))
             elif 'address'in i.arguments:
                 actions.append(("redirect", i.arguments['address']))
-            else:    
+            else:
                 actions.append(("stop",))
-                
-                
+
         print actions
 
         match = p.result[int(option)-1]['test']
@@ -186,20 +194,23 @@ def selectAction(p, M): #header="", textHeader=""):
 
     return actions
 
+
 def selectHeader():
     i = 1
     for j in headers:
-        print i, ") ", j, "(", keyWords[headers[i-1]] , ")"
+        print i, ") ", j, "(", keyWords[headers[i-1]], ")"
         i = i + 1
     return headers[int(raw_input("Select header: ")) - 1]
-    
-def selectKeyword(header):    
+
+
+def selectKeyword(header):
     i = 1
     for j in keyWords[header]:
         print i, ") ", j
         i = i + 1
     return keyWords[header][int(raw_input("Select header: ")) - 1]
-    
+
+
 def selectMessage(M):
     M.select()
     data = M.sort('ARRIVAL', 'UTF-8', 'ALL')
@@ -210,29 +221,32 @@ def selectMessage(M):
         lenId = len(str(messages[-1]))
         for i in messages[-15:]:
             typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[])')
-            #print msg_data_fetch
+            # print msg_data_fetch
             for response_part in msg_data_fetch:
                 if isinstance(response_part, tuple):
                     msg = email.message_from_string(response_part[1])
                     msg_data.append(msg)
                     # Variable length fmt
                     fmt = "%2s) %"+str(lenId)+"s %-20s %-40s"
+                    headFrom = msg['From']
+                    headSubject = msg['Subject']
                     print fmt % (j, i,
-                                 email.Header.decode_header(msg['From'])[0][0][:20],
-                                 email.Header.decode_header(msg['Subject'])[0][0][:40])
+                                 Header.decode_header(headFrom)[0][0][:20],
+                                 Header.decode_header(headSubject)[0][0][:40])
                     j = j + 1
         msg_number = raw_input("Which message? ")
-        return msg_data[int(msg_number)] #messages[-10+int(msg_number)-1]
-    else:    
+        return msg_data[int(msg_number)]  # messages[-10+int(msg_number)-1]
+    else:
         return 0
+
 
 def selectHeaderAuto(M, msg):
     i = 1
-    if 'List-Id' in msg): 
+    if 'List-Id' in msg:
         return ('List-Id', msg['List-Id'][msg['List-Id'].find('<')+1:-1])
     else:
         for header in msgHeaders:
-            if header in msg: 
+            if header in msg:
                 print i, " ) ", header, msg[header]
             i = i + 1
         header_num = raw_input("Select header: ")
