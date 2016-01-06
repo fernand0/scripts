@@ -147,7 +147,8 @@ def constructFilterSet(actions):
         fs.addfilter("", cond, act)
         # print "added!"
 
-    fs.tosieve(open(FILE_SIEVE, 'w'))
+        return fs
+
 
 
 def doFolderExist(folder, M):
@@ -341,9 +342,11 @@ def main():
 
         newActions = addRule(rules, actions)
 
-        constructFilterSet(newActions)
+        fs = constructFilterSet(newActions)
 
-        # Let's do a backup
+        fs.tosieve(open(FILE_SIEVE, 'w'))
+
+        # Let's do a backup of the old sieve script
         name = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
         c.putscript(name+'sogo', script)
 
