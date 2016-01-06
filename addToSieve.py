@@ -27,12 +27,34 @@ def printRule(rule):
     for cond in rule[1]:
         print cond.tosieve()
 
-
 def printRules(listRules):
     # For debugging
     for rule in listRules.keys():
         printRule(listRules[rule])
 
+def addRule(rules, actions):
+        #printRules(rules)
+        rule = rules[actions[0][1]]
+        #printRule(rule)
+
+        # Is there a better way to do this?
+        cmd = sievelib.factory.get_command_instance("header",
+                                                    rules[actions[0][1]])
+        cmd.check_next_arg("tag", ":contains")
+        # __quote_if_necessary
+        if not keyword.startswith(('"', "'")):
+            keyword = '"%s"' % keyword
+        cmd.check_next_arg("string", keyword)
+        if not filterCond.startswith(('"', "'")):
+            filterCond = '"%s"' % filterCond
+        cmd.check_next_arg("string", filterCond)
+        rules[actions[0][1]][1].append(cmd)
+
+        print "--------------------"
+        printRule(rules[actions[0][1]])
+        print "--------------------"
+        print rules[actions[0][1]]
+        newActions = constructActions(rules, more)
 
 def extractActions(p):
     i = 1
@@ -262,7 +284,15 @@ def selectHeaderAuto(M, msg):
                 textHeader = textHeader[pos+1:textHeader.find(']', pos + 1)]
             else:
                 textHeader = textHeader
-        return (header, textHeader)
+
+        print "Filter: (header) ", keyword, ", (text) ", textHeader
+        filterCond = raw_input("Text for selection (empty for all): ")
+
+        if not filterCond:
+            filterCond = textHeader
+
+
+        return (header, filterCond)
 
 
 def main():
@@ -294,47 +324,22 @@ def main():
 
         # We are going to filter based on one message
         msg = selectMessage(M)
-        (keyword, textHeader) = selectHeaderAuto(M, msg)
+        (keyword, filterCond) = selectHeaderAuto(M, msg)
 
         actions = selectAction(p, M)
         # actions[0][1] contains the rule selector
-        print "actions ", actions[0][1]
-        print rules[actions[0][1]]
+        # print "actions ", actions[0][1]
+        # print rules[actions[0][1]]
 
         # For a manual selection option?
         # header= selectHeader()
         # keyword = selectKeyword(header)
 
-        print "Filter: (header) ", keyword, ", (text) ", textHeader
-        filterCond = raw_input("Text for selection (empty for all): ")
+	# Eliminate
+        # conditions = []
+        # conditions.append((keyword, ":contains", filterCond))
 
-        if not filterCond:
-            filterCond = textHeader
-
-        conditions = []
-        conditions.append((keyword, ":contains", filterCond))
-        printRules(rules)
-        rule = rules[actions[0][1]]
-        printRule(rule)
-
-        # Is there a better way to do this?
-        cmd = sievelib.factory.get_command_instance("header",
-                                                    rules[actions[0][1]])
-        cmd.check_next_arg("tag", ":contains")
-        # __quote_if_necessary
-        if not keyword.startswith(('"', "'")):
-            keyword = '"%s"' % keyword
-        cmd.check_next_arg("string", keyword)
-        if not filterCond.startswith(('"', "'")):
-            filterCond = '"%s"' % filterCond
-        cmd.check_next_arg("string", filterCond)
-        rules[actions[0][1]][1].append(cmd)
-
-        print "--------------------"
-        printRule(rules[actions[0][1]])
-        print "--------------------"
-        print rules[actions[0][1]]
-        newActions = constructActions(rules, more)
+        newActions = addRule(rules, actions)
 
         constructFilterSet(newActions)
 
