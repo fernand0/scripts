@@ -8,6 +8,8 @@ import time
 import getpass
 import imaplib
 import email
+import StringIO
+import keyring
 from email import Header
 from sievelib.managesieve import Client
 from sievelib.parser import Parser
@@ -32,7 +34,7 @@ def printRules(listRules):
     for rule in listRules.keys():
         printRule(listRules[rule])
 
-def addRule(rules, actions):
+def addRule(keyword, filterCond, rules, more, actions):
         #printRules(rules)
         rule = rules[actions[0][1]]
         #printRule(rule)
@@ -55,6 +57,8 @@ def addRule(rules, actions):
         print "--------------------"
         print rules[actions[0][1]]
         newActions = constructActions(rules, more)
+
+        return newActions
 
 def extractActions(p):
     i = 1
@@ -286,7 +290,7 @@ def selectHeaderAuto(M, msg):
             else:
                 textHeader = textHeader
 
-        print "Filter: (header) ", keyword, ", (text) ", textHeader
+        print "Filter: (header) ", header, ", (text) ", textHeader
         filterCond = raw_input("Text for selection (empty for all): ")
 
         if not filterCond:
@@ -303,7 +307,8 @@ def main():
 
     SERVER = config.get("IMAP1", "server")
     USER = config.get("IMAP1", "user")
-    PASSWORD = getpass.getpass()
+    # PASSWORD = getpass.getpass()
+    PASSWORD = keyring.get_password(SERVER, USER)
 
     # Make connections to server
     # Sieve client connection
@@ -340,19 +345,22 @@ def main():
         # conditions = []
         # conditions.append((keyword, ":contains", filterCond))
 
-        newActions = addRule(rules, actions)
+        newActions = addRule(keyword, filterCond, rules, more, actions)
 
         fs = constructFilterSet(newActions)
 
-        fs.tosieve(open(FILE_SIEVE, 'w'))
+        sieveContent = StringIO.StringIO()
+        # fs.tosieve(open(FILE_SIEVE, 'w'))
+        fs.tosieve(sieveContent)
 
         # Let's do a backup of the old sieve script
         name = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
         c.putscript(name+'sogo', script)
 
         # Now we can put the new sieve filters in place
-        fSieve = open(FILE_SIEVE, 'r')
-        if not c.putscript('sogo', fSieve.read()):
+        # fSieve = open(FILE_SIEVE, 'r')
+        # if not c.putscript('sogo', fSieve.read()):
+        if not c.putscript('sogo', sieveContent.getvalue()):
             print "fail!"
         end = raw_input("More rules? (empty to continue) ")
 

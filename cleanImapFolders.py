@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # This program deletes and moves some messages from some mail account using
 # IMAP
