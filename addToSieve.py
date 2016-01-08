@@ -34,7 +34,7 @@ def printRules(listRules):
     for rule in listRules.keys():
         printRule(listRules[rule])
 
-def addRule(keyword, filterCond, rules, more, actions):
+def addRule(rules, more, keyword, filterCond, actions):
         #printRules(rules)
         rule = rules[actions[0][1]]
         #printRule(rule)
@@ -52,12 +52,13 @@ def addRule(keyword, filterCond, rules, more, actions):
         cmd.check_next_arg("string", filterCond)
         rules[actions[0][1]][1].append(cmd)
 
-        print "--------------------"
-        printRule(rules[actions[0][1]])
-        print "--------------------"
-        print rules[actions[0][1]]
+        # print "--------------------"
+        # printRule(rules[actions[0][1]])
+        # print "--------------------"
+        # print rules[actions[0][1]]
         newActions = constructActions(rules, more)
 
+        # print "actions, ", actions
         return newActions
 
 def extractActions(p):
@@ -75,7 +76,7 @@ def extractActions(p):
                 more[key['address']] = []
                 more[key['address']].append(r.children[1]['address'])
             if (type(key) == sievelib.commands.FileintoCommand):
-                print i, ") Folder   ", key['mailbox']
+                # print i, ") Folder   ", key['mailbox']
                 tests = r.arguments['test'].arguments['tests']
                 if key['mailbox'] in rules:
                     rules[key['mailbox']][1] = rules[key['mailbox']][1] + tests
@@ -84,7 +85,7 @@ def extractActions(p):
                     rules[key['mailbox']].append("fileinto")
                     rules[key['mailbox']].append(tests)
             elif (type(key) == sievelib.commands.RedirectCommand):
-                print i, ") Redirect ", key['address']
+                # print i, ") Redirect ", key['address']
                 tests = r.arguments['test'].arguments['tests']
                 if key['address'] in rules:
                     rules[key['address']][1] = rules[key['address']][1] + tests
@@ -151,8 +152,7 @@ def constructFilterSet(actions):
         fs.addfilter("", cond, act)
         # print "added!"
 
-        return fs
-
+    return fs
 
 
 def doFolderExist(folder, M):
@@ -193,10 +193,10 @@ def selectAction(p, M):  # header="", textHeader=""):
             else:
                 actions.append(("stop",))
 
-        print actions
+        # print actions
 
         match = p.result[int(option)-1]['test']
-        print "match ", match
+        # print "match ", match
     elif (int(option) == len(p.result)+1):
         folder = raw_input("Name of the folder: ")
         print "Name ", folder
@@ -327,6 +327,7 @@ def main():
         p = Parser()
         p.parse(script)
         (rules, more) = extractActions(p)
+	
 
         # We are going to filter based on one message
         msg = selectMessage(M)
@@ -345,7 +346,9 @@ def main():
         # conditions = []
         # conditions.append((keyword, ":contains", filterCond))
 
-        newActions = addRule(keyword, filterCond, rules, more, actions)
+        newActions = addRule(rules, more, keyword, filterCond, actions)
+
+        print newActions
 
         fs = constructFilterSet(newActions)
 
