@@ -105,7 +105,7 @@ def mailFolder(server, user, password, rules, folder):
             # M.select(folder)
             FOLDER = ""
         else:
-            typ, data = M.search(None, header, content)
+            typ, data = M.search(None, 'header', header, content)
             if data[0]:
                 if msgs:
                     msgs[0] = msgs[0] + ' ' + data[0]
@@ -114,31 +114,33 @@ def mailFolder(server, user, password, rules, folder):
             else:
                 print msg + " -> No messages matching"
 
-    if not msgs:
-        print "["+SERVER+","+USER+"]"+" -> Nothing to do"
-        sys.exit()
-    print "["+SERVER+","+USER+"]"+" -> Let's go!"
-    msgs = msgs[0].replace(" ", ",")
-    status = 'OK'
-    if FOLDER:
-        # M.copy needs a set of comma-separated mesages, we have a list with a
-        # string
-        print "Entra"
-        result = M.copy(msgs, FOLDER)
-        status = result[0]
-    i = msgs.count(',') + 1
-    # M.store needs a set of comma-separated mesages, we have a list with a
-    # string
-    if status == 'OK':
-        # If the list of messages is too long it won't work
-        flag = '\\Deleted'
-        result = M.store(msgs, '+FLAGS', flag)
-        if result[0] == 'OK':
-            print "[%s,%s] SERVER %s: %d messages have been deleted.\n" % (SERVER, USER, SERVER, i)
-        else:
-            print "[", SERVER, USER, "]", "Couldn't delete messages!"
+    if len(msgs)==0:
+        print "["+SERVER+","+USER+"]"+" -> Nothing to do (len 0)"
+    elif not msgs[0]:
+        print "["+SERVER+","+USER+"]"+" -> Nothing to do (len 0, empty)"
     else:
-        print "[", SERVER, USER, "]", "Couldn't move messages!"
+        print "["+SERVER+","+USER+"]"+" -> Let's go!"
+        msgs = msgs[0].replace(" ", ",")
+        status = 'OK'
+        if FOLDER:
+            # M.copy needs a set of comma-separated mesages, we have a list with a
+            # string
+            print "Entra"
+            result = M.copy(msgs, FOLDER)
+            status = result[0]
+        i = msgs.count(',') + 1
+        # M.store needs a set of comma-separated mesages, we have a list with a
+        # string
+        if status == 'OK':
+            # If the list of messages is too long it won't work
+            flag = '\\Deleted'
+            result = M.store(msgs, '+FLAGS', flag)
+            if result[0] == 'OK':
+                print "[%s,%s] SERVER %s: %d messages have been deleted.\n" % (SERVER, USER, SERVER, i)
+            else:
+                print "[", SERVER, USER, "]", "Couldn't delete messages!"
+        else:
+            print "[", SERVER, USER, "]", "Couldn't move messages!"
     M.close()
     M.logout()
 
@@ -151,7 +153,9 @@ def main():
     i = 0
 
     accounts = {}
-    for section in config.sections():
+    sections=config.sections()
+    # sections=['IMAP6']
+    for section in sections:
         SERVER = config.get(section, 'server')
         USER = config.get(section, 'user')
         RULES = config.get(section, 'rules').split('\n')
