@@ -129,12 +129,31 @@ def mailFolder(server, user, password, rules, folder):
             result = M.copy(msgs, FOLDER)
             status = result[0]
         i = msgs.count(',') + 1
+        print "["+SERVER+","+USER+"] "+msgs
+        # And this?
+        # [ra-amon.cps.unizar.es,f.tricas@ra-amon.lan]1,2,3,4,5,1,2,3,4,5,1,2,3,4,5
+
         # M.store needs a set of comma-separated mesages, we have a list with a
         # string
         if status == 'OK':
             # If the list of messages is too long it won't work
             flag = '\\Deleted'
             result = M.store(msgs, '+FLAGS', flag)
+#Traceback (most recent call last):
+#  File "/home/ftricas/.pyenv/versions/2.7.10/lib/python2.7/threading.py", line 810, in __bootstrap_inner
+#    self.run()
+#  File "/home/ftricas/.pyenv/versions/2.7.10/lib/python2.7/threading.py", line 763, in run
+#    self.__target(*self.__args, **self.__kwargs)
+#  File "/home/ftricas/usr/src/scripts/cleanImapFolders.py", line 137, in mailFolder
+#    result = M.store(msgs, '+FLAGS', flag)
+#  File "/home/ftricas/.pyenv/versions/2.7.10/lib/python2.7/imaplib.py", line 734, in store
+#    typ, dat = self._simple_command('STORE', message_set, command, flags)
+#  File "/home/ftricas/.pyenv/versions/2.7.10/lib/python2.7/imaplib.py", line 1088, in _simple_command
+#    return self._command_complete(name, self._command(name, *args))
+#  File "/home/ftricas/.pyenv/versions/2.7.10/lib/python2.7/imaplib.py", line 918, in _command_complete
+#    raise self.error('%s command error: %s %s' % (name, typ, data))
+#error: STORE command error: BAD ['Error in IMAP command STORE: Invalid messageset']
+
             if result[0] == 'OK':
                 print "[%s,%s] SERVER %s: %d messages have been deleted.\n" % (SERVER, USER, SERVER, i)
             else:
