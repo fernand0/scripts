@@ -50,21 +50,23 @@ def selectHash(M, folder, hashSelect):
     M.select(folder)
     typ, data = M.search(None, 'ALL')
     i = 0
-    msgs = ['']
+    msgs = ''
     for num in data[0].split():
         m = hashlib.md5()
         typ, msg = M.fetch(num, '(BODY.PEEK[TEXT])')
         # PEEK does not change access flags
         print msg[0][1]
         m.update(msg[0][1])
+        print num,type(num) 
         if (binascii.hexlify(m.digest()) == hashSelect):
-            if msgs[0]:
-                msgs[0] = msgs[0] + ' ' + data[0]
+            if msgs:
+                msgs = msgs + ' ' + str(num)
+                # num is a string or a number?
             else:
-                msgs[0] = data[0]
+                msgs = str(num)
             i = i + 1
         else:
-            print 'Message %s\n%s\n%s\n' % (num, data[0][1], binascii.hexlify(m.digest()))
+            print 'Message %s\n%s\n' % (num, binascii.hexlify(m.digest()))
         if (i % 10 == 0):
             print i
     print "\nEND\n\n%d messages have been selected\n" % i
@@ -94,7 +96,7 @@ def mailFolder(server, user, password, rules, folder):
     # We do not want passwords in memory when not needed
     M.select()
     i = 0
-    msgs = []
+    msgs = ''
     for rule in RULES:
         action = rule.split(',')
         header = action[0][1:-1]
@@ -108,9 +110,9 @@ def mailFolder(server, user, password, rules, folder):
             typ, data = M.search(None, 'header', header, content)
             if data[0]:
                 if msgs:
-                    msgs[0] = msgs[0] + ' ' + data[0]
+                    msgs = msgs + ' ' + data[0]
                 else:
-                    msgs = data
+                    msgs = data[0]
             else:
                 print msg + " -> No messages matching"
 
@@ -120,7 +122,7 @@ def mailFolder(server, user, password, rules, folder):
         print "["+SERVER+","+USER+"]"+" -> Nothing to do (len 0, empty)"
     else:
         print "["+SERVER+","+USER+"]"+" -> Let's go!"
-        msgs = msgs[0].replace(" ", ",")
+        msgs = msgs.replace(" ", ",")
         status = 'OK'
         if FOLDER:
             # M.copy needs a set of comma-separated mesages, we have a list with a
