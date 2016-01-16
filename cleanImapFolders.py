@@ -114,7 +114,7 @@ def mailFolder(server, user, password, rules, folder):
                 else:
                     msgs = data[0]
             else:
-                print msg + " -> No messages matching"
+                print "[%s,%s] -> No messages matching" % (SERVER, USER)
 
     if len(msgs)==0:
         print "["+SERVER+","+USER+"]"+" -> Nothing to do (len 0)"
@@ -131,8 +131,12 @@ def mailFolder(server, user, password, rules, folder):
             result = M.copy(msgs, FOLDER)
             status = result[0]
         i = msgs.count(',') + 1
-        print "["+SERVER+","+USER+"] "+msgs
+        print "[%s,%s] *%s* Status: %s"% (SERVER,USER,msgs,status)
         # And this?
+	# Maybe messages are 'disappearing' while we are working?
+	# hint:anti-spam Is it possible to lock the folder in order to avoid
+	# this? Can be dangerous (losing messages)?
+
         # [ra-amon.cps.unizar.es,f.tricas@ra-amon.lan]1,2,3,4,5,1,2,3,4,5,1,2,3,4,5
 
         # M.store needs a set of comma-separated mesages, we have a list with a
