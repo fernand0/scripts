@@ -44,6 +44,7 @@ import getpass
 import threading
 import hashlib
 import binascii
+import logging
 
 
 def selectHash(M, folder, hashSelect):
@@ -55,21 +56,21 @@ def selectHash(M, folder, hashSelect):
         m = hashlib.md5()
         typ, msg = M.fetch(num, '(BODY.PEEK[TEXT])')
         # PEEK does not change access flags
-        print msg[0][1]
+        logging.debug("%s" % msg[0][1])
         m.update(msg[0][1])
-        print num,type(num) 
         if (binascii.hexlify(m.digest()) == hashSelect):
             if msgs:
-                msgs = msgs + ' ' + str(num)
+                msgs = msgs + ' ' + num
                 # num is a string or a number?
             else:
                 msgs = str(num)
             i = i + 1
         else:
-            print 'Message %s\n%s\n' % (num, binascii.hexlify(m.digest()))
+            logging.debug("Message %s\n%s" 
+                          % (num, binascii.hexlify(m.digest())))
         if (i % 10 == 0):
-            print i
-    print "\nEND\n\n%d messages have been selected\n" % i
+            logging.debug("Counter %d" % i)
+    logging.debug("END\n\n%d messages have been selected\n" % i)
     return msgs
 
 
@@ -77,13 +78,13 @@ def getPassword(server, user):
     # Para borrar keyring.delete_password(server, user)
     password = keyring.get_password(server, user)
     if not password:
-        print "New account. Setting password"
+        logging.info("[%s,%s] New account. Setting password" % (SERVER, USER))
         password = getpass.getpass()
         keyring.set_password(server, user, password)
     return password
 
 
-def mailFolder(server, user, password, rules, folder):
+def mailFolder(server, user, password, rules, folder, logging):
     SERVER = server
     USER = user
     PASSWORD = password
@@ -101,7 +102,7 @@ def mailFolder(server, user, password, rules, folder):
         action = rule.split(',')
         header = action[0][1:-1]
         content = action[1][1:-1]
-        msg = "[%s,%s] Rule: %s %s\n" % (SERVER, USER, header, content)
+        logging.info("[%s,%s] Rule: %s %s" % (SERVER, USER, header, content))
         if (header == 'hash'):
             msgs = selectHash(M, folder, content)
             # M.select(folder)
@@ -114,24 +115,23 @@ def mailFolder(server, user, password, rules, folder):
                 else:
                     msgs = data[0]
             else:
-                print "[%s,%s] -> No messages matching" % (SERVER, USER)
+                logging.info("[%s,%s] No messages matching" % (SERVER, USER))
 
     if len(msgs)==0:
-        print "["+SERVER+","+USER+"]"+" -> Nothing to do (len 0)"
-    elif not msgs[0]:
-        print "["+SERVER+","+USER+"]"+" -> Nothing to do (len 0, empty)"
+        logging.info("[%s,%s] Nothing to do" % (SERVER, USER))
+    # elif not msgs[0]:
+    #    print "["+SERVER+","+USER+"]"+" -> Nothing to do (len 0, empty)"
     else:
-        print "["+SERVER+","+USER+"]"+" -> Let's go!"
+        logging.info("[%s,%s] Let's go!" % (SERVER, USER))
         msgs = msgs.replace(" ", ",")
         status = 'OK'
         if FOLDER:
-            # M.copy needs a set of comma-separated mesages, we have a list with a
-            # string
-            print "Entra"
+	    # M.copy needs a set of comma-separated mesages, we have a list
+	    # with a string
             result = M.copy(msgs, FOLDER)
             status = result[0]
         i = msgs.count(',') + 1
-        print "[%s,%s] *%s* Status: %s"% (SERVER,USER,msgs,status)
+        logging.info("[%s,%s] *%s* Status: %s"% (SERVER,USER,msgs,status))
         # And this?
 	# Maybe messages are 'disappearing' while we are working?
 	# hint:anti-spam Is it possible to lock the folder in order to avoid
@@ -161,11 +161,14 @@ def mailFolder(server, user, password, rules, folder):
 #error: STORE command error: BAD ['Error in IMAP command STORE: Invalid messageset']
 
             if result[0] == 'OK':
-                print "[%s,%s] SERVER %s: %d messages have been deleted.\n" % (SERVER, USER, SERVER, i)
+                logging.info("[%s,%s] SERVER %s: %d messages have been deleted."
+                              % (SERVER, USER, SERVER, i))
             else:
-                print "[", SERVER, USER, "]", "Couldn't delete messages!"
+                logging.info("[%s,%s] Couldn't delete messages!" 
+                             % (SERVER, USER))
         else:
-            print "[", SERVER, USER, "]", "Couldn't move messages!"
+            logging.info("[%s,%s] Couldn't move messages!" 
+                             % (SERVER, USER))
     M.close()
     M.logout()
 
@@ -173,6 +176,9 @@ def mailFolder(server, user, password, rules, folder):
 def main():
     config = ConfigParser.ConfigParser()
     config.read([os.path.expanduser('~/.IMAP.cfg')])
+    logging.basicConfig(#filename='example.log',
+                        level=logging.INFO,format='%(asctime)s %(message)s')
+
 
     threads = []
     i = 0
@@ -180,6 +186,7 @@ def main():
     accounts = {}
     sections=config.sections()
     # sections=['IMAP6']
+    logging.info("%s Starting" % sys.argv[0])
     for section in sections:
         SERVER = config.get(section, 'server')
         USER = config.get(section, 'user')
@@ -189,16 +196,16 @@ def main():
         else:
             FOLDER = ""
 
-        print SERVER, USER
+        logging.info("[%s,%s] Reading config" % (SERVER, USER))
         if USER not in accounts:
             PASSWORD = getPassword(SERVER, USER)
             accounts[USER] = PASSWORD
         else:
             PASSWORD = accounts[USER]
-            print "Known password!"
+            logging.info("[%s,%s] Known password!" % (SERVER, USER))
 
         t = threading.Thread(target=mailFolder,
-                             args=(SERVER, USER, PASSWORD, RULES, FOLDER))
+                             args=(SERVER, USER, PASSWORD, RULES, FOLDER, logging))
         PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         # We do not want passwords in memory when not needed
         threads.append(t)
@@ -212,7 +219,7 @@ def main():
     for t in threads:
         t.join()
 
-    print "The end!"
+    logging.info("%s The end!" % sys.argv[0])
 
 if __name__ == '__main__':
     main()
