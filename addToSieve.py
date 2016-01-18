@@ -10,6 +10,7 @@ import imaplib
 import email
 import StringIO
 import keyring
+import six
 from email import Header
 from sievelib.managesieve import Client
 from sievelib.parser import Parser
@@ -254,10 +255,10 @@ def selectMessage(M):
                     msg = email.message_from_string(response_part[1])
                     msg_data.append(msg)
                     # Variable length fmt
-                    fmt = "%2s) %"+str(lenId)+"s %-20s %-40s"
+                    fmt = "%2s) %-20s %-40s"
                     headFrom = msg['From']
                     headSubject = msg['Subject']
-                    print fmt % (j, i,
+                    print fmt % (j,
                                  Header.decode_header(headFrom)[0][0][:20],
                                  Header.decode_header(headSubject)[0][0][:40])
                     j = j + 1
@@ -276,6 +277,7 @@ def selectHeaderAuto(M, msg):
             if header in msg:
                 print i, " ) ", header, msg[header]
             i = i + 1
+	import locale
         header_num = raw_input("Select header: ")
 
         header = msgHeaders[int(header_num)-1]
@@ -292,12 +294,13 @@ def selectHeaderAuto(M, msg):
 
         print "Filter: (header) ", header, ", (text) ", textHeader
         filterCond = raw_input("Text for selection (empty for all): ")
+        # Trying to solve the problem with accents and so
+        filterCond = filterCond.decode('utf-8')
 
         if not filterCond:
             filterCond = textHeader
 
-
-        return (header, filterCond)
+    return (header, filterCond)
 
 
 def main():
@@ -333,6 +336,9 @@ def main():
         msg = selectMessage(M)
         (keyword, filterCond) = selectHeaderAuto(M, msg)
 
+        # Enconded filterCond. Probably it goes not here
+        # filterCond.decode("utf-8") if isinstance(filterCond, six.binary_type) else name  
+
         actions = selectAction(p, M)
         # actions[0][1] contains the rule selector
         # print "actions ", actions[0][1]
@@ -365,6 +371,36 @@ def main():
         # if not c.putscript('sogo', fSieve.read()):
         if not c.putscript('sogo', sieveContent.getvalue()):
             print "fail!"
+
+	# Let's start the git backup
+
+	repo = Repo(repoDir)
+	index = repo.index
+
+	listScripts=c.listscripts()[1]
+	listScripts.sort() 
+
+	print len(listScripts)
+	print listScripts[0]
+	script = listScripts[-1] # The last one
+	sieveFile=c.getscript(script)
+	file=open(repoDir+repoFile,'w')
+	file.write(sieveFile)
+	file.close()
+	index.add(['*'])
+	index.commit(name+'sogo')
+
+	if len(listScripts)>6:
+		# We will keep the last five ones (plus the active one)
+		numScripts = len(listScripts) - 6
+		i = 0
+		while numScripts > 0:
+			script = listScripts[i]
+			c.deletescript(script)
+			i = i + 1
+			numScripts = numScrips - 1
+
+
         end = raw_input("More rules? (empty to continue) ")
 
 if __name__ == "__main__":

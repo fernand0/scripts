@@ -137,10 +137,6 @@ def mailFolder(server, user, password, rules, folder, logging):
 	# hint:anti-spam Is it possible to lock the folder in order to avoid
 	# this? Can be dangerous (losing messages)?
 
-        # [ra-amon.cps.unizar.es,f.tricas@ra-amon.lan]1,2,3,4,5,1,2,3,4,5,1,2,3,4,5
-
-        # M.store needs a set of comma-separated mesages, we have a list with a
-        # string
         if status == 'OK':
             # If the list of messages is too long it won't work
             flag = '\\Deleted'
