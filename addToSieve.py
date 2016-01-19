@@ -10,11 +10,11 @@ import imaplib
 import email
 import StringIO
 import keyring
-import six
 from email import Header
 from sievelib.managesieve import Client
 from sievelib.parser import Parser
 from sievelib.factory import FiltersSet
+from git import Repo
 
 msgHeaders = ['List-Id', 'From', 'Sender', 'Subject', 'To',
               'X-Original-To', 'X-Envelope-From', 'X-Spam-Flag']
@@ -24,6 +24,8 @@ keyWords = {"address": ["From", "To"],
             }
 FILE_SIEVE = "/tmp/sieveTmp"
 
+repoDir='/home/ftricas/Documents/config/'
+repoFile='sogo.sieve'
 
 def printRule(rule):
     print "rule "
@@ -37,7 +39,11 @@ def printRules(listRules):
 
 def addRule(rules, more, keyword, filterCond, actions):
         #printRules(rules)
-        rule = rules[actions[0][1]]
+        print rules['"Docencia/master/masterbdi"']
+	print type(rules['"Docencia/master/masterbdi"'])
+        if actions[0][1] not in rules:
+                rules[actions[0][1]] = ['fileinto', []]
+            
         #printRule(rule)
 
         # Is there a better way to do this?
@@ -141,7 +147,8 @@ def constructFilterSet(actions):
             (key1, key2, key3) = condition.arguments.keys()
             head = head + (condition.arguments[key1],
                            condition.arguments[key3],
-                           condition.arguments[key2])
+                           condition.arguments[key2].decode('utf-8'))
+            # We will need to take care of these .decode's
             cond.append(head)
 
         # print "cond ->", cond
@@ -336,8 +343,6 @@ def main():
         msg = selectMessage(M)
         (keyword, filterCond) = selectHeaderAuto(M, msg)
 
-        # Enconded filterCond. Probably it goes not here
-        # filterCond.decode("utf-8") if isinstance(filterCond, six.binary_type) else name  
 
         actions = selectAction(p, M)
         # actions[0][1] contains the rule selector
@@ -382,8 +387,8 @@ def main():
 
 	print len(listScripts)
 	print listScripts[0]
-	script = listScripts[-1] # The last one
-	sieveFile=c.getscript(script)
+	# script = listScripts[-1] # The last one
+	sieveFile=c.getscript('sogo')
 	file=open(repoDir+repoFile,'w')
 	file.write(sieveFile)
 	file.close()
@@ -398,7 +403,7 @@ def main():
 			script = listScripts[i]
 			c.deletescript(script)
 			i = i + 1
-			numScripts = numScrips - 1
+			numScripts = numScripts - 1
 
 
         end = raw_input("More rules? (empty to continue) ")

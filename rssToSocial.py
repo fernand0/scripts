@@ -23,7 +23,8 @@ import feedparser
 import facebook
 from linkedin import linkedin
 from twitter import *
-import re, sys
+import re
+import sys
 import time,datetime
 from bs4 import BeautifulSoup
 from bs4 import NavigableString
@@ -74,28 +75,30 @@ def selectBlog(sel='a'):
 
 	i = 1
 
+	lastPost={}
 	for section in config.sections():
 		rssFeed = config.get(section, "rssFeed")
 		feed = feedparser.parse(rssFeed)
-		lastPost = feed.entries[0]
-		print str(i), ')', section, config.get(section, "rssFeed"), '(', time.strftime('%Y-%m-%d %H:%M:%SZ', lastPost['published_parsed']), ')'
-		if (i == 1) or (recentDate < lastPost['published_parsed']):
-			recentDate = lastPost['published_parsed']
+		lastPost[i] = feed.entries[0]
+		print str(i), ')', section, config.get(section, "rssFeed"), '(', time.strftime('%Y-%m-%d %H:%M:%SZ', lastPost[i]['published_parsed']), ')'
+		if (i == 1) or (recentDate < lastPost[i]['published_parsed']):
+			recentDate = lastPost[i]['published_parsed']
 			recentIndex = i
-			recentPost = lastPost
+			recentPost = lastPost[recentIndex]
 		i = i + 1
 
 	if (sel == 'm'):
-		# Manual selection
-		# Not working
 		if (int(i)>1):
-			i = raw_input ('Select one: ')
+			recentIndex = raw_input ('Select one: ')
+			recentPost = lastPost[int(recentIndex)]
 		else:
 			i = 1
 
 	print "You have chosen " 
 	print config.get("Blog"+str(recentIndex), "rssFeed")
 
+
+	
 	i = 0 # It will publish the last added item
 
 	soup = BeautifulSoup(recentPost.title)
@@ -196,7 +199,12 @@ def publishLinkedin(title, link, summary, image):
 
 
 def main():
-	index, title,link,summary, summaryLinks, image, twitter, fbPage =  selectBlog()
+	if len(sys.argv) > 1:
+		if sys.argv[1] == "-m"
+			index, title,link,summary, summaryLinks, image, twitter, fbPage =  selectBlog('m')
+	else:
+		index, title,link,summary, summaryLinks, image, twitter, fbPage =  selectBlog()
+
 	
 	print "Twitter...\n"
 	if twitter:

@@ -200,20 +200,23 @@ def main():
             PASSWORD = accounts[USER]
             logging.info("[%s,%s] Known password!" % (SERVER, USER))
 
-        t = threading.Thread(target=mailFolder,
-                             args=(SERVER, USER, PASSWORD, RULES, FOLDER, logging))
+        # t = threading.Thread(target=mailFolder,
+        #                     args=(SERVER, USER, PASSWORD, RULES, FOLDER, logging))
+	# We are using sequential code because when there are several set of
+	# rules for a folder concurrency causes problems
+	mailFolder(SERVER, USER, PASSWORD, RULES, FOLDER, logging)
         PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         # We do not want passwords in memory when not needed
-        threads.append(t)
+        # threads.append(t)
         i = i + 1
     for user in accounts.keys():
         accounts[user] = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
-    for t in threads:
-        t.start()
+    #for t in threads:
+    #    t.start()
 
-    for t in threads:
-        t.join()
+    #for t in threads:
+    #    t.join()
 
     logging.info("%s The end!" % sys.argv[0])
 
