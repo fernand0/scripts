@@ -200,7 +200,7 @@ def publishLinkedin(title, link, summary, image):
 
 def main():
 	if len(sys.argv) > 1:
-		if sys.argv[1] == "-m"
+		if sys.argv[1] == "-m":
 			index, title,link,summary, summaryLinks, image, twitter, fbPage =  selectBlog('m')
 	else:
 		index, title,link,summary, summaryLinks, image, twitter, fbPage =  selectBlog()
