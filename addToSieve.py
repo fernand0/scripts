@@ -405,7 +405,6 @@ def main():
 			i = i + 1
 			numScripts = numScripts - 1
 
-
         end = raw_input("More rules? (empty to continue) ")
 
 if __name__ == "__main__":
