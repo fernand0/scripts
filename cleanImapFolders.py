@@ -87,15 +87,15 @@ def getPassword(server, user):
 def mailFolder(account, accountData, logging):
     SERVER = account[0]
     USER = account[1]
-    PASSWORD = accountData[0]
+    PASSWORD = accountData['PASSWORD']
 
     M = imaplib.IMAP4_SSL(SERVER)
     M.login(USER, PASSWORD)
-    password = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     # We do not want passwords in memory when not needed
     M.select()
 
-    for actions in accountData[1]:
+    for actions in accountData['RULES']:
         RULES = actions[0]
         FOLDER = actions[1]
 
@@ -199,12 +199,15 @@ def main():
 	# We are grouping accounts in order to avoid interference among rules
 	# on the same account 
 	if (SERVER, USER) not in accounts:
+            accounts[(SERVER, USER)] = {}
             PASSWORD = getPassword(SERVER, USER)
-            accounts[(SERVER, USER)] = [PASSWORD, [] ]
-            accounts[(SERVER, USER)][1].append((RULES, FOLDER))
+            accounts[(SERVER, USER)]['PASSWORD'] = PASSWORD
+            accounts[(SERVER, USER)]['RULES'] = []
+            accounts[(SERVER, USER)]['RULES'].append((RULES, FOLDER))
         else:
-            accounts[(SERVER, USER)][1].append((RULES, FOLDER))
+            accounts[(SERVER, USER)]['RULES'].append((RULES, FOLDER))
             logging.info("[%s,%s] Known password!" % (SERVER, USER))
+    print accounts
 
     for account in accounts.keys():
         t = threading.Thread(target=mailFolder,
