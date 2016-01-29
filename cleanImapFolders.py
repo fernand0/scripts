@@ -87,7 +87,7 @@ def getPassword(server, user):
 def mailFolder(account, accountData, logging):
     SERVER = account[0]
     USER = account[1]
-    PASSWORD = accountData['PASSWORD']
+    PASSWORD = getPassword(SERVER, USER)
 
     M = imaplib.IMAP4_SSL(SERVER)
     M.login(USER, PASSWORD)
@@ -144,21 +144,6 @@ def mailFolder(account, accountData, logging):
                 # If the list of messages is too long it won't work
                 flag = '\\Deleted'
                 result = M.store(msgs, '+FLAGS', flag)
-#Traceback (most recent call last):
-#  File "/home/ftricas/.pyenv/versions/2.7.10/lib/python2.7/threading.py", line 810, in __bootstrap_inner
-#    self.run()
-#  File "/home/ftricas/.pyenv/versions/2.7.10/lib/python2.7/threading.py", line 763, in run
-#    self.__target(*self.__args, **self.__kwargs)
-#  File "/home/ftricas/usr/src/scripts/cleanImapFolders.py", line 137, in mailFolder
-#    result = M.store(msgs, '+FLAGS', flag)
-#  File "/home/ftricas/.pyenv/versions/2.7.10/lib/python2.7/imaplib.py", line 734, in store
-#    typ, dat = self._simple_command('STORE', message_set, command, flags)
-#  File "/home/ftricas/.pyenv/versions/2.7.10/lib/python2.7/imaplib.py", line 1088, in _simple_command
-#    return self._command_complete(name, self._command(name, *args))
-#  File "/home/ftricas/.pyenv/versions/2.7.10/lib/python2.7/imaplib.py", line 918, in _command_complete
-#    raise self.error('%s command error: %s %s' % (name, typ, data))
-#error: STORE command error: BAD ['Error in IMAP command STORE: Invalid messageset']
-
                 if result[0] == 'OK':
                     logging.info("[%s,%s] SERVER %s: %d messages have been deleted."
                                   % (SERVER, USER, SERVER, i))
@@ -200,14 +185,18 @@ def main():
 	# on the same account 
 	if (SERVER, USER) not in accounts:
             accounts[(SERVER, USER)] = {}
-            PASSWORD = getPassword(SERVER, USER)
-            accounts[(SERVER, USER)]['PASSWORD'] = PASSWORD
+            # PASSWORD = getPassword(SERVER, USER)
+            # accounts[(SERVER, USER)]['PASSWORD'] = PASSWORD
             accounts[(SERVER, USER)]['RULES'] = []
             accounts[(SERVER, USER)]['RULES'].append((RULES, FOLDER))
         else:
             accounts[(SERVER, USER)]['RULES'].append((RULES, FOLDER))
-            logging.info("[%s,%s] Known password!" % (SERVER, USER))
-    print accounts
+            # logging.info("[%s,%s] Known password!" % (SERVER, USER))
+
+    keys = keyring.get_keyring()
+    keys._unlock()
+    # We need to unlock the keyring because if not each thread will ask for the
+    # keyring password
 
     for account in accounts.keys():
         t = threading.Thread(target=mailFolder,
@@ -216,7 +205,7 @@ def main():
 	# rules for a folder concurrency causes problems
         # Hopefully solved
 	# mailFolder(account, accounts[account], logging)
-        PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        # PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         # We do not want passwords in memory when not needed
         threads.append(t)
         i = i + 1
