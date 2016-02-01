@@ -134,7 +134,7 @@ def mailFolder(account, accountData, logging):
                 result = M.copy(msgs, FOLDER)
                 status = result[0]
             i = msgs.count(',') + 1
-            logging.info("[%s,%s] *%s* Status: %s"% (SERVER,USER,msgs,status))
+            logging.debug("[%s,%s] *%s* Status: %s"% (SERVER,USER,msgs,status))
             # And this?
 	    # Maybe messages are 'disappearing' while we are working?
 	    # hint:anti-spam Is it possible to lock the folder in order to avoid
