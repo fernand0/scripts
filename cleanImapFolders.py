@@ -160,8 +160,12 @@ def mailFolder(account, accountData, logging):
 def main():
     config = ConfigParser.ConfigParser()
     config.read([os.path.expanduser('~/.IMAP.cfg')])
-    logging.basicConfig(#filename='example.log',
-                        level=logging.INFO,format='%(asctime)s %(message)s')
+    if (len(sys.argv)>1 and (sys.argv[1] == "-d")):
+        logging.basicConfig(#filename='example.log',
+                            level=logging.DEBUG,format='%(asctime)s %(message)s')
+    else:
+        logging.basicConfig(#filename='example.log',
+                            level=logging.INFO,format='%(asctime)s %(message)s')
 
     threads = []
     i = 0

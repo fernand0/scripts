@@ -80,13 +80,17 @@ for i in range(len(feed.entries)):
 	if (feed.entries[i].link==linkLast):
 		break
 
+print "i: ", i
 if ((i==0) and (feed.entries[i].link==linkLast)):
 	print "No new items"
 	sys.exit()
 else:
-	if (i==0):
+	if (i == (len(feed.entries)-1)):
 		print "All are new"
-		i = len(feed.entries)-1
+		print "Please, check manually"
+		sys.exit()
+		#i = len(feed.entries)-1
+	print "i: ", i
 
 config.read([os.path.expanduser('~/.rssBuffer')])
 
@@ -166,7 +170,7 @@ for j in range(10-lenMax,0,-1):
 	#print "post", post
 
 	# There are problems with &
-	print "Publishing..."
+	print "Publishing... "+ post
 	for service in serviceList:
 		print "  %s service"%service,
 		profile=profileList[service]
