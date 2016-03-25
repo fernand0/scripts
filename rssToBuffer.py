@@ -140,7 +140,7 @@ for j in range(10-lenMax,0,-1):
 			if len(re.findall(r'\w+', theTitle)) == 1:
 				print "Una palabra, probamos con el titulo"
 				theTitle = feed.entries[i].title
-			if (theLink[:22] == "https://instagram.com/") and (theTitle[:17] == "A video posted by"):
+			if (theLink[:26] == "https://www.instagram.com/") and (theTitle[:17] == "A video posted by"):
 				#exception for Instagram videos
 				theTitle = feed.entries[i].title
 			if (theLink[:22] == "https://instagram.com/") and (theTitle.find("(en")>0):
@@ -165,6 +165,7 @@ for j in range(10-lenMax,0,-1):
 	#print i, ": ", re.sub('\n+',' ', theTitle.encode('iso-8859-1','ignore')) + " " + theLink
 	#print len(re.sub('\n+',' ', theTitle.encode('iso-8859-1','ignore')) + " " + theLink)
 	
+
 	post=re.sub('\n+',' ', theTitle) +" "+theLink
 	# Sometimes there are newlines and unnecessary spaces
 	#print "post", post
