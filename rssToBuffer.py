@@ -76,9 +76,6 @@ def selectBlog(sel='a'):
        else:
           i = 1
  
-    print "You have chosen " 
-    print config.get("Blog"+str(recentIndex), "rssFeed")
-
     i = int(recentIndex)
 
     if i > 0:
@@ -91,7 +88,20 @@ def selectBlog(sel='a'):
     else:
         sys.exit()
 
+    if (config.has_option("Blog"+str(recentIndex), "linksToAvoid")):
+        linksToAvoid = config.get("Blog"+str(recentIndex), "linksToAvoid")
+    else:
+        linksToAvoid = ""
+
+    theTwitter = config.get("Blog"+str(recentIndex), "twitterAC")
+    theFbPage = config.get("Blog"+str(recentIndex), "pageFB")
+
+
+    print "You have chosen " 
+    print config.get("Blog"+str(recentIndex), "rssFeed")
+
     return(selectedBlog, identifier, recentPost)
+    #return (selectedBlog, identifier, recentPost, linksToAvoid, theTwitter, theFbPage)
 
 
 def main():
