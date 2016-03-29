@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # encoding: utf-8
 
 #
@@ -27,8 +27,10 @@
 # It contains just an URL which is the last one published. 
 # At this moment it only considers one blog
 
-import ConfigParser, os
-import feedparser, re
+import os
+import ConfigParser
+import feedparser
+import re
 from bs4 import BeautifulSoup
 
 # sudo pip install buffpy version does not work
@@ -49,16 +51,16 @@ sys.setdefaultencoding("UTF-8")
 config = ConfigParser.ConfigParser()
 config.read([os.path.expanduser('~/.rssBlogs')])
 
-i=1
+i = 1
 for section in config.sections():
 	print str(i), ')', section, config.get(section, "rssFeed")
 	i = i + 1
 
-if (int(i)>0):
-	i = raw_input ('Select one: ')
+if (i>0):
+	i = int(raw_input ('Select one: '))
 
 
-if i>0:
+if i > 0:
 	selectedBlog=config.get("Blog"+str(i), "rssFeed")
 	ini=selectedBlog.find('/')+2
 	fin=selectedBlog[ini:].find('.')
@@ -81,6 +83,7 @@ for i in range(len(feed.entries)):
 		break
 
 print "i: ", i
+
 if ((i==0) and (feed.entries[i].link==linkLast)):
 	print "No new items"
 	sys.exit()
