@@ -30,6 +30,7 @@
 import os
 import ConfigParser
 import feedparser
+import logging
 import re
 from bs4 import BeautifulSoup
 
@@ -48,144 +49,156 @@ import urllib
 reload(sys)
 sys.setdefaultencoding("UTF-8")
 
-config = ConfigParser.ConfigParser()
-config.read([os.path.expanduser('~/.rssBlogs')])
 
-i = 1
-for section in config.sections():
-	print str(i), ')', section, config.get(section, "rssFeed")
-	i = i + 1
+def main():
+    config = ConfigParser.ConfigParser()
+    config.read([os.path.expanduser('~/.rssBlogs')])
+    
+    PREFIX="rssBuffer_"
+    POSFIX="last"
 
-if (i>0):
-	i = int(raw_input ('Select one: '))
+    logging.basicConfig(filename='/home/ftricas/usr/var/' + PREFIX + '.log',
+                            level=logging.INFO,format='%(asctime)s %(message)s')
+    i = 1
+    for section in config.sections():
+        print str(i), ')', section, config.get(section, "rssFeed")
+        i = i + 1
+    
+    if (i>0):
+        i = int(raw_input ('Select one: '))
+    
+    
+    if i > 0:
+        selectedBlog=config.get("Blog"+str(i), "rssFeed")
+        ini=selectedBlog.find('/')+2
+        fin=selectedBlog[ini:].find('.')
+        identifier=selectedBlog[ini:ini+fin]+"_"+selectedBlog[ini+fin+1:ini+fin+7]
+        print "Selected ", selectedBlog
+        logging.info("Selected "+ selectedBlog)
 
+    else:
+        sys.exit()
+    
+    
+    feed = feedparser.parse(selectedBlog)
+    urlFile = open(os.path.expanduser("~/."+PREFIX+identifier+"."+POSFIX),"r")
+    
+    linkLast = urlFile.read().rstrip() # Last published
+    
+    
+    for i in range(len(feed.entries)):
+        if (feed.entries[i].link==linkLast):
+            break
+    
+    print "i: ", i
+    
+    if ((i==0) and (feed.entries[i].link==linkLast)):
+        logging.info("No new items")
+        sys.exit()
+    else:
+        if (i == (len(feed.entries)-1)):
+            logging.info("All are new")
+            logging.info("Please, check manually")
+            sys.exit()
+            #i = len(feed.entries)-1
+        logging.debug("i: "+ str(i))
+    
+    config.read([os.path.expanduser('~/.rssBuffer')])
+    
+    clientId = config.get("appKeys", "client_id")
+    clientSecret = config.get("appKeys", "client_secret")
+    redirectUrl = config.get("appKeys", "redirect_uri")
+    accessToken = config.get("appKeys", "access_token")
+    
+    # instantiate the api object 
+    api = API(client_id=clientId,
+              client_secret=clientSecret,
+              access_token=accessToken)
+    
+    logging.debug(api.info)
+    
+    
+    # We can put as many items as the service with most items allow
+    # The limit is ten.
+    # Get all pending updates of a social network profile
+    serviceList=['twitter','facebook','linkedin']
+    profileList={}
+    
+    lenMax=0
+    logging.info("Checking services...")
+    
+    for service in serviceList:
+        profileList[service] = Profiles(api=api).filter(service=service)[0]
+        if (len(profileList[service].updates.pending)>lenMax):
+            lenMax=len(profileList[service].updates.pending)
+        logging.info("%s ok" % service)
+    
+    logging.info("There are %d in some buffer, we can put %d", 
+                 (lenMax, 10-lenMax))
+    logging.info("We have %d items to post" % i)
+    
+    for j in range(10-lenMax,0,-1):
+    
+        if (i==0):
+            break
+        i = i - 1
+        if (selectedBlog.find('tumblr') > 0):
+            soup = BeautifulSoup(feed.entries[i].summary)
+            pageLink  = soup.findAll("a")
+            if pageLink:
+                theLink  = pageLink[0]["href"]
+                theTitle = pageLink[0].get_text()
+                if len(re.findall(r'\w+', theTitle)) == 1:
+                    logging.debug("Una palabra, probamos con el titulo")
+                    theTitle = feed.entries[i].title
+                if (theLink[:26] == "https://www.instagram.com/") and (theTitle[:17] == "A video posted by"):
+                    #exception for Instagram videos
+                    theTitle = feed.entries[i].title
+                if (theLink[:22] == "https://instagram.com/") and (theTitle.find("(en")>0):
+                    theTitle = theTitle[:theTitle.find("(en")-1]
+            else:
+                # Some entries do not have a proper link and the rss contains
+                # the video, image, ... in the description.
+                # In this case we use the title and the link of the entry.
+                theLink   = feed.entries[i].link
+                theTitle  = feed.entries[i].title.encode('utf-8')
+        elif (selectedBlog.find('wordpress') > 0):
+            soup = BeautifulSoup(feed.entries[i].content[0].value)
+            theTitle = feed.entries[i].title
+            theLink  = feed.entries[i].link    
+        else:
+            logging.info("I don't know what to do!")
+    
+        #pageImage = soup.findAll("img")
+        theTitle = urllib.quote(theTitle.encode('utf-8'))
+    
+    
+        #print i, ": ", re.sub('\n+',' ', theTitle.encode('iso-8859-1','ignore')) + " " + theLink
+        #print len(re.sub('\n+',' ', theTitle.encode('iso-8859-1','ignore')) + " " + theLink)
+        
+    
+        post=re.sub('\n+',' ', theTitle) +" "+theLink
+        # Sometimes there are newlines and unnecessary spaces
+        #print "post", post
+    
+        # There are problems with &
+        logging.info("Publishing... %s" % post)
+        for service in serviceList:
+            line = service
+            profile=profileList[service]
+            try:
+                profile.updates.new(post)
+                line = line + ' ok'
+                time.sleep(3)
+            except:
+                line = line + ' fail'
+                failFile = open(os.path.expanduser("~/."+PREFIX+identifier+".fail"),"w")
+                failFile.write(post)
+            logging.info("  %s service" % line)
+    
+    urlFile = open(os.path.expanduser("~/."+PREFIX+identifier+"."+POSFIX),"w")
+    urlFile.write(feed.entries[i].link)
+    urlFile.close()
 
-if i > 0:
-	selectedBlog=config.get("Blog"+str(i), "rssFeed")
-	ini=selectedBlog.find('/')+2
-	fin=selectedBlog[ini:].find('.')
-	identifier=selectedBlog[ini:ini+fin]+"_"+selectedBlog[ini+fin+1:ini+fin+7]
-	print "Selected ", selectedBlog
-else:
-	sys.exit()
-
-PREFIX=".rssBuffer_"
-POSFIX=".last"
-
-feed = feedparser.parse(selectedBlog)
-urlFile = open(os.path.expanduser("~/"+PREFIX+identifier+POSFIX),"r")
-
-linkLast = urlFile.read().rstrip() # Last published
-
-
-for i in range(len(feed.entries)):
-	if (feed.entries[i].link==linkLast):
-		break
-
-print "i: ", i
-
-if ((i==0) and (feed.entries[i].link==linkLast)):
-	print "No new items"
-	sys.exit()
-else:
-	if (i == (len(feed.entries)-1)):
-		print "All are new"
-		print "Please, check manually"
-		sys.exit()
-		#i = len(feed.entries)-1
-	print "i: ", i
-
-config.read([os.path.expanduser('~/.rssBuffer')])
-
-clientId = config.get("appKeys", "client_id")
-clientSecret = config.get("appKeys", "client_secret")
-redirectUrl = config.get("appKeys", "redirect_uri")
-accessToken = config.get("appKeys", "access_token")
-
-# instantiate the api object 
-api = API(client_id=clientId,
-          client_secret=clientSecret,
-          access_token=accessToken)
-
-#print api.info
-
-
-# We can put as many items as the service with most items allow
-# The limit is ten.
-# Get all pending updates of a social network profile
-serviceList=['twitter','facebook','linkedin']
-profileList={}
-
-lenMax=0
-print "Checking services..."
-
-for service in serviceList:
-	print "  %s"%service,
-	profileList[service] = Profiles(api=api).filter(service=service)[0]
-	if (len(profileList[service].updates.pending)>lenMax):
-		lenMax=len(profileList[service].updates.pending)
-	print "  ok"
-
-print "There are", lenMax, "in some buffer, we can put", 10-lenMax
-print "We have", i, "items to post"
-
-for j in range(10-lenMax,0,-1):
-
-	if (i==0):
-		break
-	i = i - 1
-	if (selectedBlog.find('tumblr') > 0):
-		soup = BeautifulSoup(feed.entries[i].summary)
-		pageLink  = soup.findAll("a")
-		if pageLink:
-			theLink  = pageLink[0]["href"]
-			theTitle = pageLink[0].get_text()
-			if len(re.findall(r'\w+', theTitle)) == 1:
-				print "Una palabra, probamos con el titulo"
-				theTitle = feed.entries[i].title
-			if (theLink[:26] == "https://www.instagram.com/") and (theTitle[:17] == "A video posted by"):
-				#exception for Instagram videos
-				theTitle = feed.entries[i].title
-			if (theLink[:22] == "https://instagram.com/") and (theTitle.find("(en")>0):
-				theTitle = theTitle[:theTitle.find("(en")-1]
-		else:
-			# Some entries do not have a proper link and the rss contains
-			# the video, image, ... in the description.
-			# In this case we use the title and the link of the entry.
-			theLink   = feed.entries[i].link
-			theTitle  = feed.entries[i].title.encode('utf-8')
-	elif (selectedBlog.find('wordpress') > 0):
-		soup = BeautifulSoup(feed.entries[i].content[0].value)
-		theTitle = feed.entries[i].title
-		theLink  = feed.entries[i].link	
-	else:
-		print "I don't know what to do!"
-
-	#pageImage = soup.findAll("img")
-	theTitle = urllib.quote(theTitle.encode('utf-8'))
-
-
-	#print i, ": ", re.sub('\n+',' ', theTitle.encode('iso-8859-1','ignore')) + " " + theLink
-	#print len(re.sub('\n+',' ', theTitle.encode('iso-8859-1','ignore')) + " " + theLink)
-	
-
-	post=re.sub('\n+',' ', theTitle) +" "+theLink
-	# Sometimes there are newlines and unnecessary spaces
-	#print "post", post
-
-	# There are problems with &
-	print "Publishing... "+ post
-	for service in serviceList:
-		print "  %s service"%service,
-		profile=profileList[service]
-		try:
-			profile.updates.new(post)
-			print "  ok"
-			time.sleep(3)
-		except:
-			failFile = open(os.path.expanduser("~/"+PREFIX+identifier+".fail"),"w")
-			failFile.write(post)
-
-urlFile = open(os.path.expanduser("~/"+PREFIX+identifier+POSFIX),"w")
-urlFile.write(feed.entries[i].link)
-urlFile.close()
+if __name__ == '__main__':
+    main()
