@@ -52,7 +52,6 @@ sys.setdefaultencoding("UTF-8")
 def selectBlog(sel='a'):
     config = ConfigParser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
- 
     print "Configured blogs:"
  
     i = 1
@@ -62,7 +61,7 @@ def selectBlog(sel='a'):
        rssFeed = config.get(section, "rssFeed")
        feed = feedparser.parse(rssFeed)
        lastPost[i] = feed.entries[0]
-       print str(i), ')', section, config.get(section, "rssFeed"), '(', time.strftime('%Y-%m-%d %H:%M:%SZ', lastPost[i]['published_parsed']), ')'
+       print '%s) %s %s (%s)' % (str(i), section, config.get(section, "rssFeed"),  time.strftime('%Y-%m-%d %H:%M:%SZ', lastPost[i]['published_parsed']))
        if (i == 1) or (recentDate < lastPost[i]['published_parsed']):
           recentDate = lastPost[i]['published_parsed']
           recentIndex = i
@@ -73,32 +72,32 @@ def selectBlog(sel='a'):
        if (int(i)>1):
           recentIndex = raw_input ('Select one: ')
           recentPost = lastPost[int(recentIndex)]
+          i = int(recentIndex)
        else:
           i = 1
  
-    i = int(recentIndex)
-
     if i > 0:
-        selectedBlog=config.get("Blog"+str(i), "rssFeed")
-        ini=selectedBlog.find('/')+2
-        fin=selectedBlog[ini:].find('.')
-        identifier=selectedBlog[ini:ini+fin]+"_"+selectedBlog[ini+fin+1:ini+fin+7]
-        print "Selected ", selectedBlog
-        logging.info("Selected "+ selectedBlog)
+        selectedBlog = {}
+        selectedBlog["rssFeed"] = config.get("Blog"+str(i), "rssFeed")
+        ini=selectedBlog["rssFeed"].find('/')+2
+        fin=selectedBlog["rssFeed"][ini:].find('.')
+        identifier=selectedBlog["rssFeed"][ini:ini+fin]+"_"+selectedBlog["rssFeed"][ini+fin+1:ini+fin+7]
+        print "Selected ", selectedBlog["rssFeed"]
+        logging.info("Selected "+ selectedBlog["rssFeed"])
     else:
         sys.exit()
 
     if (config.has_option("Blog"+str(recentIndex), "linksToAvoid")):
-        linksToAvoid = config.get("Blog"+str(recentIndex), "linksToAvoid")
+        selectedBlog["linksToAvoid"] = config.get("Blog"+str(recentIndex), "linksToAvoid")
     else:
-        linksToAvoid = ""
+        selectedBlog["linksToAvoid"] = ""
 
-    theTwitter = config.get("Blog"+str(recentIndex), "twitterAC")
-    theFbPage = config.get("Blog"+str(recentIndex), "pageFB")
+    selectedBlog["twitterAC"] = config.get("Blog"+str(recentIndex), "twitterAC")
+    selectedBlog["pageFB"] = config.get("Blog"+str(recentIndex), "pageFB")
 
 
     print "You have chosen " 
-    print config.get("Blog"+str(recentIndex), "rssFeed")
+    print selectedBlog["rssFeed"] 
 
     return(selectedBlog, identifier, recentPost)
     #return (selectedBlog, identifier, recentPost, linksToAvoid, theTwitter, theFbPage)
@@ -113,7 +112,7 @@ def main():
 
     selectedBlog, identifier, recentPost = selectBlog('m')
     
-    feed = feedparser.parse(selectedBlog)
+    feed = feedparser.parse(selectedBlog["rssFeed"])
     urlFile = open(os.path.expanduser("~/."+PREFIX+identifier+"."+POSFIX),"r")
     
     linkLast = urlFile.read().rstrip() # Last published
@@ -135,6 +134,7 @@ def main():
             #i = len(feed.entries)-1
         logging.debug("i: "+ str(i))
     
+    config = ConfigParser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBuffer')])
     
     clientId = config.get("appKeys", "client_id")
