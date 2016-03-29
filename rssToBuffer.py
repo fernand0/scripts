@@ -49,25 +49,38 @@ import urllib
 reload(sys)
 sys.setdefaultencoding("UTF-8")
 
-
-def main():
+def selectBlog(sel='a'):
     config = ConfigParser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
-    
-    PREFIX="rssBuffer_"
-    POSFIX="last"
-
-    logging.basicConfig(filename='/home/ftricas/usr/var/' + PREFIX + '.log',
-                            level=logging.INFO,format='%(asctime)s %(message)s')
+ 
+    print "Configured blogs:"
+ 
     i = 1
+ 
+    lastPost={}
     for section in config.sections():
-        print str(i), ')', section, config.get(section, "rssFeed")
-        i = i + 1
-    
-    if (i>0):
-        i = int(raw_input ('Select one: '))
-    
-    
+       rssFeed = config.get(section, "rssFeed")
+       feed = feedparser.parse(rssFeed)
+       lastPost[i] = feed.entries[0]
+       print str(i), ')', section, config.get(section, "rssFeed"), '(', time.strftime('%Y-%m-%d %H:%M:%SZ', lastPost[i]['published_parsed']), ')'
+       if (i == 1) or (recentDate < lastPost[i]['published_parsed']):
+          recentDate = lastPost[i]['published_parsed']
+          recentIndex = i
+          recentPost = lastPost[recentIndex]
+       i = i + 1
+ 
+    if (sel == 'm'):
+       if (int(i)>1):
+          recentIndex = raw_input ('Select one: ')
+          recentPost = lastPost[int(recentIndex)]
+       else:
+          i = 1
+ 
+    print "You have chosen " 
+    print config.get("Blog"+str(recentIndex), "rssFeed")
+
+    i = int(recentIndex)
+
     if i > 0:
         selectedBlog=config.get("Blog"+str(i), "rssFeed")
         ini=selectedBlog.find('/')+2
@@ -75,9 +88,39 @@ def main():
         identifier=selectedBlog[ini:ini+fin]+"_"+selectedBlog[ini+fin+1:ini+fin+7]
         print "Selected ", selectedBlog
         logging.info("Selected "+ selectedBlog)
-
     else:
         sys.exit()
+
+    return(selectedBlog, identifier)
+
+
+def main():
+    #config = ConfigParser.ConfigParser()
+    #config.read([os.path.expanduser('~/.rssBlogs')])
+    
+    PREFIX="rssBuffer_"
+    POSFIX="last"
+
+    logging.basicConfig(filename='/home/ftricas/usr/var/' + PREFIX + '.log',
+                            level=logging.INFO,format='%(asctime)s %(message)s')
+    selectedBlog, identifier = selectBlog('m')
+    #for section in config.sections():
+    #    print str(i), ')', section, config.get(section, "rssFeed")
+    #    i = i + 1
+    #
+    #if (i>0):
+    #    i = int(raw_input ('Select one: '))
+    
+    
+    #if i > 0:
+    #    selectedBlog=config.get("Blog"+str(i), "rssFeed")
+    #    ini=selectedBlog.find('/')+2
+    #    fin=selectedBlog[ini:].find('.')
+    #    identifier=selectedBlog[ini:ini+fin]+"_"+selectedBlog[ini+fin+1:ini+fin+7]
+    #    print "Selected ", selectedBlog
+    #    logging.info("Selected "+ selectedBlog)
+    #else:
+    #    sys.exit()
     
     
     feed = feedparser.parse(selectedBlog)
