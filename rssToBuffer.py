@@ -91,43 +91,22 @@ def selectBlog(sel='a'):
     else:
         sys.exit()
 
-    return(selectedBlog, identifier)
+    return(selectedBlog, identifier, recentPost)
 
 
 def main():
-    #config = ConfigParser.ConfigParser()
-    #config.read([os.path.expanduser('~/.rssBlogs')])
-    
     PREFIX="rssBuffer_"
     POSFIX="last"
 
     logging.basicConfig(filename='/home/ftricas/usr/var/' + PREFIX + '.log',
                             level=logging.INFO,format='%(asctime)s %(message)s')
-    selectedBlog, identifier = selectBlog('m')
-    #for section in config.sections():
-    #    print str(i), ')', section, config.get(section, "rssFeed")
-    #    i = i + 1
-    #
-    #if (i>0):
-    #    i = int(raw_input ('Select one: '))
-    
-    
-    #if i > 0:
-    #    selectedBlog=config.get("Blog"+str(i), "rssFeed")
-    #    ini=selectedBlog.find('/')+2
-    #    fin=selectedBlog[ini:].find('.')
-    #    identifier=selectedBlog[ini:ini+fin]+"_"+selectedBlog[ini+fin+1:ini+fin+7]
-    #    print "Selected ", selectedBlog
-    #    logging.info("Selected "+ selectedBlog)
-    #else:
-    #    sys.exit()
-    
+
+    selectedBlog, identifier, recentPost = selectBlog('m')
     
     feed = feedparser.parse(selectedBlog)
     urlFile = open(os.path.expanduser("~/."+PREFIX+identifier+"."+POSFIX),"r")
     
     linkLast = urlFile.read().rstrip() # Last published
-    
     
     for i in range(len(feed.entries)):
         if (feed.entries[i].link==linkLast):

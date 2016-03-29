@@ -97,8 +97,6 @@ def selectBlog(sel='a'):
 	print "You have chosen " 
 	print config.get("Blog"+str(recentIndex), "rssFeed")
 
-
-	
 	i = 0 # It will publish the last added item
 
 	soup = BeautifulSoup(recentPost.title)
