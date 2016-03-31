@@ -174,7 +174,7 @@ def main():
         if (i==0):
             break
         i = i - 1
-        if (selectedBlog.find('tumblr') > 0):
+        if (selectedBlog["rssFeed"].find('tumblr') > 0):
             soup = BeautifulSoup(feed.entries[i].summary)
             pageLink  = soup.findAll("a")
             if pageLink:
