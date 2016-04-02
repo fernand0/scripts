@@ -72,6 +72,63 @@ def extractLinks(soup, linksToAvoid=""):
 def selectBlog(sel='a'):
     config = ConfigParser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
+    print "Configured blogs:"
+ 
+ 
+    feed = []
+    # We are caching the feeds in order to use them later
+
+    i = 1
+
+    for section in config.sections():
+       rssFeed = config.get(section, "rssFeed")
+       feed.append(feedparser.parse(rssFeed))
+       lastPost = feed[-1].entries[0]
+       print '%s) %s %s (%s)' % (str(i), section, config.get(section, "rssFeed"),  time.strftime('%Y-%m-%d %H:%M:%SZ', lastPost['published_parsed']))
+       if (i == 1) or (recentDate < lastPost['published_parsed']):
+          recentDate = lastPost['published_parsed']
+          recentFeed = feed[-1]
+          recentPost = lastPost
+          recentIndex = str(i)
+       i = i + 1
+ 
+    if (sel == 'm'):
+       if (int(i)>1):
+          recentIndex = raw_input ('Select one: ')
+          i = int(recentIndex)
+          recentFeed = feed[i - 1]
+       else:
+          i = 1
+          recentIndex = '1'
+ 
+    if i > 0:
+        ini=recentFeed.feed['title_detail']['base'].find('/')+2
+        fin=recentFeed.feed['title_detail']['base'][ini:].find('.')
+        identifier=recentFeed.feed['title_detail']['base'][ini:ini+fin]+"_"+recentFeed.feed['title_detail']['base'][ini+fin+1:ini+fin+7]
+        print "Selected ", recentFeed.feed['title_detail']['base']
+        logging.info("Selected "+ recentFeed.feed['title_detail']['base'])
+    else:
+        sys.exit()
+
+    selectedBlog = {}
+    if (config.has_option("Blog"+str(recentIndex), "linksToAvoid")):
+        selectedBlog["linksToAvoid"] = config.get("Blog"+str(recentIndex), "linksToAvoid")
+    else:
+        selectedBlog["linksToAvoid"] = ""
+
+    selectedBlog["twitterAC"] = config.get("Blog"+str(recentIndex), "twitterAC")
+    selectedBlog["pageFB"] = config.get("Blog"+str(recentIndex), "pageFB")
+    selectedBlog["identifier"] = identifier
+
+
+    print "You have chosen " 
+    print recentFeed.feed['title_detail']['base']
+
+    return(recentFeed, selectedBlog)
+
+def selectBlog2(sel='a'):
+    config = ConfigParser.ConfigParser()
+    config.read([os.path.expanduser('~/.rssBlogs')])
 
     print "Configured blogs:"
 
@@ -121,7 +178,40 @@ def selectBlog(sel='a'):
 
     return (selectedBlog, identifier, recentPost, linksToAvoid, theTwitter, theFbPage)
 
-def getBlogData(selectedBlog, identifier, recentPost, linksToAvoid, theTwitter, theFbPage):
+def getBlogData(recentFeed, selectedBlog):
+    i = 0 # It will publish the last added item
+
+    soup = BeautifulSoup(recentFeed.entries[0].title)
+    theTitle = soup.get_text()
+    theLink  = recentFeed.entries[0].link
+
+    soup = BeautifulSoup(recentFeed.entries[0].summary)
+    theSummary = soup.get_text()
+
+    
+    theSummaryLinks = extractLinks(soup, selectedBlog["linksToAvoid"])
+    theImage = extractImage(soup)
+    theTwitter = selectedBlog["twitterAC"]
+    theFbPage = selectedBlog["pageFB"]
+    
+    
+    print "============================================================\n"
+    print "Results: \n"
+    print "============================================================\n"
+    print theTitle.encode('utf-8')
+    print theLink
+    print theSummary.encode('utf-8')
+    print theSummaryLinks.encode('utf-8')
+    print theImage
+    print theTwitter
+    print theFbPage
+    print "============================================================\n"
+
+    sys.exit()
+    return (theTitle, theLink, theSummary, theSummaryLinks, theImage, theTwitter, theFbPage)
+
+
+def getBlogData2(selectedBlog, identifier, recentPost, linksToAvoid, theTwitter, theFbPage):
     i = 0 # It will publish the last added item
 
     soup = BeautifulSoup(recentPost.title)
@@ -220,11 +310,12 @@ def main():
                             level=logging.INFO,format='%(asctime)s %(message)s')
     if len(sys.argv) > 1:
         if sys.argv[1] == "-m":
-            selectedBlog, index, recentPost = selectBlog('m')
+            recentFeed, selectedBlog = selectBlog('m')
     else:
-        selectedBlog, index, recentPost, linksToAvoid, twitter, fbPage = selectBlog()
+        recentFeed, selectedBlog = selectBlog()
 
-    title, link, summary, summaryLinks, image, twitter, fbPage =  getBlogData(selectedBlog, index, recentPost, linksToAvoid, twitter, fbPage)
+    getBlogData(recentFeed, selectedBlog)
+    #title, link, summary, summaryLinks, image, twitter, fbPage =  getBlogData(selectedBlog, index, recentPost, linksToAvoid, twitter, fbPage)
 
     print "Twitter...\n"
     if twitter:

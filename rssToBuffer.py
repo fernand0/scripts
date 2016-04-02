@@ -115,9 +115,6 @@ def main():
 
     recentFeed, selectedBlog = selectBlog('m')
     
-    print selectedBlog
-
-    #feed[i - 1] = feedparser.parse(selectedBlog["rssFeed"])
     urlFile = open(os.path.expanduser("~/."+PREFIX+selectedBlog['identifier']+"."+POSFIX),"r")
     
     linkLast = urlFile.read().rstrip() # Last published
@@ -137,10 +134,8 @@ def main():
             logging.info("Please, check manually")
             sys.exit()
             #i = len(recentFeed.entries)-1
-        logging.debug("i: "+ st(i))
+        logging.debug("i: "+ str(i))
     
-    sys.exit()
-
     config = ConfigParser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBuffer')])
     
@@ -172,7 +167,8 @@ def main():
             lenMax=len(profileList[service].updates.pending)
         logging.info("%s ok" % service)
     
-    logging.info("There are %d in some buffer, we can put %d", 
+    print (lenMax, 10-lenMax)
+    logging.info("There are %d in some buffer, we can put %d" % 
                  (lenMax, 10-lenMax))
     logging.info("We have %d items to post" % i)
     
@@ -181,7 +177,7 @@ def main():
         if (i==0):
             break
         i = i - 1
-        if (selectedBlog["rssFeed"].find('tumblr') > 0):
+        if (recentFeed.feed['title_detail']['base'].find('tumblr') > 0):
             soup = BeautifulSoup(recentFeed.entries[i].summary)
             pageLink  = soup.findAll("a")
             if pageLink:
@@ -231,7 +227,7 @@ def main():
                 time.sleep(3)
             except:
                 line = line + ' fail'
-                failFile = open(os.path.expanduser("~/."+PREFIX+identifier+".fail"),"w")
+                failFile = open(os.path.expanduser("~/."+PREFIX+selectedBlog['identifier']+".fail"),"w")
                 failFile.write(post)
             logging.info("  %s service" % line)
     
