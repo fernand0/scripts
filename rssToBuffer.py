@@ -231,7 +231,7 @@ def main():
                 failFile.write(post)
             logging.info("  %s service" % line)
     
-    urlFile = open(os.path.expanduser("~/."+PREFIX+identifier+"."+POSFIX),"w")
+    urlFile = open(os.path.expanduser("~/."+PREFIX+selectedBlog['identifier']+"."+POSFIX),"w")
     urlFile.write(recentFeed.entries[i].link)
     urlFile.close()
 

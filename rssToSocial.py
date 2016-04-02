@@ -207,7 +207,6 @@ def getBlogData(recentFeed, selectedBlog):
     print theFbPage
     print "============================================================\n"
 
-    sys.exit()
     return (theTitle, theLink, theSummary, theSummaryLinks, theImage, theTwitter, theFbPage)
 
 
@@ -314,7 +313,7 @@ def main():
     else:
         recentFeed, selectedBlog = selectBlog()
 
-    getBlogData(recentFeed, selectedBlog)
+    title, link, summary, summaryLinks, image, twitter, fbPage = getBlogData(recentFeed, selectedBlog)
     #title, link, summary, summaryLinks, image, twitter, fbPage =  getBlogData(selectedBlog, index, recentPost, linksToAvoid, twitter, fbPage)
 
     print "Twitter...\n"
