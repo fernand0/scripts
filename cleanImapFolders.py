@@ -58,7 +58,8 @@ def selectHash(M, folder, hashSelect):
         # PEEK does not change access flags
         logging.debug("%s" % msg[0][1])
         m.update(msg[0][1])
-        if (binascii.hexlify(m.digest()) == hashSelect):
+        msgDigest = binascii.hexlify(m.digest())
+        if (msgDigest == hashSelect):
             if msgs:
                 msgs = msgs + ' ' + num
                 # num is a string or a number?
@@ -66,8 +67,8 @@ def selectHash(M, folder, hashSelect):
                 msgs = str(num)
             i = i + 1
         else:
-            logging.debug("Message %s\n%s" 
-                          % (num, binascii.hexlify(m.digest())))
+            logging.info("Message %s\n%s" 
+                          % (num, msgDigest))
         if (i % 10 == 0):
             logging.debug("Counter %d" % i)
     logging.debug("END\n\n%d messages have been selected\n" % i)

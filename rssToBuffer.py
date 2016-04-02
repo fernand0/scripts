@@ -2,10 +2,10 @@
 # encoding: utf-8
 
 #
-# Very simple Python program to publish the entries of an RSS feed in several
+# Very simple Python program to publish the entries of an RSS recentFeed in several
 # channels of bufferapp. It uses three configuration files.
 # 
-# - The first one includes the RSS feed of the blog [~/.rssBlogs]
+# - The first one includes the RSS recentFeed of the blog [~/.rssBlogs]
 # [Blog3]
 # rssFeed:http://fernand0.tumblr.com/rss
 #
@@ -54,39 +54,41 @@ def selectBlog(sel='a'):
     config.read([os.path.expanduser('~/.rssBlogs')])
     print "Configured blogs:"
  
-    i = 1
  
-    lastPost={}
+    feed = []
+    # We are caching the feeds in order to use them later
+
+    i = 1
+
     for section in config.sections():
        rssFeed = config.get(section, "rssFeed")
-       feed = feedparser.parse(rssFeed)
-       lastPost[i] = feed.entries[0]
-       print '%s) %s %s (%s)' % (str(i), section, config.get(section, "rssFeed"),  time.strftime('%Y-%m-%d %H:%M:%SZ', lastPost[i]['published_parsed']))
-       if (i == 1) or (recentDate < lastPost[i]['published_parsed']):
-          recentDate = lastPost[i]['published_parsed']
-          recentIndex = i
-          recentPost = lastPost[recentIndex]
+       feed.append(feedparser.parse(rssFeed))
+       lastPost = feed[-1].entries[0]
+       print '%s) %s %s (%s)' % (str(i), section, config.get(section, "rssFeed"),  time.strftime('%Y-%m-%d %H:%M:%SZ', lastPost['published_parsed']))
+       if (i == 1) or (recentDate < lastPost['published_parsed']):
+          recentDate = lastPost['published_parsed']
+          recentFeed = feed[-1]
+          recentPost = lastPost
        i = i + 1
  
     if (sel == 'm'):
        if (int(i)>1):
           recentIndex = raw_input ('Select one: ')
-          recentPost = lastPost[int(recentIndex)]
           i = int(recentIndex)
+          recentFeed = feed[i - 1]
        else:
           i = 1
  
     if i > 0:
-        selectedBlog = {}
-        selectedBlog["rssFeed"] = config.get("Blog"+str(i), "rssFeed")
-        ini=selectedBlog["rssFeed"].find('/')+2
-        fin=selectedBlog["rssFeed"][ini:].find('.')
-        identifier=selectedBlog["rssFeed"][ini:ini+fin]+"_"+selectedBlog["rssFeed"][ini+fin+1:ini+fin+7]
-        print "Selected ", selectedBlog["rssFeed"]
-        logging.info("Selected "+ selectedBlog["rssFeed"])
+        ini=recentFeed.feed['title_detail']['base'].find('/')+2
+        fin=recentFeed.feed['title_detail']['base'][ini:].find('.')
+        identifier=recentFeed.feed['title_detail']['base'][ini:ini+fin]+"_"+recentFeed.feed['title_detail']['base'][ini+fin+1:ini+fin+7]
+        print "Selected ", recentFeed.feed['title_detail']['base']
+        logging.info("Selected "+ recentFeed.feed['title_detail']['base'])
     else:
         sys.exit()
 
+    selectedBlog = {}
     if (config.has_option("Blog"+str(recentIndex), "linksToAvoid")):
         selectedBlog["linksToAvoid"] = config.get("Blog"+str(recentIndex), "linksToAvoid")
     else:
@@ -94,12 +96,13 @@ def selectBlog(sel='a'):
 
     selectedBlog["twitterAC"] = config.get("Blog"+str(recentIndex), "twitterAC")
     selectedBlog["pageFB"] = config.get("Blog"+str(recentIndex), "pageFB")
+    selectedBlog["identifier"] = identifier
 
 
     print "You have chosen " 
-    print selectedBlog["rssFeed"] 
+    print recentFeed.feed['title_detail']['base']
 
-    return(selectedBlog, identifier, recentPost)
+    return(recentFeed, selectedBlog)
     #return (selectedBlog, identifier, recentPost, linksToAvoid, theTwitter, theFbPage)
 
 
@@ -110,30 +113,34 @@ def main():
     logging.basicConfig(filename='/home/ftricas/usr/var/' + PREFIX + '.log',
                             level=logging.INFO,format='%(asctime)s %(message)s')
 
-    selectedBlog, identifier, recentPost = selectBlog('m')
+    recentFeed, selectedBlog = selectBlog('m')
     
-    feed = feedparser.parse(selectedBlog["rssFeed"])
-    urlFile = open(os.path.expanduser("~/."+PREFIX+identifier+"."+POSFIX),"r")
+    print selectedBlog
+
+    #feed[i - 1] = feedparser.parse(selectedBlog["rssFeed"])
+    urlFile = open(os.path.expanduser("~/."+PREFIX+selectedBlog['identifier']+"."+POSFIX),"r")
     
     linkLast = urlFile.read().rstrip() # Last published
     
-    for i in range(len(feed.entries)):
-        if (feed.entries[i].link==linkLast):
+    for i in range(len(recentFeed.entries)):
+        if (recentFeed.entries[i].link==linkLast):
             break
     
     print "i: ", i
     
-    if ((i==0) and (feed.entries[i].link==linkLast)):
+    if ((i==0) and (recentFeed.entries[i].link==linkLast)):
         logging.info("No new items")
         sys.exit()
     else:
-        if (i == (len(feed.entries)-1)):
+        if (i == (len(recentFeed.entries)-1)):
             logging.info("All are new")
             logging.info("Please, check manually")
             sys.exit()
-            #i = len(feed.entries)-1
-        logging.debug("i: "+ str(i))
+            #i = len(recentFeed.entries)-1
+        logging.debug("i: "+ st(i))
     
+    sys.exit()
+
     config = ConfigParser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBuffer')])
     
@@ -175,29 +182,29 @@ def main():
             break
         i = i - 1
         if (selectedBlog["rssFeed"].find('tumblr') > 0):
-            soup = BeautifulSoup(feed.entries[i].summary)
+            soup = BeautifulSoup(recentFeed.entries[i].summary)
             pageLink  = soup.findAll("a")
             if pageLink:
                 theLink  = pageLink[0]["href"]
                 theTitle = pageLink[0].get_text()
                 if len(re.findall(r'\w+', theTitle)) == 1:
                     logging.debug("Una palabra, probamos con el titulo")
-                    theTitle = feed.entries[i].title
+                    theTitle = recentFeed.entries[i].title
                 if (theLink[:26] == "https://www.instagram.com/") and (theTitle[:17] == "A video posted by"):
                     #exception for Instagram videos
-                    theTitle = feed.entries[i].title
+                    theTitle = recentFeed.entries[i].title
                 if (theLink[:22] == "https://instagram.com/") and (theTitle.find("(en")>0):
                     theTitle = theTitle[:theTitle.find("(en")-1]
             else:
                 # Some entries do not have a proper link and the rss contains
                 # the video, image, ... in the description.
                 # In this case we use the title and the link of the entry.
-                theLink   = feed.entries[i].link
-                theTitle  = feed.entries[i].title.encode('utf-8')
+                theLink   = recentFeed.entries[i].link
+                theTitle  = recentFeed.entries[i].title.encode('utf-8')
         elif (selectedBlog.find('wordpress') > 0):
-            soup = BeautifulSoup(feed.entries[i].content[0].value)
-            theTitle = feed.entries[i].title
-            theLink  = feed.entries[i].link    
+            soup = BeautifulSoup(recentFeed.entries[i].content[0].value)
+            theTitle = recentFeed.entries[i].title
+            theLink  = recentFeed.entries[i].link    
         else:
             logging.info("I don't know what to do!")
     
@@ -229,7 +236,7 @@ def main():
             logging.info("  %s service" % line)
     
     urlFile = open(os.path.expanduser("~/."+PREFIX+identifier+"."+POSFIX),"w")
-    urlFile.write(feed.entries[i].link)
+    urlFile.write(recentFeed.entries[i].link)
     urlFile.close()
 
 if __name__ == '__main__':
