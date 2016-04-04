@@ -239,7 +239,7 @@ def getBlogData2(selectedBlog, identifier, recentPost, linksToAvoid, theTwitter,
 
     return (theTitle, theLink, theSummary, theSummaryLinks, theImage, theTwitter, theFbPage)
 
-def publishTwitter(index, title, link, twitter):
+def publishTwitter(title, link, twitter):
     
     config = ConfigParser.ConfigParser()
     config.read([os.path.expanduser('~/.rssTwitter')])
@@ -260,7 +260,7 @@ def publishTwitter(index, title, link, twitter):
     t = Twitter(auth=authentication)
     t.statuses.update(status=statusTxt)
 
-def publishFacebook(index, title, link, summaryLinks, image, fbPage):
+def publishFacebook(title, link, summaryLinks, image, fbPage):
     config = ConfigParser.ConfigParser()
     config.read([os.path.expanduser('~/.rssFacebook')])
 
@@ -319,7 +319,7 @@ def main():
     print "Twitter...\n"
     if twitter:
         try:
-            publishTwitter(index, title, link, twitter)
+            publishTwitter(title, link, twitter)
         except:
             print "Twitter posting failed!\n"
             print "Unexpected error:", sys.exc_info()[0]
@@ -327,7 +327,7 @@ def main():
     print "Facebook...\n"
     if fbPage:
         try:
-            publishFacebook(index, title, link, summaryLinks, image, fbPage)
+            publishFacebook(title, link, summaryLinks, image, fbPage)
         except:
             print "Facebook posting failed!\n"
             print "Unexpected error:", sys.exc_info()[0]
