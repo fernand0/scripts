@@ -167,7 +167,7 @@ def main():
             lenMax=len(profileList[service].updates.pending)
         logging.info("%s ok" % service)
     
-    print (lenMax, 10-lenMax)
+    #print (lenMax, 10-lenMax)
     logging.info("There are %d in some buffer, we can put %d" % 
                  (lenMax, 10-lenMax))
     logging.info("We have %d items to post" % i)

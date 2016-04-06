@@ -126,58 +126,6 @@ def selectBlog(sel='a'):
 
     return(recentFeed, selectedBlog)
 
-def selectBlog2(sel='a'):
-    config = ConfigParser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssBlogs')])
-
-    print "Configured blogs:"
-
-    i = 1
-
-    lastPost={}
-    for section in config.sections():
-        rssFeed = config.get(section, "rssFeed")
-        feed = feedparser.parse(rssFeed)
-        lastPost[i] = feed.entries[0]
-        print str(i), ')', section, config.get(section, "rssFeed"), '(', time.strftime('%Y-%m-%d %H:%M:%SZ', lastPost[i]['published_parsed']), ')'
-        if (i == 1) or (recentDate < lastPost[i]['published_parsed']):
-            recentDate = lastPost[i]['published_parsed']
-            recentIndex = i
-            recentPost = lastPost[recentIndex]
-        i = i + 1
-
-    if (sel == 'm'):
-        if (int(i)>1):
-            recentIndex = raw_input ('Select one: ')
-            recentPost = lastPost[int(recentIndex)]
-        else:
-            i = 1
-
-    i = int(recentIndex)
-
-    if i > 0:
-        selectedBlog=config.get("Blog"+str(i), "rssFeed")
-        ini=selectedBlog.find('/')+2
-        fin=selectedBlog[ini:].find('.')
-        identifier=selectedBlog[ini:ini+fin]+"_"+selectedBlog[ini+fin+1:ini+fin+7]
-        print "Selected ", selectedBlog
-        logging.info("Selected "+ selectedBlog)
-    else:
-        sys.exit()
-
-    if (config.has_option("Blog"+str(recentIndex), "linksToAvoid")):
-        linksToAvoid = config.get("Blog"+str(recentIndex), "linksToAvoid")
-    else:
-        linksToAvoid = ""
-
-    theTwitter = config.get("Blog"+str(recentIndex), "twitterAC")
-    theFbPage = config.get("Blog"+str(recentIndex), "pageFB")
-
-    print "You have chosen " 
-    print config.get("Blog"+str(recentIndex), "rssFeed")
-
-    return (selectedBlog, identifier, recentPost, linksToAvoid, theTwitter, theFbPage)
-
 def getBlogData(recentFeed, selectedBlog):
     i = 0 # It will publish the last added item
 
@@ -193,36 +141,6 @@ def getBlogData(recentFeed, selectedBlog):
     theImage = extractImage(soup)
     theTwitter = selectedBlog["twitterAC"]
     theFbPage = selectedBlog["pageFB"]
-    
-    
-    print "============================================================\n"
-    print "Results: \n"
-    print "============================================================\n"
-    print theTitle.encode('utf-8')
-    print theLink
-    print theSummary.encode('utf-8')
-    print theSummaryLinks.encode('utf-8')
-    print theImage
-    print theTwitter
-    print theFbPage
-    print "============================================================\n"
-
-    return (theTitle, theLink, theSummary, theSummaryLinks, theImage, theTwitter, theFbPage)
-
-
-def getBlogData2(selectedBlog, identifier, recentPost, linksToAvoid, theTwitter, theFbPage):
-    i = 0 # It will publish the last added item
-
-    soup = BeautifulSoup(recentPost.title)
-    theTitle = soup.get_text()
-    theLink  = recentPost.link
-
-    soup = BeautifulSoup(recentPost.summary)
-    theSummary = soup.get_text()
-
-    
-    theSummaryLinks = extractLinks(soup, linksToAvoid)
-    theImage = extractImage(soup)
     
     
     print "============================================================\n"
