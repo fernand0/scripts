@@ -112,23 +112,7 @@ def selectBlog(sel='a'):
 
     return(recentFeed, selectedBlog)
 
-
-def main():
-    PREFIX = "rssBuffer_"
-    POSFIX = "last"
-
-    logging.basicConfig(filename='/home/ftricas/usr/var/' + PREFIX + '.log',
-                        level=logging.INFO,
-                        format='%(asctime)s %(message)s')
-
-    recentFeed, selectedBlog = selectBlog('m')
-
-    urlFile = open(os.path.expanduser("~/." +
-                   PREFIX + selectedBlog['identifier'] +
-                   "." + POSFIX), "r")
-
-    linkLast = urlFile.read().rstrip()  # Last published
-
+def lookForLinkPosition(linkLast, recentFeed):
     for i in range(len(recentFeed.entries)):
         if (recentFeed.entries[i].link == linkLast):
             break
@@ -146,6 +130,9 @@ def main():
             # i = len(recentFeed.entries)-1
         logging.debug("i: " + str(i))
 
+    return i
+
+def connectBuffer():
     config = ConfigParser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBuffer')])
 
@@ -161,6 +148,9 @@ def main():
 
     logging.debug(api.info)
 
+    return(api)
+
+def checkPendingPosts(api):
     # We can put as many items as the service with most items allow
     # The limit is ten.
     # Get all pending updates of a social network profile
@@ -178,8 +168,34 @@ def main():
 
     logging.info("There are %d in some buffer, we can put %d" %
                  (lenMax, 10-lenMax))
-    logging.info("We have %d items to post" % i)
 
+    return(lenMax, profileList)
+
+
+
+def main():
+    PREFIX = "rssBuffer_"
+    POSFIX = "last"
+
+    logging.basicConfig(filename='/home/ftricas/usr/var/' + PREFIX + '.log',
+                        level=logging.INFO,
+                        format='%(asctime)s %(message)s')
+
+    recentFeed, selectedBlog = selectBlog('m')
+
+    urlFile = open(os.path.expanduser("~/." +
+                   PREFIX + selectedBlog['identifier'] +
+                   "." + POSFIX), "r")
+
+    linkLast = urlFile.read().rstrip()  # Last published
+
+    i = lookForLinkPosition(linkLast, recentFeed)
+    api = connectBuffer()
+
+    lenMax, profileList = checkPendingPosts(api)
+    logging.info("We have %d items to post" % i)
+    print lenMax
+    sys.exit()
     for j in range(10-lenMax, 0, -1):
         if (i == 0):
             break
