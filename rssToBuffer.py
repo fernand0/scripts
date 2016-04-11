@@ -171,35 +171,30 @@ def checkPendingPosts(api):
 
     return(lenMax, profileList)
 
-
-
-def main():
-    PREFIX = "rssBuffer_"
-    POSFIX = "last"
-
-    logging.basicConfig(filename='/home/ftricas/usr/var/' + PREFIX + '.log',
-                        level=logging.INFO,
-                        format='%(asctime)s %(message)s')
-
-    recentFeed, selectedBlog = selectBlog('m')
-
-    urlFile = open(os.path.expanduser("~/." +
-                   PREFIX + selectedBlog['identifier'] +
-                   "." + POSFIX), "r")
-
-    linkLast = urlFile.read().rstrip()  # Last published
-
-    i = lookForLinkPosition(linkLast, recentFeed)
-    api = connectBuffer()
-
-    lenMax, profileList = checkPendingPosts(api)
-    logging.info("We have %d items to post" % i)
-    print lenMax
-    sys.exit()
+def publishPosts(profileList, recentFeed, lenMax, i):
     for j in range(10-lenMax, 0, -1):
         if (i == 0):
             break
         i = i - 1
+        post = obtainBlogData(recentFeed, lenMax, i)
+        serviceList = ['twitter', 'facebook', 'linkedin']
+        for service in serviceList:
+            line = service
+            profile = profileList[service]
+            try:
+                profile.updates.new(post)
+                line = line + ' ok'
+                time.sleep(3)
+            except:
+                line = line + ' fail'
+                failFile = open(os.path.expanduser("~/." +
+                                PREFIX+selectedBlog['identifier'] +
+                                ".fail"), "w")
+                failFile.write(post)
+            logging.info("  %s service" % line)
+
+
+def obtainBlogData(recentFeed, lenMax, i):
         if (recentFeed.feed['title_detail']['base'].find('tumblr') > 0):
             soup = BeautifulSoup(recentFeed.entries[i].summary)
             pageLink = soup.findAll("a")
@@ -231,25 +226,95 @@ def main():
 
         # pageImage = soup.findAll("img")
         theTitle = urllib.quote(theTitle.encode('utf-8'))
+        theLink = urllib.quote(theLink,safe=":/")
         post = re.sub('\n+', ' ', theTitle) + " " + theLink
         # Sometimes there are newlines and unnecessary spaces
         # print "post", post
         # There are problems with &
+
         logging.info("Publishing... %s" % post)
-        for service in serviceList:
-            line = service
-            profile = profileList[service]
-            try:
-                profile.updates.new(post)
-                line = line + ' ok'
-                time.sleep(3)
-            except:
-                line = line + ' fail'
-                failFile = open(os.path.expanduser("~/." +
-                                PREFIX+selectedBlog['identifier'] +
-                                ".fail"), "w")
-                failFile.write(post)
-            logging.info("  %s service" % line)
+
+        return post
+
+def main():
+    PREFIX = "rssBuffer_"
+    POSFIX = "last"
+
+    logging.basicConfig(filename='/home/ftricas/usr/var/' + PREFIX + '.log',
+                        level=logging.INFO,
+                        format='%(asctime)s %(message)s')
+
+    recentFeed, selectedBlog = selectBlog('m')
+
+    urlFile = open(os.path.expanduser("~/." +
+                   PREFIX + selectedBlog['identifier'] +
+                   "." + POSFIX), "r")
+
+    linkLast = urlFile.read().rstrip()  # Last published
+
+    i = lookForLinkPosition(linkLast, recentFeed)
+    api = connectBuffer()
+
+    lenMax, profileList = checkPendingPosts(api)
+    logging.info("We have %d items to post" % i)
+    print("We have %d items to post" % i)
+
+    #for j in range(10-lenMax, 0, -1):
+    #    if (i == 0):
+    #        break
+    #    i = i - 1
+    #    if (recentFeed.feed['title_detail']['base'].find('tumblr') > 0):
+    #        soup = BeautifulSoup(recentFeed.entries[i].summary)
+    #        pageLink = soup.findAll("a")
+    #        if pageLink:
+    #            theLink = pageLink[0]["href"]
+    #            theTitle = pageLink[0].get_text()
+    #            if len(re.findall(r'\w+', theTitle)) == 1:
+    #                logging.debug("Una palabra, probamos con el titulo")
+    #                theTitle = recentFeed.entries[i].title
+    #            if (theLink[:26] == "https://www.instagram.com/") and \
+    #               (theTitle[:17] == "A video posted by"):
+    #                # exception for Instagram videos
+    #                theTitle = recentFeed.entries[i].title
+    #            if (theLink[:22] == "https://instagram.com/") and \
+    #               (theTitle.find("(en") > 0):
+    #                theTitle = theTitle[:theTitle.find("(en")-1]
+    #        else:
+    #            # Some entries do not have a proper link and the rss contains
+    #            # the video, image, ... in the description.
+    #            # In this case we use the title and the link of the entry.
+    #            theLink = recentFeed.entries[i].link
+    #            theTitle = recentFeed.entries[i].title.encode('utf-8')
+    #    elif (selectedBlog.find('wordpress') > 0):
+    #        soup = BeautifulSoup(recentFeed.entries[i].content[0].value)
+    #        theTitle = recentFeed.entries[i].title
+    #        theLink = recentFeed.entries[i].link
+    #    else:
+    #        logging.info("I don't know what to do!")
+
+    publishPosts(profileList, recentFeed, lenMax, i)
+    #    # pageImage = soup.findAll("img")
+    #    theTitle = urllib.quote(theTitle.encode('utf-8'))
+    #    post = re.sub('\n+', ' ', theTitle) + " " + theLink
+    #    # Sometimes there are newlines and unnecessary spaces
+    #    # print "post", post
+    #    # There are problems with &
+    #    logging.info("Publishing... %s" % post)
+
+    #    for service in serviceList:
+    #        line = service
+    #        profile = profileList[service]
+    #        try:
+    #            profile.updates.new(post)
+    #            line = line + ' ok'
+    #            time.sleep(3)
+    #        except:
+    #            line = line + ' fail'
+    #            failFile = open(os.path.expanduser("~/." +
+    #                            PREFIX+selectedBlog['identifier'] +
+    #                            ".fail"), "w")
+    #            failFile.write(post)
+    #        logging.info("  %s service" % line)
 
     urlFile = open(os.path.expanduser("~/." +
                    PREFIX + selectedBlog['identifier'] +
