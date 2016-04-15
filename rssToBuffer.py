@@ -173,6 +173,37 @@ def checkPendingPosts(api):
 
     return(lenMax, profileList)
 
+def getBlogData(recentFeed, selectedBlog, i=0):
+    i = 0  # It will publish the last added item
+
+    soup = BeautifulSoup(recentFeed.entries[i].title)
+    theTitle = soup.get_text()
+    theLink = recentFeed.entries[i].link
+
+    soup = BeautifulSoup(recentFeed.entries[i].summary)
+    theSummary = soup.get_text()
+
+    theSummaryLinks = extractLinks(soup, selectedBlog["linksToAvoid"])
+    theImage = extractImage(soup)
+    theTwitter = selectedBlog["twitterAC"]
+    theFbPage = selectedBlog["pageFB"]
+
+    print "============================================================\n"
+    print "Results: \n"
+    print "============================================================\n"
+    print theTitle.encode('utf-8')
+    print theLink
+    print theSummary.encode('utf-8')
+    print theSummaryLinks.encode('utf-8')
+    print theImage
+    print theTwitter
+    print theFbPage
+    print "============================================================\n"
+
+    return (theTitle, theLink, theSummary, theSummaryLinks,
+            theImage, theTwitter, theFbPage)
+
+
 def publishPosts(selectedBlog, profileList, recentFeed, lenMax, i):
     for j in range(10-lenMax, 0, -1):
         if (i == 0):
@@ -200,9 +231,9 @@ def publishPosts(selectedBlog, profileList, recentFeed, lenMax, i):
     urlFile.write(recentFeed.entries[i].link)
     urlFile.close()
 
-
 def obtainBlogData(recentFeed, lenMax, i):
         if (recentFeed.feed['title_detail']['base'].find('tumblr') > 0):
+            # Link in the content
             soup = BeautifulSoup(recentFeed.entries[i].summary)
             pageLink = soup.findAll("a")
             if pageLink:
@@ -225,8 +256,7 @@ def obtainBlogData(recentFeed, lenMax, i):
                 theLink = recentFeed.entries[i].link
                 theTitle = recentFeed.entries[i].title.encode('utf-8')
         elif (selectedBlog.find('wordpress') > 0):
-            soup = BeautifulSoup(recentFeed.entries[i].content[0].value)
-            theTitle = recentFeed.entries[i].title
+            theTitle = BeautifulSoup(recentFeed.entries[i].title).get_text()
             theLink = recentFeed.entries[i].link
         else:
             logging.info("I don't know what to do!")

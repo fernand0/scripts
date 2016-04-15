@@ -42,6 +42,7 @@ import imaplib
 import keyring
 import getpass
 import threading
+from Queue import Queue
 import hashlib
 import binascii
 import logging
@@ -52,6 +53,7 @@ def selectHash(M, folder, hashSelect):
     typ, data = M.search(None, 'ALL')
     i = 0
     msgs = ''
+    dupHash = []
     for num in data[0].split():
         m = hashlib.md5()
         typ, msg = M.fetch(num, '(BODY.PEEK[TEXT])')
@@ -67,11 +69,22 @@ def selectHash(M, folder, hashSelect):
                 msgs = str(num)
             i = i + 1
         else:
-            logging.info("Message %s\n%s" 
-                          % (num, msgDigest))
+            logging.debug("Message %s\n%s" % (num, msgDigest))
+        # We are deleting duplicate messages
+        if msgDigest in dupHash:
+            if msgs:
+                msgs = msgs + ' ' + num
+                # num is a string or a number?
+            else:
+                msgs = str(num)
+            i = i + 1
+        else:
+            dupHash.append(msgDigest)
         if (i % 10 == 0):
             logging.debug("Counter %d" % i)
+
     logging.debug("END\n\n%d messages have been selected\n" % i)
+
     return msgs
 
 
@@ -85,77 +98,84 @@ def getPassword(server, user):
     return password
 
 
-def mailFolder(account, accountData, logging):
+def mailFolder(account, accountData, logging, res):
     SERVER = account[0]
     USER = account[1]
     PASSWORD = getPassword(SERVER, USER)
 
     M = imaplib.IMAP4_SSL(SERVER)
-    M.login(USER, PASSWORD)
-    PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-    # We do not want passwords in memory when not needed
-    M.select()
+    try:
+        M.login(USER, PASSWORD)
+        PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        # We do not want passwords in memory when not needed
+        M.select()
 
-    for actions in accountData['RULES']:
-        RULES = actions[0]
-        FOLDER = actions[1]
+        for actions in accountData['RULES']:
+            RULES = actions[0]
+            FOLDER = actions[1]
 
-        i = 0
-        msgs = ''
-        for rule in RULES:
-            action = rule.split(',')
-            header = action[0][1:-1]
-            content = action[1][1:-1]
-            logging.info("[%s,%s] Rule: %s %s" % (SERVER, USER, header, content))
-            if (header == 'hash'):
-                msgs = selectHash(M, FOLDER, content)
-                # M.select(folder)
-                FOLDER = ""
-            else:
-                typ, data = M.search(None, 'header', header, content)
-                if data[0]:
-                    if msgs:
-                        msgs = msgs + ' ' + data[0]
+            i = 0
+            msgs = ''
+            for rule in RULES:
+                action = rule.split(',')
+                header = action[0][1:-1]
+                content = action[1][1:-1]
+                logging.info("[%s,%s] Rule: %s %s" % (SERVER, USER, header, content))
+                if (header == 'hash'):
+                    msgs = selectHash(M, FOLDER, content)
+                    # M.select(folder)
+                    FOLDER = ""
+                else:
+                    typ, data = M.search(None, 'header', header, content)
+                    if data[0]:
+                        if msgs:
+                            msgs = msgs + ' ' + data[0]
+                        else:
+                            msgs = data[0]
                     else:
-                        msgs = data[0]
-                else:
-                    logging.info("[%s,%s] No messages matching" % (SERVER, USER))
+                        logging.info("[%s,%s] No messages matching" % (SERVER, USER))
 
-        if len(msgs)==0:
-            logging.info("[%s,%s] Nothing to do" % (SERVER, USER))
-        # elif not msgs[0]:
-        #    print "["+SERVER+","+USER+"]"+" -> Nothing to do (len 0, empty)"
-        else:
-            logging.info("[%s,%s] Let's go!" % (SERVER, USER))
-            msgs = msgs.replace(" ", ",")
-            status = 'OK'
-            if FOLDER:
-	        # M.copy needs a set of comma-separated mesages, we have a list
-	        # with a string
-                result = M.copy(msgs, FOLDER)
-                status = result[0]
-            i = msgs.count(',') + 1
-            logging.debug("[%s,%s] *%s* Status: %s"% (SERVER,USER,msgs,status))
-            # And this?
-	    # Maybe messages are 'disappearing' while we are working?
-	    # hint:anti-spam Is it possible to lock the folder in order to avoid
-	    # this? Can be dangerous (losing messages)?
-
-            if status == 'OK':
-                # If the list of messages is too long it won't work
-                flag = '\\Deleted'
-                result = M.store(msgs, '+FLAGS', flag)
-                if result[0] == 'OK':
-                    logging.info("[%s,%s] SERVER %s: %d messages have been deleted."
-                                  % (SERVER, USER, SERVER, i))
-                else:
-                    logging.info("[%s,%s] Couldn't delete messages!" 
-                                 % (SERVER, USER))
+            if len(msgs)==0:
+                logging.info("[%s,%s] Nothing to do" % (SERVER, USER))
+            # elif not msgs[0]:
+            #    print "["+SERVER+","+USER+"]"+" -> Nothing to do (len 0, empty)"
             else:
-                logging.info("[%s,%s] Couldn't move messages!" 
-                                 % (SERVER, USER))
-    M.close()
-    M.logout()
+                logging.info("[%s,%s] Let's go!" % (SERVER, USER))
+                msgs = msgs.replace(" ", ",")
+                status = 'OK'
+                if FOLDER:
+	            # M.copy needs a set of comma-separated mesages, we have a list
+	            # with a string
+                    result = M.copy(msgs, FOLDER)
+                    status = result[0]
+                i = msgs.count(',') + 1
+                logging.debug("[%s,%s] *%s* Status: %s"% (SERVER,USER,msgs,status))
+                # And this?
+	        # Maybe messages are 'disappearing' while we are working?
+	        # hint:anti-spam Is it possible to lock the folder in order to avoid
+	        # this? Can be dangerous (losing messages)?
+
+                if status == 'OK':
+                    # If the list of messages is too long it won't work
+                    flag = '\\Deleted'
+                    result = M.store(msgs, '+FLAGS', flag)
+                    if result[0] == 'OK':
+                        logging.info("[%s,%s] SERVER %s: %d messages have been deleted."
+                                      % (SERVER, USER, SERVER, i))
+                    else:
+                        logging.info("[%s,%s] Couldn't delete messages!" 
+                                     % (SERVER, USER))
+                else:
+                    logging.info("[%s,%s] Couldn't move messages!" 
+                                     % (SERVER, USER))
+        M.close()
+        M.logout()
+        res.put(("ok", SERVER, USER))
+    except:
+        # We will ask for the new password
+        logging.info("[%s,%s] wrong password!"
+                         % (SERVER, USER))
+        res.put(("no", SERVER, USER))
 
 
 def main():
@@ -203,9 +223,13 @@ def main():
     # We need to unlock the keyring because if not each thread will ask for the
     # keyring password
 
+    answers = []
+
     for account in accounts.keys():
+        answers.append(Queue())
         t = threading.Thread(target=mailFolder,
-                             args=(account, accounts[account], logging))
+                             args=(account, accounts[account], logging, 
+                                   answers[-1]))
 	# We are using sequential code because when there are several set of
 	# rules for a folder concurrency causes problems
         # Hopefully solved
@@ -222,6 +246,17 @@ def main():
 
     for t in threads:
         t.join()
+
+    for ans in answers:
+        print  ans
+        anss = ans.get()
+        if (anss[0] == 'no'):
+            print "Wron password " + anss[1] + " " + anss[2] + " write a new one"
+            PASSWORD = getpass.getpass()
+            keyring.set_password(anss[1], anss[2], PASSWORD)
+            PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        else:
+            print "si " + anss[1]
 
     logging.info("%s The end!" % sys.argv[0])
 
