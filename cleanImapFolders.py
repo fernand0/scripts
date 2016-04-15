@@ -248,15 +248,19 @@ def main():
         t.join()
 
     for ans in answers:
-        print  ans
         anss = ans.get()
+        SERVER = anss[1]
+        USER = anss[2]
         if (anss[0] == 'no'):
-            print "Wron password " + anss[1] + " " + anss[2] + " write a new one"
+       
+            logging.info("[%s,%s] Wrong password. Changing" % (SERVER, USER))
+            print "Wrong password " + SERVER + " " + USER + \
+                  " write a new one"
+
+            # Maybe it should ask if you want to change the password
             PASSWORD = getpass.getpass()
-            keyring.set_password(anss[1], anss[2], PASSWORD)
+            keyring.set_password(SERVER, USER, PASSWORD)
             PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        else:
-            print "si " + anss[1]
 
     logging.info("%s The end!" % sys.argv[0])
 
