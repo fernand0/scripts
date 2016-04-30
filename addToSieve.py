@@ -247,33 +247,35 @@ def selectKeyword(header):
 
 
 def selectMessage(M):
-    M.select()
-    data = M.sort('ARRIVAL', 'UTF-8', 'ALL')
-    if (data[0] == 'OK'):
-        j = 0
-        msg_data = []
-        messages = data[1][0].split(' ')
-        lenId = len(str(messages[-1]))
-        for i in messages[-15:]:
-            typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[])')
-            # print msg_data_fetch
-            for response_part in msg_data_fetch:
-                if isinstance(response_part, tuple):
-                    msg = email.message_from_string(response_part[1])
-                    msg_data.append(msg)
-                    # Variable length fmt
-                    fmt = "%2s) %-20s %-40s"
-                    headFrom = msg['From']
-                    headSubject = msg['Subject']
-                    print fmt % (j,
-                                 Header.decode_header(headFrom)[0][0][:20],
-                                 Header.decode_header(headSubject)[0][0][:40])
-                    j = j + 1
-        msg_number = raw_input("Which message? ")
-        return msg_data[int(msg_number)]  # messages[-10+int(msg_number)-1]
-    else:
-        return 0
+    msg_number =""
+    while (not msg_number.isdigit()):
+        M.select()
+        data = M.sort('ARRIVAL', 'UTF-8', 'ALL')
+        if (data[0] == 'OK'):
+            j = 0
+            msg_data = []
+            messages = data[1][0].split(' ')
+            lenId = len(str(messages[-1]))
+            for i in messages[-15:]:
+                typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[])')
+                # print msg_data_fetch
+                for response_part in msg_data_fetch:
+                    if isinstance(response_part, tuple):
+                        msg = email.message_from_string(response_part[1])
+                        msg_data.append(msg)
+                        # Variable length fmt
+                        fmt = "%2s) %-20s %-40s"
+                        headFrom = msg['From']
+                        headSubject = msg['Subject']
+                        print fmt % (j,
+                                     Header.decode_header(headFrom)[0][0][:20],
+                                     Header.decode_header(headSubject)[0][0][:40])
+                        j = j + 1
+            msg_number = raw_input("Which message? ")
+        else:
+            return 0
 
+    return msg_data[int(msg_number)]  # messages[-10+int(msg_number)-1]
 
 def selectHeaderAuto(M, msg):
     i = 1

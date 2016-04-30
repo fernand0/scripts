@@ -92,7 +92,7 @@ def getPassword(server, user):
     # Para borrar keyring.delete_password(server, user)
     password = keyring.get_password(server, user)
     if not password:
-        logging.info("[%s,%s] New account. Setting password" % (SERVER, USER))
+        logging.info("[%s,%s] New account. Setting password" % (server, user))
         password = getpass.getpass()
         keyring.set_password(server, user, password)
     return password
