@@ -120,7 +120,7 @@ def mailFolder(account, accountData, logging, res):
                 action = rule.split(',')
                 header = action[0][1:-1]
                 content = action[1][1:-1]
-                logging.info("[%s,%s] Rule: %s %s" % (SERVER, USER, header, content))
+                msgTxt = "[%s,%s] Rule: %s %s" % (SERVER, USER, header, content)
                 if (header == 'hash'):
                     msgs = selectHash(M, FOLDER, content)
                     # M.select(folder)
@@ -133,14 +133,14 @@ def mailFolder(account, accountData, logging, res):
                         else:
                             msgs = data[0]
                     else:
-                        logging.info("[%s,%s] No messages matching" % (SERVER, USER))
+                        logging.info("%s - No messages matching" % msgTxt)
 
             if len(msgs)==0:
-                logging.info("[%s,%s] Nothing to do" % (SERVER, USER))
+                logging.info("%s Nothing to do" % msgTxt)
             # elif not msgs[0]:
             #    print "["+SERVER+","+USER+"]"+" -> Nothing to do (len 0, empty)"
             else:
-                logging.info("[%s,%s] Let's go!" % (SERVER, USER))
+                logging.info("%s - Let's go!" % msgTxt)
                 msgs = msgs.replace(" ", ",")
                 status = 'OK'
                 if FOLDER:
@@ -150,10 +150,6 @@ def mailFolder(account, accountData, logging, res):
                     status = result[0]
                 i = msgs.count(',') + 1
                 logging.debug("[%s,%s] *%s* Status: %s"% (SERVER,USER,msgs,status))
-                # And this?
-	        # Maybe messages are 'disappearing' while we are working?
-	        # hint:anti-spam Is it possible to lock the folder in order to avoid
-	        # this? Can be dangerous (losing messages)?
 
                 if status == 'OK':
                     # If the list of messages is too long it won't work
