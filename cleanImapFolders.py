@@ -156,14 +156,12 @@ def mailFolder(account, accountData, logging, res):
                     flag = '\\Deleted'
                     result = M.store(msgs, '+FLAGS', flag)
                     if result[0] == 'OK':
-                        logging.info("[%s,%s] SERVER %s: %d messages have been deleted."
-                                      % (SERVER, USER, SERVER, i))
+                        logging.info("%s: %d messages have been deleted."
+                                      % (msgTxt, i))
                     else:
-                        logging.info("[%s,%s] Couldn't delete messages!" 
-                                     % (SERVER, USER))
+                        logging.info("%s -  Couldn't delete messages!" % msgTxt)
                 else:
-                    logging.info("[%s,%s] Couldn't move messages!" 
-                                     % (SERVER, USER))
+                    logging.info("%s - Couldn't move messages!" % msgTxt)
         M.close()
         M.logout()
         res.put(("ok", SERVER, USER))
