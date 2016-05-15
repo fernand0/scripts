@@ -123,6 +123,9 @@ def selectBlog(sel='a'):
     if (config.has_option("Blog"+str(recentIndex), "linksToAvoid")):
         selectedBlog["linksToAvoid"] = config.get("Blog" + str(recentIndex),
                                                   "linksToAvoid")
+    if (config.has_option("Blog"+str(recentIndex), "comment")):
+        selectedBlog["comment"] = config.get("Blog" + str(recentIndex),
+                                                  "comment")
     else:
         selectedBlog["linksToAvoid"] = ""
 
@@ -149,6 +152,10 @@ def getBlogData(recentFeed, selectedBlog):
     theSummary = soup.get_text()
 
     theSummaryLinks = extractLinks(soup, selectedBlog["linksToAvoid"])
+    if 'comment' in selectedBlog:
+        theComment = extractLinks(soup, selectedBlog["comment"])
+    else: 
+        theComment = "Publicado!"
     theImage = extractImage(soup)
     theTwitter = selectedBlog["twitterAC"]
     theFbPage = selectedBlog["pageFB"]
@@ -161,20 +168,20 @@ def getBlogData(recentFeed, selectedBlog):
     print theSummary.encode('utf-8')
     print theSummaryLinks.encode('utf-8')
     print theImage
+    print theComment
     print theTwitter
     print theFbPage
     print "============================================================\n"
 
-    return (theTitle, theLink, theSummary, theSummaryLinks,
+    return (theTitle, theLink, theSummary, theComment, theSummaryLinks,
             theImage, theTwitter, theFbPage)
 
 
-def publishTwitter(title, link, twitter):
+def publishTwitter(title, link, comment, twitter):
 
     config = ConfigParser.ConfigParser()
     config.read([os.path.expanduser('~/.rssTwitter')])
 
-    comment = 'Publicado!'
     statusTxt = comment + " " + title + " " + link
 
     CONSUMER_KEY = config.get("appKeys", "CONSUMER_KEY")
@@ -244,13 +251,13 @@ def main():
     else:
         recentFeed, selectedBlog = selectBlog()
 
-    title, link, summary, summaryLinks, image, twitter, fbPage = \
+    title, link, summary, comment, summaryLinks, image, twitter, fbPage = \
         getBlogData(recentFeed, selectedBlog)
 
     print "Twitter...\n"
     if twitter:
         try:
-            publishTwitter(title, link, twitter)
+            publishTwitter(title, link, comment, twitter)
         except:
             print "Twitter posting failed!\n"
             print "Unexpected error:", sys.exc_info()[0]
