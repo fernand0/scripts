@@ -169,20 +169,26 @@ def doFolderExist(folder, M):
 
 def selectAction(p, M):  # header="", textHeader=""):
     i = 1
+    txtResults = ""
     for r in p.result:
         if r.children:
+            txtResults = txtResults + "%02d " % len(r.arguments['test'].arguments['tests'])
             if (type(r.children[0]) == sievelib.commands.FileintoCommand):
-                print "%2d) Folder  %s" % (i, r.children[0]['mailbox'])
+                txtResults = txtResults + "%02d) Folder  %s\n" % (i, r.children[0]['mailbox'])
             elif (type(r.children[0]) == sievelib.commands.RedirectCommand):
-                print "%2d) Address %s" % (i, r.children[0]['address'])
+                txtResults = txtResults + "%02d) Address %s\n" % (i, r.children[0]['address'])
             else:
-                print "%2d) Not implemented %s" % (i, type(r.children[0]))
+                txtResults = txtResults + "%02d) Not implemented %s\n" % (i, type(r.children[0]))
         else:
-            print "%2d) Not implemented %s" % (i, type(r))
+            txtResults = txtResults + "%02d) Not implemented %s\n" % (i, type(r))
 
         i = i + 1
-    print "%2d) New folder " % i
-    print "%2d) New redirection" % (i+1)
+    txtResults = txtResults + "99 %02d) New folder \n" % i
+    txtResults = txtResults + "99 %02d) New redirection\n" % (i+1)
+
+
+    for cad in sorted(txtResults.split('\n')):
+        print cad[3:], cad[:3]
 
     option = raw_input("Select one: ")
 

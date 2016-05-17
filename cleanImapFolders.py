@@ -121,6 +121,7 @@ def mailFolder(account, accountData, logging, res):
                 header = action[0][1:-1]
                 content = action[1][1:-1]
                 msgTxt = "[%s,%s] Rule: %s %s" % (SERVER, USER, header, content)
+                logging.debug(msgTxt)
                 if (header == 'hash'):
                     msgs = selectHash(M, FOLDER, content)
                     # M.select(folder)
@@ -133,35 +134,41 @@ def mailFolder(account, accountData, logging, res):
                         else:
                             msgs = data[0]
                     else:
-                        logging.info("%s - No messages matching" % msgTxt)
+                        logging.debug("%s - No messages matching." % msgTxt)
+                        msgTxt = "%s - No messages matching." % msgTxt
 
-            if len(msgs)==0:
-                logging.info("%s Nothing to do" % msgTxt)
-            # elif not msgs[0]:
-            #    print "["+SERVER+","+USER+"]"+" -> Nothing to do (len 0, empty)"
-            else:
-                logging.info("%s - Let's go!" % msgTxt)
-                msgs = msgs.replace(" ", ",")
-                status = 'OK'
-                if FOLDER:
-	            # M.copy needs a set of comma-separated mesages, we have a list
-	            # with a string
-                    result = M.copy(msgs, FOLDER)
-                    status = result[0]
-                i = msgs.count(',') + 1
-                logging.debug("[%s,%s] *%s* Status: %s"% (SERVER,USER,msgs,status))
-
-                if status == 'OK':
-                    # If the list of messages is too long it won't work
-                    flag = '\\Deleted'
-                    result = M.store(msgs, '+FLAGS', flag)
-                    if result[0] == 'OK':
-                        logging.info("%s: %d messages have been deleted."
-                                      % (msgTxt, i))
-                    else:
-                        logging.info("%s -  Couldn't delete messages!" % msgTxt)
+                if len(msgs)==0:
+                    logging.debug("%s Nothing to do" % msgTxt)
+                    msgTxt = "%s Nothing to do" % msgTxt
                 else:
-                    logging.info("%s - Couldn't move messages!" % msgTxt)
+                    logging.debug("%s - Let's go!" % msgTxt)
+                    msgTxt = "%s - Let's go!" % msgTxt
+                    msgs = msgs.replace(" ", ",")
+                    status = 'OK'
+                    if FOLDER:
+	                # M.copy needs a set of comma-separated mesages, we have a list
+	                # with a string
+                        result = M.copy(msgs, FOLDER)
+                        status = result[0]
+                    i = msgs.count(',') + 1
+                    logging.debug("[%s,%s] *%s* Status: %s"% (SERVER,USER,msgs,status))
+
+                    if status == 'OK':
+                        # If the list of messages is too long it won't work
+                        flag = '\\Deleted'
+                        result = M.store(msgs, '+FLAGS', flag)
+                        if result[0] == 'OK':
+                            logging.debug("%s: %d messages have been deleted."
+                                          % (msgTxt, i))
+                            msgTxt = "%s: %d messages have been deleted." \
+                                          % (msgTxt, i)
+                        else:
+                            logging.debug("%s -  Couldn't delete messages!" % msgTxt)
+                            msgTxt = "%s -  Couldn't delete messages!" % msgTxt
+                    else:
+                        logging.debug("%s - Couldn't move messages!" % msgTxt)
+                        msgTxt = "%s - Couldn't move messages!" % msgTxt
+                logging.info(msgTxt)
         M.close()
         M.logout()
         res.put(("ok", SERVER, USER))
