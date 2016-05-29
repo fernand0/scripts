@@ -20,6 +20,9 @@ from robobrowser import RoboBrowser
 # at least for me. I'll try to improve usability, capabilities and son on,
 # because in the actual state the usage is pretty basic and primitive.
 
+# Next message.
+# Spam: https://puc.rediris.es/users/index.php?set_proxy_panel=PROXY_USER&pageID=2
+# Valid: https://puc.rediris.es/users/index.php?set_proxy_panel=PROXY_USER&action=showValidMail&pageID=2
 
 def getPassword(server, user):
     # Deleting keyring.delete_password(server, user)
@@ -37,32 +40,59 @@ def listMessages(logging, browser, link):
     if len(forms) >= 4:
         form  = forms[3]
     # We need a copy
-    options = list(form['mails[]'].options)
-    options.reverse()
-    
-    logging.debug("Message ids %s" % options)
+        options = list(form['mails[]'].options)
+        options.reverse()
+        
+        logging.debug("Message ids %s" % options)
 
-    trList = browser.find_all("tr")
-    subjects = {}
-    
-    listMsg = []
-    for row in trList:
-        cellsS = row.find_all("td", { "class" : "subject clickable"})
-        cellsA = row.find_all("td", { "class" : "sender clickable"})
-        if cellsS:
-    	    listMsg.append((options.pop(), cellsA[0]['title'], cellsS[0]['title']))
-    
-    return listMsg
+        trList = browser.find_all("tr")
+        subjects = {}
+        
+        listMsg = []
+        for row in trList:
+            cellsS = row.find_all("td", { "class" : "subject clickable"})
+            cellsA = row.find_all("td", { "class" : "sender clickable"})
+            if cellsS:
+        	    listMsg.append((options.pop(), cellsA[0]['title'], cellsS[0]['title']))
+        
+        links = browser.get_links()
+        matches = list(x for x in links if (x.contents and x.contents[0].find('siguiente') >= 0))
+        if matches:
+            listMsg.append(matches[0])
+    else:
+         listMsg = []
+         form = []
+    return (listMsg, form)
 
 def showMessages(logging, listMsg):		
     i = 0
-    for row in listMsg:
+    numMsg = len(listMsg)
+    if numMsg > 10:
+        numMsg = 10
+    for row in listMsg[0:numMsg]:
     	    print i,")", listMsg[i]
     	    i = i + 1
-    print i,") Next page" 
+    if len(listMsg) > 10:
+        print i,") Next page" 
 
-def selectMessages(logging, listMsg):
-    showMessages(logging, listMsg)
+def selectMessages(logging, browser, link):
+    links = link
+    sel = '10'
+    while (sel <> 'a') and (int(sel) == 10):
+        (listMsg, form) = listMessages(logging, browser, links)
+        if listMsg:
+            showMessages(logging, listMsg)
+            sel = raw_input("Message? (number for message to be moved to valid/spam mail, 'a' for deleting all messages shown) ")
+            if (sel <> 'a'):
+                if (int(sel) == 10):
+                    links = listMsg[10]
+                elif int(sel) + 1 > len(listMsg):
+                    links = link
+                    sel = 10
+        else:
+            sel = '11'
+            form = []
+    return (sel, form)
 
 def main():
     config = ConfigParser.ConfigParser()
@@ -107,18 +137,15 @@ def main():
         i = 0
         j = -1
         for link in links:
-            if link['href'].find('action')>0:
+            if link['href'].find('action=show')>0:
                 if link['href'].find(categories[int(sel)])>0:
                     j = i
                     cat = categories[int(sel)]
             i = i + 1
         
         if (j>=0):
-            listMsg = listMessages(logging, browser, links[j])
-            selectMessages(logging, listMsg)
+            (sel, form) = selectMessages(logging, browser, links[j])
 	
-            sel = raw_input("Message? (number for message to be moved to valid/spam mail, 'a' for deleting all messages shown) ")
-            
             if (sel == 'a'):
                 # Select just one
                 print form['mails[]'].options
@@ -131,8 +158,9 @@ def main():
                 print 'Selector:', form['globalSelector'].value
                 browser.submit_form(form)
                 urlIndex = url + 'users/index.php'
-            elif (int(sel) < i):
+            elif (int(sel) < len(categories)):
                 # Select just one
+                print sel, i
                 print [listMsg[int(sel)][0]]
                 form['mails[]'].value = [listMsg[int(sel)][0]]
                 
@@ -150,8 +178,6 @@ def main():
                 print form['globalSelector'].value
                 browser.submit_form(form)
                 urlIndex = url + 'users/index.php'
-            else:
-                urlIndex = url + 'users/index.php?action=showValidMail&pageID=2'
 
 if __name__ == '__main__':
     main()
