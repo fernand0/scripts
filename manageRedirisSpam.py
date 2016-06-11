@@ -70,10 +70,10 @@ def showMessages(logging, listMsg):
     if numMsg > 10:
         numMsg = 10
     for row in listMsg[0:numMsg]:
-    	    print i,")", listMsg[i]
+    	    print "%2d) %-20s %-40s" % (i, listMsg[i][1][:25], listMsg[i][2][:50])
     	    i = i + 1
     if len(listMsg) > 10:
-        print i,") Next page" 
+        print "%2d) Next page" % i
 
 def selectMessages(logging, browser, link):
     links = link
@@ -92,7 +92,7 @@ def selectMessages(logging, browser, link):
         else:
             sel = '11'
             form = []
-    return (sel, form)
+    return (sel, form, listMsg)
 
 def main():
     config = ConfigParser.ConfigParser()
@@ -144,7 +144,7 @@ def main():
             i = i + 1
         
         if (j>=0):
-            (sel, form) = selectMessages(logging, browser, links[j])
+            (sel, form, listMsg) = selectMessages(logging, browser, links[j])
 	
             if (sel == 'a'):
                 # Select just one
@@ -158,7 +158,7 @@ def main():
                 print 'Selector:', form['globalSelector'].value
                 browser.submit_form(form)
                 urlIndex = url + 'users/index.php'
-            elif (int(sel) < len(categories)):
+            elif (int(sel) < 10):
                 # Select just one
                 print sel, i
                 print [listMsg[int(sel)][0]]
