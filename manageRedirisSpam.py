@@ -97,18 +97,19 @@ def selectMessages(logging, browser, link):
 def main():
     config = ConfigParser.ConfigParser()
     config.read([os.path.expanduser('~/.SERVERS.cfg')])
-    sections=config.sections()
     
+    i = 1
+    print "Configured accounts:"
+    for section in config.sections():
+        print '%s) %s' % (str(i), section)
+        i = i + 1
+    selection = raw_input('Select one: ')
+
     logging.basicConfig(#filename='example.log',
                         level=logging.INFO,format='%(asctime)s %(message)s')
-    for section in sections:
-        if section == 'SPAM':
-            SERVER = config.get(section, 'server')
-            USER = config.get(section, 'user')
-            PASSWORD = getPassword(SERVER, USER)
-        else:
-            logging.error("No spam account configured, check for the existence of ~/.SERVERS.cfg")
-            sys.exit()
+    SERVER = config.get(config.sections()[int(selection) - 1], 'server')
+    USER = config.get(config.sections()[int(selection) - 1], 'user')
+    PASSWORD = getPassword(SERVER, USER)
 
     url = 'https://'+SERVER+'/'
 
@@ -119,7 +120,14 @@ def main():
     form['pass'].value = PASSWORD
     
     browser.submit_form(form)
-    
+    texts = browser.find_all(text=True) 
+    for line in texts:
+        if line.find('Incorrect')>0:
+            logging.info("[%s,%s] New account. Setting password" % (SERVER, USER))
+            password = getpass.getpass()
+            keyring.set_password(SERVER, USER, password)
+            sys.exit()
+   
     urlIndex = url + 'users/index.php'
     while True:
         
