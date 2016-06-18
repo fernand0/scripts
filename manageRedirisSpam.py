@@ -55,15 +55,18 @@ def selectCategoryLink(logging, catName, links):
                cat = catName
        i = i + 1
 
-       return links[j]
+    return links[j]
 
 
 def listMessages(logging, browser, link):		
 
     linkFollowing = link
+    page = 0
     listMsg = []
+    linkMsg = []
 
     while (linkFollowing):
+        linkMsg.append(linkFollowing)
         browser.follow_link(linkFollowing)
         forms = browser.get_forms()
         
@@ -82,12 +85,13 @@ def listMessages(logging, browser, link):
                 cellsS = row.find_all("td", { "class" : "subject clickable"})
                 cellsA = row.find_all("td", { "class" : "sender clickable"})
                 if cellsS:
-            	    listMsg.append((options.pop(), cellsA[0]['title'], cellsS[0]['title']))
+            	    listMsg.append((options.pop(), cellsA[0]['title'], cellsS[0]['title'], page))
             
             links = browser.get_links()
             matches = list(x for x in links if (x.contents and x.contents[0].find('siguiente') >= 0))
             if matches:
                 linkFollowing = matches[0]
+                page = page + 1
             else:
                 linkFollowing = ""
             logging.debug("Link following %s"% linkFollowing)
@@ -95,7 +99,8 @@ def listMessages(logging, browser, link):
              listMsg = []
              form = []
     #print len(listMsg), listMsg
-    return (listMsg, form)
+    #print linkMsg
+    return (listMsg, form, linkMsg)
 
 def showMessages(logging, listMsg):		
     i = 0
@@ -108,11 +113,20 @@ def showMessages(logging, listMsg):
     if len(listMsg) > 10:
         print "%2d) Next page" % i
 
+def selectMessageText(logging, browser, text, link):
+    links = link
+    (listMsg, form, linkMsg) = listMessages(logging, browser, links)
+    for line in listMsg:
+        if (line[2].find(text)>=0):
+            return (line, linkMsg)
+
+    return ("","")
+
 def selectMessages(logging, browser, link):
     links = link
     sel = '10'
     while (sel <> 'a') and (int(sel) == 10):
-        (listMsg, form) = listMessages(logging, browser, links)
+        (listMsg, form, linkMsg) = listMessages(logging, browser, links)
         if listMsg:
             showMessages(logging, listMsg)
             sel = raw_input("Message? (number for message to be moved to valid/spam mail, 'a' for deleting all messages shown) ")
@@ -131,11 +145,6 @@ def main():
     config = ConfigParser.ConfigParser()
     config.read([os.path.expanduser('~/.SERVERS.cfg')])
     
-    if len(sys.argv) >= 3:
-        if sys.argv[1] == "-s":
-             searchMessage(sys.argv[2])
-
-        sys.exit()
     i = 1
     print "Configured accounts:"
     for section in config.sections():
@@ -176,40 +185,56 @@ def main():
         link = selectCategoryLink(logging, catName, links)
 
         if (link):
-            (sel, form, listMsg) = selectMessages(logging, browser, link)
+            if len(sys.argv) >= 3:
+                if sys.argv[1] == "-s":
+                     (line, linkMsg) = selectMessageText(logging, browser, sys.argv[2], link)
+                     if line:
+                         print "Borramos? ", line
+                         browser.follow_link(linkMsg[line[3]]) 
+                         forms = browser.get_forms()
+                         if len(forms) >= 4:
+                             form  = forms[3]
+                             form['mails[]'].value = [line[0]]
+                             form['action'] = 'spamEmailsFrom_mailarch'
+                             browser.submit_form(form)
+                     else:
+                         print "Not found ", sys.argv[2]
+        
+            else:
+                (sel, form, listMsg) = selectMessages(logging, browser, link)
 	
-            if (sel == 'a'):
-                # Select just one
-                print form['mails[]'].options
-                form['mails[]'].value = form['mails[]'].options
-                form['action'] = 'deleteEmailsFrom_spam'
-                #deleteEmailsFrom_spam
-                #noSpamEmailsFrom_spam
-                #spamEmailsFrom_mailarch
-                print 'Options:', form['globalSelector'].options
-                print 'Selector:', form['globalSelector'].value
-                browser.submit_form(form)
-                urlIndex = url + 'users/index.php'
-            elif (int(sel) < 10):
-                # Select just one
-                print sel, i
-                print [listMsg[int(sel)][0]]
-                form['mails[]'].value = [listMsg[int(sel)][0]]
+                if (sel == 'a'):
+                    # Select just one
+                    print form['mails[]'].options
+                    form['mails[]'].value = form['mails[]'].options
+                    form['action'] = 'deleteEmailsFrom_spam'
+                    #deleteEmailsFrom_spam
+                    #noSpamEmailsFrom_spam
+                    #spamEmailsFrom_mailarch
+                    print 'Options:', form['globalSelector'].options
+                    print 'Selector:', form['globalSelector'].value
+                    browser.submit_form(form)
+                    urlIndex = url + 'users/index.php'
+                elif (int(sel) < 10):
+                    # Select just one
+                    print sel, i
+                    print [listMsg[int(sel)][0]]
+                    form['mails[]'].value = [listMsg[int(sel)][0]]
+                    
+                    print "marked ", form['mails[]'].value
+                    
+                    print form
                 
-                print "marked ", form['mails[]'].value
-                
-                print form
-            
-                if cat == 'showSpam':
-                    form['action'] = 'noSpamEmailsFrom_spam'
-                elif cat == 'showValidMail':
-                    form['action'] = 'spamEmailsFrom_mailarch'
-                elif cat == 'showMailingList':
-                    form['action'] = 'spamEmailsFrom_lists'
-                print form['globalSelector'].options
-                print form['globalSelector'].value
-                browser.submit_form(form)
-                urlIndex = url + 'users/index.php'
+                    if cat == 'showSpam':
+                        form['action'] = 'noSpamEmailsFrom_spam'
+                    elif cat == 'showValidMail':
+                        form['action'] = 'spamEmailsFrom_mailarch'
+                    elif cat == 'showMailingList':
+                        form['action'] = 'spamEmailsFrom_lists'
+                    print form['globalSelector'].options
+                    print form['globalSelector'].value
+                    browser.submit_form(form)
+                    urlIndex = url + 'users/index.php'
 
 if __name__ == '__main__':
     main()
