@@ -33,7 +33,7 @@ def getPassword(server, user):
         keyring.set_password(server, user, password)
     return password
 
-def selectCategory(logging, links):        
+def selectCategory(logging):        
     categories = ['showSpam', 'showValidMail', 'showPendingValidationMail', 'showMailingList', 'showVirusWarnings', 'showNotifications', 'showTrash']
          
     i = 0
@@ -43,8 +43,9 @@ def selectCategory(logging, links):
 
     sel = raw_input("Category? ")
 
-    catName = categories[int(sel)]
+    return categories[int(sel)]
 
+def selectCategoryLink(logging, catName, links):
     i = 0
     j = -1
     for link in links:
@@ -58,41 +59,49 @@ def selectCategory(logging, links):
 
 
 def listMessages(logging, browser, link):		
-    browser.follow_link(link)
-    forms = browser.get_forms()
-    
-    if len(forms) >= 4:
-        form  = forms[3]
-    # We need a copy
-        options = list(form['mails[]'].options)
-        options.reverse()
-        
-        logging.debug("Message ids %s" % options)
 
-        trList = browser.find_all("tr")
-        subjects = {}
+    linkFollowing = link
+    listMsg = []
+
+    while (linkFollowing):
+        browser.follow_link(linkFollowing)
+        forms = browser.get_forms()
         
-        listMsg = []
-        for row in trList:
-            cellsS = row.find_all("td", { "class" : "subject clickable"})
-            cellsA = row.find_all("td", { "class" : "sender clickable"})
-            if cellsS:
-        	    listMsg.append((options.pop(), cellsA[0]['title'], cellsS[0]['title']))
-        
-        links = browser.get_links()
-        matches = list(x for x in links if (x.contents and x.contents[0].find('siguiente') >= 0))
-        if matches:
-            listMsg.append(matches[0])
-    else:
-         listMsg = []
-         form = []
+        if len(forms) >= 4:
+            form  = forms[3]
+        # We need a copy
+            options = list(form['mails[]'].options)
+            options.reverse()
+            
+            logging.debug("Message ids %s" % options)
+
+            trList = browser.find_all("tr")
+            subjects = {}
+            
+            for row in trList:
+                cellsS = row.find_all("td", { "class" : "subject clickable"})
+                cellsA = row.find_all("td", { "class" : "sender clickable"})
+                if cellsS:
+            	    listMsg.append((options.pop(), cellsA[0]['title'], cellsS[0]['title']))
+            
+            links = browser.get_links()
+            matches = list(x for x in links if (x.contents and x.contents[0].find('siguiente') >= 0))
+            if matches:
+                linkFollowing = matches[0]
+            else:
+                linkFollowing = ""
+            logging.debug("Link following %s"% linkFollowing)
+        else:
+             listMsg = []
+             form = []
+    #print len(listMsg), listMsg
     return (listMsg, form)
 
 def showMessages(logging, listMsg):		
     i = 0
     numMsg = len(listMsg)
-    if numMsg > 10:
-        numMsg = 10
+    #if numMsg > 10:
+    #    numMsg = 10
     for row in listMsg[0:numMsg]:
     	    print "%2d) %-20s %-40s" % (i, listMsg[i][1][:25], listMsg[i][2][:50])
     	    i = i + 1
@@ -163,9 +172,9 @@ def main():
         browser.open(urlIndex)
         links = browser.select('a')
         
-        link = selectCategory(logging, links)
+        catName = selectCategory(logging)
+        link = selectCategoryLink(logging, catName, links)
 
-        
         if (link):
             (sel, form, listMsg) = selectMessages(logging, browser, link)
 	
