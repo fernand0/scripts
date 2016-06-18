@@ -33,17 +33,28 @@ def getPassword(server, user):
         keyring.set_password(server, user, password)
     return password
 
-def selectCategory(logging):        
+def selectCategory(logging, links):        
     categories = ['showSpam', 'showValidMail', 'showPendingValidationMail', 'showMailingList', 'showVirusWarnings', 'showNotifications', 'showTrash']
          
     i = 0
     for cat in categories:
         print "%d) %s"% (i, cat)
         i = i + 1
-    
+
     sel = raw_input("Category? ")
 
-    return (categories[int(sel)])
+    catName = categories[int(sel)]
+
+    i = 0
+    j = -1
+    for link in links:
+       if link['href'].find('action=show')>0:
+           if link['href'].find(catName)>0:
+               j = i
+               cat = catName
+       i = i + 1
+
+       return links[j]
 
 
 def listMessages(logging, browser, link):		
@@ -152,19 +163,11 @@ def main():
         browser.open(urlIndex)
         links = browser.select('a')
         
-        catName = selectCategory(logging)
+        link = selectCategory(logging, links)
 
-        i = 0
-        j = -1
-        for link in links:
-            if link['href'].find('action=show')>0:
-                if link['href'].find(catName)>0:
-                    j = i
-                    cat = catName
-            i = i + 1
         
-        if (j>=0):
-            (sel, form, listMsg) = selectMessages(logging, browser, links[j])
+        if (link):
+            (sel, form, listMsg) = selectMessages(logging, browser, link)
 	
             if (sel == 'a'):
                 # Select just one
