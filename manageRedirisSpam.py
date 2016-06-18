@@ -98,6 +98,11 @@ def main():
     config = ConfigParser.ConfigParser()
     config.read([os.path.expanduser('~/.SERVERS.cfg')])
     
+    if len(sys.argv) >= 3:
+        if sys.argv[1] == "-s":
+             searchMessage(sys.argv[2])
+
+        sys.exit()
     i = 1
     print "Configured accounts:"
     for section in config.sections():

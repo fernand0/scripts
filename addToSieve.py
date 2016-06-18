@@ -262,7 +262,7 @@ def selectMessage(M):
             msg_data = []
             messages = data[1][0].split(' ')
             lenId = len(str(messages[-1]))
-            for i in messages[-15:]:
+            for i in messages[-24:]:
                 typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[])')
                 # print msg_data_fetch
                 for response_part in msg_data_fetch:
