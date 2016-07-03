@@ -107,9 +107,13 @@ def showMessages(logging, listMsg):
     numMsg = len(listMsg)
     #if numMsg > 10:
     #    numMsg = 10
+    print ""
     for row in listMsg[0:numMsg]:
     	    print "%2d) %-20s %-40s" % (i, listMsg[i][1][:25], listMsg[i][2][:50])
     	    i = i + 1
+            if i % 10 == 0:
+    	        print "---------------------------"
+
     if len(listMsg) > 10:
         print "%2d) Next page" % i
 
@@ -145,6 +149,8 @@ def main():
     config = ConfigParser.ConfigParser()
     config.read([os.path.expanduser('~/.SERVERS.cfg')])
     
+    rows, columns = os.popen('stty size', 'r').read().split()
+
     i = 1
     print "Configured accounts:"
     for section in config.sections():
@@ -205,6 +211,10 @@ def main():
 	
                 if (sel == 'a'):
                     # Select just one
+                    i = 0
+                    for link in linkMsg:
+                        print link
+   
                     print form['mails[]'].options
                     form['mails[]'].value = form['mails[]'].options
                     form['action'] = 'deleteEmailsFrom_spam'

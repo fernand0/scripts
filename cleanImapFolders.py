@@ -91,8 +91,10 @@ def selectHash(M, folder, hashSelect):
 def getPassword(server, user):
     # Para borrar keyring.delete_password(server, user)
     password = keyring.get_password(server, user)
+    srvMsg = server.split('.')[0]
+    usrMsg = user.split('@')[0]
     if not password:
-        logging.info("[%s,%s] New account. Setting password" % (server, user))
+        logging.info("[%s,%s] New account. Setting password" % (srvMsg, usrMsg))
         password = getpass.getpass()
         keyring.set_password(server, user, password)
     return password
@@ -103,6 +105,8 @@ def mailFolder(account, accountData, logging, res):
     USER = account[1]
     PASSWORD = getPassword(SERVER, USER)
 
+    srvMsg = SERVER.split('.')[0]
+    usrMsg = USER.split('@')[0]
     M = imaplib.IMAP4_SSL(SERVER)
     try:
         M.login(USER, PASSWORD)
@@ -120,7 +124,7 @@ def mailFolder(account, accountData, logging, res):
                 action = rule.split(',')
                 header = action[0][1:-1]
                 content = action[1][1:-1]
-                msgTxt = "[%s,%s] Rule: %s %s" % (SERVER, USER, header, content)
+                msgTxt = "[%s,%s] Rule: %s %s" % (srvMsg, usrMsg, header, content)
                 logging.debug(msgTxt)
                 if (header == 'hash'):
                     msgs = selectHash(M, FOLDER, content)
@@ -175,7 +179,7 @@ def mailFolder(account, accountData, logging, res):
     except:
         # We will ask for the new password
         logging.info("[%s,%s] wrong password!"
-                         % (SERVER, USER))
+                         % (srvMsg, usrMsg))
         res.put(("no", SERVER, USER))
 
 
@@ -205,7 +209,9 @@ def main():
         else:
             FOLDER = ""
 
-        logging.info("[%s,%s] Reading config" % (SERVER, USER))
+        srvMsg = SERVER.split('.')[0]
+        usrMsg = USER.split('@')[0]
+        logging.info("[%s,%s] Reading config" % (srvMsg, usrMsg))
 
 	# We are grouping accounts in order to avoid interference among rules
 	# on the same account 
@@ -252,9 +258,12 @@ def main():
         anss = ans.get()
         SERVER = anss[1]
         USER = anss[2]
+
+        srvMsg = SERVER.split('.')[0]
+        usrMsg = USER.split('@')[0]
         if (anss[0] == 'no'):
        
-            logging.info("[%s,%s] Wrong password. Changing" % (SERVER, USER))
+            logging.info("[%s,%s] Wrong password. Changing" % (srvMsg, usrMsg))
             print "Wrong password " + SERVER + " " + USER + \
                   " write a new one"
 
