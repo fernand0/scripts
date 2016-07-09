@@ -5,8 +5,6 @@
 # En general, no me gusta la opción -y así que la dejo como opción
 # In general, I don't like to use -y, so I'll let the user decide
 #
-# Usaremos aptitude en lugar de apt
-# We will use aptitude instead of apt
 
 YES=$1
 
@@ -18,10 +16,10 @@ then
 	YES=""
 fi
 
-sudo aptitude update $YES && echo "" && \
-sudo aptitude safe-upgrade $YES&& echo "" && \
-#sudo apt-get autoremove $YES && echo "" && \
+sudo apt-get update $YES && echo "" && \
+sudo apt-get safe-upgrade $YES&& echo "" && \
+sudo apt-get autoremove $YES && echo "" && \
 sudo localepurge && echo "" && \
 sudo deborphan | xargs sudo apt-get remove $YES --purge && echo "" && \
-sudo aptitude autoclean $YES && echo "" && \
-sudo aptitude moo
+sudo apt-get autoclean $YES && echo "" && \
+sudo apt-get moo
