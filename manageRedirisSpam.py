@@ -57,6 +57,31 @@ def selectCategoryLink(logging, catName, links):
 
     return links[j]
 
+def getMessage(logging, browser, link, number, sel):
+    browser.follow_link(link)
+    forms = browser.get_forms()
+    listMsg = []
+    selTen = sel % 10
+    if len(forms) >= 4:
+        form  = forms[3]
+
+        options = list(form['mails[]'].options)
+        options.reverse()
+        logging.debug("Message ids %s" % options)
+        trList = browser.find_all("tr")
+        subjects = {}
+        i = 0
+        for row in trList:
+            cellsS = row.find_all("td", { "class" : "subject clickable"})
+            cellsA = row.find_all("td", { "class" : "sender clickable"})
+            if cellsS:
+                if (i == selTen):
+                    break
+                else:
+                    i = i + 1
+                    options.pop()
+
+    return options.pop(), cellsA[0]['title'], cellsS[0]['title']
 
 def listMessages(logging, browser, link):		
 
@@ -210,7 +235,6 @@ def main():
                 (sel, form, listMsg, linkMsg) = selectMessages(logging, browser, link)
 	
                 if (sel == 'a'):
-                    # Select just one
                     i = 0
                     for link in linkMsg:
                         print link
@@ -229,7 +253,10 @@ def main():
                     # Select just one
                     print sel, i
                     line = listMsg[int(sel)]
-                    print [line[0]]
+                    link = linkMsg[line[3]]
+                    print [line[0]], line[3], link
+                    msg, title, subject = getMessage(logging, browser, link, line[3], int(sel))
+                    print msg, title, subject
                     browser.follow_link(linkMsg[line[3]]) 
                     forms = browser.get_forms()
                     if len(forms) >= 4:
