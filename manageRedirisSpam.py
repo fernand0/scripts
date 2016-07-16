@@ -123,6 +123,7 @@ def listMessages(logging, browser, link):
         else:
              listMsg = []
              form = []
+             linkFollowing = ""
     #print len(listMsg), listMsg
     #print linkMsg
     return (listMsg, form, linkMsg)
@@ -153,21 +154,22 @@ def selectMessageText(logging, browser, text, link):
 
 def selectMessages(logging, browser, link):
     links = link
-    sel = '10'
-    while (sel <> 'a') and (int(sel) == 10):
+    sel = '10' 
+    validSel = False
+    while ((sel <> 'a') and not validSel):
         (listMsg, form, linkMsg) = listMessages(logging, browser, links)
+        print "--->",  listMsg
         if listMsg:
             showMessages(logging, listMsg)
             sel = raw_input("Message? (number for message to be moved to valid/spam mail, 'a' for deleting all messages shown) ")
             if (sel <> 'a'):
-                if (int(sel) == 10):
-                    links = listMsg[10]
-                elif int(sel) + 1 > len(listMsg):
+                if int(sel) + 1 > len(listMsg):
                     links = link
                     sel = 10
+                else:
+                    validSel = True 
         else:
-            sel = '11'
-            form = []
+           return("", [], listMsg, linkMsg)
     return (sel, form, listMsg, linkMsg)
 
 def main():
