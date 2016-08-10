@@ -9,6 +9,9 @@ import logging
 import keyring
 import getpass
 from robobrowser import RoboBrowser
+from requests import Session
+from robobrowser import RoboBrowser
+
 # https://github.com/jmcarp/robobrowser
 
 # This program tries to provide a command line interface for the put.rediris.es
@@ -188,9 +191,12 @@ def main():
     USER = config.get(config.sections()[int(selection) - 1], 'user')
     PASSWORD = getPassword(SERVER, USER)
 
-    url = 'https://'+SERVER+'/'
+    url = 'http://'+SERVER+'/'
 
-    browser = RoboBrowser(history=True)
+    session = Session()
+    session.verify = False
+    # Dealing with bad certificate
+    browser = RoboBrowser(history=True, session=session)
     browser.open(url)
     form = browser.get_form(action='')
     form['login'].value = USER
@@ -230,6 +236,7 @@ def main():
                              browser.submit_form(form)
                      else:
                          print "Not found ", sys.argv[2]
+            sys.exit()
         
         else:
             catName = selectCategory(logging)
