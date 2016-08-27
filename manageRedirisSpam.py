@@ -11,7 +11,7 @@ import getpass
 from robobrowser import RoboBrowser
 # https://github.com/jmcarp/robobrowser
 
-# This program tries to provide a command line interface for the put.rediris.es
+# This program tries to provide a command line interface for the puc.rediris.es
 # web application. It is intended for managing spam in academic accounts whose
 # organizations have subscribed the service. I'm quite happy with the service
 # but I'd prefer to have an IMAP interface or somethin like that. For this

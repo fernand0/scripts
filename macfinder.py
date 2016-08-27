@@ -127,13 +127,13 @@ if __name__ == '__main__':
 
     print(os.getresuid())
     print "We do not need root privileges anymore ...\n"
-	drop_privileges()
-print(os.getresuid())
+    drop_privileges()
+    print(os.getresuid())
 
-	print "========= So .... =======\n"
-pprint.pprint(ipList)
+    print "========= So .... =======\n"
+    pprint.pprint(ipList)
 
-name()
-	print ipList
-	fIP = open(fileName,"w")
-pickle.dump(ipList,fIP)
+    name()
+    print ipList
+    fIP = open(fileName,"w")
+    pickle.dump(ipList,fIP)
