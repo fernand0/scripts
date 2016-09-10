@@ -17,7 +17,7 @@ then
 fi
 
 sudo apt-get update $YES && echo "" && \
-sudo apt-get safe-upgrade $YES&& echo "" && \
+sudo apt-get safe-upgrade $YES || sudo apt-get upgrade $YES && echo "" && \
 sudo apt-get autoremove $YES && echo "" && \
 sudo localepurge && echo "" && \
 sudo deborphan | xargs sudo apt-get remove $YES --purge && echo "" && \
