@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-import ConfigParser
+import configparser
 import os
 import sys
 import re
@@ -41,10 +41,10 @@ def selectCategory(logging):
          
     i = 0
     for cat in categories:
-        print "%d) %s"% (i, cat)
+        print("%d) %s"% (i, cat))
         i = i + 1
 
-    sel = raw_input("Category? ")
+    sel = input("Category? ")
 
     return categories[int(sel)]
 
@@ -86,7 +86,7 @@ def getMessage(logging, browser, link, number, sel):
 
     return options.pop(), cellsA[0]['title'], cellsS[0]['title']
 
-def listMessages(logging, browser, link):		
+def listMessages(logging, browser, link):
 
     linkFollowing = link
     page = 0
@@ -113,10 +113,12 @@ def listMessages(logging, browser, link):
                 cellsS = row.find_all("td", { "class" : "subject clickable"})
                 cellsA = row.find_all("td", { "class" : "sender clickable"})
                 if cellsS:
-            	    listMsg.append((options.pop(), cellsA[0]['title'], cellsS[0]['title'], page))
+                   listMsg.append((options.pop(), cellsA[0]['title'], cellsS[0]['title'], page))
             
-            links = browser.get_links()
-            matches = list(x for x in links if (x.contents and x.contents[0].find('siguiente') >= 0))
+            links = browser.get_links("siguiente")
+            logging.debug("------------------links %s %d %s" % (type(links),len(links), links))
+            matches = links #list(x for x in links if (x[0].contents and x[0].contents[0].find('siguiente')))
+            logging.debug("------------------matches %s" % matches)
             if matches:
                 linkFollowing = matches[0]
                 page = page + 1
@@ -131,17 +133,17 @@ def listMessages(logging, browser, link):
     logging.debug("%s", linkMsg)
     return (listMsg, form, linkMsg)
 
-def showMessages(logging, listMsg):		
+def showMessages(logging, listMsg):
     i = 0
     numMsg = len(listMsg)
     #if numMsg > 10:
     #    numMsg = 10
-    print ""
+    print("")
     for row in listMsg[0:numMsg]:
-    	    print "%2d) %-20s %-40s" % (i, listMsg[i][1][:25], listMsg[i][2][:50])
-    	    i = i + 1
-            if i % 10 == 0:
-    	        print "---------------------------"
+        print("%2d) %-20s %-40s" % (i, listMsg[i][1][:25], listMsg[i][2][:50]))
+        i = i + 1
+        if i % 10 == 0:
+            print("---------------------------")
 
 def selectMessageText(logging, browser, text, link):
     links = link
@@ -156,13 +158,13 @@ def selectMessages(logging, browser, link):
     links = link
     sel = '10' 
     validSel = False
-    while ((sel <> 'a') and not validSel):
+    while ((sel != 'a') and not validSel):
         (listMsg, form, linkMsg) = listMessages(logging, browser, links)
         logging.debug("---> %s" % listMsg)
         if listMsg:
             showMessages(logging, listMsg)
-            sel = raw_input("Message? (number for message to be moved to valid/spam mail, 'a' for deleting all messages shown) ")
-            if (sel <> 'a'):
+            sel = input("Message? (number for message to be moved to valid/spam mail, 'a' for deleting all messages shown) ")
+            if (sel != 'a'):
                 if int(sel) + 1 > len(listMsg):
                     links = link
                     sel = 10
@@ -173,17 +175,17 @@ def selectMessages(logging, browser, link):
     return (sel, form, listMsg, linkMsg)
 
 def main():
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.SERVERS.cfg')])
     
     rows, columns = os.popen('stty size', 'r').read().split()
 
     i = 1
-    print "Configured accounts:"
+    print("Configured accounts:")
     for section in config.sections():
-        print '%s) %s' % (str(i), section)
+        print('%s) %s' % (str(i), section))
         i = i + 1
-    selection = raw_input('Select one: ')
+    selection = input('Select one: ')
 
     logging.basicConfig(#filename='example.log',
                         level=logging.INFO,format='%(asctime)s %(message)s')
@@ -226,7 +228,7 @@ def main():
                      (line, linkMsg) = selectMessageText(logging, browser, sys.argv[2], link)
                      logging.debug("%s, %s" % (line, linkMsg))
                      if line:
-                         print "Borramos? ", line
+                         print("Borramos? ", line)
                          browser.follow_link(linkMsg[line[3]]) 
                          forms = browser.get_forms()
                          if len(forms) >= 4:
@@ -235,7 +237,7 @@ def main():
                              form['action'] = 'spamEmailsFrom_mailarch'
                              browser.submit_form(form)
                      else:
-                         print "Not found ", sys.argv[2]
+                         print("Not found ", sys.argv[2])
             sys.exit()
         
         else:
@@ -243,7 +245,7 @@ def main():
             link = selectCategoryLink(logging, catName, links)
             if (link):
                 (sel, form, listMsg, linkMsg) = selectMessages(logging, browser, link)
-	
+                logging.debug("sel %s, %d" % (sel, len(listMsg)))
                 if (sel == 'a'):
                     i = 0
                     for link in linkMsg:
