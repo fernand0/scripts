@@ -35,14 +35,15 @@
 #      (typ,data = M.search(None,'FROM', 'Cron Daemon') )
 
 
-import ConfigParser
+import configparser
 import os
 import sys
 import imaplib
 import keyring
+import keyrings #keyrings.alt
 import getpass
 import threading
-from Queue import Queue
+from queue import Queue
 import hashlib
 import binascii
 import logging
@@ -63,20 +64,20 @@ def selectHash(M, folder, hashSelect):
         msgDigest = binascii.hexlify(m.digest())
         if (msgDigest == hashSelect):
             if msgs:
-                msgs = msgs + ' ' + num
+                msgs = msgs + ' ' + num.decode('utf-8')
                 # num is a string or a number?
             else:
-                msgs = str(num)
+                msgs = num.decode('utf-8')
             i = i + 1
         else:
             logging.debug("Message %s\n%s" % (num, msgDigest))
         # We are deleting duplicate messages
         if msgDigest in dupHash:
             if msgs:
-                msgs = msgs + ' ' + num
+                msgs = msgs + ' ' + num.decode('utf-8')
                 # num is a string or a number?
             else:
-                msgs = str(num)
+                msgs = num.decode('utf-8')
             i = i + 1
         else:
             dupHash.append(msgDigest)
@@ -107,84 +108,102 @@ def mailFolder(account, accountData, logging, res):
 
     srvMsg = SERVER.split('.')[0]
     usrMsg = USER.split('@')[0]
-    M = imaplib.IMAP4_SSL(SERVER)
+    import ssl
+    context = ssl.create_default_context()
+    #context = ssl.SSLContext(ssl.PROTOCOL_SSLv3)
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
+    M = imaplib.IMAP4_SSL(SERVER,ssl_context=context)
     try:
         M.login(USER, PASSWORD)
         PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         # We do not want passwords in memory when not needed
-        M.select()
-
-        for actions in accountData['RULES']:
-            RULES = actions[0]
-            FOLDER = actions[1]
-
-            i = 0
-            msgs = ''
-            for rule in RULES:
-                action = rule.split(',')
-                header = action[0][1:-1]
-                content = action[1][1:-1]
-                msgTxt = "[%s,%s] Rule: %s %s" % (srvMsg, usrMsg, header, content)
-                logging.debug(msgTxt)
-                if (header == 'hash'):
-                    msgs = selectHash(M, FOLDER, content)
-                    # M.select(folder)
-                    FOLDER = ""
-                else:
-                    typ, data = M.search(None, 'header', header, content)
-                    if data[0]:
-                        if msgs:
-                            msgs = msgs + ' ' + data[0]
-                        else:
-                            msgs = data[0]
-                    else:
-                        logging.debug("%s - No messages matching." % msgTxt)
-                        msgTxt = "%s - No messages matching." % msgTxt
-
-                if len(msgs)==0:
-                    logging.debug("%s Nothing to do" % msgTxt)
-                    msgTxt = "%s Nothing to do" % msgTxt
-                else:
-                    logging.debug("%s - Let's go!" % msgTxt)
-                    msgTxt = "%s - Let's go!" % msgTxt
-                    msgs = msgs.replace(" ", ",")
-                    status = 'OK'
-                    if FOLDER:
-	                # M.copy needs a set of comma-separated mesages, we have a list
-	                # with a string
-                        result = M.copy(msgs, FOLDER)
-                        status = result[0]
-                    i = msgs.count(',') + 1
-                    logging.debug("[%s,%s] *%s* Status: %s"% (SERVER,USER,msgs,status))
-
-                    if status == 'OK':
-                        # If the list of messages is too long it won't work
-                        flag = '\\Deleted'
-                        result = M.store(msgs, '+FLAGS', flag)
-                        if result[0] == 'OK':
-                            logging.debug("%s: %d messages have been deleted."
-                                          % (msgTxt, i))
-                            msgTxt = "%s: %d messages have been deleted." \
-                                          % (msgTxt, i)
-                        else:
-                            logging.debug("%s -  Couldn't delete messages!" % msgTxt)
-                            msgTxt = "%s -  Couldn't delete messages!" % msgTxt
-                    else:
-                        logging.debug("%s - Couldn't move messages!" % msgTxt)
-                        msgTxt = "%s - Couldn't move messages!" % msgTxt
-                logging.info(msgTxt)
-        M.close()
-        M.logout()
-        res.put(("ok", SERVER, USER))
-    except:
+    except Exception as ins:
         # We will ask for the new password
+        print("except", SERVER, USER)
+        print("except", sys.exc_info()[0])
+        print("except", ins.args)
         logging.info("[%s,%s] wrong password!"
                          % (srvMsg, usrMsg))
         res.put(("no", SERVER, USER))
+        return 0
 
+    M.select()
+
+    for actions in accountData['RULES']:
+        RULES = actions[0]
+        FOLDER = actions[1]
+
+        i = 0
+        msgs = ''
+        for rule in RULES:
+            action = rule.split(',')
+            header = action[0][1:-1]
+            content = action[1][1:-1]
+            msgTxt = "[%s,%s] Rule: %s %s" % (srvMsg, usrMsg, header, content)
+            logging.debug(msgTxt)
+            if (header == 'hash'):
+                msgs = selectHash(M, FOLDER, content)
+                #M.select(folder)
+                FOLDER = ""
+            else:
+                data = ''
+                try:
+                    cadSearch = "("+header+' "'+content+'")'
+                    typ, data = M.search(None, cadSearch)
+                except:
+                    cadSearch = "(HEADER "+header+' "'+content+'")'
+                    typ, data = M.search(None, cadSearch)
+                if data and data[0]:
+                    if msgs:
+                        msgs = msgs + ' ' + data[0].decode('utf-8')
+                    else:
+                        msgs = data[0].decode('utf-8')
+                else:
+                    logging.debug("%s - No messages matching." % msgTxt)
+                    msgTxt = "%s - No messages matching." % msgTxt
+
+            if len(msgs)==0:
+                logging.debug("%s Nothing to do" % msgTxt)
+                msgTxt = "%s Nothing to do" % msgTxt
+            else:
+                logging.debug("%s - Let's go!" % msgTxt)
+                msgTxt = "%s - Let's go!" % msgTxt
+                msgs = msgs.replace(" ", ",")
+                status = 'OK'
+                if FOLDER:
+    	    # M.copy needs a set of comma-separated mesages, we have a
+    	    # list with a string
+                    print("msgs", msgs)
+                    sys.exit()
+                    result = M.copy(msgs, FOLDER)
+                    status = result[0]
+                i = msgs.count(',') + 1
+                logging.debug("[%s,%s] *%s* Status: %s"% (SERVER,USER,msgs,status))
+
+                if status == 'OK':
+                    # If the list of messages is too long it won't work
+                    flag = '\\Deleted'
+                    result = M.store(msgs, '+FLAGS', flag)
+                    if result[0] == 'OK':
+                        logging.debug("%s: %d messages have been deleted."
+                                      % (msgTxt, i))
+                        msgTxt = "%s: %d messages have been deleted." \
+                                      % (msgTxt, i)
+                    else:
+                        logging.debug("%s -  Couldn't delete messages!" % msgTxt)
+                        msgTxt = "%s -  Couldn't delete messages!" % msgTxt
+                else:
+                    logging.debug("%s - Couldn't move messages!" % msgTxt)
+                    msgTxt = "%s - Couldn't move messages!" % msgTxt
+            logging.info(msgTxt)
+    M.close()
+    M.logout()
+    res.put(("ok", SERVER, USER))
+    
 
 def main():
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.IMAP.cfg')])
     if (len(sys.argv)>1 and (sys.argv[1] == "-d")):
         logging.basicConfig(#filename='example.log',
@@ -213,9 +232,9 @@ def main():
         usrMsg = USER.split('@')[0]
         logging.info("[%s,%s] Reading config" % (srvMsg, usrMsg))
 
-	# We are grouping accounts in order to avoid interference among rules
-	# on the same account 
-	if (SERVER, USER) not in accounts:
+        # We are grouping accounts in order to avoid interference among rules
+        # on the same account 
+        if (SERVER, USER) not in accounts:
             accounts[(SERVER, USER)] = {}
             # PASSWORD = getPassword(SERVER, USER)
             # accounts[(SERVER, USER)]['PASSWORD'] = PASSWORD
@@ -226,7 +245,7 @@ def main():
             # logging.info("[%s,%s] Known password!" % (SERVER, USER))
 
     keys = keyring.get_keyring()
-    keys._unlock()
+    #keys._unlock()
     # We need to unlock the keyring because if not each thread will ask for the
     # keyring password
 
@@ -237,10 +256,10 @@ def main():
         t = threading.Thread(target=mailFolder,
                              args=(account, accounts[account], logging, 
                                    answers[-1]))
-	# We are using sequential code because when there are several set of
-	# rules for a folder concurrency causes problems
+    # We are using sequential code because when there are several set of
+    # rules for a folder concurrency causes problems
         # Hopefully solved
-	# mailFolder(account, accounts[account], logging)
+    # mailFolder(account, accounts[account], logging)
         # PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         # We do not want passwords in memory when not needed
         threads.append(t)
@@ -264,8 +283,8 @@ def main():
         if (anss[0] == 'no'):
        
             logging.info("[%s,%s] Wrong password. Changing" % (srvMsg, usrMsg))
-            print "Wrong password " + SERVER + " " + USER + \
-                  " write a new one"
+            print("Wrong password " + SERVER + " " + USER + \
+                  " write a new one")
 
             # Maybe it should ask if you want to change the password
             PASSWORD = getpass.getpass()
