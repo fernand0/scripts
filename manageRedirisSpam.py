@@ -27,6 +27,11 @@ from robobrowser import RoboBrowser
 # Spam: https://puc.rediris.es/users/index.php?set_proxy_panel=PROXY_USER&pageID=2
 # Valid: https://puc.rediris.es/users/index.php?set_proxy_panel=PROXY_USER&action=showValidMail&pageID=2
 
+optTxt = {
+          '' : 'No messages',
+          'n': 'Nothing to do',
+          'a': 'Deleting all'
+        } 
 def getPassword(server, user):
     # Deleting keyring.delete_password(server, user)
     password = keyring.get_password(server, user)
@@ -158,18 +163,14 @@ def selectMessages(logging, browser, link):
     links = link
     sel = '10' 
     validSel = False
-    while ((sel != 'a') and not validSel):
+    while not validSel:
         (listMsg, form, linkMsg) = listMessages(logging, browser, links)
         logging.debug("---> %s" % listMsg)
         if listMsg:
             showMessages(logging, listMsg)
             sel = input("Message? (number for message to be moved to valid/spam mail, 'a' for deleting all messages shown) ")
-            if (sel != 'a'):
-                if int(sel) + 1 > len(listMsg):
-                    links = link
-                    sel = 10
-                else:
-                    validSel = True 
+            if (sel in 'an') or (sel.isdigit() and int(sel) + 1 <= len(listMsg)):
+                validSel = True 
         else:
            return("", [], listMsg, linkMsg)
     return (sel, form, listMsg, linkMsg)
@@ -246,6 +247,7 @@ def main():
             if (link):
                 (sel, form, listMsg, linkMsg) = selectMessages(logging, browser, link)
                 logging.debug("sel %s, %d" % (sel, len(listMsg)))
+                print("sel %s, %d" % (sel, len(listMsg)))
                 if (sel == 'a'):
                     i = 0
                     for link in linkMsg:
@@ -261,6 +263,10 @@ def main():
                     logging.debug('Selector: %s' %  form['globalSelector'].value)
                     browser.submit_form(form)
                     urlIndex = url + 'users/index.php'
+                elif ((sel == "") or (sel == "n")):
+                    print("")
+                    print(optTxt[sel])
+                    print("")
                 elif (int(sel) < len(listMsg)):
                     # Select just one
                     logging.debug("%s, %d" % (sel, i))
