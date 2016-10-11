@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # encoding: utf-8
 #
 # Very simple Python program to publish the last RSS entry of a feed
@@ -18,7 +18,7 @@
 #
 #
 
-import ConfigParser
+import configparser
 import os
 import logging
 import feedparser
@@ -32,9 +32,10 @@ import datetime
 from bs4 import BeautifulSoup
 from bs4 import NavigableString
 from bs4 import Tag
+import importlib
 
-reload(sys)
-sys.setdefaultencoding("UTF-8")
+importlib.reload(sys)
+#sys.setdefaultencoding("UTF-8")
 
 
 def extractImage(soup):
@@ -55,10 +56,10 @@ def extractLinks(soup, linksToAvoid=""):
         if not isinstance(link.contents[0], Tag):
             # We want to avoid embdeded tags (mainly <img ... )
 
-            print linksToAvoid
-            print re.escape(linksToAvoid)
-            print str(link['href'])
-            print re.search(linksToAvoid, link['href'])
+            print(linksToAvoid)
+            print(re.escape(linksToAvoid))
+            print(str(link['href']))
+            print(re.search(linksToAvoid, link['href']))
             if ((linksToAvoid == "") or
                (not re.search(linksToAvoid, link['href']))):
                     link.append(" ["+str(j)+"]")
@@ -75,9 +76,9 @@ def extractLinks(soup, linksToAvoid=""):
 
 
 def selectBlog(sel='a'):
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
-    print "Configured blogs:"
+    print("Configured blogs:")
 
     feed = []
     # We are caching the feeds in order to use them later
@@ -88,10 +89,10 @@ def selectBlog(sel='a'):
         rssFeed = config.get(section, "rssFeed")
         feed.append(feedparser.parse(rssFeed))
         lastPost = feed[-1].entries[0]
-        print '%s) %s %s (%s)' % (str(i), section,
+        print('%s) %s %s (%s)' % (str(i), section,
                                   config.get(section, "rssFeed"),
                                   time.strftime('%Y-%m-%d %H:%M:%SZ',
-                                  lastPost['published_parsed']))
+                                  lastPost['published_parsed'])))
         if (i == 1) or (recentDate < lastPost['published_parsed']):
             recentDate = lastPost['published_parsed']
             recentFeed = feed[-1]
@@ -114,7 +115,7 @@ def selectBlog(sel='a'):
         fin = recentFeedBase[ini:].find('.')
         identifier = recentFeedBase[ini:ini+fin] + "_" + \
             recentFeedBase[ini+fin+1:ini+fin+7]
-        print "Selected ", recentFeedBase
+        print("Selected ", recentFeedBase)
         logging.info("Selected " + recentFeedBase)
     else:
         sys.exit()
@@ -135,8 +136,8 @@ def selectBlog(sel='a'):
                                         "pageFB")
     selectedBlog["identifier"] = identifier
 
-    print "You have chosen "
-    print recentFeedBase
+    print("You have chosen ")
+    print(recentFeedBase)
 
     return(recentFeed, selectedBlog)
 
@@ -160,18 +161,18 @@ def getBlogData(recentFeed, selectedBlog):
     theTwitter = selectedBlog["twitterAC"]
     theFbPage = selectedBlog["pageFB"]
 
-    print "============================================================\n"
-    print "Results: \n"
-    print "============================================================\n"
-    print theTitle.encode('utf-8')
-    print theLink
-    print theSummary.encode('utf-8')
-    print theSummaryLinks.encode('utf-8')
-    print theImage
-    print theComment
-    print theTwitter
-    print theFbPage
-    print "============================================================\n"
+    print("============================================================\n")
+    print("Results: \n")
+    print("============================================================\n")
+    print(theTitle.encode('utf-8'))
+    print(theLink)
+    print(theSummary.encode('utf-8'))
+    print(theSummaryLinks.encode('utf-8'))
+    print(theImage)
+    print(theComment)
+    print(theTwitter)
+    print(theFbPage)
+    print("============================================================\n")
 
     return (theTitle, theLink, theSummary, theComment, theSummaryLinks,
             theImage, theTwitter, theFbPage)
@@ -179,7 +180,7 @@ def getBlogData(recentFeed, selectedBlog):
 
 def publishTwitter(title, link, comment, twitter):
 
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssTwitter')])
 
     statusTxt = comment + " " + title + " " + link
@@ -199,7 +200,7 @@ def publishTwitter(title, link, comment, twitter):
 
 
 def publishFacebook(title, link, summaryLinks, image, fbPage):
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssFacebook')])
 
     oauth_access_token = config.get("Facebook", "oauth_access_token")
@@ -209,17 +210,20 @@ def publishFacebook(title, link, summaryLinks, image, fbPage):
 
     for i in range(len(pages['data'])):
         if (pages['data'][i]['name'] == fbPage):
-            print "\tWriting in... ", pages['data'][i]['name'], "\n"
+            print("\tWriting in... ", pages['data'][i]['name'], "\n")
             graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
             graph2.put_object(pages['data'][i]['id'],
                               "feed", message=title + " \n" + summaryLinks,
                               link=link, picture=image,
                               name=title, caption='',
                               description=summaryLinks.encode('utf-8'))
+            # graph2.put_object(pages['data'][2]['id'], "instant_articles", html_source=html, development_mode = True)
+            # facebook.GraphAPIError: (#200) Requires pages_manage_instant_articles permission to manage the object
+
 
 
 def publishLinkedin(title, link, summary, image):
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssLinkedin')])
 
     CONSUMER_KEY = config.get("Linkedin", "CONSUMER_KEY")
@@ -254,28 +258,28 @@ def main():
     title, link, summary, comment, summaryLinks, image, twitter, fbPage = \
         getBlogData(recentFeed, selectedBlog)
 
-    print "Twitter...\n"
+    print("Twitter...\n")
     if twitter:
         try:
             publishTwitter(title, link, comment, twitter)
         except:
-            print "Twitter posting failed!\n"
-            print "Unexpected error:", sys.exc_info()[0]
+            print("Twitter posting failed!\n")
+            print("Unexpected error:", sys.exc_info()[0])
 
-    print "Facebook...\n"
+    print("Facebook...\n")
     if fbPage:
         try:
             publishFacebook(title, link, summaryLinks, image, fbPage)
         except:
-            print "Facebook posting failed!\n"
-            print "Unexpected error:", sys.exc_info()[0]
+            print("Facebook posting failed!\n")
+            print("Unexpected error:", sys.exc_info()[0])
 
-    print "Linkedin...\n"
+    print("Linkedin...\n")
     try:
         publishLinkedin(title, link, summary, image)
     except:
-        print "Linkedin posting failed!\n"
-        print "Unexpected error:", sys.exc_info()[0]
+        print("Linkedin posting failed!\n")
+        print("Unexpected error:", sys.exc_info()[0])
 
     # Now we can publish it in some social network
 
