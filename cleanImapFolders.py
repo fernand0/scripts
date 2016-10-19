@@ -47,6 +47,7 @@ from queue import Queue
 import hashlib
 import binascii
 import logging
+import ssl
 
 
 def selectHash(M, folder, hashSelect):
@@ -108,7 +109,6 @@ def mailFolder(account, accountData, logging, res):
 
     srvMsg = SERVER.split('.')[0]
     usrMsg = USER.split('@')[0]
-    import ssl
     context = ssl.create_default_context()
     #context = ssl.SSLContext(ssl.PROTOCOL_SSLv3)
     context.check_hostname = False

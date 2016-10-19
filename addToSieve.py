@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import ConfigParser
+import configparser
 import os
 import sys
 import sievelib
@@ -8,13 +8,14 @@ import time
 import getpass
 import imaplib
 import email
-import StringIO
+import io
 import keyring
-from email import Header
+from email.header import Header
 from sievelib.managesieve import Client
 from sievelib.parser import Parser
 from sievelib.factory import FiltersSet
 from git import Repo
+import ssl
 
 msgHeaders = ['List-Id', 'From', 'Sender', 'Subject', 'To',
               'X-Original-To', 'X-Envelope-From', 'X-Spam-Flag']
@@ -28,19 +29,19 @@ repoDir='/home/ftricas/Documents/config/'
 repoFile='sogo.sieve'
 
 def printRule(rule):
-    print "rule "
+    print("rule ")
     for cond in rule[1]:
-        print cond.tosieve()
+        print(cond.tosieve())
 
 def printRules(listRules):
     # For debugging
-    for rule in listRules.keys():
+    for rule in list(listRules.keys()):
         printRule(listRules[rule])
 
 def addRule(rules, more, keyword, filterCond, actions):
         #printRules(rules)
-        print rules['"Docencia/master/masterbdi"']
-	print type(rules['"Docencia/master/masterbdi"'])
+        #print(rules['"Docencia/master/masterbdi"'])
+        #print(type(rules['"Docencia/master/masterbdi"']))
         if actions[0][1] not in rules:
                 rules[actions[0][1]] = ['fileinto', []]
             
@@ -52,6 +53,7 @@ def addRule(rules, more, keyword, filterCond, actions):
         cmd.check_next_arg("tag", ":contains")
         # __quote_if_necessary
         if not keyword.startswith(('"', "'")):
+            print(keyword)
             keyword = '"%s"' % keyword
         cmd.check_next_arg("string", keyword)
         if not filterCond.startswith(('"', "'")):
@@ -101,9 +103,9 @@ def extractActions(p):
                     rules[key['address']].append("redirect")
                     rules[key['address']].append(tests)
             else:
-                print i, ") Not implented ", type(key)
+                print(i, ") Not implented ", type(key))
         else:
-            print i, ") Not implented ", type(r)
+            print(i, ") Not implented ", type(r))
 
         i = i + 1
 
@@ -112,7 +114,7 @@ def extractActions(p):
 
 def constructActions(rules, more):
     actions = []
-    for rule in rules.keys():
+    for rule in list(rules.keys()):
         action = []
         # print "----------------------------"
         # print rules[rule]
@@ -140,14 +142,14 @@ def constructFilterSet(actions):
         # print "-> ", conditions
         cond = []
         for condition in conditions:
-            # print "condition -> ", condition
-            # print type(condition)
-            # print condition.arguments
+            print("condition -> ", condition)
+            print(type(condition))
+            print(condition.arguments)
             head = ()
-            (key1, key2, key3) = condition.arguments.keys()
+            (key1, key2, key3) = list(condition.arguments.keys())
             head = head + (condition.arguments[key1],
                            condition.arguments[key3],
-                           condition.arguments[key2].decode('utf-8'))
+                           condition.arguments[key2])#.decode('utf-8'))
             # We will need to take care of these .decode's
             cond.append(head)
 
@@ -156,7 +158,8 @@ def constructFilterSet(actions):
         for i in range(len(action[0][1])):
             act.append((action[0][0], action[0][1][i]))
         act.append(("stop",))
-        # print "act ->", act
+        print("cond ->", cond)
+        print("act ->", act)
         fs.addfilter("", cond, act)
         # print "added!"
 
@@ -188,11 +191,11 @@ def selectAction(p, M):  # header="", textHeader=""):
 
 
     for cad in sorted(txtResults.split('\n')):
-        print cad[3:], cad[:3]
+        print(cad[3:], cad[:3])
 
-    option = raw_input("Select one: ")
+    option = input("Select one: ")
 
-    print option, len(p.result)
+    print(option, len(p.result))
 
     actions = []
 
@@ -212,24 +215,24 @@ def selectAction(p, M):  # header="", textHeader=""):
         match = p.result[int(option)-1]['test']
         # print "match ", match
     elif (int(option) == len(p.result)+1):
-        folder = raw_input("Name of the folder: ")
-        print "Name ", folder
+        folder = input("Name of the folder: ")
+        print("Name ", folder)
         if (doFolderExist(folder, M)[0] != 'OK'):
-            print "Folder ", folder, " does not exist"
+            print("Folder ", folder, " does not exist")
             sys.exit()
         else:
-            print "Let's go"
+            print("Let's go")
             actions.append(("fileinto", folder))
             actions.append(("stop",))
     elif (int(option) == len(p.result)+2):
-        redir = raw_input("Redirection to: ")
-        print "Name ", redir
-        itsOK = raw_input("It's ok? (y/n)")
+        redir = input("Redirection to: ")
+        print("Name ", redir)
+        itsOK = input("It's ok? (y/n)")
         if (itsOK != 'y'):
-            print redir, " is wrong"
+            print(redir, " is wrong")
             sys.exit()
         else:
-            print "Let's go"
+            print("Let's go")
             actions.append(("redirect", redir))
             actions.append(("stop",))
 
@@ -239,17 +242,17 @@ def selectAction(p, M):  # header="", textHeader=""):
 def selectHeader():
     i = 1
     for j in headers:
-        print i, ") ", j, "(", keyWords[headers[i-1]], ")"
+        print(i, ") ", j, "(", keyWords[headers[i-1]], ")")
         i = i + 1
-    return headers[int(raw_input("Select header: ")) - 1]
+    return headers[int(input("Select header: ")) - 1]
 
 
 def selectKeyword(header):
     i = 1
     for j in keyWords[header]:
-        print i, ") ", j
+        print(i, ") ", j)
         i = i + 1
-    return keyWords[header][int(raw_input("Select header: ")) - 1]
+    return keyWords[header][int(input("Select header: ")) - 1]
 
 
 def selectMessage(M):
@@ -260,24 +263,24 @@ def selectMessage(M):
         if (data[0] == 'OK'):
             j = 0
             msg_data = []
-            messages = data[1][0].split(' ')
+            messages = data[1][0].decode("utf-8").split(' ')
             lenId = len(str(messages[-1]))
             for i in messages[-24:]:
                 typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[])')
                 # print msg_data_fetch
                 for response_part in msg_data_fetch:
                     if isinstance(response_part, tuple):
-                        msg = email.message_from_string(response_part[1])
+                        msg = email.message_from_bytes(response_part[1])
                         msg_data.append(msg)
                         # Variable length fmt
                         fmt = "%2s) %-20s %-40s"
                         headFrom = msg['From']
                         headSubject = msg['Subject']
-                        print fmt % (j,
-                                     Header.decode_header(headFrom)[0][0][:20],
-                                     Header.decode_header(headSubject)[0][0][:40])
+                        print(fmt % (j,
+                                     headFrom[:20],#[0][0][:20],
+                                     headSubject[:40]))#[0][0][:40]))
                         j = j + 1
-            msg_number = raw_input("Which message? ")
+            msg_number = input("Which message? ")
         else:
             return 0
 
@@ -290,10 +293,10 @@ def selectHeaderAuto(M, msg):
     else:
         for header in msgHeaders:
             if header in msg:
-                print i, " ) ", header, msg[header]
+                print(i, " ) ", header, msg[header])
             i = i + 1
-	import locale
-        header_num = raw_input("Select header: ")
+        import locale
+        header_num = input("Select header: ")
 
         header = msgHeaders[int(header_num)-1]
         textHeader = msg[msgHeaders[int(header_num)-1]]
@@ -307,36 +310,62 @@ def selectHeaderAuto(M, msg):
             else:
                 textHeader = textHeader
 
-        print "Filter: (header) ", header, ", (text) ", textHeader
-        filterCond = raw_input("Text for selection (empty for all): ")
+        print("Filter: (header) ", header, ", (text) ", textHeader)
+        filterCond = input("Text for selection (empty for all): ")
         # Trying to solve the problem with accents and so
-        filterCond = filterCond.decode('utf-8')
+        filterCond = filterCond#.decode('utf-8')
 
         if not filterCond:
             filterCond = textHeader
 
     return (header, filterCond)
+def getPassword(server, user):
+    # Deleting keyring.delete_password(server, user)
+    password = keyring.get_password(server, user)
+    if not password:
+        logging.info("[%s,%s] New account. Setting password" % (server, user))
+        password = getpass.getpass()
+        keyring.set_password(server, user, password)
+    return password
 
 
 def main():
 
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.IMAP.cfg')])
 
     SERVER = config.get("IMAP1", "server")
     USER = config.get("IMAP1", "user")
     # PASSWORD = getpass.getpass()
-    PASSWORD = keyring.get_password(SERVER, USER)
+    PASSWORD = getPassword(SERVER, USER)
 
     # Make connections to server
     # Sieve client connection
     c = Client(SERVER)
-    c.connect(USER, PASSWORD, starttls=True, authmech="PLAIN")
+    if not c.connect(USER, PASSWORD, starttls=True, authmech="PLAIN"):
+        print("Connection failed")
+        return 0
     # IMAP client connection
-    M = imaplib.IMAP4_SSL(SERVER)
-    M.login(USER, PASSWORD)
+    context = ssl.create_default_context()
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
+    M = imaplib.IMAP4_SSL(SERVER,ssl_context=context)
+    try:
+        M.login(USER, PASSWORD)
+        PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        # We do not want passwords in memory when not needed
+    except Exception as ins:
+        # We will ask for the new password
+        print("except", SERVER, USER)
+        print("except", sys.exc_info()[0])
+        print("except", ins.args)
+        logging.info("[%s,%s] wrong password!"
+                         % (srvMsg, usrMsg))
+        res.put(("no", SERVER, USER))
+        return 0
 
     PASSWORD = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+    M.select()
 
     end = ""
     while (not end):
@@ -345,7 +374,6 @@ def main():
         p = Parser()
         p.parse(script)
         (rules, more) = extractActions(p)
-	
 
         # We are going to filter based on one message
         msg = selectMessage(M)
@@ -361,17 +389,17 @@ def main():
         # header= selectHeader()
         # keyword = selectKeyword(header)
 
-	# Eliminate
+        # Eliminate
         # conditions = []
         # conditions.append((keyword, ":contains", filterCond))
 
         newActions = addRule(rules, more, keyword, filterCond, actions)
 
-        print newActions
+        print(newActions)
 
         fs = constructFilterSet(newActions)
 
-        sieveContent = StringIO.StringIO()
+        sieveContent = io.StringIO()
         # fs.tosieve(open(FILE_SIEVE, 'w'))
         fs.tosieve(sieveContent)
 
@@ -383,37 +411,41 @@ def main():
         # fSieve = open(FILE_SIEVE, 'r')
         # if not c.putscript('sogo', fSieve.read()):
         if not c.putscript('sogo', sieveContent.getvalue()):
-            print "fail!"
+            print("fail!")
 
-	# Let's start the git backup
+        # Let's start the git backup
 
-	repo = Repo(repoDir)
-	index = repo.index
+        repo = Repo(repoDir)
+        index = repo.index
 
-	listScripts=c.listscripts()[1]
-	listScripts.sort() 
+        print("listscripts",c.listscripts())
+        listScripts=c.listscripts()
+        print("listscripts",listScripts)
+        if (listScripts != None):
+            listScripts=listScripts[1]
+            listScripts.sort() 
+            print("listscripts",c.listscripts())
+            print(listScripts[0])
 
-	print len(listScripts)
-	print listScripts[0]
-	# script = listScripts[-1] # The last one
-	sieveFile=c.getscript('sogo')
-	file=open(repoDir+repoFile,'w')
-	file.write(sieveFile)
-	file.close()
-	index.add(['*'])
-	index.commit(name+'sogo')
+            # script = listScripts[-1] # The last one
+            sieveFile=c.getscript('sogo')
+            file=open(repoDir+repoFile,'w')
+            file.write(sieveFile)
+            file.close()
+            index.add(['*'])
+            index.commit(name+'sogo')
 
-	if len(listScripts)>6:
-		# We will keep the last five ones (plus the active one)
-		numScripts = len(listScripts) - 6
-		i = 0
-		while numScripts > 0:
-			script = listScripts[i]
-			c.deletescript(script)
-			i = i + 1
-			numScripts = numScripts - 1
+            if len(listScripts)>6:
+       	        # We will keep the last five ones (plus the active one)
+                numScripts = len(listScripts) - 6
+                i = 0
+                while numScripts > 0:
+                    script = listScripts[i]
+                    c.deletescript(script)
+                    i = i + 1
+                    numScripts = numScripts - 1
 
-        end = raw_input("More rules? (empty to continue) ")
+        end = input("More rules? (empty to continue) ")
 
 if __name__ == "__main__":
     main()

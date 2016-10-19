@@ -28,7 +28,7 @@
 # At this moment it only considers one blog
 
 import os
-import ConfigParser
+import configparser
 import feedparser
 import logging
 import re
@@ -46,17 +46,19 @@ from buffpy.managers.updates import Update
 
 import time
 import sys
-import urllib
-reload(sys)
-sys.setdefaultencoding("UTF-8")
+import urllib.request, urllib.parse, urllib.error
+import imp
+
+imp.reload(sys)
+#sys.setdefaultencoding("UTF-8")
 
 PREFIX = "rssBuffer_"
 POSFIX = "last"
 
 def selectBlog(sel='a'):
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
-    print "Configured blogs:"
+    print("Configured blogs:")
 
     feed = []
     # We are caching the feeds in order to use them later
@@ -67,10 +69,10 @@ def selectBlog(sel='a'):
         rssFeed = config.get(section, "rssFeed")
         feed.append(feedparser.parse(rssFeed))
         lastPost = feed[-1].entries[0]
-        print '%s) %s %s (%s)' % (str(i), section,
+        print('%s) %s %s (%s)' % (str(i), section,
                                   config.get(section, "rssFeed"),
                                   time.strftime('%Y-%m-%d %H:%M:%SZ',
-                                  lastPost['published_parsed']))
+                                  lastPost['published_parsed'])))
         if (i == 1) or (recentDate < lastPost['published_parsed']):
             recentDate = lastPost['published_parsed']
             recentFeed = feed[-1]
@@ -79,7 +81,7 @@ def selectBlog(sel='a'):
 
     if (sel == 'm'):
         if (int(i) > 1):
-            recentIndex = raw_input('Select one: ')
+            recentIndex = input('Select one: ')
             i = int(recentIndex)
             recentFeed = feed[i - 1]
         else:
@@ -91,7 +93,7 @@ def selectBlog(sel='a'):
         fin = recentFeedBase[ini:].find('.')
         identifier = recentFeedBase[ini:ini+fin] + \
             "_" + recentFeedBase[ini+fin+1:ini+fin+7]
-        print "Selected ", recentFeedBase
+        print("Selected ", recentFeedBase)
         logging.info("Selected " + recentFeedBase)
     else:
         sys.exit()
@@ -109,8 +111,8 @@ def selectBlog(sel='a'):
                                         "pageFB")
     selectedBlog["identifier"] = identifier
 
-    print "You have chosen "
-    print recentFeed.feed['title_detail']['base']
+    print("You have chosen ")
+    print(recentFeed.feed['title_detail']['base'])
 
     return(recentFeed, selectedBlog)
 
@@ -119,7 +121,7 @@ def lookForLinkPosition(linkLast, recentFeed):
         if (recentFeed.entries[i].link == linkLast):
             break
 
-    print "i: ", i
+    print("i: ", i)
 
     if ((i == 0) and (recentFeed.entries[i].link == linkLast)):
         logging.info("No new items")
@@ -135,7 +137,7 @@ def lookForLinkPosition(linkLast, recentFeed):
     return i
 
 def connectBuffer():
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBuffer')])
 
     clientId = config.get("appKeys", "client_id")
@@ -188,17 +190,17 @@ def getBlogData(recentFeed, selectedBlog, i=0):
     theTwitter = selectedBlog["twitterAC"]
     theFbPage = selectedBlog["pageFB"]
 
-    print "============================================================\n"
-    print "Results: \n"
-    print "============================================================\n"
-    print theTitle.encode('utf-8')
-    print theLink
-    print theSummary.encode('utf-8')
-    print theSummaryLinks.encode('utf-8')
-    print theImage
-    print theTwitter
-    print theFbPage
-    print "============================================================\n"
+    print("============================================================\n")
+    print("Results: \n")
+    print("============================================================\n")
+    print(theTitle.encode('utf-8'))
+    print(theLink)
+    print(theSummary.encode('utf-8'))
+    print(theSummaryLinks.encode('utf-8'))
+    print(theImage)
+    print(theTwitter)
+    print(theFbPage)
+    print("============================================================\n")
 
     return (theTitle, theLink, theSummary, theSummaryLinks,
             theImage, theTwitter, theFbPage)
@@ -262,8 +264,8 @@ def obtainBlogData(recentFeed, lenMax, i):
             logging.info("I don't know what to do!")
 
         # pageImage = soup.findAll("img")
-        theTitle = urllib.quote(theTitle.encode('utf-8'))
-        theLink = urllib.quote(theLink,safe=":/")
+        theTitle = urllib.parse.quote(theTitle.encode('utf-8'))
+        theLink = urllib.parse.quote(theLink,safe=":/")
         post = re.sub('\n+', ' ', theTitle) + " " + theLink
         # Sometimes there are newlines and unnecessary spaces
         # print "post", post
@@ -292,7 +294,7 @@ def main():
 
     lenMax, profileList = checkPendingPosts(api)
     logging.info("We have %d items to post" % i)
-    print("We have %d items to post" % i)
+    print(("We have %d items to post" % i))
 
     publishPosts(selectedBlog, profileList, recentFeed, lenMax, i)
 

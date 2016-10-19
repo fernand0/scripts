@@ -32,6 +32,7 @@ optTxt = {
           'n': 'Nothing to do',
           'a': 'Deleting all'
         } 
+
 def getPassword(server, user):
     # Deleting keyring.delete_password(server, user)
     password = keyring.get_password(server, user)
@@ -99,6 +100,7 @@ def listMessages(logging, browser, link):
     linkMsg = []
 
     while (linkFollowing):
+        #print("link Following", linkFollowing)
         linkMsg.append(linkFollowing)
         browser.follow_link(linkFollowing)
         forms = browser.get_forms()
@@ -120,7 +122,7 @@ def listMessages(logging, browser, link):
                 if cellsS:
                    listMsg.append((options.pop(), cellsA[0]['title'], cellsS[0]['title'], page))
             
-            links = browser.get_links("siguiente")
+            links = browser.get_links(title = "página siguiente")
             logging.debug("------------------links %s %d %s" % (type(links),len(links), links))
             matches = links #list(x for x in links if (x[0].contents and x[0].contents[0].find('siguiente')))
             logging.debug("------------------matches %s" % matches)
@@ -240,14 +242,14 @@ def main():
                      else:
                          print("Not found ", sys.argv[2])
             sys.exit()
-        
         else:
             catName = selectCategory(logging)
             link = selectCategoryLink(logging, catName, links)
+
             if (link):
                 (sel, form, listMsg, linkMsg) = selectMessages(logging, browser, link)
                 logging.debug("sel %s, %d" % (sel, len(listMsg)))
-                print("sel %s, %d" % (sel, len(listMsg)))
+                #print("sel %s, %d" % (sel, len(listMsg)))
                 if (sel == 'a'):
                     i = 0
                     for link in linkMsg:
