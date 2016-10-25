@@ -175,7 +175,6 @@ def mailFolder(account, accountData, logging, res):
     	    # M.copy needs a set of comma-separated mesages, we have a
     	    # list with a string
                     print("msgs", msgs)
-                    sys.exit()
                     result = M.copy(msgs, FOLDER)
                     status = result[0]
                 i = msgs.count(',') + 1

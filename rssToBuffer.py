@@ -121,7 +121,7 @@ def lookForLinkPosition(linkLast, recentFeed):
         if (recentFeed.entries[i].link == linkLast):
             break
 
-    print("i: ", i)
+    #print("i: ", i)
 
     if ((i == 0) and (recentFeed.entries[i].link == linkLast)):
         logging.info("No new items")
@@ -212,12 +212,14 @@ def publishPosts(selectedBlog, profileList, recentFeed, lenMax, i):
             break
         i = i - 1
         post = obtainBlogData(recentFeed, lenMax, i)
+        print("post",post)
+        sys.exit()
         serviceList = ['twitter', 'facebook', 'linkedin']
         for service in serviceList:
             line = service
             profile = profileList[service]
             try:
-                profile.updates.new(post)
+                #profile.updates.new(post)
                 line = line + ' ok'
                 time.sleep(3)
             except:
@@ -290,6 +292,7 @@ def main():
     linkLast = urlFile.read().rstrip()  # Last published
 
     i = lookForLinkPosition(linkLast, recentFeed)
+    i = 0
     api = connectBuffer()
 
     lenMax, profileList = checkPendingPosts(api)
