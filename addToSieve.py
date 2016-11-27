@@ -17,8 +17,9 @@ from sievelib.factory import FiltersSet
 from git import Repo
 import ssl
 
-msgHeaders = ['List-Id', 'From', 'Sender', 'Subject', 'To',
-              'X-Original-To', 'X-Envelope-From', 'X-Spam-Flag']
+msgHeaders = ['List-Id', 'From', 'Sender', 'Subject', 'To', 
+              'X-Original-To', 'X-Envelope-From', 
+              'X-Spam-Flag', 'X-Forward']
 headers = ["address", "header"]
 keyWords = {"address": ["From", "To"],
             "header":  ["subject", "Sender", "X-Original-To", "List-Id"]
@@ -29,9 +30,10 @@ repoDir='/home/ftricas/Documents/config/'
 repoFile='sogo.sieve'
 
 def printRule(rule):
-    print("rule ")
+    print("Rule ")
     for cond in rule[1]:
-        print(cond.tosieve())
+        cond.tosieve()
+        print()
 
 def printRules(listRules):
     # For debugging
@@ -42,29 +44,36 @@ def addRule(rules, more, keyword, filterCond, actions):
         #printRules(rules)
         #print(rules['"Docencia/master/masterbdi"'])
         #print(type(rules['"Docencia/master/masterbdi"']))
-        if actions[0][1] not in rules:
-                rules[actions[0][1]] = ['fileinto', []]
+        theActions = actions[0][1].strip('"')
+        if theActions not in rules:
+                rules[theActions] = ['fileinto', []]
             
         #printRule(rule)
 
         # Is there a better way to do this?
         cmd = sievelib.factory.get_command_instance("header",
-                                                    rules[actions[0][1]])
+                                                    rules[theActions])
         cmd.check_next_arg("tag", ":contains")
         # __quote_if_necessary
-        if not keyword.startswith(('"', "'")):
-            print(keyword)
-            keyword = '"%s"' % keyword
-        cmd.check_next_arg("string", keyword)
         if not filterCond.startswith(('"', "'")):
             filterCond = '"%s"' % filterCond
+        if not keyword.startswith(('"', "'")):
+            #print(keyword)
+            keyword = '"%s"' % keyword
+        cmd.check_next_arg("string", keyword)
         cmd.check_next_arg("string", filterCond)
-        rules[actions[0][1]][1].append(cmd)
+#print("cmd Cmd",cmd)
+        #print("theActions",theActions[1])
+        rules[theActions][1].append(cmd)
+        #print("theActions++",theActions[1])
 
         # print "--------------------"
-        # printRule(rules[actions[0][1]])
+        #printRule(rules[theActions])
         # print "--------------------"
-        # print rules[actions[0][1]]
+        #print(rules[theActions])
+        #if theActions in more:
+        #    print(more[theActions])
+        #sys.exit()
         newActions = constructActions(rules, more)
 
         # print "actions, ", actions
@@ -75,33 +84,48 @@ def extractActions(p):
     rules = {}
     more = {}
     for r in p.result:
-        # print r.children
+        # print("children", r.children)
         if r.children:
             # print type(r.children[0])
             key = r.children[0]
             if len(r.children) > 2:
                 # If there are more actions (just one more
                 # action, in fact), we will store it in more
-                more[key['address']] = []
-                more[key['address']].append(r.children[1]['address'])
+                theKey = key['address'].strip('"') 
+                more[theKey] = []
+                more[theKey].append(r.children[1]['address'])
             if (type(key) == sievelib.commands.FileintoCommand):
-                # print i, ") Folder   ", key['mailbox']
+                # print(i, ") Folder   ", key['mailbox'])
                 tests = r.arguments['test'].arguments['tests']
                 if key['mailbox'] in rules:
-                    rules[key['mailbox']][1] = rules[key['mailbox']][1] + tests
+                    #print("tests-mailbox.", )
+                    #tests[0].tosieve()
+                    #print()
+                    theKey = key['mailbox'].strip('"') 
+                    rules[theKey][1] = rules[theKey][1] + tests
                 else:
-                    rules[key['mailbox']] = []
-                    rules[key['mailbox']].append("fileinto")
-                    rules[key['mailbox']].append(tests)
+                    #print("rules..",rules)
+                    #print("tests..",dir(tests[0]))
+                    #print("\ntests..", vars(tests[0]))
+                    #print("\ntosieve...") 
+                    #tests[0].tosieve()
+                    #print()
+                    #print("key..",key['mailbox'])
+                    theKey = key['mailbox'].strip('"') 
+                    rules[theKey] = []
+                    rules[theKey].append("fileinto")
+                    rules[theKey].append(tests)
+                    #print("rules..++",rules)
             elif (type(key) == sievelib.commands.RedirectCommand):
                 # print i, ") Redirect ", key['address']
                 tests = r.arguments['test'].arguments['tests']
-                if key['address'] in rules:
-                    rules[key['address']][1] = rules[key['address']][1] + tests
+                theKey = key['address'].strip('"') 
+                if theKey in rules:
+                    rules[theKey][1] = rules[theKey][1] + tests
                 else:
-                    rules[key['address']] = []
-                    rules[key['address']].append("redirect")
-                    rules[key['address']].append(tests)
+                    rules[theKey] = []
+                    rules[theKey].append("redirect")
+                    rules[theKey].append(tests)
             else:
                 print(i, ") Not implented ", type(key))
         else:
@@ -116,17 +140,29 @@ def constructActions(rules, more):
     actions = []
     for rule in list(rules.keys()):
         action = []
-        # print "----------------------------"
-        # print rules[rule]
-        # print rule
-        # print "-----"
-        # print rules[rule][0]
-        # act = []
+        #print("\n----------------------------")
+        #print("rule", rule)
+        #print("rules[rule]",rules[rule])
+        #print("-----")
+        #print(rules[rule][0])
+        #print("-----")
+        #printRule(rules[rule])
+        #print("more",more)
+        #print("rule",rule)
+        act = []
         if rule in more:
             action.append((rules[rule][0],
                           (rule, more[rule][0]), rules[rule][1]))
         else:
-            action.append((rules[rule][0], (rule,), rules[rule][1]))
+            #print("actions",rules[rule][0], rule, rules[rule][1])
+            #if not rules[rule][0].startswith(('"', "'")):
+            #    rules[rule][0] = '"%s"' % rules[rule][0]
+            #if not rule.startswith(('"', "'")):
+            #    theRule = '"%s"' % rule
+            #else:
+            theRule = rule
+            #print("actions 2",rules[rule][0], theRule, rules[rule][1])
+            action.append((rules[rule][0], (theRule,), rules[rule][1]))
         # action.append(act)
 
         actions.append(action)
@@ -137,19 +173,20 @@ def constructActions(rules, more):
 def constructFilterSet(actions):
     fs = FiltersSet("test")
     for action in actions:
-        # print "-> ", action
+        #print("cfS-> act ", action)
         conditions = action[0][2]
-        # print "-> ", conditions
+        #print("cfS-> cond", conditions)
         cond = []
         for condition in conditions:
-            print("condition -> ", condition)
-            print(type(condition))
-            print(condition.arguments)
+            #print("cfS condition -> ", condition)
+            # print(type(condition))
+            #print(condition.arguments)
             head = ()
             (key1, key2, key3) = list(condition.arguments.keys())
-            head = head + (condition.arguments[key1],
-                           condition.arguments[key3],
-                           condition.arguments[key2])#.decode('utf-8'))
+            #print("keys",key1, key2, key3)
+            head = head + (condition.arguments[key2].strip('"'),
+                           condition.arguments[key1],
+                           condition.arguments[key3])#.decode('utf-8'))
             # We will need to take care of these .decode's
             cond.append(head)
 
@@ -158,16 +195,29 @@ def constructFilterSet(actions):
         for i in range(len(action[0][1])):
             act.append((action[0][0], action[0][1][i]))
         act.append(("stop",))
-        print("cond ->", cond)
-        print("act ->", act)
+        #print("cfS cond ->", cond)
+        #print("cfS act ->", act)
+        aList = [()]
+        #for a in cond[0]:
+        #    print("cfS ",a)
+        #    aList[0] = aList[0] + (a.strip('"'),)
+        #print("cfS cond", cond)
+        #print("cfS aList", aList)
+        #print("cfS act", act)
         fs.addfilter("", cond, act)
+        #fs.addfilter("", aList, act)
         # print "added!"
 
     return fs
 
 
 def doFolderExist(folder, M):
-    return (M.select(folder))
+    if not folder.startswith(('"', "'")):
+        folderName = '"%s"'%folder
+    else:
+        folderName = folder
+
+    return (M.select(folderName))
 
 
 def selectAction(p, M):  # header="", textHeader=""):
@@ -258,6 +308,10 @@ def selectKeyword(header):
 def selectMessage(M):
     msg_number =""
     while (not msg_number.isdigit()):
+        rows, columns = os.popen('stty size', 'r').read().split()
+        numMsgs = 24
+        if rows:
+           numMsgs = int(rows) - 3
         M.select()
         data = M.sort('ARRIVAL', 'UTF-8', 'ALL')
         if (data[0] == 'OK'):
@@ -265,7 +319,7 @@ def selectMessage(M):
             msg_data = []
             messages = data[1][0].decode("utf-8").split(' ')
             lenId = len(str(messages[-1]))
-            for i in messages[-24:]:
+            for i in messages[-numMsgs:]:
                 typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[])')
                 # print msg_data_fetch
                 for response_part in msg_data_fetch:
@@ -276,6 +330,8 @@ def selectMessage(M):
                         fmt = "%2s) %-20s %-40s"
                         headFrom = msg['From']
                         headSubject = msg['Subject']
+                        if (not headSubject):
+                            headSubject = ""
                         print(fmt % (j,
                                      headFrom[:20],#[0][0][:20],
                                      headSubject[:40]))#[0][0][:40]))
@@ -319,6 +375,7 @@ def selectHeaderAuto(M, msg):
             filterCond = textHeader
 
     return (header, filterCond)
+
 def getPassword(server, user):
     # Deleting keyring.delete_password(server, user)
     password = keyring.get_password(server, user)
@@ -373,17 +430,17 @@ def main():
         script = c.getscript('sogo')
         p = Parser()
         p.parse(script)
+
         (rules, more) = extractActions(p)
 
         # We are going to filter based on one message
         msg = selectMessage(M)
         (keyword, filterCond) = selectHeaderAuto(M, msg)
 
-
         actions = selectAction(p, M)
         # actions[0][1] contains the rule selector
-        # print "actions ", actions[0][1]
-        # print rules[actions[0][1]]
+        # print("actions ", actions[0][1])
+        # print(rules[actions[0][1].strip('"')])
 
         # For a manual selection option?
         # header= selectHeader()
@@ -393,23 +450,33 @@ def main():
         # conditions = []
         # conditions.append((keyword, ":contains", filterCond))
 
+        #print("filtercond", filterCond)
         newActions = addRule(rules, more, keyword, filterCond, actions)
 
-        print(newActions)
+        #print("nA",newActions)
+        #print("nA 0",newActions[0][0][2][0].tosieve())
+        #print("nA 0")
 
         fs = constructFilterSet(newActions)
 
         sieveContent = io.StringIO()
         # fs.tosieve(open(FILE_SIEVE, 'w'))
+        # fs.tosieve()
+        # sys.exit()
         fs.tosieve(sieveContent)
 
+        #import time
+        #time.sleep(5)
         # Let's do a backup of the old sieve script
         name = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
-        c.putscript(name+'sogo', script)
+        res  = c.putscript(name+'sogo', script)
+        print("res",res)
 
         # Now we can put the new sieve filters in place
         # fSieve = open(FILE_SIEVE, 'r')
         # if not c.putscript('sogo', fSieve.read()):
+        #print(sieveContent.getvalue())
+
         if not c.putscript('sogo', sieveContent.getvalue()):
             print("fail!")
 

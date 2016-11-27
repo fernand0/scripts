@@ -25,6 +25,7 @@ import feedparser
 import facebook
 from linkedin import linkedin
 from twitter import *
+import telepot
 import re
 import sys
 import time
@@ -102,7 +103,7 @@ def selectBlog(sel='a'):
 
     if (sel == 'm'):
         if (int(i) > 1):
-            recentIndex = raw_input('Select one: ')
+            recentIndex = input('Select one: ')
             i = int(recentIndex)
             recentFeed = feed[i - 1]
         else:
@@ -134,6 +135,8 @@ def selectBlog(sel='a'):
                                            "twitterAC")
     selectedBlog["pageFB"] = config.get("Blog" + str(recentIndex),
                                         "pageFB")
+    selectedBlog["telegramAC"] = config.get("Blog" + str(recentIndex),
+                                           "telegramAC")
     selectedBlog["identifier"] = identifier
 
     print("You have chosen ")
@@ -160,6 +163,7 @@ def getBlogData(recentFeed, selectedBlog):
     theImage = extractImage(soup)
     theTwitter = selectedBlog["twitterAC"]
     theFbPage = selectedBlog["pageFB"]
+    theTelegram = selectedBlog["telegramAC"]
 
     print("============================================================\n")
     print("Results: \n")
@@ -172,10 +176,11 @@ def getBlogData(recentFeed, selectedBlog):
     print(theComment)
     print(theTwitter)
     print(theFbPage)
+    print(theTelegram)
     print("============================================================\n")
 
     return (theTitle, theLink, theSummary, theComment, theSummaryLinks,
-            theImage, theTwitter, theFbPage)
+            theImage, theTwitter, theFbPage, theTelegram)
 
 
 def publishTwitter(title, link, comment, twitter):
@@ -242,9 +247,22 @@ def publishLinkedin(title, link, summary, image):
 
     application = linkedin.LinkedInApplication(authentication)
 
-    comment = 'Publicado! '+title
+    comment = 'Publicado! ' + title 
     application.submit_share(comment, title, summary, link, image)
 
+def publishTelegram(title, link, summary, image):
+    config = configparser.ConfigParser()
+    config.read([os.path.expanduser('~/.rssTelegram')])
+
+
+    TOKEN = config.get("Telegram", "TOKEN")
+    bot = telepot.Bot(TOKEN)
+    meMySelf = bot.getMe()
+
+    bot.sendMessage('@reflexioneseirreflexiones',title + " "
+                    + summary + " "
+                    + "\nEnlace: " + link + " "
+                    + image) 
 
 def main():
     logging.basicConfig(filename='/home/ftricas/usr/var/rssSocial_.log',
@@ -255,7 +273,7 @@ def main():
     else:
         recentFeed, selectedBlog = selectBlog()
 
-    title, link, summary, comment, summaryLinks, image, twitter, fbPage = \
+    title, link, summary, comment, summaryLinks, image, twitter, fbPage, telegram = \
         getBlogData(recentFeed, selectedBlog)
 
     print("Twitter...\n")
@@ -272,6 +290,14 @@ def main():
             publishFacebook(title, link, summaryLinks, image, fbPage)
         except:
             print("Facebook posting failed!\n")
+            print("Unexpected error:", sys.exc_info()[0])
+
+    print("Telegram...\n")
+    if telegram:
+        try:
+            publishTelegram(title,link,summary,image)
+        except:
+            print("Telegram posting failed!\n")
             print("Unexpected error:", sys.exc_info()[0])
 
     print("Linkedin...\n")
