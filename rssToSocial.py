@@ -250,7 +250,7 @@ def publishLinkedin(title, link, summary, image):
     comment = 'Publicado! ' + title 
     application.submit_share(comment, title, summary, link, image)
 
-def publishTelegram(title, link, summary, image):
+def publishTelegram(channel, title, link, summary, image):
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssTelegram')])
 
@@ -259,7 +259,7 @@ def publishTelegram(title, link, summary, image):
     bot = telepot.Bot(TOKEN)
     meMySelf = bot.getMe()
 
-    bot.sendMessage('@reflexioneseirreflexiones',title + " "
+    bot.sendMessage('@'+channel,title + " "
                     + summary + " "
                     + "\nEnlace: " + link + " "
                     + image) 
@@ -295,7 +295,7 @@ def main():
     print("Telegram...\n")
     if telegram:
         try:
-            publishTelegram(title,link,summary,image)
+            publishTelegram(telegram, title,link,summary,image)
         except:
             print("Telegram posting failed!\n")
             print("Unexpected error:", sys.exc_info()[0])
