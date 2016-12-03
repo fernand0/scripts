@@ -195,36 +195,45 @@ def publishTwitter(title, link, comment, twitter):
     TOKEN_KEY = config.get(twitter, "TOKEN_KEY")
     TOKEN_SECRET = config.get(twitter, "TOKEN_SECRET")
 
-    authentication = OAuth(
-                TOKEN_KEY,
-                TOKEN_SECRET,
-                CONSUMER_KEY,
-                CONSUMER_SECRET)
-    t = Twitter(auth=authentication)
-    t.statuses.update(status=statusTxt)
+    print("Twitter...\n")
 
+    try:
+        authentication = OAuth(
+                    TOKEN_KEY,
+                    TOKEN_SECRET,
+                    CONSUMER_KEY,
+                    CONSUMER_SECRET)
+        t = Twitter(auth=authentication)
+        t.statuses.update(status=statusTxt)
+    except:
+        print("Twitter posting failed!\n")
+        print("Unexpected error:", sys.exc_info()[0])
 
 def publishFacebook(title, link, summaryLinks, image, fbPage):
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssFacebook')])
 
-    oauth_access_token = config.get("Facebook", "oauth_access_token")
+    print("Facebook...\n")
+    try:
+        oauth_access_token = config.get("Facebook", "oauth_access_token")
 
-    graph = facebook.GraphAPI(oauth_access_token)
-    pages = graph.get_connections("me", "accounts")
+        graph = facebook.GraphAPI(oauth_access_token)
+        pages = graph.get_connections("me", "accounts")
 
-    for i in range(len(pages['data'])):
-        if (pages['data'][i]['name'] == fbPage):
-            print("\tWriting in... ", pages['data'][i]['name'], "\n")
-            graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
-            graph2.put_object(pages['data'][i]['id'],
-                              "feed", message=title + " \n" + summaryLinks,
-                              link=link, picture=image,
-                              name=title, caption='',
-                              description=summaryLinks.encode('utf-8'))
-            # graph2.put_object(pages['data'][2]['id'], "instant_articles", html_source=html, development_mode = True)
-            # facebook.GraphAPIError: (#200) Requires pages_manage_instant_articles permission to manage the object
-
+        for i in range(len(pages['data'])):
+            if (pages['data'][i]['name'] == fbPage):
+                print("\tWriting in... ", pages['data'][i]['name'], "\n")
+                graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
+                graph2.put_object(pages['data'][i]['id'],
+                                  "feed", message=title + " \n" + summaryLinks,
+                                  link=link, picture=image,
+                                  name=title, caption='',
+                                  description=summaryLinks.encode('utf-8'))
+                # graph2.put_object(pages['data'][2]['id'], "instant_articles", html_source=html, development_mode = True)
+                # facebook.GraphAPIError: (#200) Requires pages_manage_instant_articles permission to manage the object
+    except:
+        print("Facebook posting failed!\n")
+        print("Unexpected error:", sys.exc_info()[0])
 
 
 def publishLinkedin(title, link, summary, image):
@@ -237,36 +246,48 @@ def publishLinkedin(title, link, summary, image):
     USER_SECRET = config.get("Linkedin", "USER_SECRET")
     RETURN_URL = config.get("Linkedin", "RETURN_URL"),
 
-    authentication = linkedin.LinkedInDeveloperAuthentication(
-                CONSUMER_KEY,
-                CONSUMER_SECRET,
-                USER_TOKEN,
-                USER_SECRET,
-                RETURN_URL,
-                linkedin.PERMISSIONS.enums.values())
+    print("Linkedin...\n")
+    try:
+        authentication = linkedin.LinkedInDeveloperAuthentication(
+                    CONSUMER_KEY,
+                    CONSUMER_SECRET,
+                    USER_TOKEN,
+                    USER_SECRET,
+                    RETURN_URL,
+                    linkedin.PERMISSIONS.enums.values())
 
-    application = linkedin.LinkedInApplication(authentication)
+        application = linkedin.LinkedInApplication(authentication)
 
-    comment = 'Publicado! ' + title 
-    application.submit_share(comment, title, summary, link, image)
+        comment = 'Publicado! ' + title 
+        application.submit_share(comment, title, summary, link, image)
+    except:
+        print("Linkedin posting failed!\n")
+        print("Unexpected error:", sys.exc_info()[0])
 
 def publishTelegram(channel, title, link, summary, image):
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssTelegram')])
 
+    print("Telegram...\n")
 
-    TOKEN = config.get("Telegram", "TOKEN")
-    bot = telepot.Bot(TOKEN)
-    meMySelf = bot.getMe()
+    try:
+        TOKEN = config.get("Telegram", "TOKEN")
+        bot = telepot.Bot(TOKEN)
+        meMySelf = bot.getMe()
 
-    bot.sendMessage('@'+channel,title + " "
-                    + summary + " "
-                    + "\nEnlace: " + link + " "
-                    + image) 
+        bot.sendMessage('@'+channel,title + " "
+                        + summary + " "
+                        + "\nEnlace: " + link + " "
+                        + image) 
+    except:
+        print("Telegram posting failed!\n")
+        print("Unexpected error:", sys.exc_info()[0])
 
 def main():
+
     logging.basicConfig(filename='/home/ftricas/usr/var/rssSocial_.log',
                         level=logging.INFO, format='%(asctime)s %(message)s')
+
     if len(sys.argv) > 1:
         if sys.argv[1] == "-m":
             recentFeed, selectedBlog = selectBlog('m')
@@ -276,36 +297,14 @@ def main():
     title, link, summary, comment, summaryLinks, image, twitter, fbPage, telegram = \
         getBlogData(recentFeed, selectedBlog)
 
-    print("Twitter...\n")
     if twitter:
-        try:
-            publishTwitter(title, link, comment, twitter)
-        except:
-            print("Twitter posting failed!\n")
-            print("Unexpected error:", sys.exc_info()[0])
-
-    print("Facebook...\n")
+        publishTwitter(title, link, comment, twitter)
     if fbPage:
-        try:
-            publishFacebook(title, link, summaryLinks, image, fbPage)
-        except:
-            print("Facebook posting failed!\n")
-            print("Unexpected error:", sys.exc_info()[0])
-
-    print("Telegram...\n")
+        publishFacebook(title, link, summaryLinks, image, fbPage)
     if telegram:
-        try:
-            publishTelegram(telegram, title,link,summary,image)
-        except:
-            print("Telegram posting failed!\n")
-            print("Unexpected error:", sys.exc_info()[0])
+        publishTelegram(telegram, title,link,summary,image)
 
-    print("Linkedin...\n")
-    try:
-        publishLinkedin(title, link, summary, image)
-    except:
-        print("Linkedin posting failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
+    publishLinkedin(title, link, summary, image)
 
     # Now we can publish it in some social network
 
