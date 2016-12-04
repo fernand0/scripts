@@ -34,6 +34,16 @@ from bs4 import BeautifulSoup
 from bs4 import NavigableString
 from bs4 import Tag
 import importlib
+# sudo pip install buffpy version does not work
+# Better use:
+# git clone https://github.com/vtemian/buffpy.git
+# cd buffpy
+# sudo python setup.py install
+from colorama import Fore
+from buffpy.api import API
+from buffpy.managers.profiles import Profiles
+from buffpy.managers.updates import Update
+
 
 importlib.reload(sys)
 #sys.setdefaultencoding("UTF-8")
@@ -125,18 +135,34 @@ def selectBlog(sel='a'):
     if (config.has_option("Blog"+str(recentIndex), "linksToAvoid")):
         selectedBlog["linksToAvoid"] = config.get("Blog" + str(recentIndex),
                                                   "linksToAvoid")
-    if (config.has_option("Blog"+str(recentIndex), "comment")):
-        selectedBlog["comment"] = config.get("Blog" + str(recentIndex),
-                                                  "comment")
     else:
         selectedBlog["linksToAvoid"] = ""
 
-    selectedBlog["twitterAC"] = config.get("Blog" + str(recentIndex),
+    if (config.has_option("Blog"+str(recentIndex), "comment")):
+        selectedBlog["comment"] = config.get("Blog" + str(recentIndex),
+                                                  "comment")
+
+    if (config.has_option("Blog"+str(recentIndex), "twitterAC")):
+        selectedBlog["twitterAC"] = config.get("Blog" + str(recentIndex),
                                            "twitterAC")
-    selectedBlog["pageFB"] = config.get("Blog" + str(recentIndex),
+    else:
+        selectedBlog["twitterAC"] = ""
+    if (config.has_option("Blog"+str(recentIndex), "pageFB")):
+        selectedBlog["pageFB"] = config.get("Blog" + str(recentIndex),
                                         "pageFB")
-    selectedBlog["telegramAC"] = config.get("Blog" + str(recentIndex),
+    else:
+        selectedBlog["pageFB"] = ""
+    if (config.has_option("Blog"+str(recentIndex), "telegramAC")):
+        selectedBlog["telegramAC"] = config.get("Blog" + str(recentIndex),
                                            "telegramAC")
+    else:
+        selectedBlog["telegramAC"] = ""
+    if (config.has_option("Blog"+str(recentIndex), "bufferapp")):
+        selectedBlog["bufferapp"] = config.get("Blog" + str(recentIndex),
+                                           "bufferapp")
+    else:
+        selectedBlog["bufferapp"] = ""
+
     selectedBlog["identifier"] = identifier
 
     print("You have chosen ")
@@ -164,23 +190,25 @@ def getBlogData(recentFeed, selectedBlog):
     theTwitter = selectedBlog["twitterAC"]
     theFbPage = selectedBlog["pageFB"]
     theTelegram = selectedBlog["telegramAC"]
+    theBuffer = selectedBlog["bufferapp"]
 
     print("============================================================\n")
     print("Results: \n")
     print("============================================================\n")
-    print(theTitle.encode('utf-8'))
-    print(theLink)
-    print(theSummary.encode('utf-8'))
-    print(theSummaryLinks.encode('utf-8'))
-    print(theImage)
-    print(theComment)
-    print(theTwitter)
-    print(theFbPage)
-    print(theTelegram)
+    print("Title:     ", theTitle.encode('utf-8'))
+    print("Link:      ", theLink)
+    print("Summary:   ", theSummary.encode('utf-8'))
+    print("Sum links: ", theSummaryLinks.encode('utf-8'))
+    print("Image;     ", theImage)
+    print("Comment:   ", theComment)
+    print("Twitter:   ", theTwitter)
+    print("Facebook:  ", theFbPage)
+    print("Telegram:  ", theTelegram)
+    print("Buffer:    ", theBuffer)
     print("============================================================\n")
 
     return (theTitle, theLink, theSummary, theComment, theSummaryLinks,
-            theImage, theTwitter, theFbPage, theTelegram)
+            theImage, theTwitter, theFbPage, theTelegram, theBuffer)
 
 
 def publishTwitter(title, link, comment, twitter):
@@ -294,9 +322,10 @@ def main():
     else:
         recentFeed, selectedBlog = selectBlog()
 
-    title, link, summary, comment, summaryLinks, image, twitter, fbPage, telegram = \
+    title, link, summary, comment, summaryLinks, image, twitter, fbPage, telegram, bufferapp = \
         getBlogData(recentFeed, selectedBlog)
 
+    sys.exit()
     if twitter:
         publishTwitter(title, link, comment, twitter)
     if fbPage:
