@@ -184,10 +184,12 @@ def constructFilterSet(actions):
             head = ()
             (key1, key2, key3) = list(condition.arguments.keys())
             #print("keys",key1, key2, key3)
-            head = head + (condition.arguments[key2].strip('"'),
-                           condition.arguments[key1],
-                           condition.arguments[key3])#.decode('utf-8'))
+            #print("keys",condition.arguments[key1], condition.arguments[key2], condition.arguments[key3])
+            head = head + (condition.arguments['match-type'].strip('"'),
+                           condition.arguments['header-names'].strip('"'),
+                           condition.arguments['key-list'].strip('"'))#.decode('utf-8'))
             # We will need to take care of these .decode's
+            #print(head)
             cond.append(head)
 
         # print "cond ->", cond
@@ -201,8 +203,8 @@ def constructFilterSet(actions):
         #for a in cond[0]:
         #    print("cfS ",a)
         #    aList[0] = aList[0] + (a.strip('"'),)
-        #print("cfS cond", cond)
         #print("cfS aList", aList)
+        #print("cfS cond", cond)
         #print("cfS act", act)
         fs.addfilter("", cond, act)
         #fs.addfilter("", aList, act)

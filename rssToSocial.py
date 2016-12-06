@@ -34,6 +34,7 @@ from bs4 import BeautifulSoup
 from bs4 import NavigableString
 from bs4 import Tag
 import importlib
+import urllib.parse
 # sudo pip install buffpy version does not work
 # Better use:
 # git clone https://github.com/vtemian/buffpy.git
@@ -85,6 +86,21 @@ def extractLinks(soup, linksToAvoid=""):
 
     return theSummaryLinks
 
+def checkLastLink(rssFeed):
+    urlFile = open(os.path.expanduser("~/." 
+              + urllib.parse.urlparse(rssFeed).netloc
+              + ".last"), "r")
+    linkLast = urlFile.read().rstrip()  # Last published
+    return(linkLast)
+
+def checkPendingPosts(feed, lastLink):
+    posts = []
+    for entry in feed.entries:
+        if entry['link'] == lastLink:
+            break
+        posts.append(feed) 
+
+    return posts
 
 def selectBlog(sel='a'):
     config = configparser.ConfigParser()
@@ -104,6 +120,11 @@ def selectBlog(sel='a'):
                                   config.get(section, "rssFeed"),
                                   time.strftime('%Y-%m-%d %H:%M:%SZ',
                                   lastPost['published_parsed'])))
+        lastLink = checkLastLink(config.get(section, "rssFeed"))
+        if lastLink != lastPost['link']:
+            posts = checkPendingPosts(feed[-1], lastLink)
+            print(posts)
+            print(len(posts))
         if (i == 1) or (recentDate < lastPost['published_parsed']):
             recentDate = lastPost['published_parsed']
             recentFeed = feed[-1]
@@ -210,6 +231,55 @@ def getBlogData(recentFeed, selectedBlog):
     return (theTitle, theLink, theSummary, theComment, theSummaryLinks,
             theImage, theTwitter, theFbPage, theTelegram, theBuffer)
 
+def publishBuffer(title, link, comment, twitter):
+    sys.exit()
+def publishBuffer(selectedBlog, profileList, posts, lenMax, i):
+    tumblrLink = ""
+
+    bufferMax = 10
+    for j in range(bufferMax-lenMax, 0, -1):
+        if (i == 0):
+            break
+        i = i - 1
+        if 'blog' in posts:
+            (title, link, tumblrLink) = obtainTumblrData(posts, lenMax, i)
+        else:
+            title, link = obtainBlogData(posts, lenMax, i)
+
+        post = re.sub('\n+', ' ', title) + " " + link
+        logging.info("Publishing... %s" % post)
+
+        #print("res", post, tumblrLink)
+        for profile in profileList:
+            line = profile['service']
+            #from pprint import pprint 
+            #pprint (profile)
+            #pprint (post)
+            try:
+                profile.updates.new(post)
+                line = line + ' ok'
+                time.sleep(3)
+            except:
+                #print "Unexpected error:", sys.exc_info()[0]
+                #print "Unexpected error:", sys.exc_info()[1]
+                #pprint (vars(sys.exc_info()[1]))
+                #pprint (sys.exc_info()[1].__str__())
+
+                #sys.exit()
+                line = line + ' fail'
+                logging.info(line)
+                failFile = open(os.path.expanduser("~/." +
+                        PREFIX+selectedBlog['identifier'] +
+                        ".fail"), "w")
+                failFile.write(post.encode('utf-8', 'ignore'))
+                logging.info("  %s service" % line)
+    if (tumblrLink):
+        urlFile = open(os.path.expanduser("~/." +
+               PREFIX + selectedBlog['identifier'] +
+               "." + POSFIX), "w")
+
+        urlFile.write(tumblrLink.encode('utf-8'))
+        urlFile.close()
 
 def publishTwitter(title, link, comment, twitter):
 
@@ -321,11 +391,14 @@ def main():
             recentFeed, selectedBlog = selectBlog('m')
     else:
         recentFeed, selectedBlog = selectBlog()
+    sys.exit()
 
     title, link, summary, comment, summaryLinks, image, twitter, fbPage, telegram, bufferapp = \
         getBlogData(recentFeed, selectedBlog)
 
-    sys.exit()
+    if bufferapp:
+        sys.exit()
+        publishBuffer(title, link, comment, twitter)
     if twitter:
         publishTwitter(title, link, comment, twitter)
     if fbPage:
