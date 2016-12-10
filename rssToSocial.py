@@ -86,7 +86,7 @@ def extractLinks(soup, linksToAvoid=""):
     if linksTxt != "":
         theSummaryLinks = soup.get_text().strip('\n') + "\n\n" + linksTxt
     else:
-        theSummaryLinks = soup.get_text().stip('\n')
+        theSummaryLinks = soup.get_text().strip('\n')
 
     return theSummaryLinks
 
@@ -161,46 +161,10 @@ def selectBlog(sel='a'):
         sys.exit()
 
     selectedBlog = {}
-    print(recentPosts.keys())
     for section in recentPosts.keys():
         for option in config.options(section):
             recentPosts[section][option] = config.get(section, option)
-        #if (config.has_option(blog, "linksToAvoid")):
-        #    selectedBlog["linksToAvoid"] = config.get("Blog" + str(recentIndex),
-        #                                              "linksToAvoid")
-        #else:
-        #    selectedBlog["linksToAvoid"] = ""
-
-        #if (config.has_option(blog, "comment")):
-        #    selectedBlog["comment"] = config.get("Blog" + str(recentIndex),
-        #                                              "comment")
-
-        #if (config.has_option(blog, "twitterAC")):
-        #    selectedBlog["twitterAC"] = config.get("Blog" + str(recentIndex),
-        #                                       "twitterAC")
-        #else:
-        #    selectedBlog["twitterAC"] = ""
-        #if (config.has_option(blog, "pageFB")):
-        #    selectedBlog["pageFB"] = config.get("Blog" + str(recentIndex),
-        #                                    "pageFB")
-        #else:
-        #    selectedBlog["pageFB"] = ""
-        #if (config.has_option(blog, "telegramAC")):
-        #    selectedBlog["telegramAC"] = config.get("Blog" + str(recentIndex),
-        #                                       "telegramAC")
-        #else:
-        #    selectedBlog["telegramAC"] = ""
-        #if (config.has_option(blog, "bufferapp")):
-        #    selectedBlog["bufferapp"] = config.get("Blog" + str(recentIndex),
-        #                                       "bufferapp")
-        #else:
-        #    selectedBlog["bufferapp"] = ""
-
-    selectedBlog["identifier"] = identifier
-
-    print("You have chosen ")
-    print(selectedBlog)
-    #print(recentPosts)
+        selectedBlog["identifier"] = identifier
 
     return(recentFeed, selectedBlog, recentPosts)
 
@@ -407,41 +371,48 @@ def publishBuffer(profileList, posts, lenMax, i):
         post = re.sub('\n+', ' ', title) + " " + link
         logging.info("Publishing... %s" % post)
 
-        print("res", post[:24], tumblrLink)
+        print("Publishing", post[:80], tumblrLink)
         #profileList = []
         #tumblrLink = None
+        fail = 'no'
         for profile in profileList:
             line = profile['service']
+            print(profile['service'])
             #from pprint import pprint 
             #pprint (profile)
             #pprint (post)
+            #print("type", type(post))
             try:
-                profile.updates.new(post.decode('utf-8'))
+                profile.updates.new(post.encode('utf-8'))
                 line = line + ' ok'
                 time.sleep(3)
-                if (tumblrLink):
-                    urlFile = open(os.path.expanduser("~/."
-                                   + urllib.parse.urlparse(tumblrLink).netloc
-                                   + ".last"), "w")
-        
-                    urlFile.write(tumblrLink)
-                    urlFile.close()
             except:
-                print("Buffer posting failed!\n")
+                print("Buffer posting failed!")
                 print("Unexpected error:", sys.exc_info()[0])
                 print("Unexpected error:", sys.exc_info()[1])
+                logging.info("Buffer posting failed!")
+                logging.info("Unexpected error: %s"% sys.exc_info()[0])
+                logging.info("Unexpected error: %s"% sys.exc_info()[1])
                 #pprint (vars(sys.exc_info()[1]))
                 #pprint (sys.exc_info()[1].__str__())
 
                 #sys.exit()
                 line = line + ' fail'
-                logging.info(line)
                 failFile = open(os.path.expanduser("~/."
                            + urllib.parse.urlparse(tumblrLink).netloc
                            + ".fail"), "w")
                 failFile.write(post)
                 logging.info("  %s service" % line)
+                fail = 'yes'
                 break
+        logging.info("  %s service" % line)
+        if (fail == 'no' and tumblrLink):
+            urlFile = open(os.path.expanduser("~/."
+                           + urllib.parse.urlparse(tumblrLink).netloc
+                           + ".last"), "w")
+        
+            urlFile.write(tumblrLink)
+            urlFile.close()
 
 def publishTwitter(title, link, comment, twitter):
 
@@ -601,7 +572,6 @@ def main():
 
     #print(recentPosts.keys())
     for i in recentPosts.keys():
-        print("Blog", i)
         if 'bufferapp' in recentPosts[i]:
             print("Bufferapp")
             api = connectBuffer()
@@ -609,7 +579,8 @@ def main():
             publishBuffer(profileList, recentPosts[i], 
                          lenMax, len(recentPosts[i]['posts']))
         else:
-            print("Hay ", len(recentPosts[i]['posts']))
+            print("Publishing pending post")
+            #print("Hay ", len(recentPosts[i]['posts']))
             print(recentPosts[i]['posts'][len(recentPosts[i]['posts'])-1])
             posts = recentPosts[i]
             (title, tumblrLink, link, image, summary, summaryLinks) = (
