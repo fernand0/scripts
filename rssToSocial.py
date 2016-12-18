@@ -246,10 +246,6 @@ def checkLimitPosts(api):
     return(lenMax, profileList)
 
 def obtainBlogData(postsBlog, lenMax, i):
-    #print('Link: ', posts['posts'][i])
-    #print('Link: ', posts['posts'][i]['post_url'])
-    #print 'Title: ' + posts['posts'][i]['summary']
-    #print("posts",posts, len(posts))
     posts = postsBlog['posts']
     theSummary = posts[i]['summary']
     theTitle = posts[i]['title']
@@ -350,7 +346,6 @@ def obtainBlogData(postsBlog, lenMax, i):
     return (theTitle, theLink, tumblrLink)
 
 
-
 def publishBuffer(profileList, posts, lenMax, i):
     tumblrLink = ""
 
@@ -370,8 +365,19 @@ def publishBuffer(profileList, posts, lenMax, i):
 
         post = re.sub('\n+', ' ', title) + " " + link
         logging.info("Publishing... %s" % post)
+        print("============================================================\n")
+        print("Results: \n")
+        print("============================================================\n")
+        print("Title:     ", title)
+        print("Link:      ", link)
+        print("tumb Link: ", tumblrLink)
+        print("Summary:   ", summary)
+        print("Sum links: ", summaryLinks)
+        print("Image;     ", image)
+        print("Post       ", post)
+        print("============================================================\n")
 
-        print("Publishing", post[:80], tumblrLink)
+        #print(type(post))
         #profileList = []
         #tumblrLink = None
         fail = 'no'
@@ -405,14 +411,14 @@ def publishBuffer(profileList, posts, lenMax, i):
                 logging.info("  %s service" % line)
                 fail = 'yes'
                 break
-        logging.info("  %s service" % line)
-        if (fail == 'no' and tumblrLink):
-            urlFile = open(os.path.expanduser("~/."
-                           + urllib.parse.urlparse(tumblrLink).netloc
-                           + ".last"), "w")
+            logging.info("  %s service" % line)
+            if (fail == 'no' and tumblrLink):
+                urlFile = open(os.path.expanduser("~/."
+                               + urllib.parse.urlparse(tumblrLink).netloc
+                               + ".last"), "w")
         
-            urlFile.write(tumblrLink)
-            urlFile.close()
+                urlFile.write(tumblrLink)
+                urlFile.close()
 
 def publishTwitter(title, link, comment, twitter):
 
@@ -545,7 +551,6 @@ def test():
         recentPosts[section] = {}
         recentPosts[section]['posts'] = feed[-1].entries[0]
 
-    #print(recentPosts)
     for i in recentPosts.keys():
          print("post",i,recentPosts[i]['posts']['title'])
          print("post",i,recentPosts[i]['posts']['link'])
@@ -553,6 +558,7 @@ def test():
              print("post content",i,recentPosts[i]['posts']['content'][0]['value'])
          else:
              print("post summary",i,recentPosts[i]['posts']['summary'])
+
     return recentPosts
 
 
@@ -581,7 +587,7 @@ def main():
         else:
             print("Publishing pending post")
             #print("Hay ", len(recentPosts[i]['posts']))
-            print(recentPosts[i]['posts'][len(recentPosts[i]['posts'])-1])
+            #print(recentPosts[i]['posts'][len(recentPosts[i]['posts'])-1])
             posts = recentPosts[i]
             (title, tumblrLink, link, image, summary, summaryLinks) = (
                   obtainBlogData(posts, 1, len(recentPosts[i]['posts'])-1)
