@@ -47,7 +47,7 @@ from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 
 
-importlib.reload(sys)
+#importlib.reload(sys)
 #sys.setdefaultencoding("UTF-8")
 
 
@@ -346,7 +346,7 @@ def obtainBlogData(postsBlog, lenMax, i):
     return (theTitle, theLink, tumblrLink)
 
 
-def publishBuffer(profileList, posts, lenMax, i):
+def publishBuffer(profileList, posts, isDebug, lenMax, i):
     tumblrLink = ""
 
     bufferMax = 10
@@ -378,8 +378,9 @@ def publishBuffer(profileList, posts, lenMax, i):
         print("============================================================\n")
 
         #print(type(post))
-        #profileList = []
-        #tumblrLink = None
+        if isDebug:
+            profileList = []
+            tumblrLink = None
         fail = 'no'
         for profile in profileList:
             line = profile['service']
@@ -564,8 +565,8 @@ def test():
 
 def main():
 
-    logging.basicConfig(filename='/home/ftricas/usr/var/rssSocial_.log',
-                        level=logging.INFO, format='%(asctime)s %(message)s')
+    isDebug = False
+    loggingLevel = logging.INFO
 
     if len(sys.argv) > 1:
         if sys.argv[1] == "-m":
@@ -573,8 +574,16 @@ def main():
         if sys.argv[1] == "-t":
             test()
             sys.exit()
+        if sys.argv[1] == "-d":
+            print("debug")
+            recentFeed, selectedBlog, recentPosts = selectBlog()
+            loggingLevel = logging.DEBUG
+            isDebug = True
     else:
         recentFeed, selectedBlog, recentPosts = selectBlog()
+
+    logging.basicConfig(filename='/home/ftricas/usr/var/rssSocial_.log',
+                        level=loggingLevel, format='%(asctime)s %(message)s')
 
     #print(recentPosts.keys())
     for i in recentPosts.keys():
@@ -582,7 +591,7 @@ def main():
             print("Bufferapp")
             api = connectBuffer()
             lenMax, profileList = checkLimitPosts(api)
-            publishBuffer(profileList, recentPosts[i], 
+            publishBuffer(profileList, recentPosts[i], isDebug,
                          lenMax, len(recentPosts[i]['posts']))
         else:
             print("Publishing pending post")
@@ -602,25 +611,26 @@ def main():
     #title, link, summary, comment, summaryLinks, image, twitter, fbPage, telegram, bufferapp = \
     #    getBlogData(recentFeed, selectedBlog)
 
-            if 'twitterac' in recentPosts[i]:
-                twitter = recentPosts[i]['twitterac']
-                publishTwitter(title, link, comment, twitter)
-            if 'pagefb' in recentPosts[i]:
-                fbPage = recentPosts[i]['pagefb']
-                publishFacebook(title, link, summaryLinks, image, fbPage)
-            if 'telegramac' in recentPosts[i]:
-                telegram = recentPosts[i]['telegramac']
-                publishTelegram(telegram, title,link,summary,image)
+            if not isDebug:
+                if 'twitterac' in recentPosts[i]:
+                    twitter = recentPosts[i]['twitterac']
+                    publishTwitter(title, link, comment, twitter)
+                if 'pagefb' in recentPosts[i]:
+                    fbPage = recentPosts[i]['pagefb']
+                    publishFacebook(title, link, summaryLinks, image, fbPage)
+                if 'telegramac' in recentPosts[i]:
+                    telegram = recentPosts[i]['telegramac']
+                    publishTelegram(telegram, title,link,summary,image)
 
-            publishLinkedin(title, link, summary, image)
+                publishLinkedin(title, link, summary, image)
 
-            if (tumblrLink):
-                urlFile = open(os.path.expanduser("~/."
-                               + urllib.parse.urlparse(tumblrLink).netloc
-                               + ".last"), "w")
+                if (tumblrLink):
+                    urlFile = open(os.path.expanduser("~/."
+                                   + urllib.parse.urlparse(tumblrLink).netloc
+                                   + ".last"), "w")
         
-                urlFile.write(tumblrLink)
-                urlFile.close()
+                    urlFile.write(tumblrLink)
+                    urlFile.close()
 
 
 if __name__ == '__main__':
