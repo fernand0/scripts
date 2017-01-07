@@ -47,7 +47,7 @@ from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 
 
-importlib.reload(sys)
+#importlib.reload(sys)
 #sys.setdefaultencoding("UTF-8")
 
 
@@ -246,10 +246,6 @@ def checkLimitPosts(api):
     return(lenMax, profileList)
 
 def obtainBlogData(postsBlog, lenMax, i):
-    #print('Link: ', posts['posts'][i])
-    #print('Link: ', posts['posts'][i]['post_url'])
-    #print 'Title: ' + posts['posts'][i]['summary']
-    #print("posts",posts, len(posts))
     posts = postsBlog['posts']
     theSummary = posts[i]['summary']
     theTitle = posts[i]['title']
@@ -350,8 +346,7 @@ def obtainBlogData(postsBlog, lenMax, i):
     return (theTitle, theLink, tumblrLink)
 
 
-
-def publishBuffer(profileList, posts, lenMax, i):
+def publishBuffer(profileList, posts, isDebug, lenMax, i):
     tumblrLink = ""
 
     bufferMax = 10
@@ -370,10 +365,22 @@ def publishBuffer(profileList, posts, lenMax, i):
 
         post = re.sub('\n+', ' ', title) + " " + link
         logging.info("Publishing... %s" % post)
+        print("============================================================\n")
+        print("Results: \n")
+        print("============================================================\n")
+        print("Title:     ", title)
+        print("Link:      ", link)
+        print("tumb Link: ", tumblrLink)
+        print("Summary:   ", summary)
+        print("Sum links: ", summaryLinks)
+        print("Image;     ", image)
+        print("Post       ", post)
+        print("============================================================\n")
 
-        print("Publishing", post[:80], tumblrLink)
-        #profileList = []
-        #tumblrLink = None
+        #print(type(post))
+        if isDebug:
+            profileList = []
+            tumblrLink = None
         fail = 'no'
         for profile in profileList:
             line = profile['service']
@@ -405,14 +412,14 @@ def publishBuffer(profileList, posts, lenMax, i):
                 logging.info("  %s service" % line)
                 fail = 'yes'
                 break
-        logging.info("  %s service" % line)
-        if (fail == 'no' and tumblrLink):
-            urlFile = open(os.path.expanduser("~/."
-                           + urllib.parse.urlparse(tumblrLink).netloc
-                           + ".last"), "w")
+            logging.info("  %s service" % line)
+            if (fail == 'no' and tumblrLink):
+                urlFile = open(os.path.expanduser("~/."
+                               + urllib.parse.urlparse(tumblrLink).netloc
+                               + ".last"), "w")
         
-            urlFile.write(tumblrLink)
-            urlFile.close()
+                urlFile.write(tumblrLink)
+                urlFile.close()
 
 def publishTwitter(title, link, comment, twitter):
 
@@ -545,7 +552,6 @@ def test():
         recentPosts[section] = {}
         recentPosts[section]['posts'] = feed[-1].entries[0]
 
-    #print(recentPosts)
     for i in recentPosts.keys():
          print("post",i,recentPosts[i]['posts']['title'])
          print("post",i,recentPosts[i]['posts']['link'])
@@ -553,13 +559,14 @@ def test():
              print("post content",i,recentPosts[i]['posts']['content'][0]['value'])
          else:
              print("post summary",i,recentPosts[i]['posts']['summary'])
+
     return recentPosts
 
 
 def main():
 
-    logging.basicConfig(filename='/home/ftricas/usr/var/rssSocial_.log',
-                        level=logging.INFO, format='%(asctime)s %(message)s')
+    isDebug = False
+    loggingLevel = logging.INFO
 
     if len(sys.argv) > 1:
         if sys.argv[1] == "-m":
@@ -567,8 +574,16 @@ def main():
         if sys.argv[1] == "-t":
             test()
             sys.exit()
+        if sys.argv[1] == "-d":
+            print("debug")
+            recentFeed, selectedBlog, recentPosts = selectBlog()
+            loggingLevel = logging.DEBUG
+            isDebug = True
     else:
         recentFeed, selectedBlog, recentPosts = selectBlog()
+
+    logging.basicConfig(filename='/home/ftricas/usr/var/rssSocial_.log',
+                        level=loggingLevel, format='%(asctime)s %(message)s')
 
     #print(recentPosts.keys())
     for i in recentPosts.keys():
@@ -576,12 +591,12 @@ def main():
             print("Bufferapp")
             api = connectBuffer()
             lenMax, profileList = checkLimitPosts(api)
-            publishBuffer(profileList, recentPosts[i], 
+            publishBuffer(profileList, recentPosts[i], isDebug,
                          lenMax, len(recentPosts[i]['posts']))
         else:
             print("Publishing pending post")
             #print("Hay ", len(recentPosts[i]['posts']))
-            print(recentPosts[i]['posts'][len(recentPosts[i]['posts'])-1])
+            #print(recentPosts[i]['posts'][len(recentPosts[i]['posts'])-1])
             posts = recentPosts[i]
             (title, tumblrLink, link, image, summary, summaryLinks) = (
                   obtainBlogData(posts, 1, len(recentPosts[i]['posts'])-1)
@@ -596,25 +611,26 @@ def main():
     #title, link, summary, comment, summaryLinks, image, twitter, fbPage, telegram, bufferapp = \
     #    getBlogData(recentFeed, selectedBlog)
 
-            if 'twitterac' in recentPosts[i]:
-                twitter = recentPosts[i]['twitterac']
-                publishTwitter(title, link, comment, twitter)
-            if 'pagefb' in recentPosts[i]:
-                fbPage = recentPosts[i]['pagefb']
-                publishFacebook(title, link, summaryLinks, image, fbPage)
-            if 'telegramac' in recentPosts[i]:
-                telegram = recentPosts[i]['telegramac']
-                publishTelegram(telegram, title,link,summary,image)
+            if not isDebug:
+                if 'twitterac' in recentPosts[i]:
+                    twitter = recentPosts[i]['twitterac']
+                    publishTwitter(title, link, comment, twitter)
+                if 'pagefb' in recentPosts[i]:
+                    fbPage = recentPosts[i]['pagefb']
+                    publishFacebook(title, link, summaryLinks, image, fbPage)
+                if 'telegramac' in recentPosts[i]:
+                    telegram = recentPosts[i]['telegramac']
+                    publishTelegram(telegram, title,link,summary,image)
 
-            publishLinkedin(title, link, summary, image)
+                publishLinkedin(title, link, summary, image)
 
-            if (tumblrLink):
-                urlFile = open(os.path.expanduser("~/."
-                               + urllib.parse.urlparse(tumblrLink).netloc
-                               + ".last"), "w")
+                if (tumblrLink):
+                    urlFile = open(os.path.expanduser("~/."
+                                   + urllib.parse.urlparse(tumblrLink).netloc
+                                   + ".last"), "w")
         
-                urlFile.write(tumblrLink)
-                urlFile.close()
+                    urlFile.write(tumblrLink)
+                    urlFile.close()
 
 
 if __name__ == '__main__':

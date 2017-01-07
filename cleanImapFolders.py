@@ -138,6 +138,7 @@ def mailFolder(account, accountData, logging, res):
         msgs = ''
         for rule in RULES:
             action = rule.split(',')
+            logging.debug(action)
             header = action[0][1:-1]
             content = action[1][1:-1]
             msgTxt = "[%s,%s] Rule: %s %s" % (srvMsg, usrMsg, header, content)

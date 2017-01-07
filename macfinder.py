@@ -83,6 +83,8 @@ def seek(ipList):                        # defines a function to analize the net
     hosts_list = [(nm[x]['addresses']) for x in nm.all_hosts()]
     # saves the host list
     pprint.pprint(hosts_list)
+    print("ipList")
+    pprint.pprint(ipList)
 
     for addresses in hosts_list:
         print("addressses", addresses)
