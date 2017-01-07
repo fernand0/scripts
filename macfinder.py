@@ -28,35 +28,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import sys
 import nmap                         # import nmap.py
+#from nmap import nmap
 import pwd, grp
 import time
 import pickle
 import pprint
 
-# File used to store data
-fileName=os.path.expanduser('~')+'/.ipList.txt'
-
-try:
-    nm = nmap.PortScanner()         # creates an'instance of nmap.PortScanner
-    ipList = {}
-except nmap.PortScannerError:
-    print('Nmap not found', sys.exc_info()[0])
-    sys.exit(0)
-except:
-    print("Unexpected error:", sys.exc_info()[0])
-    sys.exit(0)
 
 def loadData():
+    ipList={}
     try:
-	fIP = open(fileName,"r")
+        fIP = open(fileName,"rb")
         try:
             ipList=pickle.load(fIP)
         except:
-            print "The file does not contain adequate data\n"
+            print("The file does not contain adequate data")
     except: 
-        print "No file with stored ips \n" 
-	ipList={}
+        print("No file with stored ips ") 
+        ipList={}
 
+    print(ipList)
     return ipList
 
 
@@ -84,7 +75,7 @@ def drop_privileges():
     old_umask = os.umask(0o22)
 
 
-def seek():                        # defines a function to analize the network
+def seek(ipList):                        # defines a function to analize the network
     count = 0
     nm.scan(hosts='192.168.1.0/24', arguments='-n -sP -PE -T5')
     # executes a ping scan
@@ -94,25 +85,39 @@ def seek():                        # defines a function to analize the network
     pprint.pprint(hosts_list)
 
     for addresses in hosts_list:
+        print("addressses", addresses)
         count = count + 1
-	try:
-		if not ipList.has_key(addresses['mac']):
-			ipList[addresses['mac']] = ("", addresses['ipv4'])
-
-
-		
-	except:
-		pass
-
+        #try:
+        if 'mac' in addresses and not addresses['mac'] in ipList:
+            ipList[addresses['mac']] = ("", addresses['ipv4'])
+        #except:
+        #    pass
+    pprint.pprint(ipList)
     return count                   # returns the host number
 
-def name():                        # defines a function to analize the network
+def name(pList):                       
+# defines a function to analize the network
+    print("nombres")
+    print(ipList)
     for mac in ipList.keys():
-	name = raw_input(mac+" ("+ipList[mac][0]+","+ipList[mac][1]+") Name? ")
+        name = raw_input(mac+" ("+ipList[mac][0]+","+ipList[mac][1]+") Name? ")
         if name != "":
-	    ipList[mac]=(name, ipList[mac][1])
+            ipList[mac]=(name, ipList[mac][1])
     
 if __name__ == '__main__':
+    # File used to store data
+    fileName=os.path.expanduser('~')+'/.ipList.txt'
+    
+    try:
+        nm = nmap.PortScanner()         # creates an'instance of nmap.PortScanner
+        ipList = {}
+    except nmap.PortScannerError:
+        print('Nmap not found', sys.exc_info()[0])
+        sys.exit(0)
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+        sys.exit(0)
+
     count = 1
 
     ipList=loadData()
@@ -121,19 +126,19 @@ if __name__ == '__main__':
         sys.exit()
     # check if the number of addresses is still the same
     while (count <= 10):
-        print "Pass: ",count, "Found: ", seek(), "Total: ", len(ipList)
+        print("Pass: ",count, "Found: ", seek(ipList), "Total: ", len(ipList))
         time.sleep(1)
         count = count + 1
 
     print(os.getresuid())
-    print "We do not need root privileges anymore ...\n"
+    print("We do not need root privileges anymore ...")
     drop_privileges()
     print(os.getresuid())
 
-    print "========= So .... =======\n"
+    print("========= So .... =======")
     pprint.pprint(ipList)
 
-    name()
-    print ipList
-    fIP = open(fileName,"w")
+    name(ipList)
+    print(ipList,type(ipList))
+    fIP = open(fileName,"wb")
     pickle.dump(ipList,fIP)
