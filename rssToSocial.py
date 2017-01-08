@@ -120,6 +120,7 @@ def selectBlog(sel='a'):
 
     for section in config.sections():
         rssFeed = config.get(section, "rssFeed")
+        print(rssFeed)
         feed.append(feedparser.parse(rssFeed))
         lastPost = feed[-1].entries[0]
         print('%s) %s %s (%s)' % (str(i), section,
@@ -257,6 +258,15 @@ def obtainBlogData(postsBlog, lenMax, i):
        theLink = tumblrLink
     else:
        theLink = link['href']
+       pos = theLink.find('.')
+       lenProt = len('http://')
+       if (theLink[lenProt:pos] == theTitle[:pos - lenProt]):
+           # A way to identify retumblings. They have the name of the tumblr at
+           # the beggining of the anchor text
+           print("si")
+           print(theTitle)
+           print(theTitle[pos - lenProt + 1:])
+           theTitle = theTitle[pos - lenProt + 1:]
     if 'content' in posts[i]:
         soup = BeautifulSoup(posts[i]['content'][0]['value'], 'lxml')
     else:    
@@ -363,7 +373,13 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
         #    title, link = obtainBlogData(posts, lenMax, i)
         #print("title",title, link, tumblrLink)
 
-        post = re.sub('\n+', ' ', title) + " " + link
+        titlePost = re.sub('\n+', ' ', title)
+        if (len(titlePost) > 140 - 30):
+            # We are allowing 30 characters for the (short) link 
+            titlePostT = titlePost[:140-30] 
+        else:
+            titlePostT = ""
+        post = titlePost + " " + link
         logging.info("Publishing... %s" % post)
         print("============================================================\n")
         print("Results: \n")
@@ -390,7 +406,10 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
             #pprint (post)
             #print("type", type(post))
             try:
-                profile.updates.new(post.encode('utf-8'))
+                if titlePostT and (profile['service'] == 'twitter'):
+                    profile.updates.new(urllib.parse.quote(titlePostT + " " + link).encode('utf-8'))
+                else:
+                    profile.updates.new(urllib.parse.quote(post).encode('utf-8'))
                 line = line + ' ok'
                 time.sleep(3)
             except:
@@ -506,7 +525,7 @@ def publishLinkedin(title, link, summary, image):
         print("Linkedin posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
-def publishTelegram(channel, title, link, summary, image):
+def publishTelegram(channel, title, link, summary, summaryLinks, image):
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssTelegram')])
 
@@ -520,9 +539,9 @@ def publishTelegram(channel, title, link, summary, image):
         h = HTMLParser()
         title = h.unescape(title)
         bot.sendMessage('@'+channel,title + " "
-                        + summary + " "
-                        + "\nEnlace: " + link + " "
-                        + image) 
+                        + "\nEnlace: " + link
+                        + "\nEscribí: \n"
+                        + summaryLinks) 
     except:
         print("Telegram posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
@@ -611,6 +630,7 @@ def main():
     #title, link, summary, comment, summaryLinks, image, twitter, fbPage, telegram, bufferapp = \
     #    getBlogData(recentFeed, selectedBlog)
 
+            #isDebug = True
             if not isDebug:
                 if 'twitterac' in recentPosts[i]:
                     twitter = recentPosts[i]['twitterac']
@@ -620,7 +640,7 @@ def main():
                     publishFacebook(title, link, summaryLinks, image, fbPage)
                 if 'telegramac' in recentPosts[i]:
                     telegram = recentPosts[i]['telegramac']
-                    publishTelegram(telegram, title,link,summary,image)
+                    publishTelegram(telegram, title,link,summary, summaryLinks, image)
 
                 publishLinkedin(title, link, summary, image)
 
