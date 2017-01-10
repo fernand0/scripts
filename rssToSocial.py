@@ -120,6 +120,14 @@ def selectBlog(sel='a'):
 
     for section in config.sections():
         rssFeed = config.get(section, "rssFeed")
+        if 'time' in config[section].keys():
+	# We can put a limit (in hours). If this time has not pased since the
+	# last time we posted we will skip this post. 
+	    filename = os.path.expanduser("~/." 
+                      + urllib.parse.urlparse(rssFeed).netloc + ".last")
+            if ((time.time() - os.path.getmtime(filename))-24*60*60) < 0:
+                print("no")
+                continue
         print(rssFeed)
         feed.append(feedparser.parse(rssFeed))
         lastPost = feed[-1].entries[0]
