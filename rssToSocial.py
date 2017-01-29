@@ -34,6 +34,7 @@ import datetime
 from bs4 import BeautifulSoup
 from bs4 import NavigableString
 from bs4 import Tag
+from bs4 import Doctype
 import importlib
 import urllib.parse
 # sudo pip install buffpy version does not work
@@ -506,13 +507,22 @@ def cleanTags(soup):
             for theTag in soup.find_all(tag):
                 theTag.unwrap()
 
+    code = [td.find('code') for td in soup.findAll('pre')]
+    # github.io inserts code tags inside pre tags
+    for cod in code:
+        cod.unwrap()
+
+    tags = soup.findAll(text=lambda text:isinstance(text, Doctype))
+    tags[0].extract()
+    # <!DOCTYPE html> in github.io
+
 def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, image):
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssTelegram')])
 
-    print("Telegram...\n")
+    print("Telegram...%s\n"%channel)
 
-    try:
+    if True:
         TOKEN = config.get("Telegram", "TOKEN")
         bot = telepot.Bot(TOKEN)
         meMySelf = bot.getMe()
@@ -522,14 +532,23 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
         htmlText='<a href="'+link+'">'+title + "</a>\n" + summaryHtml
         soup = BeautifulSoup(htmlText)
         cleanTags(soup)
-        bot.sendMessage('@'+channel, str(soup)[:4096], parse_mode='HTML') 
+        print(soup)
+        textToPublish = str(soup)[:4096]
+        index = textToPublish.rfind('<')
+        index2 = textToPublish.find('>',index)
+        if (index2 < 0):
+        # unclosed tag
+        # Maybe we can still have an unclosed tag
+        # Something like: <a href="">< we would 
+            textToPublish = str(soup)[:index - 1]+' ...'
+        bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
         #bot.sendMessage('@'+channel,'<a href="'+link+'">'+title + "</a>\n"
         #            #+ "\nEnlace: " + link
         #            #+ "\nEscribí: \n"
         #            + summaryHtml, parse_mode='HTML') 
-    except:
-        print("Telegram posting failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
+    #except:
+    #    print("Telegram posting failed!\n")
+    #    print("Unexpected error:", sys.exc_info()[0])
 
 def test():
     config = configparser.ConfigParser()
@@ -619,15 +638,15 @@ def main():
             if not isDebug:
                 if 'twitterac' in recentPosts[i]:
                     twitter = recentPosts[i]['twitterac']
-                    publishTwitter(title, link, comment, twitter)
+                    #publishTwitter(title, link, comment, twitter)
                 if 'pagefb' in recentPosts[i]:
                     fbPage = recentPosts[i]['pagefb']
-                    publishFacebook(title, link, summaryLinks, image, fbPage)
+                    #publishFacebook(title, link, summaryLinks, image, fbPage)
                 if 'telegramac' in recentPosts[i]:
                     telegram = recentPosts[i]['telegramac']
                     publishTelegram(telegram, title,link,summary, summaryHtml, summaryLinks, image)
 
-                publishLinkedin(title, link, summary, image)
+                #publishLinkedin(title, link, summary, image)
 
                 if (tumblrLink):
                     urlFile = open(os.path.expanduser("~/."
