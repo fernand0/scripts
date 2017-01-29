@@ -638,15 +638,15 @@ def main():
             if not isDebug:
                 if 'twitterac' in recentPosts[i]:
                     twitter = recentPosts[i]['twitterac']
-                    #publishTwitter(title, link, comment, twitter)
+                    publishTwitter(title, link, comment, twitter)
                 if 'pagefb' in recentPosts[i]:
                     fbPage = recentPosts[i]['pagefb']
-                    #publishFacebook(title, link, summaryLinks, image, fbPage)
+                    publishFacebook(title, link, summaryLinks, image, fbPage)
                 if 'telegramac' in recentPosts[i]:
                     telegram = recentPosts[i]['telegramac']
                     publishTelegram(telegram, title,link,summary, summaryHtml, summaryLinks, image)
 
-                #publishLinkedin(title, link, summary, image)
+                publishLinkedin(title, link, summary, image)
 
                 if (tumblrLink):
                     urlFile = open(os.path.expanduser("~/."
