@@ -513,7 +513,8 @@ def cleanTags(soup):
         cod.unwrap()
 
     tags = soup.findAll(text=lambda text:isinstance(text, Doctype))
-    tags[0].extract()
+    if (len(tags)>0):
+        tags[0].extract()
     # <!DOCTYPE html> in github.io
 
 def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, image):
