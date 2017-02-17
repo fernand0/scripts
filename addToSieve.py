@@ -11,6 +11,7 @@ import email
 import io
 import keyring
 from email.header import Header
+from email.header import decode_header
 from sievelib.managesieve import Client
 from sievelib.parser import Parser
 from sievelib.factory import FiltersSet
@@ -212,6 +213,22 @@ def constructFilterSet(actions):
 
     return fs
 
+def headerToString(header):
+    if not (header is None):
+        headRes = ""
+        for (headDec, enc) in decode_header(header):
+            # It is a list of coded and not coded strings
+            if (enc is None) or (enc == 'unknown-8bit'): 
+                enc = 'iso-8859-1'
+            if (not isinstance(headDec, str)):
+                headDec = headDec.decode(enc)
+            headRes = headRes + headDec
+    else:
+        headRes = ""
+
+    return headRes
+
+
 
 def doFolderExist(folder, M):
     if not folder.startswith(('"', "'")):
@@ -335,8 +352,8 @@ def selectMessage(M):
                         if (not headSubject):
                             headSubject = ""
                         print(fmt % (j,
-                                     headFrom[:20],#[0][0][:20],
-                                     headSubject[:40]))#[0][0][:40]))
+                                 headerToString(headFrom)[:20],#[0][0][:20],
+                                 headerToString(headSubject)[:55]))#[0][0][:40]))
                         j = j + 1
             msg_number = input("Which message? ")
         else:
