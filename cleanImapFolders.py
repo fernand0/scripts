@@ -135,6 +135,7 @@ def mailFolder(account, accountData, logging, res):
         FOLDER = actions[1]
 
         i = 0
+        total = 0
         msgs = ''
         for rule in RULES:
             action = rule.split(',')
@@ -190,6 +191,7 @@ def mailFolder(account, accountData, logging, res):
                                       % (msgTxt, i))
                         msgTxt = "%s: %d messages have been deleted." \
                                       % (msgTxt, i)
+                        total = total + i
                     else:
                         logging.debug("%s -  Couldn't delete messages!" % msgTxt)
                         msgTxt = "%s -  Couldn't delete messages!" % msgTxt
@@ -199,7 +201,7 @@ def mailFolder(account, accountData, logging, res):
             logging.info(msgTxt)
     M.close()
     M.logout()
-    res.put(("ok", SERVER, USER))
+    res.put(("ok", SERVER, USER, total))
     
 
 def main():
@@ -273,10 +275,13 @@ def main():
     for t in threads:
         t.join()
 
+    totalDeleted = 0
     for ans in answers:
         anss = ans.get()
         SERVER = anss[1]
         USER = anss[2]
+        totalDeleted = totalDeleted + anss[3]
+
 
         srvMsg = SERVER.split('.')[0]
         usrMsg = USER.split('@')[0]
@@ -292,6 +297,7 @@ def main():
             PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
     logging.info("%s The end!" % sys.argv[0])
+    print("%s The end! Deleted %d messages" % (sys.argv[0], totalDeleted))
 
 if __name__ == '__main__':
     main()
