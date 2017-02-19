@@ -228,8 +228,6 @@ def headerToString(header):
 
     return headRes
 
-
-
 def doFolderExist(folder, M):
     if not folder.startswith(('"', "'")):
         folderName = '"%s"'%folder
@@ -322,7 +320,6 @@ def selectKeyword(header):
         print(i, ") ", j)
         i = i + 1
     return keyWords[header][int(input("Select header: ")) - 1]
-
 
 def selectMessage(M):
     msg_number =""
