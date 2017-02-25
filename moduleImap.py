@@ -227,11 +227,13 @@ def selectMessageAndFolder(M):
             elif (len(msg_number) > 0) and (msg_number[0] == '-'):
                 if msg_number[1:].isdigit():
                     startMsg = int(msg_number)
+                elif msg_number[1] == 'x':
+                    return ("x","")
                 else:
                     folder = selectFolder(M, msg_number[1:])
                     folder = nameFolder(folder) 
         else:
-            return 0
+            return ("","")
 
     return (folder, msg_data[int(msg_number)])  # messages[-10+int(msg_number)-1]
 
@@ -440,17 +442,21 @@ def selectMessagesNew(M):
        moreMessages = ""
        while not moreMessages:
             (folder, msg) = selectMessageAndFolder(M)
-            sbj = msg['Subject']
-            (msgs, distMsgs) = selectMessageSubject(folder, M, sbj)
+            if folder != 'x':
+                sbj = msg['Subject']
+                (msgs, distMsgs) = selectMessageSubject(folder, M, sbj)
 
-            printMessageHeaders(M, msgs)
+                printMessageHeaders(M, msgs)
 
-            if listMsgs: 
-                listMsgs = listMsgs + ',' + msgs
+                if listMsgs: 
+                    listMsgs = listMsgs + ',' + msgs
+                else:
+                    listMsgs = msgs
+
+                moreMessages = input("More messages? ")    
             else:
-                listMsgs = msgs
-
-            moreMessages = input("More messages? ")    
+                end = 'x'
+                moreMessages = end
 
        if listMsgs:
             printMessageHeaders(M, listMsgs)
@@ -459,7 +465,9 @@ def selectMessagesNew(M):
             folder = nameFolder(folder) 
             print("Selected folder (final): ", folder)
             moveMails(M,listMsgs, folder)
-       end = input("More rules? (empty to continue) ")
+       if not end:
+          end = input("More rules? (empty to continue) ")
+    return(0)
 
 def selectFolder(M, moreMessages = ""):
     resp, data = M.list('""', '*')
