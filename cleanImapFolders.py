@@ -58,6 +58,25 @@ def getPassword(server, user):
         keyring.set_password(server, user, password)
     return password
 
+def organize():
+
+    config = loadImapConfig()[0]
+    (server, user, password, rules, folder) = readImapConfig(config)
+    rules = ""
+    folder = "" # not used here
+    M = makeConnection(server, user, password)
+    password = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+    if not M:
+        sys.exit("Connection failure")
+
+    msgs = selectAllMessages('Sent', M)
+    if msgs:
+        moveMails(M,  msgs, 'INBOX')
+
+    selectMessagesNew(M)
+
+
 def main():
 
     if (len(sys.argv)>1 and (sys.argv[1] == "-d")):
@@ -120,6 +139,8 @@ def main():
 
     for t in threads:
         t.start()
+
+    organize()
 
     for t in threads:
         t.join()
