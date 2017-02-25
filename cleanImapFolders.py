@@ -43,9 +43,6 @@ import keyrings #keyrings.alt
 import getpass
 import threading
 from queue import Queue
-import hashlib
-import binascii
-import logging
 import ssl
 from moduleImap import *
 
