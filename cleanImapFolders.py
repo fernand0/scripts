@@ -59,31 +59,25 @@ def getPassword(server, user):
     return password
 
 def main():
-    config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.IMAP.cfg')])
-    if (len(sys.argv)>1 and (sys.argv[1] == "-d")):
-        logging.basicConfig(#filename='example.log',
-                            level=logging.DEBUG,format='%(asctime)s %(message)s')
-    else:
-        logging.basicConfig(#filename='example.log',
-                            level=logging.INFO,format='%(asctime)s %(message)s')
 
+    if (len(sys.argv)>1 and (sys.argv[1] == "-d")):
+        logging.basicConfig(filename = os.path.expanduser('~/usr/var/IMAP.log'),
+                            level=logging.DEBUG,format='%(asctime)s %(message)s')
+                            #filename='example.log',
+    else:
+        logging.basicConfig(filename = os.path.expanduser('~/usr/var/IMAP.log'),
+                            level=logging.INFO,format='%(asctime)s %(message)s')
+                            #filename='example.log',
+
+    (config, nSec) = loadImapConfig()
     threads = []
     i = 0
 
-    accounts = {}
-    sections=config.sections()
-    # sections=['IMAP6']
     logging.info("%s Starting" % sys.argv[0])
-    for section in sections:
-        SERVER = config.get(section, 'server')
-        USER = config.get(section, 'user')
-        RULES = config.get(section, 'rules').split('\n')
-        if config.has_option(section, 'move'):
-            FOLDER = config.get(section, "move")
-        else:
-            FOLDER = ""
+    accounts = {}
 
+    while (i < nSec):
+        (SERVER, USER, PASSWORD, RULES, FOLDER) = readImapConfig(config, i)
         srvMsg = SERVER.split('.')[0]
         usrMsg = USER.split('@')[0]
         logging.info("[%s,%s] Reading config" % (srvMsg, usrMsg))
@@ -99,6 +93,7 @@ def main():
         else:
             accounts[(SERVER, USER)]['RULES'].append((RULES, FOLDER))
             # logging.info("[%s,%s] Known password!" % (SERVER, USER))
+        i = i + 1
 
     keys = keyring.get_keyring()
     #keys._unlock()
