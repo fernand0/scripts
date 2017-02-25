@@ -38,7 +38,6 @@
 import configparser
 import os
 import sys
-import imaplib
 import keyring
 import keyrings #keyrings.alt
 import getpass
@@ -48,46 +47,7 @@ import hashlib
 import binascii
 import logging
 import ssl
-
-
-def selectHash(M, folder, hashSelect):
-    M.select(folder)
-    typ, data = M.search(None, 'ALL')
-    i = 0
-    msgs = ''
-    dupHash = []
-    for num in data[0].split():
-        m = hashlib.md5()
-        typ, msg = M.fetch(num, '(BODY.PEEK[TEXT])')
-        # PEEK does not change access flags
-        logging.debug("%s" % msg[0][1])
-        m.update(msg[0][1])
-        msgDigest = binascii.hexlify(m.digest())
-        if (msgDigest == hashSelect):
-            if msgs:
-                msgs = msgs + ' ' + num.decode('utf-8')
-                # num is a string or a number?
-            else:
-                msgs = num.decode('utf-8')
-            i = i + 1
-        else:
-            logging.debug("Message %s\n%s" % (num, msgDigest))
-        # We are deleting duplicate messages
-        if msgDigest in dupHash:
-            if msgs:
-                msgs = msgs + ' ' + num.decode('utf-8')
-                # num is a string or a number?
-            else:
-                msgs = num.decode('utf-8')
-            i = i + 1
-        else:
-            dupHash.append(msgDigest)
-        if (i % 10 == 0):
-            logging.debug("Counter %d" % i)
-
-    logging.debug("END\n\n%d messages have been selected\n" % i)
-
-    return msgs
+from moduleImap import *
 
 
 def getPassword(server, user):
@@ -100,109 +60,6 @@ def getPassword(server, user):
         password = getpass.getpass()
         keyring.set_password(server, user, password)
     return password
-
-
-def mailFolder(account, accountData, logging, res):
-    SERVER = account[0]
-    USER = account[1]
-    PASSWORD = getPassword(SERVER, USER)
-
-    srvMsg = SERVER.split('.')[0]
-    usrMsg = USER.split('@')[0]
-    context = ssl.create_default_context()
-    #context = ssl.SSLContext(ssl.PROTOCOL_SSLv3)
-    context.check_hostname = False
-    context.verify_mode = ssl.CERT_NONE
-    M = imaplib.IMAP4_SSL(SERVER,ssl_context=context)
-    try:
-        M.login(USER, PASSWORD)
-        PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        # We do not want passwords in memory when not needed
-    except Exception as ins:
-        # We will ask for the new password
-        print("except", SERVER, USER)
-        print("except", sys.exc_info()[0])
-        print("except", ins.args)
-        logging.info("[%s,%s] wrong password!"
-                         % (srvMsg, usrMsg))
-        res.put(("no", SERVER, USER))
-        return 0
-
-    M.select()
-
-    for actions in accountData['RULES']:
-        RULES = actions[0]
-        FOLDER = actions[1]
-
-        i = 0
-        total = 0
-        msgs = ''
-        for rule in RULES:
-            action = rule.split(',')
-            logging.debug(action)
-            header = action[0][1:-1]
-            content = action[1][1:-1]
-            msgTxt = "[%s,%s] Rule: %s %s" % (srvMsg, usrMsg, header, content)
-            logging.debug(msgTxt)
-            if (header == 'hash'):
-                msgs = selectHash(M, FOLDER, content)
-                #M.select(folder)
-                FOLDER = ""
-            else:
-                data = ''
-                try:
-                    cadSearch = "("+header+' "'+content+'")'
-                    typ, data = M.search(None, cadSearch)
-                except:
-                    cadSearch = "(HEADER "+header+' "'+content+'")'
-                    typ, data = M.search(None, cadSearch)
-                if data and data[0]:
-                    if msgs:
-                        msgs = msgs + ' ' + data[0].decode('utf-8')
-                    else:
-                        msgs = data[0].decode('utf-8')
-                else:
-                    logging.debug("%s - No messages matching." % msgTxt)
-                    msgTxt = "%s - No messages matching." % msgTxt
-
-            if len(msgs)==0:
-                logging.debug("%s Nothing to do" % msgTxt)
-                msgTxt = "%s Nothing to do" % msgTxt
-            else:
-                logging.debug("%s - Let's go!" % msgTxt)
-                msgTxt = "%s - Let's go!" % msgTxt
-                msgs = msgs.replace(" ", ",")
-                status = 'OK'
-                if FOLDER:
-    	    # M.copy needs a set of comma-separated mesages, we have a
-    	    # list with a string
-                    print("msgs", msgs)
-                    result = M.copy(msgs, FOLDER)
-                    status = result[0]
-                i = msgs.count(',') + 1
-                logging.debug("[%s,%s] *%s* Status: %s"% (SERVER,USER,msgs,status))
-
-                if status == 'OK':
-                    # If the list of messages is too long it won't work
-                    flag = '\\Deleted'
-                    result = M.store(msgs, '+FLAGS', flag)
-                    if result[0] == 'OK':
-                        logging.debug("%s: %d messages have been deleted."
-                                      % (msgTxt, i))
-                        msgTxt = "%s: %d messages have been deleted." \
-                                      % (msgTxt, i)
-                        total = total + i
-                    else:
-                        logging.debug("%s -  Couldn't delete messages!" % msgTxt)
-                        msgTxt = "%s -  Couldn't delete messages!" % msgTxt
-                else:
-                    logging.debug("%s - Couldn't move messages!" % msgTxt)
-                    msgTxt = "%s - Couldn't move messages!" % msgTxt
-            logging.info(msgTxt)
-    M.close()
-    M.logout()
-    res.put(("ok", SERVER, USER, total))
-    
 
 def main():
     config = configparser.ConfigParser()

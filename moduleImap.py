@@ -5,19 +5,17 @@
 import configparser
 import os
 import sys
-import sievelib
+import logging
 import time
 import getpass
 import imaplib
 import email
+import hashlib
+import binascii
 import io
 import keyring
 from email.header import Header
 from email.header import decode_header
-from sievelib.managesieve import Client
-from sievelib.parser import Parser
-from sievelib.factory import FiltersSet
-from git import Repo
 import ssl
 
 msgHeaders = ['List-Id', 'From', 'Sender', 'Subject', 'To', 
@@ -27,193 +25,23 @@ headers = ["address", "header"]
 keyWords = {"address": ["From", "To"],
             "header":  ["subject", "Sender", "X-Original-To", "List-Id"]
             }
-FILE_SIEVE = "/tmp/sieveTmp"
 
-repoDir='/home/ftricas/Documents/config/'
-repoFile='sogo.sieve'
+def getPassword(server, user):
+    # Deleting keyring.delete_password(server, user)
+    password = keyring.get_password(server, user)
+    if not password:
+        logging.info("[%s,%s] New account. Setting password" % (server, user))
+        password = getpass.getpass()
+        keyring.set_password(server, user, password)
+    return password
 
-def printRule(rule):
-    print("Rule ")
-    for cond in rule[1]:
-        cond.tosieve()
-        print()
+def stripRe(header):
+    # Drop some standard strings added by email clients
+    Res = ['Fwd', 'Fw', 'Re', 'RV']
+    for h in Res:
+        header = header.replace(h+': ', '')
+    return(header)
 
-def printRules(listRules):
-    # For debugging
-    for rule in list(listRules.keys()):
-        printRule(listRules[rule])
-
-def addRule(rules, more, keyword, filterCond, actions):
-        #printRules(rules)
-        #print(rules['"Docencia/master/masterbdi"'])
-        #print(type(rules['"Docencia/master/masterbdi"']))
-        theActions = actions[0][1].strip('"')
-        if theActions not in rules:
-                rules[theActions] = ['fileinto', []]
-            
-        #printRule(rule)
-
-        # Is there a better way to do this?
-        cmd = sievelib.factory.get_command_instance("header",
-                                                    rules[theActions])
-        cmd.check_next_arg("tag", ":contains")
-        # __quote_if_necessary
-        if not filterCond.startswith(('"', "'")):
-            filterCond = '"%s"' % filterCond
-        if not keyword.startswith(('"', "'")):
-            #print(keyword)
-            keyword = '"%s"' % keyword
-        cmd.check_next_arg("string", keyword)
-        cmd.check_next_arg("string", filterCond)
-#print("cmd Cmd",cmd)
-        #print("theActions",theActions[1])
-        rules[theActions][1].append(cmd)
-        #print("theActions++",theActions[1])
-
-        # print "--------------------"
-        #printRule(rules[theActions])
-        # print "--------------------"
-        #print(rules[theActions])
-        #if theActions in more:
-        #    print(more[theActions])
-        #sys.exit()
-        newActions = constructActions(rules, more)
-
-        # print "actions, ", actions
-        return newActions
-
-def extractActions(p):
-    i = 1
-    rules = {}
-    more = {}
-    for r in p.result:
-        # print("children", r.children)
-        if r.children:
-            # print type(r.children[0])
-            key = r.children[0]
-            if len(r.children) > 2:
-                # If there are more actions (just one more
-                # action, in fact), we will store it in more
-                theKey = key['address'].strip('"') 
-                more[theKey] = []
-                more[theKey].append(r.children[1]['address'])
-            if (type(key) == sievelib.commands.FileintoCommand):
-                # print(i, ") Folder   ", key['mailbox'])
-                tests = r.arguments['test'].arguments['tests']
-                if key['mailbox'] in rules:
-                    #print("tests-mailbox.", )
-                    #tests[0].tosieve()
-                    #print()
-                    theKey = key['mailbox'].strip('"') 
-                    rules[theKey][1] = rules[theKey][1] + tests
-                else:
-                    #print("rules..",rules)
-                    #print("tests..",dir(tests[0]))
-                    #print("\ntests..", vars(tests[0]))
-                    #print("\ntosieve...") 
-                    #tests[0].tosieve()
-                    #print()
-                    #print("key..",key['mailbox'])
-                    theKey = key['mailbox'].strip('"') 
-                    rules[theKey] = []
-                    rules[theKey].append("fileinto")
-                    rules[theKey].append(tests)
-                    #print("rules..++",rules)
-            elif (type(key) == sievelib.commands.RedirectCommand):
-                # print i, ") Redirect ", key['address']
-                tests = r.arguments['test'].arguments['tests']
-                theKey = key['address'].strip('"') 
-                if theKey in rules:
-                    rules[theKey][1] = rules[theKey][1] + tests
-                else:
-                    rules[theKey] = []
-                    rules[theKey].append("redirect")
-                    rules[theKey].append(tests)
-            else:
-                print(i, ") Not implented ", type(key))
-        else:
-            print(i, ") Not implented ", type(r))
-
-        i = i + 1
-
-    return (rules, more)
-
-
-def constructActions(rules, more):
-    actions = []
-    for rule in list(rules.keys()):
-        action = []
-        #print("\n----------------------------")
-        #print("rule", rule)
-        #print("rules[rule]",rules[rule])
-        #print("-----")
-        #print(rules[rule][0])
-        #print("-----")
-        #printRule(rules[rule])
-        #print("more",more)
-        #print("rule",rule)
-        act = []
-        if rule in more:
-            action.append((rules[rule][0],
-                          (rule, more[rule][0]), rules[rule][1]))
-        else:
-            #print("actions",rules[rule][0], rule, rules[rule][1])
-            #if not rules[rule][0].startswith(('"', "'")):
-            #    rules[rule][0] = '"%s"' % rules[rule][0]
-            #if not rule.startswith(('"', "'")):
-            #    theRule = '"%s"' % rule
-            #else:
-            theRule = rule
-            #print("actions 2",rules[rule][0], theRule, rules[rule][1])
-            action.append((rules[rule][0], (theRule,), rules[rule][1]))
-        # action.append(act)
-
-        actions.append(action)
-    # print "actions, ", actions
-    return actions
-
-
-def constructFilterSet(actions):
-    fs = FiltersSet("test")
-    for action in actions:
-        #print("cfS-> act ", action)
-        conditions = action[0][2]
-        #print("cfS-> cond", conditions)
-        cond = []
-        for condition in conditions:
-            #print("cfS condition -> ", condition)
-            # print(type(condition))
-            #print(condition.arguments)
-            head = ()
-            (key1, key2, key3) = list(condition.arguments.keys())
-            #print("keys",key1, key2, key3)
-            #print("keys",condition.arguments[key1], condition.arguments[key2], condition.arguments[key3])
-            head = head + (condition.arguments['match-type'].strip('"'),
-                           condition.arguments['header-names'].strip('"'),
-                           condition.arguments['key-list'].strip('"'))#.decode('utf-8'))
-            # We will need to take care of these .decode's
-            #print(head)
-            cond.append(head)
-
-        # print "cond ->", cond
-        act = []
-        for i in range(len(action[0][1])):
-            act.append((action[0][0], action[0][1][i]))
-        act.append(("stop",))
-        #print("cfS cond ->", cond)
-        #print("cfS act ->", act)
-        aList = [()]
-        #for a in cond[0]:
-        #    print("cfS ",a)
-        #    aList[0] = aList[0] + (a.strip('"'),)
-        #print("cfS aList", aList)
-        #print("cfS cond", cond)
-        #print("cfS act", act)
-        fs.addfilter("", cond, act)
-        #fs.addfilter("", aList, act)
-        # print "added!"
-
-    return fs
 
 def headerToString(header):
     if not (header is None):
@@ -230,6 +58,107 @@ def headerToString(header):
 
     return headRes
 
+def mailFolder(account, accountData, logging, res):
+    SERVER = account[0]
+    USER = account[1]
+    PASSWORD = getPassword(SERVER, USER)
+
+    srvMsg = SERVER.split('.')[0]
+    usrMsg = USER.split('@')[0]
+    context = ssl.create_default_context()
+    #context = ssl.SSLContext(ssl.PROTOCOL_SSLv3)
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
+    M = imaplib.IMAP4_SSL(SERVER,ssl_context=context)
+    try:
+        M.login(USER, PASSWORD)
+        PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        # We do not want passwords in memory when not needed
+    except Exception as ins:
+        # We will ask for the new password
+        print("except", SERVER, USER)
+        print("except", sys.exc_info()[0])
+        print("except", ins.args)
+        logging.info("[%s,%s] wrong password!"
+                         % (srvMsg, usrMsg))
+        res.put(("no", SERVER, USER))
+        return 0
+
+    M.select()
+
+    for actions in accountData['RULES']:
+        RULES = actions[0]
+        FOLDER = actions[1]
+
+        i = 0
+        total = 0
+        msgs = ''
+        for rule in RULES:
+            action = rule.split(',')
+            logging.debug(action)
+            header = action[0][1:-1]
+            content = action[1][1:-1]
+            msgTxt = "[%s,%s] Rule: %s %s" % (srvMsg, usrMsg, header, content)
+            logging.debug(msgTxt)
+            if (header == 'hash'):
+                msgs = selectHash(M, FOLDER, content)
+                #M.select(folder)
+                FOLDER = ""
+            else:
+                data = ''
+                try:
+                    cadSearch = "("+header+' "'+content+'")'
+                    typ, data = M.search(None, cadSearch)
+                except:
+                    cadSearch = "(HEADER "+header+' "'+content+'")'
+                    typ, data = M.search(None, cadSearch)
+                if data and data[0]:
+                    if msgs:
+                        msgs = msgs + ' ' + data[0].decode('utf-8')
+                    else:
+                        msgs = data[0].decode('utf-8')
+                else:
+                    logging.debug("%s - No messages matching." % msgTxt)
+                    msgTxt = "%s - No messages matching." % msgTxt
+
+            if len(msgs)==0:
+                logging.debug("%s Nothing to do" % msgTxt)
+                msgTxt = "%s Nothing to do" % msgTxt
+            else:
+                logging.debug("%s - Let's go!" % msgTxt)
+                msgTxt = "%s - Let's go!" % msgTxt
+                msgs = msgs.replace(" ", ",")
+                status = 'OK'
+                if FOLDER:
+    	    # M.copy needs a set of comma-separated mesages, we have a
+    	    # list with a string
+                    print("msgs", msgs)
+                    result = M.copy(msgs, FOLDER)
+                    status = result[0]
+                i = msgs.count(',') + 1
+                logging.debug("[%s,%s] *%s* Status: %s"% (SERVER,USER,msgs,status))
+
+                if status == 'OK':
+                    # If the list of messages is too long it won't work
+                    flag = '\\Deleted'
+                    result = M.store(msgs, '+FLAGS', flag)
+                    if result[0] == 'OK':
+                        logging.debug("%s: %d messages have been deleted."
+                                      % (msgTxt, i))
+                        msgTxt = "%s: %d messages have been deleted." \
+                                      % (msgTxt, i)
+                        total = total + i
+                    else:
+                        logging.debug("%s -  Couldn't delete messages!" % msgTxt)
+                        msgTxt = "%s -  Couldn't delete messages!" % msgTxt
+                else:
+                    logging.debug("%s - Couldn't move messages!" % msgTxt)
+                    msgTxt = "%s - Couldn't move messages!" % msgTxt
+            logging.info(msgTxt)
+    M.close()
+    M.logout()
+    res.put(("ok", SERVER, USER, total))
+ 
 def doFolderExist(folder, M):
     if not folder.startswith(('"', "'")):
         folderName = '"%s"'%folder
@@ -238,90 +167,12 @@ def doFolderExist(folder, M):
 
     return (M.select(folderName))
 
-
-def selectAction(p, M):  # header="", textHeader=""):
-    i = 1
-    txtResults = ""
-    for r in p.result:
-        if r.children:
-            txtResults = txtResults + "%02d " % len(r.arguments['test'].arguments['tests'])
-            if (type(r.children[0]) == sievelib.commands.FileintoCommand):
-                txtResults = txtResults + "%02d) Folder  %s\n" % (i, r.children[0]['mailbox'])
-            elif (type(r.children[0]) == sievelib.commands.RedirectCommand):
-                txtResults = txtResults + "%02d) Address %s\n" % (i, r.children[0]['address'])
-            else:
-                txtResults = txtResults + "%02d) Not implemented %s\n" % (i, type(r.children[0]))
-        else:
-            txtResults = txtResults + "%02d) Not implemented %s\n" % (i, type(r))
-
-        i = i + 1
-    txtResults = txtResults + "99 %02d) New folder \n" % i
-    txtResults = txtResults + "99 %02d) New redirection\n" % (i+1)
-
-
-    for cad in sorted(txtResults.split('\n')):
-        print(cad[3:], cad[:3])
-
-    option = input("Select one: ")
-
-    print(option, len(p.result))
-
-    actions = []
-
-    if (int(option) <= len(p.result)):
-        action = p.result[int(option)-1].children
-
-        for i in action:
-            if 'mailbox' in i.arguments:
-                actions.append(("fileinto", i.arguments['mailbox']))
-            elif 'address'in i.arguments:
-                actions.append(("redirect", i.arguments['address']))
-            else:
-                actions.append(("stop",))
-
-        # print actions
-
-        match = p.result[int(option)-1]['test']
-        # print "match ", match
-    elif (int(option) == len(p.result)+1):
-        folder = input("Name of the folder: ")
-        print("Name ", folder)
-        if (doFolderExist(folder, M)[0] != 'OK'):
-            print("Folder ", folder, " does not exist")
-            sys.exit()
-        else:
-            print("Let's go")
-            actions.append(("fileinto", folder))
-            actions.append(("stop",))
-    elif (int(option) == len(p.result)+2):
-        redir = input("Redirection to: ")
-        print("Name ", redir)
-        itsOK = input("It's ok? (y/n)")
-        if (itsOK != 'y'):
-            print(redir, " is wrong")
-            sys.exit()
-        else:
-            print("Let's go")
-            actions.append(("redirect", redir))
-            actions.append(("stop",))
-
-    return actions
-
-
 def selectHeader():
     i = 1
     for j in headers:
         print(i, ") ", j, "(", keyWords[headers[i-1]], ")")
         i = i + 1
     return headers[int(input("Select header: ")) - 1]
-
-
-def selectKeyword(header):
-    i = 1
-    for j in keyWords[header]:
-        print(i, ") ", j)
-        i = i + 1
-    return keyWords[header][int(input("Select header: ")) - 1]
 
 def selectMessage(M):
     msg_number =""
@@ -394,16 +245,63 @@ def selectHeaderAuto(M, msg):
 
     return (header, filterCond)
 
-def getPassword(server, user):
-    # Deleting keyring.delete_password(server, user)
-    password = keyring.get_password(server, user)
-    if not password:
-        logging.info("[%s,%s] New account. Setting password" % (server, user))
-        password = getpass.getpass()
-        keyring.set_password(server, user, password)
-    return password
+def selectHash(M, folder, hashSelect):
+    M.select(folder)
+    typ, data = M.search(None, 'ALL')
+    i = 0
+    msgs = ''
+    dupHash = []
+    for num in data[0].split():
+        m = hashlib.md5()
+        typ, msg = M.fetch(num, '(BODY.PEEK[TEXT])')
+        # PEEK does not change access flags
+        logging.debug("%s" % msg[0][1])
+        m.update(msg[0][1])
+        msgDigest = binascii.hexlify(m.digest())
+        if (msgDigest == hashSelect):
+            if msgs:
+                msgs = msgs + ' ' + num.decode('utf-8')
+                # num is a string or a number?
+            else:
+                msgs = num.decode('utf-8')
+            i = i + 1
+        else:
+            logging.debug("Message %s\n%s" % (num, msgDigest))
+        # We are deleting duplicate messages
+        if msgDigest in dupHash:
+            if msgs:
+                msgs = msgs + ' ' + num.decode('utf-8')
+                # num is a string or a number?
+            else:
+                msgs = num.decode('utf-8')
+            i = i + 1
+        else:
+            dupHash.append(msgDigest)
+        if (i % 10 == 0):
+            logging.debug("Counter %d" % i)
 
+    logging.debug("END\n\n%d messages have been selected\n" % i)
 
+    return msgs
+
+def listMessages(M, folder):
+    # List the headers of all e-mails in a folder
+    M.select(folder)
+    data = M.sort('ARRIVAL', 'UTF-8', 'ALL')
+    if (data[0] == 'OK'):
+        messages = data[1][0].decode("utf-8").split(' ')
+        for i in messages: #[-40:]: #[-numMsgs:]:
+            typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[HEADER.FIELDS (SUBJECT FROM DATE)])')
+            for response_part in msg_data_fetch:
+                if isinstance(response_part, tuple):
+                    msg = email.message_from_bytes(response_part[1])
+                    headSubject = msg['Subject']
+                    headFrom = msg['From']
+                    headDate = msg['Date']
+                    print(headerToString(headFrom),
+                          headerToString(headSubject),
+                          headerToString(headDate))
+            
 def main():
 
     config = configparser.ConfigParser()
@@ -411,15 +309,8 @@ def main():
 
     SERVER = config.get("IMAP1", "server")
     USER = config.get("IMAP1", "user")
-    # PASSWORD = getpass.getpass()
     PASSWORD = getPassword(SERVER, USER)
 
-    # Make connections to server
-    # Sieve client connection
-    c = Client(SERVER)
-    if not c.connect(USER, PASSWORD, starttls=True, authmech="PLAIN"):
-        print("Connection failed")
-        return 0
     # IMAP client connection
     context = ssl.create_default_context()
     context.check_hostname = False
@@ -442,95 +333,7 @@ def main():
     PASSWORD = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
     M.select()
 
-    end = ""
-    while (not end):
-        # Could we move this parsing part out of the while?
-        script = c.getscript('sogo')
-        p = Parser()
-        p.parse(script)
-
-        (rules, more) = extractActions(p)
-
-        # We are going to filter based on one message
-        msg = selectMessage(M)
-        (keyword, filterCond) = selectHeaderAuto(M, msg)
-
-        actions = selectAction(p, M)
-        # actions[0][1] contains the rule selector
-        # print("actions ", actions[0][1])
-        # print(rules[actions[0][1].strip('"')])
-
-        # For a manual selection option?
-        # header= selectHeader()
-        # keyword = selectKeyword(header)
-
-        # Eliminate
-        # conditions = []
-        # conditions.append((keyword, ":contains", filterCond))
-
-        #print("filtercond", filterCond)
-        newActions = addRule(rules, more, keyword, filterCond, actions)
-
-        #print("nA",newActions)
-        #print("nA 0",newActions[0][0][2][0].tosieve())
-        #print("nA 0")
-
-        fs = constructFilterSet(newActions)
-
-        sieveContent = io.StringIO()
-        # fs.tosieve(open(FILE_SIEVE, 'w'))
-        # fs.tosieve()
-        # sys.exit()
-        fs.tosieve(sieveContent)
-
-        #import time
-        #time.sleep(5)
-        # Let's do a backup of the old sieve script
-        name = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
-        res  = c.putscript(name+'sogo', script)
-        print("res",res)
-
-        # Now we can put the new sieve filters in place
-        # fSieve = open(FILE_SIEVE, 'r')
-        # if not c.putscript('sogo', fSieve.read()):
-        #print(sieveContent.getvalue())
-
-        if not c.putscript('sogo', sieveContent.getvalue()):
-            print("fail!")
-
-        # Let's start the git backup
-
-        repo = Repo(repoDir)
-        index = repo.index
-
-        print("listscripts",c.listscripts())
-        listScripts=c.listscripts()
-        print("listscripts",listScripts)
-        if (listScripts != None):
-            listScripts=listScripts[1]
-            listScripts.sort() 
-            print("listscripts",c.listscripts())
-            print(listScripts[0])
-
-            # script = listScripts[-1] # The last one
-            sieveFile=c.getscript('sogo')
-            file=open(repoDir+repoFile,'w')
-            file.write(sieveFile)
-            file.close()
-            index.add(['*'])
-            index.commit(name+'sogo')
-
-            if len(listScripts)>6:
-       	        # We will keep the last five ones (plus the active one)
-                numScripts = len(listScripts) - 6
-                i = 0
-                while numScripts > 0:
-                    script = listScripts[i]
-                    c.deletescript(script)
-                    i = i + 1
-                    numScripts = numScripts - 1
-
-        end = input("More rules? (empty to continue) ")
+    listMessages(M, 'INBOX')
 
 if __name__ == "__main__":
     main()
