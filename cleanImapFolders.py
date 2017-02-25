@@ -59,7 +59,8 @@ def getPassword(server, user):
     return password
 
 def organize():
-
+    # This function allous us to select mails from a folder and move them to
+    # other in an interactive way
     config = loadImapConfig()[0]
     (server, user, password, rules, folder) = readImapConfig(config)
     rules = ""

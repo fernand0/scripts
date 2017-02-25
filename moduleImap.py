@@ -202,6 +202,8 @@ def selectMessageAndFolder(M):
 
             #print("start", startMsg)
             #print(messages[0], messages[1])
+            if startMsg < 0:
+                startMsg = 0
             for i in messages[startMsg:startMsg + numMsgs - 1]:
                 typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[])')
                 # print msg_data_fetch
