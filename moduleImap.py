@@ -234,6 +234,8 @@ def selectMessageAndFolder(M):
                 else:
                     folder = selectFolder(M, msg_number[1:])
                     folder = nameFolder(folder) 
+            else:
+                startMsg = 0
         else:
             return ("","")
 
@@ -463,9 +465,9 @@ def selectMessagesNew(M):
        if listMsgs:
             printMessageHeaders(M, listMsgs)
             folder = selectFolder(M, moreMessages)
-            print("Selected folder (before): ", folder)
+            #print("Selected folder (before): ", folder)
             folder = nameFolder(folder) 
-            print("Selected folder (final): ", folder)
+            #print("Selected folder (final): ", folder)
             moveMails(M,listMsgs, folder)
        if not end:
           end = input("More rules? (empty to continue) ")
