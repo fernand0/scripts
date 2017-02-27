@@ -223,7 +223,7 @@ def selectMessageAndFolder(M):
                                      headFromDec[:20],#[0][0][:20],
                                      headSubjDec[:40]))#[0][0][:40]))
                         j = j + 1
-            msg_number = input("Which message? ([-] switches mode: [number] starting point [string] folder name)\n")
+            msg_number = input("Which message? ([-] switches mode: [number] starting point [string] folder name 'x' exit)\n")
             if msg_number.isdigit():
                 startMsg = int(msg_number)
             elif (len(msg_number) > 0) and (msg_number[0] == '-'):
@@ -469,16 +469,15 @@ def selectMessagesNew(M):
             folder = nameFolder(folder) 
             #print("Selected folder (final): ", folder)
             moveMails(M,listMsgs, folder)
-       if not end:
-          end = input("More rules? (empty to continue) ")
     return(0)
 
 def selectFolder(M, moreMessages = ""):
     resp, data = M.list('""', '*')
     listFolders = ""
     numberFolder = -1
+    if moreMessages:  iNameFolder = moreMessages
     while listFolders == "":
-        inNameFolder = input("String in the folder ("+moreMessages+') ')
+        inNameFolder = input("String in the folder ("+iNameFolder+') ')
         i = 0
         if not inNameFolder: inNameFolder = moreMessages
         for name in data:
