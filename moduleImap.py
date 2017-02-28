@@ -43,7 +43,6 @@ def stripRe(header):
         header = header.replace(h+': ', '')
     return(header)
 
-
 def headerToString(header):
     if not (header is None):
         headRes = ""

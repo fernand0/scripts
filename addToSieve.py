@@ -6,12 +6,8 @@ import sys
 import sievelib
 import time
 import getpass
-import imaplib
-import email
 import io
 import keyring
-from email.header import Header
-from email.header import decode_header
 from sievelib.managesieve import Client
 from sievelib.parser import Parser
 from sievelib.factory import FiltersSet
@@ -284,13 +280,9 @@ def selectAction(p, M):  # header="", textHeader=""):
 
 def main():
 
-    config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.IMAP.cfg')])
+    (config, nSec) = loadImapConfig()
 
-    SERVER = config.get("IMAP1", "server")
-    USER = config.get("IMAP1", "user")
-    # PASSWORD = getpass.getpass()
-    PASSWORD = getPassword(SERVER, USER)
+    (SERVER, USER, PASSWORD, RULES, FOLDER) = readImapConfig(config)
 
     # Make connections to server
     # Sieve client connection
@@ -298,25 +290,7 @@ def main():
     if not c.connect(USER, PASSWORD, starttls=True, authmech="PLAIN"):
         print("Connection failed")
         return 0
-    # IMAP client connection
-    context = ssl.create_default_context()
-    context.check_hostname = False
-    context.verify_mode = ssl.CERT_NONE
-    M = imaplib.IMAP4_SSL(SERVER,ssl_context=context)
-    try:
-        M.login(USER, PASSWORD)
-        PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        # We do not want passwords in memory when not needed
-    except Exception as ins:
-        # We will ask for the new password
-        print("except", SERVER, USER)
-        print("except", sys.exc_info()[0])
-        print("except", ins.args)
-        logging.info("[%s,%s] wrong password!"
-                         % (srvMsg, usrMsg))
-        res.put(("no", SERVER, USER))
-        return 0
-
+    M = makeConnection(SERVER, USER, PASSWORD)
     PASSWORD = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
     M.select()
 
