@@ -184,7 +184,10 @@ def selectMessageAndFolder(M):
         if rows:
            numMsgs = int(rows) - 3
         print("folder",folder)
-        M.select(folder)
+        try:
+           M.select(folder)
+        except:
+           return("","")
         data = M.sort('ARRIVAL', 'UTF-8', 'ALL')
         if (data[0] == 'OK'):
             j = 0
@@ -232,7 +235,7 @@ def selectMessageAndFolder(M):
                     return ("x","")
                 else:
                     folder = selectFolder(M, msg_number[1:])
-                    folder = nameFolder(folder) 
+                    #folder = nameFolder(folder) 
             else:
                 startMsg = 0
         else:
@@ -465,18 +468,39 @@ def selectMessagesNew(M):
             printMessageHeaders(M, listMsgs)
             folder = selectFolder(M, moreMessages)
             #print("Selected folder (before): ", folder)
-            folder = nameFolder(folder) 
+            #folder = nameFolder(folder) 
             #print("Selected folder (final): ", folder)
             moveMails(M,listMsgs, folder)
     return(0)
+
+def createFolder(M, name):
+    print("We can select a folder where our new folder will be created")
+    folder = selectFolder(M)
+    print(folder)
+    #folder  = nameFolder(folder)
+    if (folder[-1] == '"'):
+       folder = folder[:-1]+'/'+name+'"'
+    else:
+       if (' ' in name):
+          folder = '"' + folder+'/'+name + '"'
+       else:
+          folder = folder+'/'+name
+    print(folder)
+    (typ, create_response) = M.create(folder)
+    print("Created "+folder+ " ")
+    print(create_response)
+
+    return(folder)
+
+
 
 def selectFolder(M, moreMessages = ""):
     resp, data = M.list('""', '*')
     listFolders = ""
     numberFolder = -1
-    if moreMessages:  iNameFolder = moreMessages
+    if moreMessages: inNameFolder = moreMessages
     while listFolders == "":
-        inNameFolder = input("String in the folder ("+iNameFolder+') ')
+        inNameFolder = input("String in the folder ("+moreMessages+') ')
         i = 0
         if not inNameFolder: inNameFolder = moreMessages
         for name in data:
@@ -484,12 +508,21 @@ def selectFolder(M, moreMessages = ""):
                 listFolders = listFolders + "%d) %s\n" % (i, nameFolder(name))
                 numberFolder = i
             i = i + 1
-    print(listFolders, end = "")
-    iFolder = input("Folder number ("+str(numberFolder)+") ")
-    if not iFolder:
-        iFolder = data[numberFolder]
-    else:
-        iFolder = data[int(iFolder)]
+        print(listFolders, end = "")
+        iFolder = input("Folder number ("+str(numberFolder)+") ")
+        if not iFolder:
+            iFolder = nameFolder(data[numberFolder])
+        elif (len(iFolder) > 0) and (iFolder[0] == '-'):
+            if (len(iFolder) == 3) and (iFolder == '-cf'):
+                nfn = input("New folder name? ")
+                iFolder = createFolder(M, nfn)
+                listFolders = iFolder
+            else:
+                listFolders = ""
+                moreMessages = iFolder[1:]
+        else:
+            iFolder = nameFolder(data[int(iFolder)])
+
     return(iFolder)
 
 def selectMessages(M):
@@ -518,8 +551,7 @@ def selectMessages(M):
        if listMsgs:
             printMessageHeaders(M, listMsgs)
             folder = selectFolder(M, moreMessages)
-            print("Selected folder (before): ", folder)
-            folder = nameFolder(folder) 
+            #folder = nameFolder(folder) 
             print("Selected folder (final): ", folder)
             moveMails(M,listMsgs, folder)
        end = input("More rules? (empty to continue) ")
