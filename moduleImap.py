@@ -10,6 +10,7 @@ import time
 import getpass
 import imaplib
 import email
+import email.policy
 import hashlib
 import binascii
 import distance
@@ -17,6 +18,7 @@ import io
 import keyring
 from email.header import Header
 from email.header import decode_header
+
 import ssl
 
 msgHeaders = ['List-Id', 'From', 'Sender', 'Subject', 'To', 
@@ -38,7 +40,7 @@ def getPassword(server, user):
 
 def stripRe(header):
     # Drop some standard strings added by email clients
-    Res = ['Fwd', 'Fw', 'Re', 'RV']
+    Res = ['Fwd', 'Fw', 'Re', 'RV', '(fwd)']
     for h in Res:
         header = header.replace(h+': ', '')
     return(header)
@@ -192,6 +194,7 @@ def selectMessageAndFolder(M):
         if (data[0] == 'OK'):
             j = 0
             msg_data = []
+            msg_numbers = []
             messages = data[1][0].decode("utf-8").split(' ')
             #lenId = len(str(messages[-1]))
             print("Number of messsages", len(messages))
@@ -211,8 +214,10 @@ def selectMessageAndFolder(M):
                 # print msg_data_fetch
                 for response_part in msg_data_fetch:
                     if isinstance(response_part, tuple):
-                        msg = email.message_from_bytes(response_part[1])
+                        msg = email.message_from_bytes(response_part[1],
+                              policy = email.policy.SMTP)
                         msg_data.append(msg)
+                        msg_numbers.append(i)
                         # Variable length fmt
                         fmt = "%2s) %-20s %-40s"
                         headFrom = msg['From']
@@ -225,7 +230,7 @@ def selectMessageAndFolder(M):
                                      headFromDec[:20],#[0][0][:20],
                                      headSubjDec[:40]))#[0][0][:40]))
                         j = j + 1
-            msg_number = input("Which message? ([-] switches mode: [number] starting point [string] folder name 'x' exit)\n")
+            msg_number = input("Which message? ([-] switches mode: [number] starting point [string] folder name 'x' exit) [+] to read the message [.] to select just *this* message\n")
             if msg_number.isdigit():
                 startMsg = int(msg_number)
             elif (len(msg_number) > 0) and (msg_number[0] == '-'):
@@ -235,14 +240,22 @@ def selectMessageAndFolder(M):
                     return ("x","")
                 else:
                     folder = selectFolder(M, msg_number[1:])
+                    startMsg = 0
                     #folder = nameFolder(folder) 
+            elif (len(msg_number) > 0) and (msg_number[0] == '+'):
+                if msg_number[1:].isdigit():
+                    printMessage(M, msg_data[int(msg_number[1:])],int(rows),int(columns))
+                    startMsg = 0
+            elif (len(msg_number) > 0) and (msg_number[0] == '.'):
+                # Just *this* message
+                if msg_number[1:].isdigit():
+                    return(".",msg_data[int(msg_number[1:])], msg_numbers[int(msg_number[1:])])
             else:
                 startMsg = 0
         else:
             return ("","")
 
-    return (folder, msg_data[int(msg_number)])  # messages[-10+int(msg_number)-1]
-
+    return (folder, msg_data[int(msg_number)], msg_numbers[int(msg_number)])  # messages[-10+int(msg_number)-1]
 
 def selectMessage(M):
     msg_number =""
@@ -365,7 +378,7 @@ def selectAllMessages(folder, M):
 
     return ",".join(messages)
 
-def selectMessageSubject(folder, M, sbj):
+def selectMessageSubject(folder, M, sbj, sens=0):
     msg_number =""
     rows, columns = os.popen('stty size', 'r').read().split()
     numMsgs = 24
@@ -423,7 +436,7 @@ def selectMessageSubject(folder, M, sbj):
                     #print("dist", dist)
                  
 
-                    if (dist < minLen/4):
+                    if (dist < minLen/(4+sens)):
                         print("+", end = "", flush = True)
                         if msgs:
                            msgs = msgs + ',' + str(i)
@@ -447,31 +460,59 @@ def selectMessagesNew(M):
        listMsgs = ""
        moreMessages = ""
        while not moreMessages:
-            (folder, msg) = selectMessageAndFolder(M)
-            if folder != 'x':
-                sbj = msg['Subject']
-                (msgs, distMsgs) = selectMessageSubject(folder, M, sbj)
-
-                printMessageHeaders(M, msgs)
+            (folder, msg, msgNumber) = selectMessageAndFolder(M)
+            if (folder != 'x'):
+                if  (folder != "."):
+                    sbj = msg['Subject']
+                    ok = ""
+                    sens = 0
+                    while not ok:
+                        (msgs, distMsgs) = selectMessageSubject(folder, M, sbj, sens)
+                        printMessageHeaders(M, msgs)
+                        isOk = input("Less messages [-] More messages [+] ")
+                        if isOk == '-':
+                           sens = sens + 1
+                        elif isOk == '+':
+                           moreMessages = ""
+                           ok = "ok"
+                        else:
+                           ok = "ok"
+                else:
+                    msgs = msgNumber
+                    isOk = ""
 
                 if listMsgs: 
                     listMsgs = listMsgs + ',' + msgs
                 else:
                     listMsgs = msgs
 
-                moreMessages = input("More messages? ")    
+                if (isOk != '+') and (folder != '.'):   
+                   moreMessages = isOk    
+                else:
+                   moreMessages = input("More messages? ")    
             else:
                 end = 'x'
                 moreMessages = end
 
        if listMsgs:
             printMessageHeaders(M, listMsgs)
+            if isOk:
+                moreMessages = isOk    
             folder = selectFolder(M, moreMessages)
             #print("Selected folder (before): ", folder)
             #folder = nameFolder(folder) 
             #print("Selected folder (final): ", folder)
             moveMails(M,listMsgs, folder)
     return(0)
+
+def printMessage(M, msg, rows = 24, columns = 80):
+    print(headerToString(msg['From']))
+    print(headerToString(msg['Subject']))
+    print(headerToString(msg['Date']))
+    body = msg.get_body()
+    print(body.get_content()[:(rows-5)*columns])
+    wait = input("Any key to follow")
+
 
 def createFolder(M, name):
     print("We can select a folder where our new folder will be created")
@@ -492,8 +533,6 @@ def createFolder(M, name):
 
     return(folder)
 
-
-
 def selectFolder(M, moreMessages = ""):
     resp, data = M.list('""', '*')
     listFolders = ""
@@ -508,8 +547,11 @@ def selectFolder(M, moreMessages = ""):
                 listFolders = listFolders + "%d) %s\n" % (i, nameFolder(name))
                 numberFolder = i
             i = i + 1
-        print(listFolders, end = "")
-        iFolder = input("Folder number ("+str(numberFolder)+") ")
+        if listFolders:
+            print(listFolders, end = "")
+            iFolder = input("Folder number ("+str(numberFolder)+") ")
+        else:
+            iFolder = ""
         if not iFolder:
             iFolder = nameFolder(data[numberFolder])
         elif (len(iFolder) > 0) and (iFolder[0] == '-'):
@@ -619,7 +661,6 @@ def moveMails(M, msgs, folder):
     M.expunge()
     # msgs contains the index of the message, we can retrieve/move them
 
-
 def printMessageHeaders(M, msgs):
     if msgs:
         print (msgs)
@@ -629,7 +670,6 @@ def printMessageHeaders(M, msgs):
                 if isinstance(response_part, tuple):
                     msgI = email.message_from_bytes(response_part[1])
                     print(headerToString(msgI['Subject']))
-
 
 def listMessages(M, folder):
     # List the headers of all e-mails in a folder
@@ -649,6 +689,7 @@ def listMessages(M, folder):
                           headerToString(headSubject),
                           headerToString(headDate))
             
+
 def main():
 
     config = configparser.ConfigParser()
