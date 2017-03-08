@@ -237,7 +237,7 @@ def selectMessageAndFolder(M):
                 if msg_number[1:].isdigit():
                     startMsg = int(msg_number)
                 elif msg_number[1] == 'x':
-                    return ("x","")
+                    return ("x","","")
                 else:
                     folder = selectFolder(M, msg_number[1:])
                     startMsg = 0
@@ -549,7 +549,7 @@ def selectFolder(M, moreMessages = ""):
             i = i + 1
         if listFolders:
             print(listFolders, end = "")
-            iFolder = input("Folder number ("+str(numberFolder)+") ")
+            iFolder = input("Folder number ("+str(numberFolder)+") [-cf] Create Folder ")
         else:
             iFolder = ""
         if not iFolder:
