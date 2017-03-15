@@ -164,6 +164,7 @@ def selectHeader():
 def showMessagesList(M, messages, numMsgs, startMsg):
     msg_data = []
     msg_numbers = []
+    j = 0
     print("Number of messsages", len(messages))
     if startMsg == 0: 
         startMsg = len(messages) - numMsgs + 1
@@ -211,39 +212,8 @@ def selectMessageAndFolder(M):
            return("","")
         data = M.sort('ARRIVAL', 'UTF-8', 'ALL')
         if (data[0] == 'OK'):
-            j = 0
-            msg_data = []
-            msg_numbers = []
             messages = data[1][0].decode("utf-8").split(' ')
-            print("Number of messsages", len(messages))
-            if startMsg == 0: 
-                startMsg = len(messages) - numMsgs + 1
-            else:
-		# It will be a negative number, we'll use it a starting point
-		# changing the sing
-                startMsg = -startMsg - 1
-
-            if startMsg < 0:
-                startMsg = 0
-            for i in messages[startMsg:startMsg + numMsgs - 1]:
-                typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[])')
-                # print msg_data_fetch
-                for response_part in msg_data_fetch:
-                    if isinstance(response_part, tuple):
-                        msg = email.message_from_bytes(response_part[1],
-                              policy = email.policy.SMTP)
-                        msg_data.append(msg)
-                        msg_numbers.append(i)
-                        # Variable length fmt
-                        fmt = "%2s) %-20s %-40s"
-                        headFrom = msg['From']
-                        headSubject = msg['Subject']
-                        headFromDec = headerToString(headFrom)
-                        headSubjDec = headerToString(headSubject)
-                        print(fmt % (j,
-                                     headFromDec[:20],#[0][0][:20],
-                                     headSubjDec[:40]))#[0][0][:40]))
-                        j = j + 1
+            (msg_data, msg_numbers) = showMessagesList(M, messages, numMsgs, startMsg)
             msg_number = input("Which message? ([-] switches mode: [number] starting point [string] folder name 'x' exit) [+] to read the message [.] to select just *this* message\n")
             if msg_number.isdigit():
                 startMsg = int(msg_number)
@@ -292,35 +262,6 @@ def selectMessage(M):
             msg_numbers = []
             messages = data[1][0].decode("utf-8").split(' ')
             (msg_data, msg_numbers) = showMessagesList(M, messages, numMsgs, startMsg)
-            #print("Number of messsages", len(messages))
-            #if startMsg == 0: 
-            #    startMsg = len(messages) - numMsgs + 1
-            #else:
-	    #    # It will be a negative number, we'll use it a starting point
-	    #    # changing the sing
-            #    startMsg = -startMsg - 1
-
-            #if startMsg < 0:
-            #    startMsg = 0
-            #for i in messages[startMsg:startMsg + numMsgs - 1]:
-            #    typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[])')
-            #    # print msg_data_fetch
-            #    for response_part in msg_data_fetch:
-            #        if isinstance(response_part, tuple):
-            #            msg = email.message_from_bytes(response_part[1],
-            #                  policy = email.policy.SMTP)
-            #            msg_data.append(msg)
-            #            msg_numbers.append(i)
-            #            # Variable length fmt
-            #            fmt = "%2s) %-20s %-40s"
-            #            headFrom = msg['From']
-            #            headSubject = msg['Subject']
-            #            headFromDec = headerToString(headFrom)
-            #            headSubjDec = headerToString(headSubject)
-            #            print(fmt % (j,
-            #                         headFromDec[:20],#[0][0][:20],
-            #                         headSubjDec[:40]))#[0][0][:40]))
-            #            j = j + 1
             msg_number = input("Which message? ")
         else:
             return 0
