@@ -61,6 +61,8 @@ def headerToString(header):
     return headRes
 
 def mailFolder(account, accountData, logging, res):
+    # Apply rules to mailboxes
+
     SERVER = account[0]
     USER = account[1]
     PASSWORD = getPassword(SERVER, USER)
@@ -68,24 +70,6 @@ def mailFolder(account, accountData, logging, res):
     srvMsg = SERVER.split('.')[0]
     usrMsg = USER.split('@')[0]
     M = makeConnection(SERVER, USER, PASSWORD)
-    #context = ssl.create_default_context()
-    ##context = ssl.SSLContext(ssl.PROTOCOL_SSLv3)
-    #context.check_hostname = False
-    #context.verify_mode = ssl.CERT_NONE
-    #M = imaplib.IMAP4_SSL(SERVER,ssl_context=context)
-    #try:
-    #    M.login(USER, PASSWORD)
-    #    PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-    #    # We do not want passwords in memory when not needed
-    #except Exception as ins:
-    #    # We will ask for the new password
-    #    print("except", SERVER, USER)
-    #    print("except", sys.exc_info()[0])
-    #    print("except", ins.args)
-    #    logging.info("[%s,%s] wrong password!"
-    #                     % (srvMsg, usrMsg))
-    #    res.put(("no", SERVER, USER))
-    #    return 0
 
     M.select()
 
@@ -177,6 +161,40 @@ def selectHeader():
         i = i + 1
     return headers[int(input("Select header: ")) - 1]
 
+def showMessagesList(M, messages, numMsgs, startMsg):
+    msg_data = []
+    msg_numbers = []
+    print("Number of messsages", len(messages))
+    if startMsg == 0: 
+        startMsg = len(messages) - numMsgs + 1
+    else:
+        # It will be a negative number, we'll use it a starting point
+        # changing the sing
+        startMsg = -startMsg - 1
+    
+    if startMsg < 0:
+        startMsg = 0
+    for i in messages[startMsg:startMsg + numMsgs - 1]:
+        typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[])')
+        # print msg_data_fetch
+        for response_part in msg_data_fetch:
+            if isinstance(response_part, tuple):
+                msg = email.message_from_bytes(response_part[1],
+                      policy = email.policy.SMTP)
+                msg_data.append(msg)
+                msg_numbers.append(i)
+                # Variable length fmt
+                fmt = "%2s) %-20s %-40s"
+                headFrom = msg['From']
+                headSubject = msg['Subject']
+                headFromDec = headerToString(headFrom)
+                headSubjDec = headerToString(headSubject)
+                print(fmt % (j,
+                             headFromDec[:20],#[0][0][:20],
+                             headSubjDec[:40]))#[0][0][:40]))
+                j = j + 1
+    return(msg_data, msg_numbers)
+ 
 def selectMessageAndFolder(M):
     msg_number =""
     startMsg = 0
@@ -197,7 +215,6 @@ def selectMessageAndFolder(M):
             msg_data = []
             msg_numbers = []
             messages = data[1][0].decode("utf-8").split(' ')
-            #lenId = len(str(messages[-1]))
             print("Number of messsages", len(messages))
             if startMsg == 0: 
                 startMsg = len(messages) - numMsgs + 1
@@ -206,8 +223,6 @@ def selectMessageAndFolder(M):
 		# changing the sing
                 startMsg = -startMsg - 1
 
-            #print("start", startMsg)
-            #print(messages[0], messages[1])
             if startMsg < 0:
                 startMsg = 0
             for i in messages[startMsg:startMsg + numMsgs - 1]:
@@ -223,8 +238,6 @@ def selectMessageAndFolder(M):
                         fmt = "%2s) %-20s %-40s"
                         headFrom = msg['From']
                         headSubject = msg['Subject']
-                        #print(headFrom)
-                        #print(headSubject)
                         headFromDec = headerToString(headFrom)
                         headSubjDec = headerToString(headSubject)
                         print(fmt % (j,
@@ -267,30 +280,47 @@ def selectMessage(M):
         numMsgs = 24
         if rows:
            numMsgs = int(rows) - 3
-        M.select()
+        print("folder",folder)
+        try:
+           M.select(folder)
+        except:
+           return("")
         data = M.sort('ARRIVAL', 'UTF-8', 'ALL')
         if (data[0] == 'OK'):
             j = 0
             msg_data = []
+            msg_numbers = []
             messages = data[1][0].decode("utf-8").split(' ')
-            lenId = len(str(messages[-1]))
-            for i in messages[-numMsgs:]:
-                typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[])')
-                # print msg_data_fetch
-                for response_part in msg_data_fetch:
-                    if isinstance(response_part, tuple):
-                        msg = email.message_from_bytes(response_part[1])
-                        msg_data.append(msg)
-                        # Variable length fmt
-                        fmt = "%2s) %-20s %-40s"
-                        headFrom = msg['From']
-                        headSubject = msg['Subject']
-                        if (not headSubject):
-                            headSubject = ""
-                        print(fmt % (j,
-                                 headerToString(headFrom)[:20],#[0][0][:20],
-                                 headerToString(headSubject)[:55]))#[0][0][:40]))
-                        j = j + 1
+            (msg_data, msg_numbers) = showMessagesList(M, messages, numMsgs, startMsg)
+            #print("Number of messsages", len(messages))
+            #if startMsg == 0: 
+            #    startMsg = len(messages) - numMsgs + 1
+            #else:
+	    #    # It will be a negative number, we'll use it a starting point
+	    #    # changing the sing
+            #    startMsg = -startMsg - 1
+
+            #if startMsg < 0:
+            #    startMsg = 0
+            #for i in messages[startMsg:startMsg + numMsgs - 1]:
+            #    typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[])')
+            #    # print msg_data_fetch
+            #    for response_part in msg_data_fetch:
+            #        if isinstance(response_part, tuple):
+            #            msg = email.message_from_bytes(response_part[1],
+            #                  policy = email.policy.SMTP)
+            #            msg_data.append(msg)
+            #            msg_numbers.append(i)
+            #            # Variable length fmt
+            #            fmt = "%2s) %-20s %-40s"
+            #            headFrom = msg['From']
+            #            headSubject = msg['Subject']
+            #            headFromDec = headerToString(headFrom)
+            #            headSubjDec = headerToString(headSubject)
+            #            print(fmt % (j,
+            #                         headFromDec[:20],#[0][0][:20],
+            #                         headSubjDec[:40]))#[0][0][:40]))
+            #            j = j + 1
             msg_number = input("Which message? ")
         else:
             return 0
