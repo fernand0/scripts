@@ -67,24 +67,25 @@ def mailFolder(account, accountData, logging, res):
 
     srvMsg = SERVER.split('.')[0]
     usrMsg = USER.split('@')[0]
-    context = ssl.create_default_context()
-    #context = ssl.SSLContext(ssl.PROTOCOL_SSLv3)
-    context.check_hostname = False
-    context.verify_mode = ssl.CERT_NONE
-    M = imaplib.IMAP4_SSL(SERVER,ssl_context=context)
-    try:
-        M.login(USER, PASSWORD)
-        PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        # We do not want passwords in memory when not needed
-    except Exception as ins:
-        # We will ask for the new password
-        print("except", SERVER, USER)
-        print("except", sys.exc_info()[0])
-        print("except", ins.args)
-        logging.info("[%s,%s] wrong password!"
-                         % (srvMsg, usrMsg))
-        res.put(("no", SERVER, USER))
-        return 0
+    M = makeConnection(SERVER, USER, PASSWORD)
+    #context = ssl.create_default_context()
+    ##context = ssl.SSLContext(ssl.PROTOCOL_SSLv3)
+    #context.check_hostname = False
+    #context.verify_mode = ssl.CERT_NONE
+    #M = imaplib.IMAP4_SSL(SERVER,ssl_context=context)
+    #try:
+    #    M.login(USER, PASSWORD)
+    #    PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    #    # We do not want passwords in memory when not needed
+    #except Exception as ins:
+    #    # We will ask for the new password
+    #    print("except", SERVER, USER)
+    #    print("except", sys.exc_info()[0])
+    #    print("except", ins.args)
+    #    logging.info("[%s,%s] wrong password!"
+    #                     % (srvMsg, usrMsg))
+    #    res.put(("no", SERVER, USER))
+    #    return 0
 
     M.select()
 
@@ -510,7 +511,10 @@ def printMessage(M, msg, rows = 24, columns = 80):
     print(headerToString(msg['Subject']))
     print(headerToString(msg['Date']))
     body = msg.get_body()
-    print(body.get_content()[:(rows-5)*columns])
+    try:
+       print(body.get_content()[:(rows-5)*columns])
+    except KeyError:
+       print(str(body)[:(rows-5)*columns])
     wait = input("Any key to follow")
 
 
@@ -548,8 +552,11 @@ def selectFolder(M, moreMessages = ""):
                 numberFolder = i
             i = i + 1
         if listFolders:
-            print(listFolders, end = "")
-            iFolder = input("Folder number ("+str(numberFolder)+") [-cf] Create Folder ")
+            if (listFolders.count('\n') > 1):
+                print(listFolders, end = "")
+                iFolder = input("Folder number ("+str(numberFolder)+") [-cf] Create Folder ")
+            else:
+                iFolder = str(numberFolder)
         else:
             iFolder = ""
         if not iFolder:
