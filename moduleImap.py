@@ -161,7 +161,14 @@ def selectHeader():
         i = i + 1
     return headers[int(input("Select header: ")) - 1]
 
-def showMessagesList(M, messages, numMsgs, startMsg):
+def showMessagesList(M, messages, startMsg):
+    rows, columns = os.popen('stty size', 'r').read().split()
+    numMsgs = 24
+    if rows:
+       numMsgs = int(rows) - 3
+    if columns:
+       col = int(columns) 
+
     msg_data = []
     msg_numbers = []
     j = 0
@@ -192,7 +199,7 @@ def showMessagesList(M, messages, numMsgs, startMsg):
                 headSubjDec = headerToString(headSubject)
                 print(fmt % (j,
                              headFromDec[:20],#[0][0][:20],
-                             headSubjDec[:40]))#[0][0][:40]))
+                             headSubjDec[:col - 20 - 5]))#[0][0][:40]))
                 j = j + 1
     return(msg_data, msg_numbers)
  
@@ -213,7 +220,7 @@ def selectMessageAndFolder(M):
         data = M.sort('ARRIVAL', 'UTF-8', 'ALL')
         if (data[0] == 'OK'):
             messages = data[1][0].decode("utf-8").split(' ')
-            (msg_data, msg_numbers) = showMessagesList(M, messages, numMsgs, startMsg)
+            (msg_data, msg_numbers) = showMessagesList(M, messages, startMsg)
             msg_number = input("Which message? ([-] switches mode: [number] starting point [string] folder name 'x' exit) [+] to read the message [.] to select just *this* message\n")
             if msg_number.isdigit():
                 startMsg = int(msg_number)
