@@ -16,8 +16,10 @@ import binascii
 import distance
 import io
 import keyring
+import re
 from email.header import Header
 from email.header import decode_header
+from bs4 import BeautifulSoup
 
 import ssl
 
@@ -268,7 +270,7 @@ def selectMessage(M):
             msg_data = []
             msg_numbers = []
             messages = data[1][0].decode("utf-8").split(' ')
-            (msg_data, msg_numbers) = showMessagesList(M, messages, numMsgs, startMsg)
+            (msg_data, msg_numbers) = showMessagesList(M, folder, messages, startMsg)
             msg_number = input("Which message? ")
         else:
             return 0
@@ -435,6 +437,7 @@ def selectMessagesNew(M):
     while (not end):
        # Could we move this parsing part out of the while?
        # We are going to filter based on one message
+       moveSent(M)
        msgs = ""
        listMsgs = ""
        moreMessages = ""
@@ -484,21 +487,51 @@ def selectMessagesNew(M):
             moveMails(M,listMsgs, folder)
     return(0)
 
+def cleanHtml(html):
+    soup = BeautifulSoup(html,'html.parser')
+    for script in soup(["script", "style"]):
+        script.extract()
+    return(re.sub("\n\s*\n*", "\n", soup.get_text()))
+
+def getMessageBody(msg):
+    # http://blog.magiksys.net/parsing-email-using-python-content
+    body = msg.get_body()
+    try:
+       bodyTxt = body.get_content() 
+       typeB = body.get_content_type()
+       print(typeB)
+       if (typeB == 'text/html'):
+           bodyTxt = cleanHtml(bodyTxt)
+       return(bodyTxt)
+    except KeyError:
+       for part in body.get_payload():
+           type=part.get_content_type()
+           print(type)
+           if type[:4] == 'text':
+              bodyTxt = part.get_content() 
+              if (type == 'text/html'):
+                  bodyTxt = cleanHtml(bodyTxt)
+              return(bodyTxt)
+           elif type == 'multipart/alternative':
+              print("alternative")
+              return(getMessageBody(part))
+           else:
+              print("Not managed type: ", type)
+
+    return("")
+
 def printMessage(M, msg, rows = 24, columns = 80):
     print(headerToString(msg['From']))
     print(headerToString(msg['Subject']))
     print(headerToString(msg['Date']))
-    body = msg.get_body()
-    try:
-       print(body.get_content()[:(rows-5)*columns])
-    except KeyError:
-       print(str(body)[:(rows-5)*columns])
+    body = getMessageBody(msg)    
+    print(body[:(rows-5)*columns])
     wait = input("Any key to follow")
 
 
-def createFolder(M, name):
+def createFolder(M, name, folder):
     print("We can select a folder where our new folder will be created")
-    folder = selectFolder(M)
+    folder = selectFolder(M, folder)
     print(folder)
     #folder  = nameFolder(folder)
     if (folder[-1] == '"'):
@@ -529,10 +562,19 @@ def selectFolder(M, moreMessages = ""):
                 listFolders = listFolders + "%d) %s\n" % (i, nameFolder(name))
                 numberFolder = i
             i = i + 1
-        if listFolders:
+        iFolder = ""
+        while listFolders and not iFolder.isdigit():
             if (listFolders.count('\n') > 1):
                 print(listFolders, end = "")
-                iFolder = input("Folder number ("+str(numberFolder)+") [-cf] Create Folder ")
+                iFolder = input("Folder number ("+str(numberFolder)+") [-cf] Create Folder // A string to select a smaller set of folders")
+                listFoldersS = ""
+                if (len(iFolder) > 0) and not(iFolder.isdigit()) and (iFolder[0] != '-'):
+                    for line in listFolders.split('\n'):
+                         if line.find(iFolder)>0:
+                             listFoldersS = listFoldersS + line + '\n'
+
+                if listFoldersS:
+                    listFolders = listFoldersS
             else:
                 iFolder = str(numberFolder)
         else:
@@ -542,7 +584,7 @@ def selectFolder(M, moreMessages = ""):
         elif (len(iFolder) > 0) and (iFolder[0] == '-'):
             if (len(iFolder) == 3) and (iFolder == '-cf'):
                 nfn = input("New folder name? ")
-                iFolder = createFolder(M, nfn)
+                iFolder = createFolder(M, nfn, moreMessages)
                 listFolders = iFolder
             else:
                 listFolders = ""
@@ -633,6 +675,11 @@ def nameFolder(folder):
     folder = folder[folder.find('"/" ')+4:]
 
     return(folder)
+
+def moveSent(M):
+    msgs = selectAllMessages('Sent', M)
+    if msgs:
+        moveMails(M,  msgs, 'INBOX')
 
 def moveMails(M, msgs, folder):
     print("Copying ", msgs, " in ", folder)

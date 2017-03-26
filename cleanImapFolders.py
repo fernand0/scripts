@@ -71,10 +71,7 @@ def organize():
     if not M:
         sys.exit("Connection failure")
 
-    msgs = selectAllMessages('Sent', M)
-    if msgs:
-        moveMails(M,  msgs, 'INBOX')
-
+    moveSent(M)
     selectMessagesNew(M)
 
 
