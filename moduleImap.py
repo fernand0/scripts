@@ -603,6 +603,33 @@ def selectFolder(M, moreMessages = ""):
             iFolder = nameFolder(data[int(iFolder)])
     return(iFolder)
 
+def listFolderNames(data, inNameFolder = ""):
+    listFolders = ""
+    i = 0
+    for name in data:
+        if (type(name) == str): name = name.encode('ascii')
+        if inNameFolder.encode('ascii').lower() in name.lower():
+            listFolders = listFolders + "%d) %s\n" % (i, nameFolder(name))
+        i = i + 1
+
+    return(listFolders)
+
+def selectFolder(M, moreMessages = ""):
+    resp, data = M.list('""', '*')
+    #print(data)
+    listFolders = listFolderNames(data, moreMessages)
+    while listFolders:
+        print(listFolders)
+        inNameFolder = input("String in the folder ("+moreMessages+') ')
+        
+        if inNameFolder.isdigit(): inNameFolder = inNameFolder + ") "
+        # There can be a problem if the number is part of the name or the
+       	# number of the folder.
+        listFolders = listFolderNames(listFolders.split('\n'), inNameFolder)
+        if (listFolders.count('\n') == 1):
+            print(nameFolder(listFolders))
+            return(nameFolder(listFolders))
+
 def selectMessages(M):
     M.select()
     end = ""
@@ -679,11 +706,20 @@ def makeConnection(SERVER, USER, PASSWORD):
     return M
 
 def nameFolder(folder):
+    # This function has two modes of working: 
+    # The first one is when it receives a list of IMAP folders like:
     # b'(\\HasNoChildren) "/" Departamento/estudiantes' b'Departamento/estudiantes'
     #   01234567890123456789012
     # b'(\\HasChildren) "/" "unizar/aa vrtic/sicuz/servicios/web"'
-    folder = folder.decode()
-    folder = folder[folder.find('"/" ')+4:]
+    # The other one can be a number followed by a ) and the folder
+    # 1) folderName
+    # 2) "Folder name"
+
+    if type(folder) == bytes: folder = folder.decode()
+    if folder and folder[0].isdigit():
+       folder = folder[folder.find(') ')+2:]
+    else:
+       folder = folder[folder.find('"/" ')+4:]
 
     return(folder)
 
