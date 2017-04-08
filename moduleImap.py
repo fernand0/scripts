@@ -620,8 +620,15 @@ def selectFolder(M, moreMessages = ""):
     listFolders = listFolderNames(data, moreMessages)
     while listFolders:
         print(listFolders)
-        inNameFolder = input("String in the folder ("+moreMessages+') ')
+        inNameFolder = input("Folder number [-cf] Create Folder // A string to select a smaller set of folders ")
         
+        if (len(inNameFolder) > 0) and (inNameFolder == '-cf'):
+           print("sí")
+           nfn = input("New folder name? ")
+           iFolder = createFolder(M, nfn, moreMessages)
+           listFolders = iFolder
+           print(listFolders)
+           sys.exit()
         if inNameFolder.isdigit(): inNameFolder = inNameFolder + ") "
         # There can be a problem if the number is part of the name or the
        	# number of the folder.
