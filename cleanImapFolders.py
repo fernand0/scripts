@@ -39,7 +39,6 @@ import configparser
 import os
 import sys
 import keyring
-import keyrings #keyrings.alt
 import getpass
 import threading
 from queue import Queue

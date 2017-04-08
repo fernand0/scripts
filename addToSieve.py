@@ -255,7 +255,7 @@ def selectAction(p, M):  # header="", textHeader=""):
         match = p.result[int(option)-1]['test']
         # print "match ", match
     elif (int(option) == len(p.result)+1):
-        folder = input("Name of the folder: ")
+        folder = selectFolder(M) #input("Name of the folder: ")
         print("Name ", folder)
         if (doFolderExist(folder, M)[0] != 'OK'):
             print("Folder ", folder, " does not exist")

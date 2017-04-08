@@ -33,6 +33,8 @@ keyWords = {"address": ["From", "To"],
 
 def getPassword(server, user):
     # Deleting keyring.delete_password(server, user)
+    #print("keyrings",keyring.backend.get_all_keyring())
+    #print("the keyring",keyring.get_keyring())
     password = keyring.get_password(server, user)
     if not password:
         logging.info("[%s,%s] New account. Setting password" % (server, user))
@@ -407,7 +409,8 @@ def selectMessageSubject(folder, M, sbj, sens=0):
                             if minLen < 20:
                                 # print("he",headSubjDec[-minLen:])
                                 # print("sb",sbjDec[-minLen:])
-                                dist = distance.hamming(headSubjDec[-minLen:], sbjDec[-minLen:])
+                                dist = distance.levenshtein(headSubjDec[-minLen:], sbjDec[-minLen:])
+                                #:dist = distance.hamming(headSubjDec[-minLen:], sbjDec[-minLen:])
                             else:
                                 dist = distance.levenshtein(headSubjDec[-minLen:], sbjDec[-minLen:])
                         else:
@@ -564,21 +567,28 @@ def selectFolder(M, moreMessages = ""):
             i = i + 1
         iFolder = ""
         while listFolders and not iFolder.isdigit():
+            listFoldersS = ""
             if (listFolders.count('\n') > 1):
                 print(listFolders, end = "")
-                iFolder = input("Folder number ("+str(numberFolder)+") [-cf] Create Folder // A string to select a smaller set of folders")
-                listFoldersS = ""
+                iFolder = input("Folder number ("+str(numberFolder)+") [-cf] Create Folder // A string to select a smaller set of folders ")
+                if not iFolder: iFolder = str(numberFolder)
                 if (len(iFolder) > 0) and not(iFolder.isdigit()) and (iFolder[0] != '-'):
+                    listFoldersS = ""
                     for line in listFolders.split('\n'):
                          if line.find(iFolder)>0:
-                             listFoldersS = listFoldersS + line + '\n'
+                             if listFoldersS:
+                                 listFoldersS = listFoldersS + '\n' + line
+                             else:
+                                 listFoldersS = line
+                elif (len(iFolder) > 0) and (iFolder[0] == '-') and (iFolder == '-cf'):
+                    break
+                else:
+                    iFolder = (iFolder)
 
                 if listFoldersS:
                     listFolders = listFoldersS
             else:
-                iFolder = str(numberFolder)
-        else:
-            iFolder = ""
+                iFolder = listFolders[:listFolders.find(')')]#str(numberFolder)
         if not iFolder:
             iFolder = nameFolder(data[numberFolder])
         elif (len(iFolder) > 0) and (iFolder[0] == '-'):
@@ -591,7 +601,6 @@ def selectFolder(M, moreMessages = ""):
                 moreMessages = iFolder[1:]
         else:
             iFolder = nameFolder(data[int(iFolder)])
-
     return(iFolder)
 
 def selectMessages(M):
@@ -660,6 +669,8 @@ def makeConnection(SERVER, USER, PASSWORD):
         print("except", SERVER, USER)
         print("except", sys.exc_info()[0])
         print("except", ins.args)
+        srvMsg = SERVER.split('.')[0]
+        usrMsg = USER.split('@')[0]
         logging.info("[%s,%s] wrong password!"
                          % (srvMsg, usrMsg))
         res.put(("no", SERVER, USER))
