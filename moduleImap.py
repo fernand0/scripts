@@ -236,6 +236,7 @@ def selectMessageAndFolder(M):
                 else:
                     folder = selectFolder(M, msg_number[1:])
                     startMsg = 0
+                    print("folder",folder)
                     #folder = nameFolder(folder) 
             elif (len(msg_number) > 0) and (msg_number[0] == '+'):
                 if msg_number[1:].isdigit():
@@ -544,14 +545,16 @@ def createFolder(M, name, folder):
           folder = '"' + folder+'/'+name + '"'
        else:
           folder = folder+'/'+name
-    print(folder)
     (typ, create_response) = M.create(folder)
-    print("Created "+folder+ " ")
-    print(create_response)
+    if typ == "OK":
+        print("Created "+folder+ " ")
+    else:
+        print("Error creating "+folder+ " ")
+        print(typ, create_response)
 
     return(folder)
 
-def selectFolder(M, moreMessages = ""):
+def selectFolderOld(M, moreMessages = ""):
     resp, data = M.list('""', '*')
     listFolders = ""
     numberFolder = -1
@@ -589,6 +592,7 @@ def selectFolder(M, moreMessages = ""):
                     listFolders = listFoldersS
             else:
                 iFolder = listFolders[:listFolders.find(')')]#str(numberFolder)
+                print("iFolder",iFolder, iFolder.find('\n'))
         if not iFolder:
             iFolder = nameFolder(data[numberFolder])
         elif (len(iFolder) > 0) and (iFolder[0] == '-'):
@@ -601,6 +605,7 @@ def selectFolder(M, moreMessages = ""):
                 moreMessages = iFolder[1:]
         else:
             iFolder = nameFolder(data[int(iFolder)])
+    print("ifolder", iFolder, iFolder.find('\n'))
     return(iFolder)
 
 def listFolderNames(data, inNameFolder = ""):
@@ -608,8 +613,17 @@ def listFolderNames(data, inNameFolder = ""):
     i = 0
     for name in data:
         if (type(name) == str): name = name.encode('ascii')
+        #print(inNameFolder.isdigit(), (inNameFolder+") "), name.lower().find((inNameFolder+") ").encode('ascii').lower()))
+        if inNameFolder.isdigit() and name.lower().find((inNameFolder+") ").encode('ascii').lower()) == 0:
+            # There can be a problem if the number is part of the name or the
+       	    # number of the folder.
+            listFolders = "%d) %s" % (i, nameFolder(name))
+            return(listFolders)
         if inNameFolder.encode('ascii').lower() in name.lower():
-            listFolders = listFolders + "%d) %s\n" % (i, nameFolder(name))
+            if listFolders:
+               listFolders = listFolders + '\n' + "%d) %s" % (i, nameFolder(name))
+            else:
+               listFolders = "%d) %s" % (i, nameFolder(name))
         i = i + 1
 
     return(listFolders)
@@ -617,25 +631,26 @@ def listFolderNames(data, inNameFolder = ""):
 def selectFolder(M, moreMessages = ""):
     resp, data = M.list('""', '*')
     #print(data)
-    listFolders = listFolderNames(data, moreMessages)
+    listAllFolders = listFolderNames(data, moreMessages)
+    if not listAllFolders: listAllFolders = listFolderNames(data, "")
+    listFolders = listAllFolders
     while listFolders:
+        if (listFolders.count('\n') == 0):
+            nF = nameFolder(listFolders)
+            nF = nF.strip('\n')
+            print("nameFolder", nF)
+            return(nF)
         print(listFolders)
         inNameFolder = input("Folder number [-cf] Create Folder // A string to select a smaller set of folders ")
         
         if (len(inNameFolder) > 0) and (inNameFolder == '-cf'):
-           print("sí")
            nfn = input("New folder name? ")
            iFolder = createFolder(M, nfn, moreMessages)
-           listFolders = iFolder
-           print(listFolders)
-           sys.exit()
-        if inNameFolder.isdigit(): inNameFolder = inNameFolder + ") "
-        # There can be a problem if the number is part of the name or the
-       	# number of the folder.
+           return(iFolder)
+           #listFolders = iFolder
         listFolders = listFolderNames(listFolders.split('\n'), inNameFolder)
-        if (listFolders.count('\n') == 1):
-            print(nameFolder(listFolders))
-            return(nameFolder(listFolders))
+        if not listFolders:
+            listFolders = listAllFolders
 
 def selectMessages(M):
     M.select()
