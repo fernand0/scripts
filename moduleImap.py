@@ -186,25 +186,26 @@ def showMessagesList(M, folder, messages, startMsg):
     
     if startMsg < 0:
         startMsg = 0
-    for i in messages[startMsg:startMsg + numMsgs - 1]:
-        typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[])')
-        # print msg_data_fetch
-        for response_part in msg_data_fetch:
-            if isinstance(response_part, tuple):
-                msg = email.message_from_bytes(response_part[1],
-                      policy = email.policy.SMTP)
-                msg_data.append(msg)
-                msg_numbers.append(i)
-                # Variable length fmt
-                fmt = "%2s) %-20s %-40s"
-                headFrom = msg['From']
-                headSubject = msg['Subject']
-                headFromDec = headerToString(headFrom)
-                headSubjDec = headerToString(headSubject)
-                print(fmt % (j,
-                             headFromDec[:20],#[0][0][:20],
-                             headSubjDec[:col - 20 - 5]))#[0][0][:40]))
-                j = j + 1
+    for i in messages[startMsg:min(startMsg + numMsgs - 1, len(messages))]:
+        if i:
+            typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[])')
+            # print msg_data_fetch
+            for response_part in msg_data_fetch:
+                if isinstance(response_part, tuple):
+                    msg = email.message_from_bytes(response_part[1],
+                          policy = email.policy.SMTP)
+                    msg_data.append(msg)
+                    msg_numbers.append(i)
+                    # Variable length fmt
+                    fmt = "%2s) %-20s %-40s"
+                    headFrom = msg['From']
+                    headSubject = msg['Subject']
+                    headFromDec = headerToString(headFrom)
+                    headSubjDec = headerToString(headSubject)
+                    print(fmt % (j,
+                                 headFromDec[:20],#[0][0][:20],
+                                 headSubjDec[:col - 20 - 5]))#[0][0][:40]))
+                    j = j + 1
     return(msg_data, msg_numbers)
  
 def selectMessageAndFolder(M):
@@ -525,11 +526,16 @@ def getMessageBody(msg):
     return("")
 
 def printMessage(M, msg, rows = 24, columns = 80):
-    print(headerToString(msg['From']))
-    print(headerToString(msg['Subject']))
-    print(headerToString(msg['Date']))
+    headers = ['From', 'To', 'Subject', 'Date']
+    for head in headers:
+        print("%s: %s"% (head,headerToString(msg[head][:columns - len(head) - 2])))
     body = getMessageBody(msg)    
-    print(body[:(rows-5)*columns])
+    count = 0
+    for line in body.split('\n'):
+        print(line[:columns])
+        count += 1
+        if count > rows - len(headers) - 3:
+            break
     wait = input("Any key to follow")
 
 
