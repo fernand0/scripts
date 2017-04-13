@@ -6,17 +6,14 @@ import sys
 import sievelib
 import time
 import getpass
-import imaplib
-import email
 import io
 import keyring
-from email.header import Header
-from email.header import decode_header
 from sievelib.managesieve import Client
 from sievelib.parser import Parser
 from sievelib.factory import FiltersSet
 from git import Repo
 import ssl
+from moduleImap import *
 
 msgHeaders = ['List-Id', 'From', 'Sender', 'Subject', 'To', 
               'X-Original-To', 'X-Envelope-From', 
@@ -213,30 +210,6 @@ def constructFilterSet(actions):
 
     return fs
 
-def headerToString(header):
-    if not (header is None):
-        headRes = ""
-        for (headDec, enc) in decode_header(header):
-            # It is a list of coded and not coded strings
-            if (enc is None) or (enc == 'unknown-8bit'): 
-                enc = 'iso-8859-1'
-            if (not isinstance(headDec, str)):
-                headDec = headDec.decode(enc)
-            headRes = headRes + headDec
-    else:
-        headRes = ""
-
-    return headRes
-
-def doFolderExist(folder, M):
-    if not folder.startswith(('"', "'")):
-        folderName = '"%s"'%folder
-    else:
-        folderName = folder
-
-    return (M.select(folderName))
-
-
 def selectAction(p, M):  # header="", textHeader=""):
     i = 1
     txtResults = ""
@@ -282,7 +255,7 @@ def selectAction(p, M):  # header="", textHeader=""):
         match = p.result[int(option)-1]['test']
         # print "match ", match
     elif (int(option) == len(p.result)+1):
-        folder = input("Name of the folder: ")
+        folder = selectFolder(M) #input("Name of the folder: ")
         print("Name ", folder)
         if (doFolderExist(folder, M)[0] != 'OK'):
             print("Folder ", folder, " does not exist")
@@ -305,112 +278,11 @@ def selectAction(p, M):  # header="", textHeader=""):
 
     return actions
 
-
-def selectHeader():
-    i = 1
-    for j in headers:
-        print(i, ") ", j, "(", keyWords[headers[i-1]], ")")
-        i = i + 1
-    return headers[int(input("Select header: ")) - 1]
-
-
-def selectKeyword(header):
-    i = 1
-    for j in keyWords[header]:
-        print(i, ") ", j)
-        i = i + 1
-    return keyWords[header][int(input("Select header: ")) - 1]
-
-def selectMessage(M):
-    msg_number =""
-    while (not msg_number.isdigit()):
-        rows, columns = os.popen('stty size', 'r').read().split()
-        numMsgs = 24
-        if rows:
-           numMsgs = int(rows) - 3
-        M.select()
-        data = M.sort('ARRIVAL', 'UTF-8', 'ALL')
-        if (data[0] == 'OK'):
-            j = 0
-            msg_data = []
-            messages = data[1][0].decode("utf-8").split(' ')
-            lenId = len(str(messages[-1]))
-            for i in messages[-numMsgs:]:
-                typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[])')
-                # print msg_data_fetch
-                for response_part in msg_data_fetch:
-                    if isinstance(response_part, tuple):
-                        msg = email.message_from_bytes(response_part[1])
-                        msg_data.append(msg)
-                        # Variable length fmt
-                        fmt = "%2s) %-20s %-40s"
-                        headFrom = msg['From']
-                        headSubject = msg['Subject']
-                        if (not headSubject):
-                            headSubject = ""
-                        print(fmt % (j,
-                                 headerToString(headFrom)[:20],#[0][0][:20],
-                                 headerToString(headSubject)[:55]))#[0][0][:40]))
-                        j = j + 1
-            msg_number = input("Which message? ")
-        else:
-            return 0
-
-    return msg_data[int(msg_number)]  # messages[-10+int(msg_number)-1]
-
-def selectHeaderAuto(M, msg):
-    i = 1
-    if 'List-Id' in msg:
-        return ('List-Id', msg['List-Id'][msg['List-Id'].find('<')+1:-1])
-    else:
-        for header in msgHeaders:
-            if header in msg:
-                print(i, " ) ", header, msg[header])
-            i = i + 1
-        import locale
-        header_num = input("Select header: ")
-
-        header = msgHeaders[int(header_num)-1]
-        textHeader = msg[msgHeaders[int(header_num)-1]]
-        pos = textHeader.find('<')
-        if (pos >= 0):
-            textHeader = textHeader[pos+1:textHeader.find('>', pos + 1)]
-        else:
-            pos = textHeader.find('[')
-            if (pos >= 0):
-                textHeader = textHeader[pos+1:textHeader.find(']', pos + 1)]
-            else:
-                textHeader = textHeader
-
-        print("Filter: (header) ", header, ", (text) ", textHeader)
-        filterCond = input("Text for selection (empty for all): ")
-        # Trying to solve the problem with accents and so
-        filterCond = filterCond#.decode('utf-8')
-
-        if not filterCond:
-            filterCond = textHeader
-
-    return (header, filterCond)
-
-def getPassword(server, user):
-    # Deleting keyring.delete_password(server, user)
-    password = keyring.get_password(server, user)
-    if not password:
-        logging.info("[%s,%s] New account. Setting password" % (server, user))
-        password = getpass.getpass()
-        keyring.set_password(server, user, password)
-    return password
-
-
 def main():
 
-    config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.IMAP.cfg')])
+    (config, nSec) = loadImapConfig()
 
-    SERVER = config.get("IMAP1", "server")
-    USER = config.get("IMAP1", "user")
-    # PASSWORD = getpass.getpass()
-    PASSWORD = getPassword(SERVER, USER)
+    (SERVER, USER, PASSWORD, RULES, FOLDER) = readImapConfig(config)
 
     # Make connections to server
     # Sieve client connection
@@ -418,25 +290,7 @@ def main():
     if not c.connect(USER, PASSWORD, starttls=True, authmech="PLAIN"):
         print("Connection failed")
         return 0
-    # IMAP client connection
-    context = ssl.create_default_context()
-    context.check_hostname = False
-    context.verify_mode = ssl.CERT_NONE
-    M = imaplib.IMAP4_SSL(SERVER,ssl_context=context)
-    try:
-        M.login(USER, PASSWORD)
-        PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        # We do not want passwords in memory when not needed
-    except Exception as ins:
-        # We will ask for the new password
-        print("except", SERVER, USER)
-        print("except", sys.exc_info()[0])
-        print("except", ins.args)
-        logging.info("[%s,%s] wrong password!"
-                         % (srvMsg, usrMsg))
-        res.put(("no", SERVER, USER))
-        return 0
-
+    M = makeConnection(SERVER, USER, PASSWORD)
     PASSWORD = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
     M.select()
 

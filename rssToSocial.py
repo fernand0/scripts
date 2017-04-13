@@ -445,7 +445,7 @@ def publishFacebook(title, link, summaryLinks, image, fbPage):
     try:
         oauth_access_token = config.get("Facebook", "oauth_access_token")
 
-        graph = facebook.GraphAPI(oauth_access_token)
+        graph = facebook.GraphAPI(oauth_access_token, version='2.7')
         pages = graph.get_connections("me", "accounts")
 
         for i in range(len(pages['data'])):
