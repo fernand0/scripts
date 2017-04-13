@@ -5,6 +5,8 @@ from oauth2client.service_account import ServiceAccountCredentials
 import os
 import socket
 import time
+import pwd
+import inspect
 
 # Based on code from: https://www.twilio.com/blog/2017/02/an-easy-way-to-read-and-write-to-a-google-spreadsheet-in-python.html
 
@@ -16,13 +18,16 @@ def getIp():
 
 def main():
     hostname = socket.gethostname()
-    ip = getIp()
-    
-    print(hostname,ip, time.time())
+    dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) # script directory
 
-    client_secret =  os.path.expanduser('~/.ssh/otros/errBot Youtube-7ff8701bdfdd.json')
+    ip = getIp()
+    user = dir[:dir.find('/',len('/home/'))]
+
+    print(hostname, user, ip, time.time())
+
+    client_secret =  user + '/.ssh/otros/errBot Youtube-7ff8701bdfdd.json'
+
     sheet_name = 'Registro IPs'
-    
     
     # use creds to create a client to interact with the Google Drive API
     scope = ['https://spreadsheets.google.com/feeds']
