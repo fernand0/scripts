@@ -527,9 +527,12 @@ def getMessageBody(msg):
 
 def printMessage(M, msg, rows = 24, columns = 80):
     headers = ['From', 'To', 'Subject', 'Date']
+
     for head in headers:
         print("%s: %s"% (head,headerToString(msg[head][:columns - len(head) - 2])))
+
     body = getMessageBody(msg)    
+
     count = 0
     for line in body.split('\n'):
         print(line[:columns])
