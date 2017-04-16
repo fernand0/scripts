@@ -20,6 +20,7 @@ def main():
     hostname = socket.gethostname()
     dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) # script directory
 
+    time.sleep(300)
     ip = getIp()
     user = dir[:dir.find('/',len('/home/'))]
 
