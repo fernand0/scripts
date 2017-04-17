@@ -44,6 +44,7 @@ import threading
 from queue import Queue
 import ssl
 from moduleImap import *
+from moduleSieve import *
 
 
 def getPassword(server, user):
@@ -56,6 +57,111 @@ def getPassword(server, user):
         password = getpass.getpass()
         keyring.set_password(server, user, password)
     return password
+
+def addToSieve():
+    config = loadImapConfig()[0]
+
+    (SERVER, USER, PASSWORD, RULES, FOLDER) = readImapConfig(config)
+
+    # Make connections to server
+    # Sieve client connection
+    c = Client(SERVER)
+    if not c.connect(USER, PASSWORD, starttls=True, authmech="PLAIN"):
+        print("Connection failed")
+        return 0
+    M = makeConnection(SERVER, USER, PASSWORD)
+    PASSWORD = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+    M.select()
+
+    end = ""
+    while (not end):
+        # Could we move this parsing part out of the while?
+        script = c.getscript('sogo')
+        p = Parser()
+        p.parse(script)
+
+        (rules, more) = extractActions(p)
+
+        # We are going to filter based on one message
+        msg = selectMessage(M)
+        (keyword, filterCond) = selectHeaderAuto(M, msg)
+
+        actions = selectAction(p, M)
+        # actions[0][1] contains the rule selector
+        # print("actions ", actions[0][1])
+        # print(rules[actions[0][1].strip('"')])
+
+        # For a manual selection option?
+        # header= selectHeader()
+        # keyword = selectKeyword(header)
+
+        # Eliminate
+        # conditions = []
+        # conditions.append((keyword, ":contains", filterCond))
+
+        #print("filtercond", filterCond)
+        newActions = addRule(rules, more, keyword, filterCond, actions)
+
+        #print("nA",newActions)
+        #print("nA 0",newActions[0][0][2][0].tosieve())
+        #print("nA 0")
+
+        fs = constructFilterSet(newActions)
+
+        sieveContent = io.StringIO()
+        # fs.tosieve(open(FILE_SIEVE, 'w'))
+        # fs.tosieve()
+        # sys.exit()
+        fs.tosieve(sieveContent)
+
+        #import time
+        #time.sleep(5)
+        # Let's do a backup of the old sieve script
+        name = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
+        res  = c.putscript(name+'sogo', script)
+        print("res",res)
+
+        # Now we can put the new sieve filters in place
+        # fSieve = open(FILE_SIEVE, 'r')
+        # if not c.putscript('sogo', fSieve.read()):
+        #print(sieveContent.getvalue())
+
+        if not c.putscript('sogo', sieveContent.getvalue()):
+            print("fail!")
+
+        # Let's start the git backup
+
+        repo = Repo(repoDir)
+        index = repo.index
+
+        print("listscripts",c.listscripts())
+        listScripts=c.listscripts()
+        print("listscripts",listScripts)
+        if (listScripts != None):
+            listScripts=listScripts[1]
+            listScripts.sort() 
+            print("listscripts",c.listscripts())
+            print(listScripts[0])
+
+            # script = listScripts[-1] # The last one
+            sieveFile=c.getscript('sogo')
+            file=open(repoDir+repoFile,'w')
+            file.write(sieveFile)
+            file.close()
+            index.add(['*'])
+            index.commit(name+'sogo')
+
+            if len(listScripts)>6:
+       	        # We will keep the last five ones (plus the active one)
+                numScripts = len(listScripts) - 6
+                i = 0
+                while numScripts > 0:
+                    script = listScripts[i]
+                    c.deletescript(script)
+                    i = i + 1
+                    numScripts = numScripts - 1
+
+        end = input("More rules? (empty to continue) ")
 
 def organize():
     # This function allous us to select mails from a folder and move them to
@@ -137,7 +243,10 @@ def main():
     for t in threads:
         t.start()
 
-    organize()
+    if (len(sys.argv) > 1) and (sys.argv[1] == "-a"):
+        addToSieve()
+    else:
+        organize()
 
     for t in threads:
         t.join()
