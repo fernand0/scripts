@@ -20,6 +20,7 @@ import re
 from email.header import Header
 from email.header import decode_header
 from bs4 import BeautifulSoup
+import moduleSieve
 
 import ssl
 
@@ -247,6 +248,9 @@ def selectMessageAndFolder(M):
                 # Just *this* message
                 if msg_number[1:].isdigit():
                     return(".",msg_data[int(msg_number[1:])], msg_numbers[int(msg_number[1:])])
+            elif (len(msg_number) > 0) and (msg_number[0] == '>'):
+                if msg_number[1:].isdigit():
+                    moduleSieve.addToSieve(msg_data[int(msg_number[1:])])
             else:
                 startMsg = 0
         else:
