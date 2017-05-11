@@ -20,6 +20,7 @@ import re
 from email.header import Header
 from email.header import decode_header
 from bs4 import BeautifulSoup
+import moduleSieve
 
 import ssl
 
@@ -226,7 +227,7 @@ def selectMessageAndFolder(M):
         if (data[0] == 'OK'):
             messages = data[1][0].decode("utf-8").split(' ')
             (msg_data, msg_numbers) = showMessagesList(M, folder, messages, startMsg)
-            msg_number = input("Which message? ([-] switches mode: [number] starting point [string] folder name 'x' exit) [+] to read the message [.] to select just *this* message\n")
+            msg_number = input("Which message? ([-] switches mode: [number] starting point [string] folder name 'x' exit) [+] to read the message [.] to select just *this* message [>] use this message to create a sieve filter\n")
             if msg_number.isdigit():
                 startMsg = int(msg_number)
             elif (len(msg_number) > 0) and (msg_number[0] == '-'):
@@ -247,6 +248,9 @@ def selectMessageAndFolder(M):
                 # Just *this* message
                 if msg_number[1:].isdigit():
                     return(".",msg_data[int(msg_number[1:])], msg_numbers[int(msg_number[1:])])
+            elif (len(msg_number) > 0) and (msg_number[0] == '>'):
+                if msg_number[1:].isdigit():
+                    moduleSieve.addToSieve(msg_data[int(msg_number[1:])])
             else:
                 startMsg = 0
         else:

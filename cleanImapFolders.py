@@ -43,7 +43,7 @@ import getpass
 import threading
 from queue import Queue
 import ssl
-from moduleImap import *
+from moduleSieve import *
 
 
 def getPassword(server, user):
@@ -56,6 +56,7 @@ def getPassword(server, user):
         password = getpass.getpass()
         keyring.set_password(server, user, password)
     return password
+
 
 def organize():
     # This function allous us to select mails from a folder and move them to
@@ -137,7 +138,10 @@ def main():
     for t in threads:
         t.start()
 
-    organize()
+    if (len(sys.argv) > 1) and (sys.argv[1] == "-a"):
+        addToSieve()
+    else:
+        organize()
 
     for t in threads:
         t.join()
