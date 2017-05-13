@@ -23,4 +23,7 @@ sudo apt-get autoremove $YES && echo "" && \
 sudo localepurge || echo "localepurge not available" && echo "" && \
 sudo deborphan | xargs sudo apt-get remove $YES --purge && echo "" && \
 sudo apt-get autoclean $YES && echo "" && \
+sudo /usr/lib/update-notifier/update-motd-updates-available --force
+sudo /usr/lib/update-notifier/update-motd-reboot-required --force
 sudo apt-get moo
+

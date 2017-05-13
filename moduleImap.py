@@ -122,8 +122,8 @@ def mailFolder(account, accountData, logging, res):
                 msgs = msgs.replace(" ", ",")
                 status = 'OK'
                 if FOLDER:
-    	    # M.copy needs a set of comma-separated mesages, we have a
-    	    # list with a string
+		    # M.copy needs a set of comma-separated mesages, we have a
+		    # list with a string
                     print("msgs", msgs)
                     result = M.copy(msgs, FOLDER)
                     status = result[0]
@@ -479,8 +479,8 @@ def selectMessagesNew(M):
 
                 if (isOk != '+') and (folder != '.'):   
                    moreMessages = isOk    
-                else:
-                   moreMessages = input("More messages? ")    
+                #elif (isOk == '+'):
+                #   moreMessages = input("More messages? ")    
             else:
                 end = 'x'
                 moreMessages = end
