@@ -786,6 +786,9 @@ def moveSent(M):
 
 def moveMailsRemote(M, msgs, folder):
     pos = folder.rfind('@')
+    # We start at the end because we can have accounts where the user includes
+    # an @ (there can be two): user@host@mailhost
+
     SERVERD = folder[pos+1:]
     USERD   = folder[:pos]
     PASSWORDD = getPassword(SERVERD, USERD)
@@ -814,7 +817,12 @@ def moveMailsRemote(M, msgs, folder):
         i = i + 1
     MD.close()
     MD.logout()
-    return('OKOK')
+    # We are returning a different code from 'OK' because we do not want to
+    # delte these messages.
+    if (i == len(msgs.split(','))):
+       return('OKOK')
+    else:
+       return('OKNO')
 
 
 def moveMails(M, msgs, folder):
