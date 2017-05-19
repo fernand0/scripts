@@ -282,7 +282,7 @@ def selectAction(p, M):  # header="", textHeader=""):
 def addToSieve(msg=""):
     config = loadImapConfig()[0]
 
-    (SERVER, USER, PASSWORD, RULES, FOLDER) = readImapConfig(config)
+    (SERVER, USER, PASSWORD, RULES, INBOX, FOLDER) = readImapConfig(config)
 
     # Make connections to server
     # Sieve client connection

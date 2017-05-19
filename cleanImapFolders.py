@@ -62,7 +62,7 @@ def organize():
     # This function allous us to select mails from a folder and move them to
     # other in an interactive way
     config = loadImapConfig()[0]
-    (server, user, password, rules, folder) = readImapConfig(config)
+    (server, user, password, rules, inbox, folder) = readImapConfig(config)
     rules = ""
     folder = "" # not used here
     M = makeConnection(server, user, password)
@@ -94,7 +94,7 @@ def main():
     accounts = {}
 
     while (i < nSec):
-        (SERVER, USER, PASSWORD, RULES, FOLDER) = readImapConfig(config, i)
+        (SERVER, USER, PASSWORD, RULES, INBOX, FOLDER) = readImapConfig(config, i)
         srvMsg = SERVER.split('.')[0]
         usrMsg = USER.split('@')[0]
         logging.info("[%s,%s] Reading config" % (srvMsg, usrMsg))
@@ -106,12 +106,17 @@ def main():
             # PASSWORD = getPassword(SERVER, USER)
             # accounts[(SERVER, USER)]['PASSWORD'] = PASSWORD
             accounts[(SERVER, USER)]['RULES'] = []
-            accounts[(SERVER, USER)]['RULES'].append((RULES, FOLDER))
-        else:
-            accounts[(SERVER, USER)]['RULES'].append((RULES, FOLDER))
-            # logging.info("[%s,%s] Known password!" % (SERVER, USER))
+
+        #if not INBOX:
+        #    INBOX = ''
+        #    #accounts[(SERVER, USER)]['INBOX'] = INBOX[0]
+        accounts[(SERVER, USER)]['RULES'].append((RULES, INBOX, FOLDER))
+
         i = i + 1
 
+    #import pprint
+    #pprint.pprint(accounts)
+    #sys.exit()
     keys = keyring.get_keyring()
     #keys._unlock()
     # We need to unlock the keyring because if not each thread will ask for the

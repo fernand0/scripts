@@ -76,11 +76,16 @@ def mailFolder(account, accountData, logging, res):
     usrMsg = USER.split('@')[0]
     M = makeConnection(SERVER, USER, PASSWORD)
 
-    M.select()
 
     for actions in accountData['RULES']:
         RULES = actions[0]
-        FOLDER = actions[1]
+        INBOX = actions[1]
+        FOLDER = actions[2]
+
+        if INBOX:
+           M.select(INBOX)
+        else:
+           M.select()
 
         i = 0
         total = 0
@@ -96,6 +101,9 @@ def mailFolder(account, accountData, logging, res):
                 msgs = selectHash(M, FOLDER, content)
                 #M.select(folder)
                 FOLDER = ""
+                data = None
+            elif (header == 'status'):
+                (typ, data) = M.search(None, '(UNSEEN)')
             else:
                 data = ''
                 try:
@@ -104,14 +112,14 @@ def mailFolder(account, accountData, logging, res):
                 except:
                     cadSearch = "(HEADER "+header+' "'+content+'")'
                     typ, data = M.search(None, cadSearch)
-                if data and data[0]:
-                    if msgs:
-                        msgs = msgs + ' ' + data[0].decode('utf-8')
-                    else:
-                        msgs = data[0].decode('utf-8')
+            if data and data[0]:
+                if msgs:
+                    msgs = msgs + ' ' + data[0].decode('utf-8')
                 else:
-                    logging.debug("%s - No messages matching." % msgTxt)
-                    msgTxt = "%s - No messages matching." % msgTxt
+                    msgs = data[0].decode('utf-8')
+            else:
+                logging.debug("%s - No messages matching." % msgTxt)
+                msgTxt = "%s - No messages matching." % msgTxt
 
             if len(msgs)==0:
                 logging.debug("%s Nothing to do" % msgTxt)
@@ -122,11 +130,17 @@ def mailFolder(account, accountData, logging, res):
                 msgs = msgs.replace(" ", ",")
                 status = 'OK'
                 if FOLDER:
-    	    # M.copy needs a set of comma-separated mesages, we have a
-    	    # list with a string
-                    print("msgs", msgs)
-                    result = M.copy(msgs, FOLDER)
-                    status = result[0]
+		    # M.copy needs a set of comma-separated mesages, we have a
+		    # list with a string
+                    print(FOLDER)
+                    if FOLDER.find('@')>=0:
+                        #print("msgs", msgs)
+                        #print("remote")
+                        status = moveMailsRemote(M, msgs, FOLDER)
+                    else:
+                        print("msgs", msgs)
+                        result = M.copy(msgs, FOLDER)
+                        status = result[0]
                 i = msgs.count(',') + 1
                 logging.debug("[%s,%s] *%s* Status: %s"% (SERVER,USER,msgs,status))
 
@@ -479,8 +493,8 @@ def selectMessagesNew(M):
 
                 if (isOk != '+') and (folder != '.'):   
                    moreMessages = isOk    
-                else:
-                   moreMessages = input("More messages? ")    
+                #elif (isOk == '+'):
+                #   moreMessages = input("More messages? ")    
             else:
                 end = 'x'
                 moreMessages = end
@@ -709,12 +723,19 @@ def readImapConfig(config, confPos = 0):
     SERVER = config.get(sections[confPos], "server")
     USER = config.get(sections[confPos], "user")
     PASSWORD = getPassword(SERVER, USER)
-    RULES = config.get(sections[confPos], 'rules').split('\n')
+    if config.has_option(sections[confPos], 'rules'):
+        RULES = config.get(sections[confPos], 'rules').split('\n')
+    else:
+        RULES = ""
+    if config.has_option(sections[confPos], 'inbox'):
+        INBOX = config.get(sections[confPos], 'inbox')
+    else:
+        INBOX = ""
     if config.has_option(sections[confPos], 'move'):
         FOLDER = config.get(sections[confPos], "move")
     else:
         FOLDER = ""
-    return (SERVER, USER, PASSWORD, RULES, FOLDER)
+    return (SERVER, USER, PASSWORD, RULES, INBOX, FOLDER)
 
 def makeConnection(SERVER, USER, PASSWORD):
     # IMAP client connection
@@ -762,6 +783,47 @@ def moveSent(M):
     msgs = selectAllMessages('Sent', M)
     if msgs:
         moveMails(M,  msgs, 'INBOX')
+
+def moveMailsRemote(M, msgs, folder):
+    pos = folder.rfind('@')
+    # We start at the end because we can have accounts where the user includes
+    # an @ (there can be two): user@host@mailhost
+
+    SERVERD = folder[pos+1:]
+    USERD   = folder[:pos]
+    PASSWORDD = getPassword(SERVERD, USERD)
+
+    MD = makeConnection(SERVERD, USERD, PASSWORDD)
+    MD.select('INBOX')
+    
+    i = 0
+    for msgId in msgs.split(','): #[:25]:
+        #print('.', end='')
+        typ, data = M.fetch(msgId, '(RFC822)')
+        M.store(msgId, "-FLAGS", "\\Seen")
+        
+        if (typ == 'OK'): 
+            message = data[0][1]
+    
+            flags = '' 
+    
+            msg = email.message_from_bytes(message);
+            msgDate = email.utils.parsedate(msg['Date'])
+            
+            res = MD.append('INBOX',flags, msgDate, message)
+            
+            if res[0] == 'OK':
+                M.store(msgId, "+FLAGS", "\\Seen")
+        i = i + 1
+    MD.close()
+    MD.logout()
+    # We are returning a different code from 'OK' because we do not want to
+    # delte these messages.
+    if (i == len(msgs.split(','))):
+       return('OKOK')
+    else:
+       return('OKNO')
+
 
 def moveMails(M, msgs, folder):
     print("Copying ", msgs, " in ", folder)
