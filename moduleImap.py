@@ -244,6 +244,9 @@ def selectMessageAndFolder(M):
             msg_number = input("Which message? ([-] switches mode: [number] starting point [string] folder name 'x' exit) [+] to read the message [.] to select just *this* message [>] use this message to create a sieve filter\n")
             if msg_number.isdigit():
                 startMsg = int(msg_number)
+                if int(msg_number) > numMsgs: 
+                    msg_number=""
+                    continue 
             elif (len(msg_number) > 0) and (msg_number[0] == '-'):
                 if msg_number[1:].isdigit():
                     startMsg = int(msg_number)
@@ -638,6 +641,7 @@ def selectFolderOld(M, moreMessages = ""):
 def listFolderNames(data, inNameFolder = ""):
     listFolders = ""
     i = 0
+    
     for name in data:
         if (type(name) == str): name = name.encode('ascii')
         #print(inNameFolder.isdigit(), (inNameFolder+") "), name.lower().find((inNameFolder+") ").encode('ascii').lower()))
@@ -676,7 +680,11 @@ def selectFolder(M, moreMessages = ""):
            return(iFolder)
            #listFolders = iFolder
         listFolders = listFolderNames(listFolders.split('\n'), inNameFolder)
-        if not listFolders:
+        if (not inNameFolder):
+            print("Entra")
+            listAllFolders = listFolderNames(data, "")
+            listFolders = ""
+        if (not listFolders):
             listFolders = listAllFolders
 
 def selectMessages(M):

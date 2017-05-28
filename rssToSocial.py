@@ -69,21 +69,31 @@ def extractImage(soup):
 def extractLinks(soup, linksToAvoid=""):
     j = 0
     linksTxt = ""
-    for link in soup("a"):
-        if not isinstance(link.contents[0], Tag):
-            # We want to avoid embdeded tags (mainly <img ... )
-
-            #print(linksToAvoid)
-            #print(re.escape(linksToAvoid))
-            #print(str(link['href']))
-            #print(re.search(linksToAvoid, link['href']))
-            if ((linksToAvoid == "") or
-               (not re.search(linksToAvoid, link['href']))):
+    links = soup.find_all(["a","iframe"])
+    print("ll",links)
+    for link in soup.find_all(["a","iframe"]):
+        print("link", link)
+        print("link cont", link.contents, type(link.contents))
+        theLink = ""
+        if len(link.contents) > 0: 
+            if not isinstance(link.contents[0], Tag):
+                # We want to avoid embdeded tags (mainly <img ... )
+                theLink = link['href']
+        else:
+            theLink = link['src']
+        #print(linksToAvoid)
+        #print(re.escape(linksToAvoid))
+        #print(str(link['href']))
+        #print(re.search(linksToAvoid, link['href']))
+        if ((linksToAvoid == "") or
+           (not re.search(linksToAvoid, theLink))):
+                if theLink:
                     link.append(" ["+str(j)+"]")
                     linksTxt = linksTxt + "["+str(j)+"] " + \
                         link.contents[0] + "\n"
-                    linksTxt = linksTxt + "    " + link['href'] + "\n"
+                    linksTxt = linksTxt + "    " + theLink + "\n"
                     j = j + 1
+
     if linksTxt != "":
         theSummaryLinks = soup.get_text().strip('\n') + "\n\n" + linksTxt
     else:
@@ -580,9 +590,14 @@ def test():
          print("post",i,recentPosts[i]['posts']['title'])
          print("post",i,recentPosts[i]['posts']['link'])
          if 'content' in recentPosts[i]['posts']:
-             print("post content",i,recentPosts[i]['posts']['content'][0]['value'])
+             content = recentPosts[i]['posts']['content'][0]['value']
          else:
-             print("post summary",i,recentPosts[i]['posts']['summary'])
+             content = recentPosts[i]['posts']['summary']
+         print("post content",i,content)
+         soup = BeautifulSoup(content)
+         theSummary = soup.get_text()
+         theSummaryLinks = extractLinks(soup)
+         print("post links",i,theSummaryLinks)
 
     return recentPosts
 
