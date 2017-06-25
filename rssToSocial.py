@@ -167,7 +167,7 @@ def selectBlog(sel='a'):
             i = 1
             recentIndex = '1'
 
-    if i > 0:
+    if i > 1:
         recentFeedBase = recentFeed.feed['title_detail']['base']
         ini = recentFeedBase.find('/')+2
         fin = recentFeedBase[ini:].find('.')
