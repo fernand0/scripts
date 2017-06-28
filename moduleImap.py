@@ -32,6 +32,11 @@ keyWords = {"address": ["From", "To"],
             "header":  ["subject", "Sender", "X-Original-To", "List-Id"]
             }
 
+def setPassword(server, user):
+        password = getpass.getpass()
+        keyring.set_password(server, user, password)
+        return(password)
+
 def getPassword(server, user):
     # Deleting keyring.delete_password(server, user)
     #print("keyrings",keyring.backend.get_all_keyring())
@@ -132,7 +137,7 @@ def mailFolder(account, accountData, logging, res):
                 if FOLDER:
 		    # M.copy needs a set of comma-separated mesages, we have a
 		    # list with a string
-                    print(FOLDER)
+                    #print(FOLDER)
                     if FOLDER.find('@')>=0:
                         #print("msgs", msgs)
                         #print("remote")
@@ -236,7 +241,7 @@ def selectMessageAndFolder(M):
         try:
            M.select(folder)
         except:
-           return("","")
+           return("","", -1)
         data = M.sort('ARRIVAL', 'UTF-8', 'ALL')
         if (data[0] == 'OK'):
             messages = data[1][0].decode("utf-8").split(' ')
@@ -469,8 +474,10 @@ def selectMessagesNew(M):
        moreMessages = ""
        while not moreMessages:
             (folder, msg, msgNumber) = selectMessageAndFolder(M)
-            if (folder != 'x'):
-                if  (folder != "."):
+            if msgNumber == -1:
+                return(-1)
+            elif (folder != 'x'):
+                if (folder != "."):
                     sbj = msg['Subject']
                     ok = ""
                     sens = 0
@@ -488,7 +495,7 @@ def selectMessagesNew(M):
                 else:
                     msgs = msgNumber
                     isOk = ""
-
+                    moreMessages = input("String in the folder ("+moreMessages+') ')
                 if listMsgs: 
                     listMsgs = listMsgs + ',' + msgs
                 else:
@@ -751,21 +758,25 @@ def makeConnection(SERVER, USER, PASSWORD):
     context.check_hostname = False
     context.verify_mode = ssl.CERT_NONE
     M = imaplib.IMAP4_SSL(SERVER,ssl_context=context)
-    try:
-        M.login(USER, PASSWORD)
-        PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        # We do not want passwords in memory when not needed
-    except Exception as ins:
-        # We will ask for the new password
-        print("except", SERVER, USER)
-        print("except", sys.exc_info()[0])
-        print("except", ins.args)
-        srvMsg = SERVER.split('.')[0]
-        usrMsg = USER.split('@')[0]
-        logging.info("[%s,%s] wrong password!"
-                         % (srvMsg, usrMsg))
-        res.put(("no", SERVER, USER))
-        return 0
+    ok = ''
+    while not ok:
+        try:
+            M.login(USER, PASSWORD)
+            PASSWORD = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            # We do not want passwords in memory when not needed
+            ok = 'ok'
+        except Exception as ins:
+            # We will ask for the new password
+            print("except", SERVER, USER)
+            print("except", sys.exc_info()[0])
+            print("except", ins.args)
+            srvMsg = SERVER.split('.')[0]
+            usrMsg = USER.split('@')[0]
+            logging.info("[%s,%s] wrong password!"
+                             % (srvMsg, usrMsg))
+            PASSWORD= setPassword(SERVER, USER)
+            #res.put(("no", SERVER, USER))
+            #return 0
 
     return M
 
