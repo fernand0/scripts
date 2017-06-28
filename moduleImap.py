@@ -33,9 +33,11 @@ keyWords = {"address": ["From", "To"],
             }
 
 def setPassword(server, user):
-        password = getpass.getpass()
-        keyring.set_password(server, user, password)
-        return(password)
+    logging.info("[%s,%s] New account. Setting password" % (server, user))
+    print("Server: %s,  User: %s" % (server, user))
+    password = getpass.getpass()
+    keyring.set_password(server, user, password)
+    return(password)
 
 def getPassword(server, user):
     # Deleting keyring.delete_password(server, user)
@@ -43,9 +45,7 @@ def getPassword(server, user):
     #print("the keyring",keyring.get_keyring())
     password = keyring.get_password(server, user)
     if not password:
-        logging.info("[%s,%s] New account. Setting password" % (server, user))
-        password = getpass.getpass()
-        keyring.set_password(server, user, password)
+        password = setPassword(server, user)
     return password
 
 def stripRe(header):

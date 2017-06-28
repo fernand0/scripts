@@ -297,7 +297,7 @@ def addToSieve(msg=""):
     #end = ""
     #while (not end):
     # Could we move this parsing part out of the while?
-    script = c.getscript('sogo')
+    script = c.getscript('sieve-script')
     p = Parser()
     p.parse(script)
 
@@ -348,7 +348,7 @@ def addToSieve(msg=""):
     # if not c.putscript('sogo', fSieve.read()):
     #print(sieveContent.getvalue())
 
-    if not c.putscript('sogo', sieveContent.getvalue()):
+    if not c.putscript('sieve-script', sieveContent.getvalue()):
         print("fail!")
 
     # Let's start the git backup
@@ -366,7 +366,7 @@ def addToSieve(msg=""):
         print(listScripts[0])
 
         # script = listScripts[-1] # The last one
-        sieveFile=c.getscript('sogo')
+        sieveFile=c.getscript('sieve-script')
         file=open(repoDir+repoFile,'w')
         file.write(sieveFile)
         file.close()
@@ -389,7 +389,7 @@ def main():
 
     (config, nSec) = loadImapConfig()
 
-    (SERVER, USER, PASSWORD, RULES, FOLDER) = readImapConfig(config)
+    (SERVER, USER, PASSWORD, RULES, INBOX, FOLDER) = readImapConfig(config)
 
     # Make connections to server
     # Sieve client connection
@@ -397,6 +397,8 @@ def main():
     if not c.connect(USER, PASSWORD, starttls=True, authmech="PLAIN"):
         print("Connection failed")
         return 0
+    else:
+        print(c.listscripts())
     M = makeConnection(SERVER, USER, PASSWORD)
     PASSWORD = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
     M.select()
@@ -404,7 +406,7 @@ def main():
     end = ""
     while (not end):
         # Could we move this parsing part out of the while?
-        script = c.getscript('sogo')
+        script = c.getscript('sieve-script')
         p = Parser()
         p.parse(script)
 
