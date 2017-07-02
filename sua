@@ -21,7 +21,7 @@ sudo apt-get safe-upgrade $YES || sudo apt-get upgrade $YES && echo "" && \
 sudo apt-get dselect-upgrade && \
 sudo apt-get autoremove $YES && echo "" && \
 sudo localepurge || echo "localepurge not available" && echo "" && \
-sudo deborphan | xargs sudo apt-get remove $YES --purge && echo "" && \
+sudo deborphan | xargs sudo dpkg --purge $YES && echo "" && \
 sudo apt-get autoclean $YES && echo "" 
 sudo /usr/lib/update-notifier/update-motd-updates-available --force
 sudo /usr/lib/update-notifier/update-motd-reboot-required --force
