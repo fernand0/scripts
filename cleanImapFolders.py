@@ -61,18 +61,20 @@ def getPassword(server, user):
 def organize():
     # This function allous us to select mails from a folder and move them to
     # other in an interactive way
-    config = loadImapConfig()[0]
-    (server, user, password, rules, inbox, folder) = readImapConfig(config)
-    rules = ""
-    folder = "" # not used here
-    M = makeConnection(server, user, password)
-    password = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-
-    if not M:
-        sys.exit("Connection failure")
-
-    moveSent(M)
-    selectMessagesNew(M)
+    end = -1
+    while end != 0:
+        config = loadImapConfig()[0]
+        (server, user, password, rules, inbox, folder) = readImapConfig(config)
+        rules = ""
+        folder = "" # not used here
+        M = makeConnection(server, user, password)
+        password = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    
+        if not M:
+            sys.exit("Connection failure")
+    
+        moveSent(M)
+        end = selectMessagesNew(M)
 
 
 def main():
