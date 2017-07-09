@@ -34,6 +34,7 @@ def main():
     user = dir[:dir.find('/',len('/home/'))]
     client_secret =  user + '/.ssh/otros/errBot Youtube-7ff8701bdfdd.json'
     sheet_name = 'Registro IPs'
+    print("Starting "+ user)
     
     # use creds to create a client to interact with the Google Drive API
     scope = ['https://spreadsheets.google.com/feeds']

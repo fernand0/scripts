@@ -21,6 +21,7 @@ from email.header import Header
 from email.header import decode_header
 from bs4 import BeautifulSoup
 import moduleSieve
+import calendar
 
 import ssl
 
@@ -177,6 +178,14 @@ def doFolderExist(folder, M):
         folderName = folder
 
     return (M.select(folderName))
+
+def selectBefore(M, date='01-Jan-1975'):
+    M.select()
+    res = M.search(None, '(SENTBEFORE '+date+")")
+
+    if (res[0] == 'OK'):
+       msgs = res[1][0]
+       return(msgs)
 
 def selectHeader():
     i = 1
@@ -845,12 +854,14 @@ def moveMailsRemote(M, msgs, folder):
 
 
 def moveMails(M, msgs, folder):
-    print("Copying ", msgs, " in ", folder)
+    print("Copying *%s* in *%s*"% (msgs, folder))
     (status, resultMsg) = M.copy(msgs, folder)
+    print("status ", status)
     if status == 'OK':
         # If the list of messages is too long it won't work
         flag = '\\Deleted'
         result = M.store(msgs, '+FLAGS', flag)
+        print("status ", result)
         if result[0] != 'OK':
             print("fail!")
     M.expunge()
@@ -884,6 +895,32 @@ def listMessages(M, folder):
                           headerToString(headSubject),
                           headerToString(headDate))
             
+def testDate():
+    M = makeConnection('localhost', 'debian', 'cmppmalh!')
+    print(M.select())
+    for year in range(2016,2018):
+        for month in range(12):
+            mm = month
+            if (mm == 0):
+                mm = 12
+                yy = year - 1
+            else:
+                yy = year
+            monthN = calendar.month_name[month + 1][:3]
+            msgs = selectBefore(M, '01-'+monthN+'-'+str(year))
+            print(str(yy), mm, len(msgs))
+            if (mm == 1): 
+                folder = 'INBOX/'+str(year)
+                if (doFolderExist(folder ,M)[0] == 'NO'):
+                   (typ, create_response) = M.create(folder)
+            if (len(msgs) > 0):
+                folder = 'INBOX/'+str(year)+'/'+'0'+str(mm)[-1:]
+                if (doFolderExist(folder ,M)[0] == 'NO'):
+                   (typ, create_response) = M.create(folder)
+                msgs = msgs.decode('utf-8').replace(" ",",")
+                M.select()
+                moveMails(M, msgs, folder)
+
 
 def main():
 
@@ -919,4 +956,6 @@ def main():
     listMessages(M, 'INBOX')
 
 if __name__ == "__main__":
+    testDate()
+    sys.exit()
     main()
