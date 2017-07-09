@@ -898,7 +898,7 @@ def listMessages(M, folder):
 def testDate():
     M = makeConnection('localhost', 'debian', 'cmppmalh!')
     print(M.select())
-    for year in range(2016,2018):
+    for year in range(2011,2018):
         for month in range(12):
             mm = month
             if (mm == 0):
