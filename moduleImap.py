@@ -901,7 +901,7 @@ def testDate():
     month = today.month
     M = makeConnection('localhost', 'debian', 'cmppmalh!')
     print(M.select())
-    for year in range(2011,year):
+    for year in range(2011,year + 1):
         for month in range(12):
             mm = month
             if (mm == 0):
