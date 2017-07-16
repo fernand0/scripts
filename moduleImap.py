@@ -179,6 +179,14 @@ def doFolderExist(folder, M):
 
     return (M.select(folderName))
 
+def selectSince(M, folder, date='01-Jan-1975'):
+    M.select(folder)
+    res = M.search(None, '(SENTSINCE '+date+")")
+
+    if (res[0] == 'OK'):
+       msgs = res[1][0]
+       return(msgs)
+
 def selectBefore(M, date='01-Jan-1975'):
     M.select()
     res = M.search(None, '(SENTBEFORE '+date+")")
@@ -895,12 +903,27 @@ def listMessages(M, folder):
                           headerToString(headSubject),
                           headerToString(headDate))
             
-def testDate():
+def testDate(server, user, password, folder='INBOX'):
     today = datetime.datetime.now()
     year = today.year
     month = today.month
-    M = makeConnection('localhost', 'debian', 'cmppmalh!')
-    print(M.select())
+    M = makeConnection(server, user, password)
+    M.select(folder)
+    data = M.sort('DATE', 'UTF-8', 'ALL')
+    if (data[0] == 'OK'):
+        msg = data[1][0].decode("utf-8").split(' ')[0]
+        typ, msg_data_fetch = M.fetch(msg, '(BODY.PEEK[HEADER.FIELDS (SUBJECT FROM DATE)])')
+        print(msg_data_fetch)
+        for response_part in msg_data_fetch:
+            if isinstance(response_part, tuple):
+                msg = email.message_from_bytes(response_part[1])
+                headDate = msg['Date']
+                print(headDate)
+                date = datetime.datetime.strptime(headDate,"%a, %d %b %Y %I:%M:%S %z")
+                print(date.year, date.month, date.day)
+                msgs = selectSince(M, folder, "01-Jan-%s"%date.year)#, "%s-%s-%s" % (date.day, date.month, date.year))
+                print("->",msgs)
+    sys.exit()
     for year in range(2011,year + 1):
         for month in range(12):
             mm = month
@@ -934,6 +957,9 @@ def main():
     USER = config.get("IMAP1", "user")
     PASSWORD = getPassword(SERVER, USER)
 
+    testDate(SERVER, USER, PASSWORD)
+    sys.exit()
+    listMessages(M, 'INBOX')
     # IMAP client connection
     context = ssl.create_default_context()
     context.check_hostname = False
@@ -959,6 +985,4 @@ def main():
     listMessages(M, 'INBOX')
 
 if __name__ == "__main__":
-    testDate()
-    sys.exit()
     main()
