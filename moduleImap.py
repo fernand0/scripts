@@ -187,9 +187,12 @@ def selectSince(M, folder, date='01-Jan-1975'):
        msgs = res[1][0]
        return(msgs)
 
-def selectBefore(M, date='01-Jan-1975'):
+def selectDate(M, folder, operator = '<',  date='01-Jan-1975'):
     M.select()
-    res = M.search(None, '(SENTBEFORE '+date+")")
+    if operator == '<':
+       res = M.search(None, '(SENTBEFORE '+date+")")
+    else:
+       res = M.search(None, '(SENTSINCE '+date+")")
 
     if (res[0] == 'OK'):
        msgs = res[1][0]
@@ -913,18 +916,21 @@ def testDate(server, user, password, folder='INBOX'):
     if (data[0] == 'OK'):
         msg = data[1][0].decode("utf-8").split(' ')[0]
         typ, msg_data_fetch = M.fetch(msg, '(BODY.PEEK[HEADER.FIELDS (SUBJECT FROM DATE)])')
-        print(msg_data_fetch)
         for response_part in msg_data_fetch:
             if isinstance(response_part, tuple):
                 msg = email.message_from_bytes(response_part[1])
                 headDate = msg['Date']
-                print(headDate)
-                date = datetime.datetime.strptime(headDate,"%a, %d %b %Y %I:%M:%S %z")
-                print(date.year, date.month, date.day)
-                msgs = selectSince(M, folder, "01-Jan-%s"%date.year)#, "%s-%s-%s" % (date.day, date.month, date.year))
-                print("->",msgs)
-    sys.exit()
-    for year in range(2011,year + 1):
+                import dateutil.parser
+                print(msg['From'], msg['Subject'], headDate)
+                #cal = parsedatetime.Calendar()
+                date = dateutil.parser.parse(headDate)
+                #date = datetime.datetime.strptime(headDate,"%a, %d %b %Y %H:%M:%S %z %Z")
+                #msgs = selectDate(M, folder, '<', "01-Jan-%s"%date.year)#, "%s-%s-%s" % (date.day, date.month, date.year))
+                #print("->",msgs)
+    if date: 
+       yearIni = date.date().year
+       print(yearIni)
+    for year in range(yearIni,year + 1):
         for month in range(12):
             mm = month
             if (mm == 0):
@@ -933,14 +939,16 @@ def testDate(server, user, password, folder='INBOX'):
             else:
                 yy = year
             monthN = calendar.month_name[month + 1][:3]
-            msgs = selectBefore(M, '01-'+monthN+'-'+str(year))
+            msgs = selectDate(M, folder, '<', '01-'+monthN+'-'+str(year))
             print(str(yy), mm, len(msgs))
             if (mm == 1): 
                 folder = 'INBOX/'+str(year)
                 if (doFolderExist(folder ,M)[0] == 'NO'):
                    (typ, create_response) = M.create(folder)
             if (len(msgs) > 0):
-                folder = 'INBOX/'+str(year)+'/'+'0'+str(mm)[-1:]
+                theMonth = '0'+str(mm)
+                theMonth = theMonth[-2:]
+                folder = 'INBOX/'+str(year)+'/' + theMonth
                 if (doFolderExist(folder ,M)[0] == 'NO'):
                    (typ, create_response) = M.create(folder)
                 msgs = msgs.decode('utf-8').replace(" ",",")
