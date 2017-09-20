@@ -51,6 +51,18 @@ from buffpy.managers.updates import Update
 #importlib.reload(sys)
 #sys.setdefaultencoding("UTF-8")
 
+def spam(recentPost):
+    txt = "Puedes seguir las novedades en "
+    if 'pagefb' in recentPost:
+        txt = txt + ' Facebook: ' + recentPost['pagefb']
+        if (pages['data'][i]['name'] == pagefb):
+            print("name")
+            print(pages['data'][i]['link'])
+
+    if 'telegramac' in recentPost:
+        txt = txt + ' Telegram: https://t.me/' + recentPost['telegramac']
+    print(txt)
+    sys.exit()
 
 def extractImage(soup):
     pageImage = soup.findAll("img")
@@ -75,6 +87,7 @@ def extractLinks(soup, linksToAvoid=""):
         print("link", link)
         print("link cont", link.contents, type(link.contents))
         theLink = ""
+        print(link)
         if len(link.contents) > 0: 
             if not isinstance(link.contents[0], Tag):
                 # We want to avoid embdeded tags (mainly <img ... )
@@ -626,6 +639,7 @@ def main():
 
     #print(recentPosts.keys())
     for i in recentPosts.keys():
+        #spam(recentPosts[i])
         if 'bufferapp' in recentPosts[i]:
             print("Bufferapp")
             api = connectBuffer()
