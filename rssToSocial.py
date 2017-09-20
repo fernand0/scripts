@@ -26,6 +26,7 @@ import facebook
 from linkedin import linkedin
 from twitter import *
 from html.parser import HTMLParser
+import pickle
 import telepot
 import re
 import sys
@@ -51,6 +52,18 @@ from buffpy.managers.updates import Update
 #importlib.reload(sys)
 #sys.setdefaultencoding("UTF-8")
 
+def spam(recentPost):
+    txt = "Puedes seguir las novedades en "
+    if 'pagefb' in recentPost:
+        txt = txt + ' Facebook: ' + recentPost['pagefb']
+        if (pages['data'][i]['name'] == pagefb):
+            print("name")
+            print(pages['data'][i]['link'])
+
+    if 'telegramac' in recentPost:
+        txt = txt + ' Telegram: https://t.me/' + recentPost['telegramac']
+    print(txt)
+    sys.exit()
 
 def extractImage(soup):
     pageImage = soup.findAll("img")
@@ -75,6 +88,7 @@ def extractLinks(soup, linksToAvoid=""):
         print("link", link)
         print("link cont", link.contents, type(link.contents))
         theLink = ""
+        print(link)
         if len(link.contents) > 0: 
             if not isinstance(link.contents[0], Tag):
                 # We want to avoid embdeded tags (mainly <img ... )
@@ -384,6 +398,16 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
             #pprint (profile)
             #pprint (post)
             #print("type", type(post))
+            if (profile['service'] == 'twitter') or (profile['service'] == 'faceook'):
+                # We should add a configuration option in order to check which
+                # services are the ones with immediate posting. For now, we
+                # know that we are using Twitter and Facebook
+                
+                path = os.path.expanduser('~')
+                with open(path + '/.urls.pickle', 'rb') as f:
+                    list = pickle.load(f)
+                if link in list:
+                    continue
             try:
                 if titlePostT and (profile['service'] == 'twitter'):
                     profile.updates.new(urllib.parse.quote(titlePostT + " " + link).encode('utf-8'))
@@ -626,6 +650,7 @@ def main():
 
     #print(recentPosts.keys())
     for i in recentPosts.keys():
+        #spam(recentPosts[i])
         if 'bufferapp' in recentPosts[i]:
             print("Bufferapp")
             api = connectBuffer()
