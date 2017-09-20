@@ -26,6 +26,7 @@ import facebook
 from linkedin import linkedin
 from twitter import *
 from html.parser import HTMLParser
+import pickle
 import telepot
 import re
 import sys
@@ -397,6 +398,16 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
             #pprint (profile)
             #pprint (post)
             #print("type", type(post))
+            if (profile['service'] == 'twitter') or (profile['service'] == 'faceook'):
+                # We should add a configuration option in order to check which
+                # services are the ones with immediate posting. For now, we
+                # know that we are using Twitter and Facebook
+                
+                path = os.path.expanduser('~')
+                with open(path + '/.urls.pickle', 'rb') as f:
+                    list = pickle.load(f)
+                if link in list:
+                    continue
             try:
                 if titlePostT and (profile['service'] == 'twitter'):
                     profile.updates.new(urllib.parse.quote(titlePostT + " " + link).encode('utf-8'))
