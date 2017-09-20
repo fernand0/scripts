@@ -407,6 +407,7 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
                 with open(path + '/.urls.pickle', 'rb') as f:
                     list = pickle.load(f)
                 if link in list:
+                    print("no")
                     continue
             try:
                 if titlePostT and (profile['service'] == 'twitter'):
