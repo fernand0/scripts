@@ -404,9 +404,11 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
                 # know that we are using Twitter and Facebook
                 
                 path = os.path.expanduser('~')
+                print(profile['service'], path)
                 with open(path + '/.urls.pickle', 'rb') as f:
-                    list = pickle.load(f)
-                if link in list:
+                    theList = pickle.load(f)
+                    print(link, theList)
+                if link in theList:
                     print("no")
                     continue
             try:
