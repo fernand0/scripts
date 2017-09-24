@@ -408,7 +408,8 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
                 with open(path + '/.urls.pickle', 'rb') as f:
                     theList = pickle.load(f)
                     print(link, theList)
-                if link in theList:
+                if url[url.find(':')+2:]in theList:
+                    # Without the http or https 
                     print("no")
                     continue
             try:
