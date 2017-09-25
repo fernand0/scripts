@@ -246,6 +246,7 @@ def obtainBlogData(postsBlog, lenMax, i):
     tumblrLink = posts[i]['link']
     theSummaryLinks = ""
     soup = BeautifulSoup(posts[i]['summary'], 'lxml')
+
     link = soup.a
     if link is None:
        theLink = tumblrLink
@@ -265,6 +266,11 @@ def obtainBlogData(postsBlog, lenMax, i):
     else:    
         summaryHtml = posts[i]['summary']
     soup = BeautifulSoup(summaryHtml, 'lxml')
+
+    quotes = soup.find_all('blockquote')
+    for quote in quotes:
+        quote.insert_before('«')
+        quote.insert_after( '»')
 
     theSummary = soup.get_text()
     if "linkstoavoid" in postsBlog:
