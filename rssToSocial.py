@@ -407,8 +407,8 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
                 print(profile['service'], path)
                 with open(path + '/.urls.pickle', 'rb') as f:
                     theList = pickle.load(f)
-                    print(link, theList)
-                if url[url.find(':')+2:]in theList:
+                    print(link, link[link.find(':')+2:], theList)
+                if link[link.find(':')+2:] in theList:
                     # Without the http or https 
                     print("no")
                     continue
@@ -535,6 +535,11 @@ def publishLinkedin(title, link, summary, image):
 def cleanTags(soup):
     tags = [tag.name for tag in soup.find_all()]
     validTags = ['b', 'strong', 'i', 'em', 'a', 'code', 'pre']
+
+    quotes = soup.find_all('blockquote')
+    for quote in quotes:
+        quote.insert_before('«')
+        quote.insert_after( '»')
 
     if soup.blockquote:
         soup.blockquote.insert_before('«')
