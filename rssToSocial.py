@@ -508,9 +508,10 @@ def cleanTags(soup):
     tags = [tag.name for tag in soup.find_all()]
     validTags = ['b', 'strong', 'i', 'em', 'a', 'code', 'pre']
 
-    if soup.blockquote:
-        soup.blockquote.insert_before('«')
-        soup.blockquote.insert_after( '»')
+    quotes = soup.find_all('blockquote')
+    for quote in quotes:
+        quote.insert_before('«')
+        quote.insert_after( '»')
 
     for tag in tags:
         if tag not in validTags:
