@@ -404,7 +404,7 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
             #pprint (profile)
             #pprint (post)
             #print("type", type(post))
-            if (profile['service'] == 'twitter') or (profile['service'] == 'faceook'):
+            if (profile['service'] == 'twitter') or (profile['service'] == 'facebook'):
                 # We should add a configuration option in order to check which
                 # services are the ones with immediate posting. For now, we
                 # know that we are using Twitter and Facebook
