@@ -257,9 +257,9 @@ def obtainBlogData(postsBlog, lenMax, i):
        if (theLink[lenProt:pos] == theTitle[:pos - lenProt]):
            # A way to identify retumblings. They have the name of the tumblr at
            # the beggining of the anchor text
-           print("si")
-           print(theTitle)
-           print(theTitle[pos - lenProt + 1:])
+           #print("si")
+           #print(theTitle)
+           #print(theTitle[pos - lenProt + 1:])
            theTitle = theTitle[pos - lenProt + 1:]
     if 'content' in posts[i]:
         summaryHtml = posts[i]['description']
@@ -281,6 +281,16 @@ def obtainBlogData(postsBlog, lenMax, i):
         theSummaryLinks = extractLinks(soup, "")
     theImage = extractImage(soup)
 
+    print("============================================================\n")
+    print("Results: \n")
+    print("============================================================\n")
+    print("Title:     ", theTitle.encode('utf-8'))
+    print("Link:      ", theLink)
+    print("Summary:   ", theSummary.encode('utf-8'))
+    print("Sum links: ", theSummaryLinks.encode('utf-8'))
+    print("Image;     ", theImage)
+    print("Tumblr:    ", tumblrLink)
+    print("============================================================\n")
     return (theTitle, theLink, tumblrLink, theImage, theSummary, summaryHtml ,theSummaryLinks)
     sys.exit()
     if posts['posts'][i]['type'] == 'photo':
