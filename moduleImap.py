@@ -21,6 +21,7 @@ from email.header import Header
 from email.header import decode_header
 from bs4 import BeautifulSoup
 import moduleSieve
+import click
 
 import ssl
 
@@ -678,7 +679,12 @@ def selectFolder(M, moreMessages = ""):
             nF = nF.strip('\n')
             print("nameFolder", nF)
             return(nF)
-        print(listFolders)
+        rows, columns = os.popen('stty size', 'r').read().split()
+        if listFolders.count('\n') > int(rows) - 2:
+            click.echo_via_pager(listFolders)
+        else:
+            print(listFolders)
+        print(len(listFolders))
         inNameFolder = input("Folder number [-cf] Create Folder // A string to select a smaller set of folders ")
         
         if (len(inNameFolder) > 0) and (inNameFolder == '-cf'):

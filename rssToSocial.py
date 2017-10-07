@@ -407,6 +407,7 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
                 with open(path + '/.urls.pickle', 'rb') as f:
                     list = pickle.load(f)
                 if link in list:
+                    #problems with https vs http (web vs feed)
                     print("no")
                     continue
             try:
