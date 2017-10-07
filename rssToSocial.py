@@ -246,6 +246,7 @@ def obtainBlogData(postsBlog, lenMax, i):
     tumblrLink = posts[i]['link']
     theSummaryLinks = ""
     soup = BeautifulSoup(posts[i]['summary'], 'lxml')
+
     link = soup.a
     if link is None:
        theLink = tumblrLink
@@ -265,6 +266,11 @@ def obtainBlogData(postsBlog, lenMax, i):
     else:    
         summaryHtml = posts[i]['summary']
     soup = BeautifulSoup(summaryHtml, 'lxml')
+
+    quotes = soup.find_all('blockquote')
+    for quote in quotes:
+        quote.insert_before('«')
+        quote.insert_after( '»')
 
     theSummary = soup.get_text()
     if "linkstoavoid" in postsBlog:
@@ -398,16 +404,18 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
             #pprint (profile)
             #pprint (post)
             #print("type", type(post))
-            if (profile['service'] == 'twitter') or (profile['service'] == 'faceook'):
+            if (profile['service'] == 'twitter') or (profile['service'] == 'facebook'):
                 # We should add a configuration option in order to check which
                 # services are the ones with immediate posting. For now, we
                 # know that we are using Twitter and Facebook
                 
                 path = os.path.expanduser('~')
+                print(profile['service'], path)
                 with open(path + '/.urls.pickle', 'rb') as f:
-                    list = pickle.load(f)
-                if link in list:
-                    #problems with https vs http (web vs feed)
+                    theList = pickle.load(f)
+                    print(link, link[link.find(':')+2:], theList)
+                if link[link.find(':')+2:] in theList:
+                    # Without the http or https 
                     print("no")
                     continue
             try:
@@ -533,6 +541,11 @@ def publishLinkedin(title, link, summary, image):
 def cleanTags(soup):
     tags = [tag.name for tag in soup.find_all()]
     validTags = ['b', 'strong', 'i', 'em', 'a', 'code', 'pre']
+
+    quotes = soup.find_all('blockquote')
+    for quote in quotes:
+        quote.insert_before('«')
+        quote.insert_after( '»')
 
     if soup.blockquote:
         soup.blockquote.insert_before('«')
