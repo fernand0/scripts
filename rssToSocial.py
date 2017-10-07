@@ -549,9 +549,9 @@ def cleanTags(soup):
         quote.insert_before('«')
         quote.insert_after( '»')
 
-    if soup.blockquote:
-        soup.blockquote.insert_before('«')
-        soup.blockquote.insert_after( '»')
+    #if soup.blockquote:
+    #    soup.blockquote.insert_before('«')
+    #    soup.blockquote.insert_after( '»')
 
     for tag in tags:
         if tag not in validTags:
