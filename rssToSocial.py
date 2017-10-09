@@ -135,7 +135,8 @@ def checkPendingPosts(feed, lastLink):
 def selectBlog(sel='a'):
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
-    print("Configured blogs:")
+    print(time.ctime())
+    print("\nConfigured blogs:")
 
     feed = []
     # We are caching the feeds in order to use them later
@@ -616,6 +617,7 @@ def test():
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
     print("Configured blogs:")
+    print(time.ctime())
 
     feed = []
     # We are caching the feeds in order to use them later
