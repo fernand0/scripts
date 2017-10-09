@@ -392,19 +392,19 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
             titlePostT = ""
         post = titlePost + " " + link
         logging.info("Publishing... %s" % post)
-        print("============================================================\n")
-        print("Results: \n")
-        print("============================================================\n")
-        print("Title:     ", title)
-        print("Link:      ", link)
-        print("tumb Link: ", tumblrLink)
-        print("Summary:   ", summary)
-        print("Sum links: ", summaryLinks)
-        print("Image;     ", image)
-        print("Post       ", post)
-        print("============================================================\n")
+        #print("============================================================\n")
+        #print("Results: \n")
+        #print("============================================================\n")
+        #print("Title:     ", title)
+        #print("Link:      ", link)
+        #print("tumb Link: ", tumblrLink)
+        #print("Summary:   ", summary)
+        #print("Sum links: ", summaryLinks)
+        #print("Image;     ", image)
+        #print("Post       ", post)
+        #print("============================================================\n")
 
-        #print(type(post))
+        ##print(type(post))
         if isDebug:
             profileList = []
             tumblrLink = None
