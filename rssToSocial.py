@@ -422,13 +422,13 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
                 # know that we are using Twitter and Facebook
                 
                 path = os.path.expanduser('~')
-                print(profile['service'], path)
+                #print(profile['service'], path)
                 with open(path + '/.urls.pickle', 'rb') as f:
                     theList = pickle.load(f)
-                    print(link, link[link.find(':')+2:], theList)
+                    #print(link, link[link.find(':')+2:], theList)
                 if link[link.find(':')+2:] in theList:
                     # Without the http or https 
-                    print("no")
+                    #print("no")
                     continue
             try:
                 if titlePostT and (profile['service'] == 'twitter'):
