@@ -209,6 +209,6 @@ if __name__ == "__main__":
               + urllib.parse.urlparse(blog.getRssFeed()).netloc
               + ".last"), "r")
         linkLast = urlFile.read().rstrip()  # Last published
-        print(blog.getLinkPosition(linkLast))
+        print(blog.getRssFeed(),blog.getLinkPosition(linkLast))
 
 
