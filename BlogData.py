@@ -9,7 +9,7 @@ class BlogData():
          self.rssFeed = ''
          self.socialNetworks = {}
          self.linksToAvoid = ""
-         self.posts = []
+         self.posts = None
          self.time = []
  
     def getRssFeed(self):
@@ -36,7 +36,14 @@ class BlogData():
     def setTime(self, time):
         self.time = time
 
-    def getBlogEntries(self):
+    def getPosts(self):
+        return(self.posts)
+ 
+    def setPosts(self, posts):
+        self.posts = posts
+
+    def getBlogPosts(self):
+        self.setPosts(feedparser.parse(self.rssFeed))
 
 if __name__ == "__main__":
 
@@ -61,9 +68,11 @@ if __name__ == "__main__":
         for option in config.options(section):
             if ('ac' in option) or ('fb' in option):
                 blog.addSocialNetwork((option, config.get(section, option)))
+        blog.getBlogPosts()
         blogs.append(blog)
 
     for blog in blogs:
         print(blog.getRssFeed())
         print(blog.getSocialNetworks())
+        print(blog.posts)
 
