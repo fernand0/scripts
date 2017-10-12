@@ -64,10 +64,7 @@ def extractLinks(soup, linksToAvoid=""):
     j = 0
     linksTxt = ""
     links = soup.find_all(["a","iframe"])
-    print("ll",links)
     for link in soup.find_all(["a","iframe"]):
-        print("link", link)
-        print("link cont", link.contents, type(link.contents))
         theLink = ""
         if len(link.contents) > 0: 
             if not isinstance(link.contents[0], Tag):
@@ -127,7 +124,6 @@ def selectBlog(sel='a'):
 	# last time we posted we will skip this post. 
             filename = os.path.expanduser("~/." + urllib.parse.urlparse(rssFeed).netloc + ".last")
             if ((time.time() - os.path.getmtime(filename))-24*60*60) < 0:
-                print("no")
                 continue
         feed.append(feedparser.parse(rssFeed))
         lastPost = feed[-1].entries[0]
@@ -275,10 +271,11 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
         else:
             titlePostT = ""
         post = titlePost + " " + link
+
         logging.info("Publishing... %s" % post)
-        print("============================================================\n")
+        print("==========================================================\n")
         print("Results: \n")
-        print("============================================================\n")
+        print("==========================================================\n")
         print("Title:     ", title)
         print("Link:      ", link)
         print("tumb Link: ", tumblrLink)
@@ -286,9 +283,8 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
         print("Sum links: ", summaryLinks)
         print("Image;     ", image)
         print("Post       ", post)
-        print("============================================================\n")
+        print("==========================================================\n")
 
-        #print(type(post))
         if isDebug:
             profileList = []
             tumblrLink = None
@@ -296,10 +292,7 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
         for profile in profileList:
             line = profile['service']
             print(profile['service'])
-            #from pprint import pprint 
-            #pprint (profile)
-            #pprint (post)
-            #print("type", type(post))
+
             try:
                 if titlePostT and (profile['service'] == 'twitter'):
                     profile.updates.new(urllib.parse.quote(titlePostT + " " + link).encode('utf-8'))
@@ -314,10 +307,7 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
                 logging.info("Buffer posting failed!")
                 logging.info("Unexpected error: %s"% sys.exc_info()[0])
                 logging.info("Unexpected error: %s"% sys.exc_info()[1])
-                #pprint (vars(sys.exc_info()[1]))
-                #pprint (sys.exc_info()[1].__str__())
 
-                #sys.exit()
                 line = line + ' fail'
                 failFile = open(os.path.expanduser("~/."
                            + urllib.parse.urlparse(tumblrLink).netloc
@@ -326,6 +316,7 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
                 logging.info("  %s service" % line)
                 fail = 'yes'
                 break
+
             logging.info("  %s service" % line)
             if (fail == 'no' and tumblrLink):
                 urlFile = open(os.path.expanduser("~/."
@@ -385,8 +376,6 @@ def publishFacebook(title, link, summaryLinks, image, fbPage):
                                   link=link, picture=image,
                                   name=title, caption='',
                                   description=summaryLinks.encode('utf-8'))
-                # graph2.put_object(pages['data'][2]['id'], "instant_articles", html_source=html, development_mode = True)
-                # facebook.GraphAPIError: (#200) Requires pages_manage_instant_articles permission to manage the object
     except:
         print("Facebook posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
@@ -470,13 +459,6 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
         # Something like: <a href="">< we would 
             textToPublish = str(soup)[:index - 1]+' ...'
         bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
-        #bot.sendMessage('@'+channel,'<a href="'+link+'">'+title + "</a>\n"
-        #            #+ "\nEnlace: " + link
-        #            #+ "\nEscribí: \n"
-        #            + summaryHtml, parse_mode='HTML') 
-    #except:
-    #    print("Telegram posting failed!\n")
-    #    print("Unexpected error:", sys.exc_info()[0])
 
 def test():
     config = configparser.ConfigParser()
@@ -541,18 +523,14 @@ def main():
     logging.basicConfig(filename='/home/ftricas/usr/var/rssSocial_.log',
                         level=loggingLevel, format='%(asctime)s %(message)s')
 
-    #print(recentPosts.keys())
     for i in recentPosts.keys():
         if 'bufferapp' in recentPosts[i]:
-            print("Bufferapp")
             api = connectBuffer()
             lenMax, profileList = checkLimitPosts(api)
             publishBuffer(profileList, recentPosts[i], isDebug,
                          lenMax, len(recentPosts[i]['posts']))
         else:
             print("Publishing pending post")
-            #print("Hay ", len(recentPosts[i]['posts']))
-            #print(recentPosts[i]['posts'][len(recentPosts[i]['posts'])-1])
             posts = recentPosts[i]
             (title, tumblrLink, link, image, summary, summaryHtml, summaryLinks) = (
                   obtainBlogData(posts, 1, len(recentPosts[i]['posts'])-1)
@@ -564,10 +542,6 @@ def main():
             else:
                 comment = ""
 
-    #title, link, summary, comment, summaryLinks, image, twitter, fbPage, telegram, bufferapp = \
-    #    getBlogData(recentFeed, selectedBlog)
-
-            #isDebug = True
             if not isDebug:
                 if 'twitterac' in recentPosts[i]:
                     twitter = recentPosts[i]['twitterac']
@@ -592,44 +566,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-# Not in use
-def getBlogData(recentFeed, selectedBlog):
-    i = 0  # It will publish the last added item
-
-    soup = BeautifulSoup(recentFeed.entries[0].title)
-    theTitle = soup.get_text()
-    theLink = recentFeed.entries[0].link
-
-    soup = BeautifulSoup(recentFeed.entries[0].summary)
-    theSummary = soup.get_text()
-    theSummaryLinks = extractLinks(soup, selectedBlog["linksToAvoid"])
-    if 'comment' in selectedBlog:
-        theComment = extractLinks(soup, selectedBlog["comment"])
-    else: 
-        theComment = "Publicado!"
-    theImage = extractImage(soup)
-    theTwitter = selectedBlog["twitterAC"]
-    theFbPage = selectedBlog["pageFB"]
-    theTelegram = selectedBlog["telegramAC"]
-    theBuffer = selectedBlog["bufferapp"]
-
-    print("============================================================\n")
-    print("Results: \n")
-    print("============================================================\n")
-    print("Title:     ", theTitle.encode('utf-8'))
-    print("Link:      ", theLink)
-    print("Summary:   ", theSummary.encode('utf-8'))
-    print("Sum links: ", theSummaryLinks.encode('utf-8'))
-    print("Image;     ", theImage)
-    print("Comment:   ", theComment)
-    print("Twitter:   ", theTwitter)
-    print("Facebook:  ", theFbPage)
-    print("Telegram:  ", theTelegram)
-    print("Buffer:    ", theBuffer)
-    print("============================================================\n")
-
-    return (theTitle, theLink, theSummary, theComment, theSummaryLinks,
-            theImage, theTwitter, theFbPage, theTelegram, theBuffer)
-
-
