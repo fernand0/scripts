@@ -135,7 +135,8 @@ def checkPendingPosts(feed, lastLink):
 def selectBlog(sel='a'):
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
-    print("Configured blogs:")
+    print(time.ctime())
+    print("\nConfigured blogs:")
 
     feed = []
     # We are caching the feeds in order to use them later
@@ -257,9 +258,9 @@ def obtainBlogData(postsBlog, lenMax, i):
        if (theLink[lenProt:pos] == theTitle[:pos - lenProt]):
            # A way to identify retumblings. They have the name of the tumblr at
            # the beggining of the anchor text
-           print("si")
-           print(theTitle)
-           print(theTitle[pos - lenProt + 1:])
+           #print("si")
+           #print(theTitle)
+           #print(theTitle[pos - lenProt + 1:])
            theTitle = theTitle[pos - lenProt + 1:]
     if 'content' in posts[i]:
         summaryHtml = posts[i]['description']
@@ -281,6 +282,16 @@ def obtainBlogData(postsBlog, lenMax, i):
         theSummaryLinks = extractLinks(soup, "")
     theImage = extractImage(soup)
 
+    print("============================================================\n")
+    print("Results: \n")
+    print("============================================================\n")
+    print("Title:     ", theTitle.encode('utf-8'))
+    print("Link:      ", theLink)
+    print("Summary:   ", theSummary.encode('utf-8'))
+    print("Sum links: ", theSummaryLinks.encode('utf-8'))
+    print("Image;     ", theImage)
+    print("Tumblr:    ", tumblrLink)
+    print("============================================================\n")
     return (theTitle, theLink, tumblrLink, theImage, theSummary, summaryHtml ,theSummaryLinks)
     sys.exit()
     if posts['posts'][i]['type'] == 'photo':
@@ -382,19 +393,19 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
             titlePostT = ""
         post = titlePost + " " + link
         logging.info("Publishing... %s" % post)
-        print("============================================================\n")
-        print("Results: \n")
-        print("============================================================\n")
-        print("Title:     ", title)
-        print("Link:      ", link)
-        print("tumb Link: ", tumblrLink)
-        print("Summary:   ", summary)
-        print("Sum links: ", summaryLinks)
-        print("Image;     ", image)
-        print("Post       ", post)
-        print("============================================================\n")
+        #print("============================================================\n")
+        #print("Results: \n")
+        #print("============================================================\n")
+        #print("Title:     ", title)
+        #print("Link:      ", link)
+        #print("tumb Link: ", tumblrLink)
+        #print("Summary:   ", summary)
+        #print("Sum links: ", summaryLinks)
+        #print("Image;     ", image)
+        #print("Post       ", post)
+        #print("============================================================\n")
 
-        #print(type(post))
+        ##print(type(post))
         if isDebug:
             profileList = []
             tumblrLink = None
@@ -412,13 +423,13 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
                 # know that we are using Twitter and Facebook
                 
                 path = os.path.expanduser('~')
-                print(profile['service'], path)
+                #print(profile['service'], path)
                 with open(path + '/.urls.pickle', 'rb') as f:
                     theList = pickle.load(f)
-                    print(link, link[link.find(':')+2:], theList)
+                    #print(link, link[link.find(':')+2:], theList)
                 if link[link.find(':')+2:] in theList:
                     # Without the http or https 
-                    print("no")
+                    #print("no")
                     continue
             try:
                 if titlePostT and (profile['service'] == 'twitter'):
@@ -549,9 +560,9 @@ def cleanTags(soup):
         quote.insert_before('«')
         quote.insert_after( '»')
 
-    if soup.blockquote:
-        soup.blockquote.insert_before('«')
-        soup.blockquote.insert_after( '»')
+    #if soup.blockquote:
+    #    soup.blockquote.insert_before('«')
+    #    soup.blockquote.insert_after( '»')
 
     for tag in tags:
         if tag not in validTags:
@@ -606,6 +617,7 @@ def test():
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
     print("Configured blogs:")
+    print(time.ctime())
 
     feed = []
     # We are caching the feeds in order to use them later
