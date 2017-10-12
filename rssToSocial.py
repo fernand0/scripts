@@ -26,7 +26,6 @@ import facebook
 from linkedin import linkedin
 from twitter import *
 from html.parser import HTMLParser
-import pickle
 import telepot
 import re
 import sys
@@ -43,27 +42,10 @@ import urllib.parse
 # git clone https://github.com/vtemian/buffpy.git
 # cd buffpy
 # sudo python setup.py install
-from colorama import Fore
 from buffpy.api import API
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 
-
-#importlib.reload(sys)
-#sys.setdefaultencoding("UTF-8")
-
-def spam(recentPost):
-    txt = "Puedes seguir las novedades en "
-    if 'pagefb' in recentPost:
-        txt = txt + ' Facebook: ' + recentPost['pagefb']
-        if (pages['data'][i]['name'] == pagefb):
-            print("name")
-            print(pages['data'][i]['link'])
-
-    if 'telegramac' in recentPost:
-        txt = txt + ' Telegram: https://t.me/' + recentPost['telegramac']
-    print(txt)
-    sys.exit()
 
 def extractImage(soup):
     pageImage = soup.findAll("img")
@@ -78,27 +60,19 @@ def extractImage(soup):
     else:
         return imageLink
 
-
 def extractLinks(soup, linksToAvoid=""):
     j = 0
     linksTxt = ""
     links = soup.find_all(["a","iframe"])
-    print("ll",links)
     for link in soup.find_all(["a","iframe"]):
-        print("link", link)
-        print("link cont", link.contents, type(link.contents))
         theLink = ""
-        print(link)
         if len(link.contents) > 0: 
             if not isinstance(link.contents[0], Tag):
                 # We want to avoid embdeded tags (mainly <img ... )
                 theLink = link['href']
         else:
             theLink = link['src']
-        #print(linksToAvoid)
-        #print(re.escape(linksToAvoid))
-        #print(str(link['href']))
-        #print(re.search(linksToAvoid, link['href']))
+
         if ((linksToAvoid == "") or
            (not re.search(linksToAvoid, theLink))):
                 if theLink:
@@ -116,7 +90,7 @@ def extractLinks(soup, linksToAvoid=""):
     return theSummaryLinks
 
 def checkLastLink(rssFeed):
-    urlFile = open(os.path.expanduser("~/." 
+    urlFile = open(os.path.expanduser("~" + "/."  
               + urllib.parse.urlparse(rssFeed).netloc
               + ".last"), "r")
     linkLast = urlFile.read().rstrip()  # Last published
@@ -135,8 +109,7 @@ def checkPendingPosts(feed, lastLink):
 def selectBlog(sel='a'):
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
-    print(time.ctime())
-    print("\nConfigured blogs:")
+    print("Configured blogs:")
 
     feed = []
     # We are caching the feeds in order to use them later
@@ -151,7 +124,6 @@ def selectBlog(sel='a'):
 	# last time we posted we will skip this post. 
             filename = os.path.expanduser("~/." + urllib.parse.urlparse(rssFeed).netloc + ".last")
             if ((time.time() - os.path.getmtime(filename))-24*60*60) < 0:
-                print("no")
                 continue
         feed.append(feedparser.parse(rssFeed))
         lastPost = feed[-1].entries[0]
@@ -201,7 +173,6 @@ def selectBlog(sel='a'):
 
     return(recentFeed, selectedBlog, recentPosts)
 
-
 def connectBuffer():
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBuffer')])
@@ -246,6 +217,7 @@ def obtainBlogData(postsBlog, lenMax, i):
     theTitle = posts[i]['title']
     tumblrLink = posts[i]['link']
     theSummaryLinks = ""
+
     soup = BeautifulSoup(posts[i]['summary'], 'lxml')
 
     link = soup.a
@@ -258,22 +230,17 @@ def obtainBlogData(postsBlog, lenMax, i):
        if (theLink[lenProt:pos] == theTitle[:pos - lenProt]):
            # A way to identify retumblings. They have the name of the tumblr at
            # the beggining of the anchor text
-           #print("si")
-           #print(theTitle)
-           #print(theTitle[pos - lenProt + 1:])
+           logging.debug("It's a retumblr")
+           logging.debug(theTitle)
+           logging.debug(theTitle[pos - lenProt + 1:])
            theTitle = theTitle[pos - lenProt + 1:]
+
     if 'content' in posts[i]:
-        summaryHtml = posts[i]['description']
-    elif 'content' in posts[i]:
         summaryHtml = posts[i]['content'][0]['value']
     else:    
         summaryHtml = posts[i]['summary']
-    soup = BeautifulSoup(summaryHtml, 'lxml')
 
-    quotes = soup.find_all('blockquote')
-    for quote in quotes:
-        quote.insert_before('«')
-        quote.insert_after( '»')
+    soup = BeautifulSoup(summaryHtml, 'lxml')
 
     theSummary = soup.get_text()
     if "linkstoavoid" in postsBlog:
@@ -282,91 +249,7 @@ def obtainBlogData(postsBlog, lenMax, i):
         theSummaryLinks = extractLinks(soup, "")
     theImage = extractImage(soup)
 
-    print("============================================================\n")
-    print("Results: \n")
-    print("============================================================\n")
-    print("Title:     ", theTitle.encode('utf-8'))
-    print("Link:      ", theLink)
-    print("Summary:   ", theSummary.encode('utf-8'))
-    print("Sum links: ", theSummaryLinks.encode('utf-8'))
-    print("Image;     ", theImage)
-    print("Tumblr:    ", tumblrLink)
-    print("============================================================\n")
     return (theTitle, theLink, tumblrLink, theImage, theSummary, summaryHtml ,theSummaryLinks)
-    sys.exit()
-    if posts['posts'][i]['type'] == 'photo':
-        print('photo')
-        soup = BeautifulSoup(posts['posts'][i]['caption'], 'lxml')
-        link = soup.a
-        if link:
-            theLink = link['href']
-            theTitle = link.get_text()
-        elif 'post_url' in posts['posts'][i]:
-            # Tumblr photo
-            theLink = posts['posts'][i]['post_url']
-            theTitle = soup.get_text()
-        else:
-            from pprint import pprint 
-            pprint (posts['posts'][i])
-            theLink = posts['posts'][i]['link_url']
-            theTitle = soup.get_text()
-    elif posts['posts'][i]['type'] == 'link':
-        print('link')
-        #print(posts['posts'][i])
-        theLink = posts['posts'][i]['url']
-        theTitle = posts['posts'][i]['title']
-    elif 'post_url' in posts['posts'][i]:
-        print('post_url')
-        print(posts['posts'][i])
-        theLink = posts['posts'][i]['post_url']
-        theTitle = posts['posts'][i]['summary']
-    elif 'caption' in posts['posts'][i]:
-        #soup = BeautifulSoup(posts['posts'][i]['caption'],'lxml')
-        #print "Content: "+ soup.get_text()
-        #print posts['posts'][i]['trail'][0].keys()
-        soup = BeautifulSoup(posts['posts'][i]['trail'][0]['content'], 'lxml')
-        sys.exit()
-        if 'source_url' in posts['posts'][i]:
-            #print('posts',posts['posts'][i])
-            theLink = posts['posts'][i]['source_url']
-            theTitle = soup.findAll("a")[0].get_text()
-            if len(re.findall(r'\w+', theTitle)) == 1:
-                #reTumblr
-                logging.debug("Una palabra, probamos con el titulo")
-                #print(posts['posts'][i]['summary'])
-                theTitle = posts['posts'][i]['summary']
-            if (theLink[:26] == "https://www.instagram.com/") and \
-               (theTitle[:17] == "A video posted by"):
-                # exception for Instagram videos
-                theTitle = posts['posts'][i]['summary']
-            if (theLink[:22] == "https://instagram.com/") and \
-               (theTitle.find("(en") > 0):
-                theTitle = theTitle[:theTitle.find("(en")-1]
-        else:
-            #print('no source_url')
-            # Some entries do not have a proper link and the rss contains
-            # the video, image, ... in the description.
-            # In this case we use the title and the link of the entry.
-            theLink = posts['posts'][i]['post_url']
-            theTitle = posts['posts'][i]['summary']
-
-
-    else:
-        #print "s "+ posts['posts'][i]['summary']
-        theLink = posts['posts'][i]['post_url']
-        theTitle = posts['posts'][i]['summary']
-
-    #print("Link: "+ theLink)
-    #print("Title: "+ theTitle)
-    if theTitle is None:
-        theTitle = ""
-    if theLink is None:
-        theLink = ""
-    theTitle = urllib.quote(theTitle.encode('utf-8'))
-    tumblrLink = posts['posts'][i]['post_url']
-
-    return (theTitle, theLink, tumblrLink)
-
 
 def publishBuffer(profileList, posts, isDebug, lenMax, i):
     tumblrLink = ""
@@ -376,14 +259,10 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
         if (i == 0):
             break
         i = i - 1
-        #print(i)
-        #if 'blog' in posts:
+
         (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks) = (
              obtainBlogData(posts, lenMax, i)
         )
-        #else:
-        #    title, link = obtainBlogData(posts, lenMax, i)
-        #print("title",title, link, tumblrLink)
 
         titlePost = re.sub('\n+', ' ', title)
         if (len(titlePost) > 140 - 30):
@@ -392,20 +271,20 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
         else:
             titlePostT = ""
         post = titlePost + " " + link
-        logging.info("Publishing... %s" % post)
-        #print("============================================================\n")
-        #print("Results: \n")
-        #print("============================================================\n")
-        #print("Title:     ", title)
-        #print("Link:      ", link)
-        #print("tumb Link: ", tumblrLink)
-        #print("Summary:   ", summary)
-        #print("Sum links: ", summaryLinks)
-        #print("Image;     ", image)
-        #print("Post       ", post)
-        #print("============================================================\n")
 
-        ##print(type(post))
+        logging.info("Publishing... %s" % post)
+        print("============================================================")
+        print("Results: ")
+        print("============================================================")
+        print("Title:     ", title)
+        print("Link:      ", link)
+        print("tumb Link: ", tumblrLink)
+        print("Summary:   ", summary)
+        print("Sum links: ", summaryLinks)
+        print("Image;     ", image)
+        print("Post       ", post)
+        print("============================================================")
+
         if isDebug:
             profileList = []
             tumblrLink = None
@@ -413,24 +292,7 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
         for profile in profileList:
             line = profile['service']
             print(profile['service'])
-            #from pprint import pprint 
-            #pprint (profile)
-            #pprint (post)
-            #print("type", type(post))
-            if (profile['service'] == 'twitter') or (profile['service'] == 'facebook'):
-                # We should add a configuration option in order to check which
-                # services are the ones with immediate posting. For now, we
-                # know that we are using Twitter and Facebook
-                
-                path = os.path.expanduser('~')
-                #print(profile['service'], path)
-                with open(path + '/.urls.pickle', 'rb') as f:
-                    theList = pickle.load(f)
-                    #print(link, link[link.find(':')+2:], theList)
-                if link[link.find(':')+2:] in theList:
-                    # Without the http or https 
-                    #print("no")
-                    continue
+
             try:
                 if titlePostT and (profile['service'] == 'twitter'):
                     profile.updates.new(urllib.parse.quote(titlePostT + " " + link).encode('utf-8'))
@@ -445,10 +307,7 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
                 logging.info("Buffer posting failed!")
                 logging.info("Unexpected error: %s"% sys.exc_info()[0])
                 logging.info("Unexpected error: %s"% sys.exc_info()[1])
-                #pprint (vars(sys.exc_info()[1]))
-                #pprint (sys.exc_info()[1].__str__())
 
-                #sys.exit()
                 line = line + ' fail'
                 failFile = open(os.path.expanduser("~/."
                            + urllib.parse.urlparse(tumblrLink).netloc
@@ -457,6 +316,7 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
                 logging.info("  %s service" % line)
                 fail = 'yes'
                 break
+
             logging.info("  %s service" % line)
             if (fail == 'no' and tumblrLink):
                 urlFile = open(os.path.expanduser("~/."
@@ -516,8 +376,6 @@ def publishFacebook(title, link, summaryLinks, image, fbPage):
                                   link=link, picture=image,
                                   name=title, caption='',
                                   description=summaryLinks.encode('utf-8'))
-                # graph2.put_object(pages['data'][2]['id'], "instant_articles", html_source=html, development_mode = True)
-                # facebook.GraphAPIError: (#200) Requires pages_manage_instant_articles permission to manage the object
     except:
         print("Facebook posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
@@ -560,10 +418,6 @@ def cleanTags(soup):
         quote.insert_before('«')
         quote.insert_after( '»')
 
-    #if soup.blockquote:
-    #    soup.blockquote.insert_before('«')
-    #    soup.blockquote.insert_after( '»')
-
     for tag in tags:
         if tag not in validTags:
             for theTag in soup.find_all(tag):
@@ -605,19 +459,11 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
         # Something like: <a href="">< we would 
             textToPublish = str(soup)[:index - 1]+' ...'
         bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
-        #bot.sendMessage('@'+channel,'<a href="'+link+'">'+title + "</a>\n"
-        #            #+ "\nEnlace: " + link
-        #            #+ "\nEscribí: \n"
-        #            + summaryHtml, parse_mode='HTML') 
-    #except:
-    #    print("Telegram posting failed!\n")
-    #    print("Unexpected error:", sys.exc_info()[0])
 
 def test():
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
     print("Configured blogs:")
-    print(time.ctime())
 
     feed = []
     # We are caching the feeds in order to use them later
@@ -677,19 +523,14 @@ def main():
     logging.basicConfig(filename='/home/ftricas/usr/var/rssSocial_.log',
                         level=loggingLevel, format='%(asctime)s %(message)s')
 
-    #print(recentPosts.keys())
     for i in recentPosts.keys():
-        #spam(recentPosts[i])
         if 'bufferapp' in recentPosts[i]:
-            print("Bufferapp")
             api = connectBuffer()
             lenMax, profileList = checkLimitPosts(api)
             publishBuffer(profileList, recentPosts[i], isDebug,
                          lenMax, len(recentPosts[i]['posts']))
         else:
             print("Publishing pending post")
-            #print("Hay ", len(recentPosts[i]['posts']))
-            #print(recentPosts[i]['posts'][len(recentPosts[i]['posts'])-1])
             posts = recentPosts[i]
             (title, tumblrLink, link, image, summary, summaryHtml, summaryLinks) = (
                   obtainBlogData(posts, 1, len(recentPosts[i]['posts'])-1)
@@ -701,10 +542,6 @@ def main():
             else:
                 comment = ""
 
-    #title, link, summary, comment, summaryLinks, image, twitter, fbPage, telegram, bufferapp = \
-    #    getBlogData(recentFeed, selectedBlog)
-
-            #isDebug = True
             if not isDebug:
                 if 'twitterac' in recentPosts[i]:
                     twitter = recentPosts[i]['twitterac']
@@ -729,44 +566,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-# Not in use
-def getBlogData(recentFeed, selectedBlog):
-    i = 0  # It will publish the last added item
-
-    soup = BeautifulSoup(recentFeed.entries[0].title)
-    theTitle = soup.get_text()
-    theLink = recentFeed.entries[0].link
-
-    soup = BeautifulSoup(recentFeed.entries[0].summary)
-    theSummary = soup.get_text()
-    theSummaryLinks = extractLinks(soup, selectedBlog["linksToAvoid"])
-    if 'comment' in selectedBlog:
-        theComment = extractLinks(soup, selectedBlog["comment"])
-    else: 
-        theComment = "Publicado!"
-    theImage = extractImage(soup)
-    theTwitter = selectedBlog["twitterAC"]
-    theFbPage = selectedBlog["pageFB"]
-    theTelegram = selectedBlog["telegramAC"]
-    theBuffer = selectedBlog["bufferapp"]
-
-    print("============================================================\n")
-    print("Results: \n")
-    print("============================================================\n")
-    print("Title:     ", theTitle.encode('utf-8'))
-    print("Link:      ", theLink)
-    print("Summary:   ", theSummary.encode('utf-8'))
-    print("Sum links: ", theSummaryLinks.encode('utf-8'))
-    print("Image;     ", theImage)
-    print("Comment:   ", theComment)
-    print("Twitter:   ", theTwitter)
-    print("Facebook:  ", theFbPage)
-    print("Telegram:  ", theTelegram)
-    print("Buffer:    ", theBuffer)
-    print("============================================================\n")
-
-    return (theTitle, theLink, theSummary, theComment, theSummaryLinks,
-            theImage, theTwitter, theFbPage, theTelegram, theBuffer)
-
-
