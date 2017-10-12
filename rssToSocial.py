@@ -42,14 +42,9 @@ import urllib.parse
 # git clone https://github.com/vtemian/buffpy.git
 # cd buffpy
 # sudo python setup.py install
-from colorama import Fore
 from buffpy.api import API
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
-
-
-#importlib.reload(sys)
-#sys.setdefaultencoding("UTF-8")
 
 
 def extractImage(soup):
@@ -64,7 +59,6 @@ def extractImage(soup):
         return imageLink[:imageLink.find('?')]
     else:
         return imageLink
-
 
 def extractLinks(soup, linksToAvoid=""):
     j = 0
@@ -81,10 +75,7 @@ def extractLinks(soup, linksToAvoid=""):
                 theLink = link['href']
         else:
             theLink = link['src']
-        #print(linksToAvoid)
-        #print(re.escape(linksToAvoid))
-        #print(str(link['href']))
-        #print(re.search(linksToAvoid, link['href']))
+
         if ((linksToAvoid == "") or
            (not re.search(linksToAvoid, theLink))):
                 if theLink:
@@ -102,7 +93,7 @@ def extractLinks(soup, linksToAvoid=""):
     return theSummaryLinks
 
 def checkLastLink(rssFeed):
-    urlFile = open(os.path.expanduser("~/." 
+    urlFile = open(os.path.expanduser("~" + "/"  
               + urllib.parse.urlparse(rssFeed).netloc
               + ".last"), "r")
     linkLast = urlFile.read().rstrip()  # Last published
@@ -186,7 +177,6 @@ def selectBlog(sel='a'):
 
     return(recentFeed, selectedBlog, recentPosts)
 
-
 def connectBuffer():
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBuffer')])
@@ -231,7 +221,9 @@ def obtainBlogData(postsBlog, lenMax, i):
     theTitle = posts[i]['title']
     tumblrLink = posts[i]['link']
     theSummaryLinks = ""
+
     soup = BeautifulSoup(posts[i]['summary'], 'lxml')
+
     link = soup.a
     if link is None:
        theLink = tumblrLink
@@ -242,14 +234,16 @@ def obtainBlogData(postsBlog, lenMax, i):
        if (theLink[lenProt:pos] == theTitle[:pos - lenProt]):
            # A way to identify retumblings. They have the name of the tumblr at
            # the beggining of the anchor text
-           print("si")
-           print(theTitle)
-           print(theTitle[pos - lenProt + 1:])
+           logging.debug("It's a retumblr")
+           logging.debug(theTitle)
+           logging.debug(theTitle[pos - lenProt + 1:])
            theTitle = theTitle[pos - lenProt + 1:]
+
     if 'content' in posts[i]:
         summaryHtml = posts[i]['content'][0]['value']
     else:    
         summaryHtml = posts[i]['summary']
+
     soup = BeautifulSoup(summaryHtml, 'lxml')
 
     theSummary = soup.get_text()
@@ -260,80 +254,6 @@ def obtainBlogData(postsBlog, lenMax, i):
     theImage = extractImage(soup)
 
     return (theTitle, theLink, tumblrLink, theImage, theSummary, summaryHtml ,theSummaryLinks)
-    sys.exit()
-    if posts['posts'][i]['type'] == 'photo':
-        print('photo')
-        soup = BeautifulSoup(posts['posts'][i]['caption'], 'lxml')
-        link = soup.a
-        if link:
-            theLink = link['href']
-            theTitle = link.get_text()
-        elif 'post_url' in posts['posts'][i]:
-            # Tumblr photo
-            theLink = posts['posts'][i]['post_url']
-            theTitle = soup.get_text()
-        else:
-            from pprint import pprint 
-            pprint (posts['posts'][i])
-            theLink = posts['posts'][i]['link_url']
-            theTitle = soup.get_text()
-    elif posts['posts'][i]['type'] == 'link':
-        print('link')
-        #print(posts['posts'][i])
-        theLink = posts['posts'][i]['url']
-        theTitle = posts['posts'][i]['title']
-    elif 'post_url' in posts['posts'][i]:
-        print('post_url')
-        print(posts['posts'][i])
-        theLink = posts['posts'][i]['post_url']
-        theTitle = posts['posts'][i]['summary']
-    elif 'caption' in posts['posts'][i]:
-        #soup = BeautifulSoup(posts['posts'][i]['caption'],'lxml')
-        #print "Content: "+ soup.get_text()
-        #print posts['posts'][i]['trail'][0].keys()
-        soup = BeautifulSoup(posts['posts'][i]['trail'][0]['content'], 'lxml')
-        sys.exit()
-        if 'source_url' in posts['posts'][i]:
-            #print('posts',posts['posts'][i])
-            theLink = posts['posts'][i]['source_url']
-            theTitle = soup.findAll("a")[0].get_text()
-            if len(re.findall(r'\w+', theTitle)) == 1:
-                #reTumblr
-                logging.debug("Una palabra, probamos con el titulo")
-                #print(posts['posts'][i]['summary'])
-                theTitle = posts['posts'][i]['summary']
-            if (theLink[:26] == "https://www.instagram.com/") and \
-               (theTitle[:17] == "A video posted by"):
-                # exception for Instagram videos
-                theTitle = posts['posts'][i]['summary']
-            if (theLink[:22] == "https://instagram.com/") and \
-               (theTitle.find("(en") > 0):
-                theTitle = theTitle[:theTitle.find("(en")-1]
-        else:
-            #print('no source_url')
-            # Some entries do not have a proper link and the rss contains
-            # the video, image, ... in the description.
-            # In this case we use the title and the link of the entry.
-            theLink = posts['posts'][i]['post_url']
-            theTitle = posts['posts'][i]['summary']
-
-
-    else:
-        #print "s "+ posts['posts'][i]['summary']
-        theLink = posts['posts'][i]['post_url']
-        theTitle = posts['posts'][i]['summary']
-
-    #print("Link: "+ theLink)
-    #print("Title: "+ theTitle)
-    if theTitle is None:
-        theTitle = ""
-    if theLink is None:
-        theLink = ""
-    theTitle = urllib.quote(theTitle.encode('utf-8'))
-    tumblrLink = posts['posts'][i]['post_url']
-
-    return (theTitle, theLink, tumblrLink)
-
 
 def publishBuffer(profileList, posts, isDebug, lenMax, i):
     tumblrLink = ""
@@ -343,14 +263,10 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
         if (i == 0):
             break
         i = i - 1
-        #print(i)
-        #if 'blog' in posts:
+
         (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks) = (
              obtainBlogData(posts, lenMax, i)
         )
-        #else:
-        #    title, link = obtainBlogData(posts, lenMax, i)
-        #print("title",title, link, tumblrLink)
 
         titlePost = re.sub('\n+', ' ', title)
         if (len(titlePost) > 140 - 30):

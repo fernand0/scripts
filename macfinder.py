@@ -48,7 +48,7 @@ except:
 
 def loadData():
     try:
-	fIP = open(fileName,"r")
+        fIP = open(fileName,"r")
         try:
             ipList=pickle.load(fIP)
         except:
