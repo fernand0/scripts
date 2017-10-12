@@ -253,79 +253,46 @@ def obtainBlogData(postsBlog, lenMax, i):
     return (theTitle, theLink, tumblrLink, theImage, theSummary, summaryHtml ,theSummaryLinks)
 
 def publishBuffer(profileList, posts, isDebug, lenMax, i):
-    tumblrLink = ""
+    if isDebug:
+        profileList = []
+        tumblrLink = None
+    fail = 'no'
+    for profile in profileList:
+        line = profile['service']
+        print(profile['service'])
 
-    bufferMax = 10
-    for j in range(bufferMax-lenMax, 0, -1):
-        if (i == 0):
-            break
-        i = i - 1
+        try:
+            if titlePostT and (profile['service'] == 'twitter'):
+                profile.updates.new(urllib.parse.quote(titlePostT + " " + link).encode('utf-8'))
+            else:
+                profile.updates.new(urllib.parse.quote(post).encode('utf-8'))
+            line = line + ' ok'
+            time.sleep(3)
+        except:
+            print("Buffer posting failed!")
+            print("Unexpected error:", sys.exc_info()[0])
+            print("Unexpected error:", sys.exc_info()[1])
+            logging.info("Buffer posting failed!")
+            logging.info("Unexpected error: %s"% sys.exc_info()[0])
+            logging.info("Unexpected error: %s"% sys.exc_info()[1])
 
-        (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks) = (
-             obtainBlogData(posts, lenMax, i)
-        )
-
-        titlePost = re.sub('\n+', ' ', title)
-        if (len(titlePost) > 140 - 30):
-            # We are allowing 30 characters for the (short) link 
-            titlePostT = titlePost[:140-30] 
-        else:
-            titlePostT = ""
-        post = titlePost + " " + link
-
-        logging.info("Publishing... %s" % post)
-        print("============================================================")
-        print("Results: ")
-        print("============================================================")
-        print("Title:     ", title)
-        print("Link:      ", link)
-        print("tumb Link: ", tumblrLink)
-        print("Summary:   ", summary)
-        print("Sum links: ", summaryLinks)
-        print("Image;     ", image)
-        print("Post       ", post)
-        print("============================================================")
-
-        if isDebug:
-            profileList = []
-            tumblrLink = None
-        fail = 'no'
-        for profile in profileList:
-            line = profile['service']
-            print(profile['service'])
-
-            try:
-                if titlePostT and (profile['service'] == 'twitter'):
-                    profile.updates.new(urllib.parse.quote(titlePostT + " " + link).encode('utf-8'))
-                else:
-                    profile.updates.new(urllib.parse.quote(post).encode('utf-8'))
-                line = line + ' ok'
-                time.sleep(3)
-            except:
-                print("Buffer posting failed!")
-                print("Unexpected error:", sys.exc_info()[0])
-                print("Unexpected error:", sys.exc_info()[1])
-                logging.info("Buffer posting failed!")
-                logging.info("Unexpected error: %s"% sys.exc_info()[0])
-                logging.info("Unexpected error: %s"% sys.exc_info()[1])
-
-                line = line + ' fail'
-                failFile = open(os.path.expanduser("~/."
-                           + urllib.parse.urlparse(tumblrLink).netloc
-                           + ".fail"), "w")
-                failFile.write(post)
-                logging.info("  %s service" % line)
-                fail = 'yes'
-                break
-
+            line = line + ' fail'
+            failFile = open(os.path.expanduser("~/."
+                       + urllib.parse.urlparse(tumblrLink).netloc
+                       + ".fail"), "w")
+            failFile.write(post)
             logging.info("  %s service" % line)
-            if (fail == 'no' and tumblrLink):
-                urlFile = open(os.path.expanduser("~/."
-                               + urllib.parse.urlparse(tumblrLink).netloc
-                               + ".last"), "w")
-        
-                urlFile.write(tumblrLink)
-                urlFile.close()
+            fail = 'yes'
+            break
+
+        logging.info("  %s service" % line)
+        if (fail == 'no' and tumblrLink):
+            urlFile = open(os.path.expanduser("~/."
+                           + urllib.parse.urlparse(tumblrLink).netloc
+                           + ".last"), "w")
+    
+            urlFile.write(tumblrLink)
+            urlFile.close()
 
 def publishTwitter(title, link, comment, twitter):
 
@@ -507,19 +474,56 @@ def main():
     isDebug = False
     loggingLevel = logging.INFO
 
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "-m":
-            recentFeed, selectedBlog, recentPosts = selectBlog('m')
-        if sys.argv[1] == "-t":
-            test()
-            sys.exit()
-        if sys.argv[1] == "-d":
-            print("debug")
-            recentFeed, selectedBlog, recentPosts = selectBlog()
-            loggingLevel = logging.DEBUG
-            isDebug = True
-    else:
-        recentFeed, selectedBlog, recentPosts = selectBlog()
+    #if len(sys.argv) > 1:
+    #    if sys.argv[1] == "-m":
+    #        recentFeed, selectedBlog, recentPosts = selectBlog('m')
+    #    if sys.argv[1] == "-t":
+    #        test()
+    #        sys.exit()
+    #    if sys.argv[1] == "-d":
+    #        print("debug")
+    #        recentFeed, selectedBlog, recentPosts = selectBlog()
+    #        loggingLevel = logging.DEBUG
+    #        isDebug = True
+    #else:
+    #    recentFeed, selectedBlog, recentPosts = selectBlog()
+
+    config = configparser.ConfigParser()
+    config.read([os.path.expanduser('~/.rssBlogs')])
+
+    print("Configured blogs:")
+
+    blogs = []
+
+    for section in config.sections():
+        rssFeed = config.get(section, "rssFeed")
+        print(rssFeed)
+        blog = BlogData.BlogData()
+        blog.setRssFeed(rssFeed)
+        optFields = ["linksToAvoid", "time", "bufferapp"]
+        if ("linksToAvoid" in config.options(section)):
+            blog.setLinksToAvoid(config.get(section, "linksToAvoid"))
+        if ("time" in config.options(section)):
+            blog.setTime(config.get(section, "time"))
+
+        for option in config.options(section):
+            if ('ac' in option) or ('fb' in option):
+                blog.addSocialNetwork((option, config.get(section, option)))
+        blog.getBlogPosts()
+        blogs.append(blog)
+
+        (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks) = (
+             blog.obtainBlogData(posts, lenMax, i)
+        )
+
+        if ("bufferapp" in config.options(section)):
+            blog.setBufferapp(config.get(section, "bufferapp"))
+            api = connectBuffer()
+            lenMax, profileList = checkLimitPosts(api)
+            publishBuffer(profileList, recentPosts[i], isDebug,
+                         lenMax, len(recentPosts[i]['posts']))
+        else:
+
 
     logging.basicConfig(filename='/home/ftricas/usr/var/rssSocial_.log',
                         level=loggingLevel, format='%(asctime)s %(message)s')
@@ -528,8 +532,26 @@ def main():
         if 'bufferapp' in recentPosts[i]:
             api = connectBuffer()
             lenMax, profileList = checkLimitPosts(api)
-            publishBuffer(profileList, recentPosts[i], isDebug,
-                         lenMax, len(recentPosts[i]['posts']))
+
+            bufferMax = 10
+            for j in range(bufferMax-lenMax, 0, -1):
+                if (i == 0):
+                    break
+                i = i - 1
+
+                titlePost = re.sub('\n+', ' ', title)
+                if (len(titlePost) > 140 - 30):
+                    # We are allowing 30 characters for the (short) link 
+                    titlePostT = titlePost[:140-30] 
+                else:
+                    titlePostT = ""
+                post = titlePost + " " + link
+                logging.info("Publishing... %s" % post)
+
+                logging.info("Publishing... %s" % post)
+
+                publishBuffer(profileList, recentPosts[i], isDebug,
+                             lenMax, len(recentPosts[i]['posts']))
         else:
             print("Publishing pending post")
             posts = recentPosts[i]
