@@ -145,6 +145,12 @@ class BlogData():
             theSummaryLinks = self.extractLinks(soup, self.getLinkstoavoid())
         else:
             theSummaryLinks = self.extractLinks(soup, "")
+
+        if ('comment' in posts[i]):
+            comment = posts[i]['comment']
+        else:
+            comment = ""
+
         theImage = self.extractImage(soup)
 
         print("============================================================")
@@ -155,12 +161,13 @@ class BlogData():
         print("tumb Link: ", tumblrLink)
         print("Summary:   ", summaryHtml[:200])
         print("Sum links: ", theSummaryLinks)
+        print("Comment:   ", comment)
         print("Image;     ", theImage)
         print("Post       ", theTitle + " " + theLink)
         print("============================================================")
 
 
-        return (theTitle, theLink, tumblrLink, theImage, theSummary, summaryHtml ,theSummaryLinks)
+        return (theTitle, theLink, tumblrLink, theImage, theSummary, summaryHtml ,theSummaryLinks, comment)
 
 
 if __name__ == "__main__":
@@ -196,6 +203,8 @@ if __name__ == "__main__":
     for blog in blogs:
         print(blog.getRssFeed())
         print(blog.getSocialNetworks())
+        if 'twitterac' in blog.getSocialNetworks():
+            print(blog.getSocialNetworks()['twitterac'])
         print(blog.getPosts().entries[0]['link'])
         print(blog.getLinkPosition(blog.getPosts().entries[0]['link']))
         print(blog.datePost(0))

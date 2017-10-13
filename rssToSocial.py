@@ -532,77 +532,92 @@ def main():
                     break
                 i = i - 1
 
-                (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks) = (
+                (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks, comment) = (
                      blog.obtainPostData(i)
                 )
+                print(title)
                 publishBuffer(profileList, recentPosts[i], isDebug,
                              lenMax, len(recentPosts[i]['posts']))
         else:
-            (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks) = (
-                 blog.obtainPostData(i)
-            )
-            continue
-    sys.exit()
+            if (i > 0):
+                (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks, comment) = (
+                        blog.obtainPostData(i)
+                        )
+                if not isDebug:
+                    if 'twitterac' in blog.getSocialNetworks():
+                        twitter = blog.getSocialNetworks()['twitterac']
+                        publishTwitter(title, link, comment, twitter)
+                    if 'pagefb' in blog.getSocialNetworks():
+                        fbPage = blog.getSocialNetworks()['pagefb']
+                        publishFacebook(title, link, summaryLinks, image, fbPage)
+                    if 'telegramac' in blog.getSocialNetworks():
+                        telegram = blog.getSocialNetworks()['telegramac']
+                        publishTelegram(telegram, title,link,summary, summaryHtml, summaryLinks, image)
 
+                    publishLinkedin(title, link, summary, image)
 
-
-    for i in recentPosts.keys():
-        if 'bufferapp' in recentPosts[i]:
-            api = connectBuffer()
-            lenMax, profileList = checkLimitPosts(api)
-
-            bufferMax = 10
-            for j in range(bufferMax-lenMax, 0, -1):
-                if (i == 0):
-                    break
-                i = i - 1
-
-                titlePost = re.sub('\n+', ' ', title)
-                if (len(titlePost) > 140 - 30):
-                    # We are allowing 30 characters for the (short) link 
-                    titlePostT = titlePost[:140-30] 
-                else:
-                    titlePostT = ""
-                post = titlePost + " " + link
-                logging.info("Publishing... %s" % post)
-
-                logging.info("Publishing... %s" % post)
-
-                publishBuffer(profileList, recentPosts[i], isDebug,
-                             lenMax, len(recentPosts[i]['posts']))
-        else:
-            print("Publishing pending post")
-            posts = recentPosts[i]
-            (title, tumblrLink, link, image, summary, summaryHtml, summaryLinks) = (
-                  obtainBlogData(posts, 1, len(recentPosts[i]['posts'])-1)
-            )
-            tumblrLink = link
-            print("title",title, link, tumblrLink, image)
-            if ('comment' in recentPosts[i]):
-                comment = recentPosts[i]['comment']
-            else:
-                comment = ""
-
-            if not isDebug:
-                if 'twitterac' in recentPosts[i]:
-                    twitter = recentPosts[i]['twitterac']
-                    publishTwitter(title, link, comment, twitter)
-                if 'pagefb' in recentPosts[i]:
-                    fbPage = recentPosts[i]['pagefb']
-                    publishFacebook(title, link, summaryLinks, image, fbPage)
-                if 'telegramac' in recentPosts[i]:
-                    telegram = recentPosts[i]['telegramac']
-                    publishTelegram(telegram, title,link,summary, summaryHtml, summaryLinks, image)
-
-                publishLinkedin(title, link, summary, image)
-
-                if (tumblrLink):
-                    urlFile = open(os.path.expanduser("~/."
-                                   + urllib.parse.urlparse(tumblrLink).netloc
-                                   + ".last"), "w")
+                    if (tumblrLink):
+                        urlFile = open(os.path.expanduser("~/."
+                                       + urllib.parse.urlparse(tumblrLink).netloc
+                                       + ".last"), "w")
         
-                    urlFile.write(tumblrLink)
-                    urlFile.close()
+                        urlFile.write(tumblrLink)
+                        urlFile.close()
+
+
+
+
+
+
+    #for i in recentPosts.keys():
+    #    if 'bufferapp' in recentPosts[i]:
+    #        api = connectBuffer()
+    #        lenMax, profileList = checkLimitPosts(api)
+
+    #        bufferMax = 10
+    #        for j in range(bufferMax-lenMax, 0, -1):
+    #            if (i == 0):
+    #                break
+    #            i = i - 1
+
+    #            titlePost = re.sub('\n+', ' ', title)
+    #            if (len(titlePost) > 140 - 30):
+    #                # We are allowing 30 characters for the (short) link 
+    #                titlePostT = titlePost[:140-30] 
+    #            else:
+    #                titlePostT = ""
+    #            post = titlePost + " " + link
+    #            logging.info("Publishing... %s" % post)
+
+    #            logging.info("Publishing... %s" % post)
+
+    #            publishBuffer(profileList, recentPosts[i], isDebug,
+    #                         lenMax, len(recentPosts[i]['posts']))
+    #    else:
+    #        print("Publishing pending post")
+    #        posts = recentPosts[i]
+    #        (title, tumblrLink, link, image, summary, summaryHtml, summaryLinks) = (
+    #              obtainBlogData(posts, 1, len(recentPosts[i]['posts'])-1)
+    #        )
+    #        tumblrLink = link
+    #        print("title",title, link, tumblrLink, image)
+    #        if ('comment' in recentPosts[i]):
+    #            comment = recentPosts[i]['comment']
+    #        else:
+    #            comment = ""
+
+    #        if not isDebug:
+    #            if 'twitterac' in recentPosts[i]:
+    #                sys.exit()
+    #                publishTwitter(title, link, comment, twitter)
+    #            if 'pagefb' in recentPosts[i]:
+    #                fbPage = recentPosts[i]['pagefb']
+    #                publishFacebook(title, link, summaryLinks, image, fbPage)
+    #            if 'telegramac' in recentPosts[i]:
+    #                telegram = recentPosts[i]['telegramac']
+    #                publishTelegram(telegram, title,link,summary, summaryHtml, summaryLinks, image)
+
+    #            publishLinkedin(title, link, summary, image)
 
 
 if __name__ == '__main__':
