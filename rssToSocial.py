@@ -48,48 +48,6 @@ from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 
 
-def extractImage(soup):
-    pageImage = soup.findAll("img")
-    #  Only the first one
-    if len(pageImage) > 0:
-        imageLink = (pageImage[0]["src"])
-    else:
-        imageLink = ""
-
-    if imageLink.find('?') > 0:
-        return imageLink[:imageLink.find('?')]
-    else:
-        return imageLink
-
-def extractLinks(soup, linksToAvoid=""):
-    j = 0
-    linksTxt = ""
-    links = soup.find_all(["a","iframe"])
-    for link in soup.find_all(["a","iframe"]):
-        theLink = ""
-        if len(link.contents) > 0: 
-            if not isinstance(link.contents[0], Tag):
-                # We want to avoid embdeded tags (mainly <img ... )
-                theLink = link['href']
-        else:
-            theLink = link['src']
-
-        if ((linksToAvoid == "") or
-           (not re.search(linksToAvoid, theLink))):
-                if theLink:
-                    link.append(" ["+str(j)+"]")
-                    linksTxt = linksTxt + "["+str(j)+"] " + \
-                        link.contents[0] + "\n"
-                    linksTxt = linksTxt + "    " + theLink + "\n"
-                    j = j + 1
-
-    if linksTxt != "":
-        theSummaryLinks = soup.get_text().strip('\n') + "\n\n" + linksTxt
-    else:
-        theSummaryLinks = soup.get_text().strip('\n')
-
-    return theSummaryLinks
-
 def checkLastLink(rssFeed):
     urlFile = open(os.path.expanduser("~" + "/."  
               + urllib.parse.urlparse(rssFeed).netloc
@@ -245,10 +203,10 @@ def obtainBlogData(postsBlog, lenMax, i):
 
     theSummary = soup.get_text()
     if "linkstoavoid" in postsBlog:
-        theSummaryLinks = extractLinks(soup, postsBlog["linkstoavoid"])
+        theSummaryLinks = blog.extractLinks(soup, postsBlog["linkstoavoid"])
     else:
-        theSummaryLinks = extractLinks(soup, "")
-    theImage = extractImage(soup)
+        theSummaryLinks = blog.extractLinks(soup, "")
+    theImage = blog.extractImage(soup)
 
     return (theTitle, theLink, tumblrLink, theImage, theSummary, summaryHtml ,theSummaryLinks)
 
@@ -463,7 +421,7 @@ def test():
          print("post content",i,content)
          soup = BeautifulSoup(content)
          theSummary = soup.get_text()
-         theSummaryLinks = extractLinks(soup)
+         theSummaryLinks = blog.extractLinks(soup)
          print("post links",i,theSummaryLinks)
 
     return recentPosts
@@ -504,6 +462,7 @@ def main():
         print(rssFeed)
         blog = BlogData.BlogData()
         blog.setRssFeed(rssFeed)
+
         optFields = ["linksToAvoid", "time", "bufferapp"]
         if ("linksToAvoid" in config.options(section)):
             blog.setLinksToAvoid(config.get(section, "linksToAvoid"))
@@ -513,9 +472,9 @@ def main():
         for option in config.options(section):
             if ('ac' in option) or ('fb' in option):
                 blog.addSocialNetwork((option, config.get(section, option)))
+
         blog.getBlogPosts()
         blogs.append(blog)
-
         
         lastLink = checkLastLink(blog.getRssFeed())
         i = blog.getLinkPosition(lastLink)
@@ -532,42 +491,33 @@ def main():
                     break
                 i = i - 1
 
-                (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks, comment) = (
-                     blog.obtainPostData(i)
-                )
+                (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i))
                 print(title)
-                publishBuffer(profileList, recentPosts[i], isDebug,
+                #publishBuffer(profileList, recentPosts[i], isDebug,
                              lenMax, len(recentPosts[i]['posts']))
         else:
             if (i > 0):
-                (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks, comment) = (
-                        blog.obtainPostData(i)
-                        )
+                (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i))
                 if not isDebug:
                     if 'twitterac' in blog.getSocialNetworks():
                         twitter = blog.getSocialNetworks()['twitterac']
-                        publishTwitter(title, link, comment, twitter)
+                        #publishTwitter(title, link, comment, twitter)
                     if 'pagefb' in blog.getSocialNetworks():
                         fbPage = blog.getSocialNetworks()['pagefb']
-                        publishFacebook(title, link, summaryLinks, image, fbPage)
+                        #publishFacebook(title, link, summaryLinks, image, fbPage)
                     if 'telegramac' in blog.getSocialNetworks():
                         telegram = blog.getSocialNetworks()['telegramac']
-                        publishTelegram(telegram, title,link,summary, summaryHtml, summaryLinks, image)
+                        #publishTelegram(telegram, title,link,summary, summaryHtml, summaryLinks, image)
 
-                    publishLinkedin(title, link, summary, image)
+                    #publishLinkedin(title, link, summary, image)
 
-                    if (tumblrLink):
+                    if False: #(tumblrLink):
                         urlFile = open(os.path.expanduser("~/."
                                        + urllib.parse.urlparse(tumblrLink).netloc
                                        + ".last"), "w")
         
                         urlFile.write(tumblrLink)
                         urlFile.close()
-
-
-
-
-
 
     #for i in recentPosts.keys():
     #    if 'bufferapp' in recentPosts[i]:
