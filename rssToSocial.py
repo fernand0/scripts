@@ -217,7 +217,7 @@ def publishBuffer(profileList, title, link, tumblrLink, isDebug, lenMax):
     fail = 'no'
     for profile in profileList:
         line = profile['service']
-        print(profile['service'])
+        #print(profile['service'])
 
         if (len(title) > 140 - 30):
         # We are allowing 30 characters for the (short) link 
