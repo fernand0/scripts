@@ -491,6 +491,10 @@ def main():
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
 
+    logging.basicConfig(filename=os.path.expanduser("~") 
+                        + "/usr/var/rssSocial_.log",
+                        level=loggingLevel, format='%(asctime)s %(message)s')
+
     print("Configured blogs:")
 
     blogs = []
@@ -512,21 +516,35 @@ def main():
         blog.getBlogPosts()
         blogs.append(blog)
 
-        (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks) = (
-             blog.obtainBlogData(posts, lenMax, i)
-        )
+        
+        lastLink = checkLastLink(blog.getRssFeed())
+        i = blog.getLinkPosition(lastLink)
+        print(i)
+        print("Publishing pending post")
 
         if ("bufferapp" in config.options(section)):
             blog.setBufferapp(config.get(section, "bufferapp"))
             api = connectBuffer()
             lenMax, profileList = checkLimitPosts(api)
-            publishBuffer(profileList, recentPosts[i], isDebug,
-                         lenMax, len(recentPosts[i]['posts']))
+            bufferMax = 10
+            for j in range(bufferMax-lenMax, 0, -1):
+                if (i == 0):
+                    break
+                i = i - 1
+
+                (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks) = (
+                     blog.obtainPostData(i)
+                )
+                publishBuffer(profileList, recentPosts[i], isDebug,
+                             lenMax, len(recentPosts[i]['posts']))
         else:
+            (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks) = (
+                 blog.obtainPostData(i)
+            )
+            continue
+    sys.exit()
 
 
-    logging.basicConfig(filename='/home/ftricas/usr/var/rssSocial_.log',
-                        level=loggingLevel, format='%(asctime)s %(message)s')
 
     for i in recentPosts.keys():
         if 'bufferapp' in recentPosts[i]:
