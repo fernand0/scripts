@@ -210,7 +210,7 @@ def obtainBlogData(postsBlog, lenMax, i):
 
     return (theTitle, theLink, tumblrLink, theImage, theSummary, summaryHtml ,theSummaryLinks)
 
-def publishBuffer(profileList, posts, isDebug, lenMax, i):
+def publishBuffer(profileList, title, link, tumblrLink, isDebug, lenMax):
     if isDebug:
         profileList = []
         tumblrLink = None
@@ -218,6 +218,13 @@ def publishBuffer(profileList, posts, isDebug, lenMax, i):
     for profile in profileList:
         line = profile['service']
         print(profile['service'])
+
+        if (len(title) > 140 - 30):
+        # We are allowing 30 characters for the (short) link 
+            titlePostT = title[:140-30] 
+        else:
+            titlePostT = ""
+        post = title + " " + link
 
         try:
             if titlePostT and (profile['service'] == 'twitter'):
@@ -493,25 +500,24 @@ def main():
 
                 (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i))
                 print(title)
-                #publishBuffer(profileList, recentPosts[i], isDebug,
-                             lenMax, len(recentPosts[i]['posts']))
+                publishBuffer(profileList, title, link, tumblrLink, isDebug, lenMax)
         else:
             if (i > 0):
-                (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i))
+                (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
                 if not isDebug:
                     if 'twitterac' in blog.getSocialNetworks():
                         twitter = blog.getSocialNetworks()['twitterac']
-                        #publishTwitter(title, link, comment, twitter)
+                        publishTwitter(title, link, comment, twitter)
                     if 'pagefb' in blog.getSocialNetworks():
                         fbPage = blog.getSocialNetworks()['pagefb']
-                        #publishFacebook(title, link, summaryLinks, image, fbPage)
+                        publishFacebook(title, link, summaryLinks, image, fbPage)
                     if 'telegramac' in blog.getSocialNetworks():
                         telegram = blog.getSocialNetworks()['telegramac']
-                        #publishTelegram(telegram, title,link,summary, summaryHtml, summaryLinks, image)
+                        publishTelegram(telegram, title,link,summary, summaryHtml, summaryLinks, image)
 
-                    #publishLinkedin(title, link, summary, image)
+                    publishLinkedin(title, link, summary, image)
 
-                    if False: #(tumblrLink):
+                    if (tumblrLink):
                         urlFile = open(os.path.expanduser("~/."
                                        + urllib.parse.urlparse(tumblrLink).netloc
                                        + ".last"), "w")
