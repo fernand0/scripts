@@ -18,7 +18,7 @@
 #
 #
 
-import BlogData
+import moduleBlog
 import configparser
 import os
 import logging
@@ -170,45 +170,45 @@ def checkLimitPosts(api):
 
     return(lenMax, profileList)
 
-def obtainBlogData(postsBlog, lenMax, i):
-    posts = postsBlog['posts']
-    theSummary = posts[i]['summary']
-    theTitle = posts[i]['title']
-    tumblrLink = posts[i]['link']
-    theSummaryLinks = ""
-
-    soup = BeautifulSoup(posts[i]['summary'], 'lxml')
-
-    link = soup.a
-    if link is None:
-       theLink = tumblrLink
-    else:
-       theLink = link['href']
-       pos = theLink.find('.')
-       lenProt = len('http://')
-       if (theLink[lenProt:pos] == theTitle[:pos - lenProt]):
-           # A way to identify retumblings. They have the name of the tumblr at
-           # the beggining of the anchor text
-           logging.debug("It's a retumblr")
-           logging.debug(theTitle)
-           logging.debug(theTitle[pos - lenProt + 1:])
-           theTitle = theTitle[pos - lenProt + 1:]
-
-    if 'content' in posts[i]:
-        summaryHtml = posts[i]['content'][0]['value']
-    else:    
-        summaryHtml = posts[i]['summary']
-
-    soup = BeautifulSoup(summaryHtml, 'lxml')
-
-    theSummary = soup.get_text()
-    if "linkstoavoid" in postsBlog:
-        theSummaryLinks = blog.extractLinks(soup, postsBlog["linkstoavoid"])
-    else:
-        theSummaryLinks = blog.extractLinks(soup, "")
-    theImage = blog.extractImage(soup)
-
-    return (theTitle, theLink, tumblrLink, theImage, theSummary, summaryHtml ,theSummaryLinks)
+#def obtainBlogData(postsBlog, lenMax, i):
+#    posts = postsBlog['posts']
+#    theSummary = posts[i]['summary']
+#    theTitle = posts[i]['title']
+#    tumblrLink = posts[i]['link']
+#    theSummaryLinks = ""
+#
+#    soup = BeautifulSoup(posts[i]['summary'], 'lxml')
+#
+#    link = soup.a
+#    if link is None:
+#       theLink = tumblrLink
+#    else:
+#       theLink = link['href']
+#       pos = theLink.find('.')
+#       lenProt = len('http://')
+#       if (theLink[lenProt:pos] == theTitle[:pos - lenProt]):
+#           # A way to identify retumblings. They have the name of the tumblr at
+#           # the beggining of the anchor text
+#           logging.debug("It's a retumblr")
+#           logging.debug(theTitle)
+#           logging.debug(theTitle[pos - lenProt + 1:])
+#           theTitle = theTitle[pos - lenProt + 1:]
+#
+#    if 'content' in posts[i]:
+#        summaryHtml = posts[i]['content'][0]['value']
+#    else:    
+#        summaryHtml = posts[i]['summary']
+#
+#    soup = BeautifulSoup(summaryHtml, 'lxml')
+#
+#    theSummary = soup.get_text()
+#    if "linkstoavoid" in postsBlog:
+#        theSummaryLinks = blog.extractLinks(soup, postsBlog["linkstoavoid"])
+#    else:
+#        theSummaryLinks = blog.extractLinks(soup, "")
+#    theImage = blog.extractImage(soup)
+#
+#    return (theTitle, theLink, tumblrLink, theImage, theSummary, summaryHtml ,theSummaryLinks)
 
 def publishBuffer(profileList, title, link, tumblrLink, isDebug, lenMax):
     if isDebug:
@@ -467,7 +467,7 @@ def main():
     for section in config.sections():
         rssFeed = config.get(section, "rssFeed")
         print(rssFeed)
-        blog = BlogData.BlogData()
+        blog = moduleBlog.moduleBlog()
         blog.setRssFeed(rssFeed)
 
         optFields = ["linksToAvoid", "time", "bufferapp"]

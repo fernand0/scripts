@@ -5,7 +5,7 @@ import feedparser
 from bs4 import BeautifulSoup
 from bs4 import Tag
 
-class BlogData():
+class moduleBlog():
 
     def __init__(self):
          self.rssFeed = ''
@@ -172,7 +172,7 @@ class BlogData():
 
 if __name__ == "__main__":
 
-    import BlogData
+    import moduleBlog
     
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
@@ -184,7 +184,7 @@ if __name__ == "__main__":
     for section in config.sections():
         rssFeed = config.get(section, "rssFeed")
         print(rssFeed)
-        blog = BlogData.BlogData()
+        blog = moduleBlog.moduleBlog()
         blog.setRssFeed(rssFeed)
         optFields = ["linksToAvoid", "time", "bufferapp"]
         if ("linksToAvoid" in config.options(section)):
