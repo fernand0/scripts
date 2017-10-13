@@ -170,46 +170,6 @@ def checkLimitPosts(api):
 
     return(lenMax, profileList)
 
-#def obtainBlogData(postsBlog, lenMax, i):
-#    posts = postsBlog['posts']
-#    theSummary = posts[i]['summary']
-#    theTitle = posts[i]['title']
-#    tumblrLink = posts[i]['link']
-#    theSummaryLinks = ""
-#
-#    soup = BeautifulSoup(posts[i]['summary'], 'lxml')
-#
-#    link = soup.a
-#    if link is None:
-#       theLink = tumblrLink
-#    else:
-#       theLink = link['href']
-#       pos = theLink.find('.')
-#       lenProt = len('http://')
-#       if (theLink[lenProt:pos] == theTitle[:pos - lenProt]):
-#           # A way to identify retumblings. They have the name of the tumblr at
-#           # the beggining of the anchor text
-#           logging.debug("It's a retumblr")
-#           logging.debug(theTitle)
-#           logging.debug(theTitle[pos - lenProt + 1:])
-#           theTitle = theTitle[pos - lenProt + 1:]
-#
-#    if 'content' in posts[i]:
-#        summaryHtml = posts[i]['content'][0]['value']
-#    else:    
-#        summaryHtml = posts[i]['summary']
-#
-#    soup = BeautifulSoup(summaryHtml, 'lxml')
-#
-#    theSummary = soup.get_text()
-#    if "linkstoavoid" in postsBlog:
-#        theSummaryLinks = blog.extractLinks(soup, postsBlog["linkstoavoid"])
-#    else:
-#        theSummaryLinks = blog.extractLinks(soup, "")
-#    theImage = blog.extractImage(soup)
-#
-#    return (theTitle, theLink, tumblrLink, theImage, theSummary, summaryHtml ,theSummaryLinks)
-
 def publishBuffer(profileList, title, link, tumblrLink, isDebug, lenMax):
     if isDebug:
         profileList = []
@@ -439,20 +399,6 @@ def main():
     isDebug = False
     loggingLevel = logging.INFO
 
-    #if len(sys.argv) > 1:
-    #    if sys.argv[1] == "-m":
-    #        recentFeed, selectedBlog, recentPosts = selectBlog('m')
-    #    if sys.argv[1] == "-t":
-    #        test()
-    #        sys.exit()
-    #    if sys.argv[1] == "-d":
-    #        print("debug")
-    #        recentFeed, selectedBlog, recentPosts = selectBlog()
-    #        loggingLevel = logging.DEBUG
-    #        isDebug = True
-    #else:
-    #    recentFeed, selectedBlog, recentPosts = selectBlog()
-
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
 
@@ -524,56 +470,6 @@ def main():
         
                         urlFile.write(tumblrLink)
                         urlFile.close()
-
-    #for i in recentPosts.keys():
-    #    if 'bufferapp' in recentPosts[i]:
-    #        api = connectBuffer()
-    #        lenMax, profileList = checkLimitPosts(api)
-
-    #        bufferMax = 10
-    #        for j in range(bufferMax-lenMax, 0, -1):
-    #            if (i == 0):
-    #                break
-    #            i = i - 1
-
-    #            titlePost = re.sub('\n+', ' ', title)
-    #            if (len(titlePost) > 140 - 30):
-    #                # We are allowing 30 characters for the (short) link 
-    #                titlePostT = titlePost[:140-30] 
-    #            else:
-    #                titlePostT = ""
-    #            post = titlePost + " " + link
-    #            logging.info("Publishing... %s" % post)
-
-    #            logging.info("Publishing... %s" % post)
-
-    #            publishBuffer(profileList, recentPosts[i], isDebug,
-    #                         lenMax, len(recentPosts[i]['posts']))
-    #    else:
-    #        print("Publishing pending post")
-    #        posts = recentPosts[i]
-    #        (title, tumblrLink, link, image, summary, summaryHtml, summaryLinks) = (
-    #              obtainBlogData(posts, 1, len(recentPosts[i]['posts'])-1)
-    #        )
-    #        tumblrLink = link
-    #        print("title",title, link, tumblrLink, image)
-    #        if ('comment' in recentPosts[i]):
-    #            comment = recentPosts[i]['comment']
-    #        else:
-    #            comment = ""
-
-    #        if not isDebug:
-    #            if 'twitterac' in recentPosts[i]:
-    #                sys.exit()
-    #                publishTwitter(title, link, comment, twitter)
-    #            if 'pagefb' in recentPosts[i]:
-    #                fbPage = recentPosts[i]['pagefb']
-    #                publishFacebook(title, link, summaryLinks, image, fbPage)
-    #            if 'telegramac' in recentPosts[i]:
-    #                telegram = recentPosts[i]['telegramac']
-    #                publishTelegram(telegram, title,link,summary, summaryHtml, summaryLinks, image)
-
-    #            publishLinkedin(title, link, summary, image)
 
 
 if __name__ == '__main__':
