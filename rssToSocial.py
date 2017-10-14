@@ -216,7 +216,20 @@ def connectLinkedin():
 
     return(application)
 
+def connectTelegram(channel):
+    config = configparser.ConfigParser()
+    config.read([os.path.expanduser('~/.rssTelegram')])
 
+    TOKEN = config.get("Telegram", "TOKEN")
+
+    try:
+        bot = telepot.Bot(TOKEN)
+        meMySelf = bot.getMe()
+    except:
+        print("Telegram posting failed!\n")
+        print("Unexpected error:", sys.exc_info()[0])
+
+    return(bot)
 
 
 def checkLimitPosts(api):
@@ -357,15 +370,12 @@ def cleanTags(soup):
     # <!DOCTYPE html> in github.io
 
 def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, image):
-    config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssTelegram')])
+    #publishTelegram("reflexioneseirreflexiones","Canal de Reflexiones e Irreflexiones", "http://fernand0.blogalia.com/", "", "", "", "")
 
     print("Telegram...%s\n"%channel)
 
-    if True:
-        TOKEN = config.get("Telegram", "TOKEN")
-        bot = telepot.Bot(TOKEN)
-        meMySelf = bot.getMe()
+    try:
+        bot = connectTelegram(channel)
 
         h = HTMLParser()
         title = h.unescape(title)
@@ -382,6 +392,9 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
         # Something like: <a href="">< we would 
             textToPublish = str(soup)[:index - 1]+' ...'
         bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
+    except:
+        print("Telegram posting failed!\n")
+        print("Unexpected error:", sys.exc_info()[0])
 
 def test():
     config = configparser.ConfigParser()
