@@ -462,7 +462,7 @@ def main():
         lastLink = checkLastLink(blog.getRssFeed())
         i = blog.getLinkPosition(lastLink)
         print(i)
-        print("Publishing pending post")
+        print("Publishing pending posts\n")
 
         if ("bufferapp" in config.options(section)):
             blog.setBufferapp(config.get(section, "bufferapp"))
@@ -475,7 +475,6 @@ def main():
                 i = i - 1
 
                 (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i))
-                print(title)
                 publishBuffer(profileList, title, link, tumblrLink, isDebug, lenMax)
         else:
             if (i > 0):

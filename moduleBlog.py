@@ -168,6 +168,7 @@ class moduleBlog():
         print("Image;     ", theImage)
         print("Post       ", theTitle + " " + theLink)
         print("============================================================")
+        print("\n")
 
 
         return (theTitle, theLink, tumblrLink, theImage, theSummary, summaryHtml ,theSummaryLinks, comment)
