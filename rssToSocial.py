@@ -1,21 +1,18 @@
 #!/usr/bin/env python
 # encoding: utf-8
 #
-# Very simple Python program to publish the last RSS entry of a feed
+# Very simple Python program to publish RSS entries of a set of feeds
 # in available social networks.
-#
-# It shows the blogs available and allows to select one of them.
 #
 # It has a configuration file with a number of blogs with:
 #    - The RSS feed of the blog
 #    - The Twitter account where the news will be published
 #    - The Facebook page where the news will be published
+#    - Other social networks
 # It uses a configuration file that has two sections:
 #      - The oauth access token
 #
 # And more thins. To be done.
-#
-#
 #
 
 import moduleBlog

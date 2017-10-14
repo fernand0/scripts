@@ -134,7 +134,9 @@ class moduleBlog():
                logging.debug(theTitle[pos - lenProt + 1:])
                theTitle = theTitle[pos - lenProt + 1:]
 
-        if 'content' in posts[i]:
+        if 'description' in posts[i]:
+            summaryHtml = posts[i]['description']
+        elif 'content' in posts[i]:
             summaryHtml = posts[i]['content'][0]['value']
         else:    
             summaryHtml = posts[i]['summary']
