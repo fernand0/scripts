@@ -147,6 +147,78 @@ def connectBuffer():
 
     return(api)
 
+def connectTwitter(twitterAC):    
+    config = configparser.ConfigParser()
+    config.read([os.path.expanduser('~/.rssTwitter')])
+
+    CONSUMER_KEY = config.get("appKeys", "CONSUMER_KEY")
+    CONSUMER_SECRET = config.get("appKeys", "CONSUMER_SECRET")
+    TOKEN_KEY = config.get(twitterAC, "TOKEN_KEY")
+    TOKEN_SECRET = config.get(twitterAC, "TOKEN_SECRET")
+
+    try:
+        authentication = OAuth(
+                    TOKEN_KEY,
+                    TOKEN_SECRET,
+                    CONSUMER_KEY,
+                    CONSUMER_SECRET)
+        t = Twitter(auth=authentication)
+    except:
+        print("Twitter authentication failed!\n")
+        print("Unexpected error:", sys.exc_info()[0])
+
+    return(t)
+
+def connectFacebook(fbPage):
+    config = configparser.ConfigParser()
+    config.read([os.path.expanduser('~/.rssFacebook')])
+
+    try:
+        oauth_access_token = config.get("Facebook", "oauth_access_token")
+
+        graph = facebook.GraphAPI(oauth_access_token, version='2.7')
+        pages = graph.get_connections("me", "accounts")
+
+        for i in range(len(pages['data'])):
+            if (pages['data'][i]['name'] == fbPage):
+                print("\tWriting in... ", pages['data'][i]['name'], "\n")
+                graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
+    except:
+        print("Facebook authentication failed!\n")
+        print("Unexpected error:", sys.exc_info()[0])
+
+    return(pages['data'][i]['access_token'], pages['data'][i]['id'])
+
+def connectLinkedin():
+    config = configparser.ConfigParser()
+    config.read([os.path.expanduser('~/.rssLinkedin')])
+
+    CONSUMER_KEY = config.get("Linkedin", "CONSUMER_KEY")
+    CONSUMER_SECRET = config.get("Linkedin", "CONSUMER_SECRET")
+    USER_TOKEN = config.get("Linkedin", "USER_TOKEN")
+    USER_SECRET = config.get("Linkedin", "USER_SECRET")
+    RETURN_URL = config.get("Linkedin", "RETURN_URL"),
+
+    try:
+        authentication = linkedin.LinkedInDeveloperAuthentication(
+                         CONSUMER_KEY,
+                         CONSUMER_SECRET,
+                         USER_TOKEN,
+                         USER_SECRET,
+                         RETURN_URL,
+                         linkedin.PERMISSIONS.enums.values())
+
+        application = linkedin.LinkedInApplication(authentication)
+
+    except:
+        print("Linkedin posting failed!\n")
+        print("Unexpected error:", sys.exc_info()[0])
+
+    return(application)
+
+
+
+
 def checkLimitPosts(api):
     # We can put as many items as the service with most items allow
     # The limit is ten.
@@ -217,82 +289,43 @@ def publishBuffer(profileList, title, link, tumblrLink, isDebug, lenMax):
             urlFile.close()
 
 def publishTwitter(title, link, comment, twitter):
-
-    config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssTwitter')])
-
     statusTxt = comment + " " + title + " " + link
     h = HTMLParser()
     statusTxt = h.unescape(statusTxt)
 
-    CONSUMER_KEY = config.get("appKeys", "CONSUMER_KEY")
-    CONSUMER_SECRET = config.get("appKeys", "CONSUMER_SECRET")
-    TOKEN_KEY = config.get(twitter, "TOKEN_KEY")
-    TOKEN_SECRET = config.get(twitter, "TOKEN_SECRET")
-
     print("Twitter...\n")
-
     try:
-        authentication = OAuth(
-                    TOKEN_KEY,
-                    TOKEN_SECRET,
-                    CONSUMER_KEY,
-                    CONSUMER_SECRET)
-        t = Twitter(auth=authentication)
+        t = connectTwitter(twitter)
         t.statuses.update(status=statusTxt)
     except:
         print("Twitter posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
 def publishFacebook(title, link, summaryLinks, image, fbPage):
-    config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssFacebook')])
+
+    #publishFacebook("prueba2", "https://www.facebook.com/reflexioneseirreflexiones/", "b", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-9/426052_381657691846622_987775451_n.jpg", "Reflexiones e Irreflexiones")
 
     print("Facebook...\n")
     try:
-        oauth_access_token = config.get("Facebook", "oauth_access_token")
-
-        graph = facebook.GraphAPI(oauth_access_token, version='2.7')
-        pages = graph.get_connections("me", "accounts")
-
-        for i in range(len(pages['data'])):
-            if (pages['data'][i]['name'] == fbPage):
-                print("\tWriting in... ", pages['data'][i]['name'], "\n")
-                graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
-                h = HTMLParser()
-                title = h.unescape(title)
-                graph2.put_object(pages['data'][i]['id'],
-                                  "feed", message=title + " \n" + summaryLinks,
-                                  link=link, picture=image,
-                                  name=title, caption='',
-                                  description=summaryLinks.encode('utf-8'))
+        h = HTMLParser()
+        title = h.unescape(title)
+        (access, page) = connectFacebook(fbPage)
+        print(page)
+        facebook.GraphAPI(access).put_object(page,
+                          "feed", message=title + " \n" + summaryLinks,
+                          link=link, picture=image,
+                          name=title, caption='',
+                          description=summaryLinks.encode('utf-8'))
     except:
         print("Facebook posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
 
 def publishLinkedin(title, link, summary, image):
-    config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssLinkedin')])
-
-    CONSUMER_KEY = config.get("Linkedin", "CONSUMER_KEY")
-    CONSUMER_SECRET = config.get("Linkedin", "CONSUMER_SECRET")
-    USER_TOKEN = config.get("Linkedin", "USER_TOKEN")
-    USER_SECRET = config.get("Linkedin", "USER_SECRET")
-    RETURN_URL = config.get("Linkedin", "RETURN_URL"),
-
+    # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
     print("Linkedin...\n")
     try:
-        authentication = linkedin.LinkedInDeveloperAuthentication(
-                    CONSUMER_KEY,
-                    CONSUMER_SECRET,
-                    USER_TOKEN,
-                    USER_SECRET,
-                    RETURN_URL,
-                    linkedin.PERMISSIONS.enums.values())
-
-        application = linkedin.LinkedInApplication(authentication)
-
+        application = connectLinkedin()
         comment = 'Publicado! ' + title 
         application.submit_share(comment, title, summary, link, image)
     except:
