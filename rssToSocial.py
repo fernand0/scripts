@@ -442,7 +442,7 @@ def main():
 
     for section in config.sections():
         rssFeed = config.get(section, "rssFeed")
-        print(rssFeed)
+        print("Blog: ", rssFeed)
         blog = moduleBlog.moduleBlog()
         blog.setRssFeed(rssFeed)
 
@@ -461,7 +461,7 @@ def main():
         
         lastLink = checkLastLink(blog.getRssFeed())
         i = blog.getLinkPosition(lastLink)
-        print(i)
+        print("Position: ", i)
         print("Publishing pending posts\n")
 
         if ("bufferapp" in config.options(section)):
