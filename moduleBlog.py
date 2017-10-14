@@ -1,6 +1,7 @@
 
 import configparser
 import os
+import time
 import feedparser
 from bs4 import BeautifulSoup
 from bs4 import Tag
@@ -207,9 +208,9 @@ if __name__ == "__main__":
             print(blog.getSocialNetworks()['twitterac'])
         print(blog.getPosts().entries[0]['link'])
         print(blog.getLinkPosition(blog.getPosts().entries[0]['link']))
-        print(blog.datePost(0))
+        print(time.asctime(blog.datePost(0)))
         print(blog.getLinkPosition(blog.getPosts().entries[5]['link']))
-        print(blog.datePost(5))
+        print(time.asctime(blog.datePost(5)))
         blog.obtainPostData(0)
 
     for blog in blogs:
