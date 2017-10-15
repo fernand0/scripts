@@ -191,7 +191,6 @@ def publishFacebook(title, link, summaryLinks, image, fbPage):
         h = HTMLParser()
         title = h.unescape(title)
         (access, page) = connectFacebook(fbPage)
-        print(page)
         facebook.GraphAPI(access).put_object(page,
                           "feed", message=title + " \n" + summaryLinks,
                           link=link, picture=image,
