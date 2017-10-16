@@ -26,5 +26,5 @@ sudo apt autoclean $YES && echo ""
 sudo /usr/lib/update-notifier/update-motd-updates-available --force
 sudo /usr/lib/update-notifier/update-motd-reboot-required --force
 sudo apt moo
-sudo apt checkrestart
+sudo checkrestart
 
