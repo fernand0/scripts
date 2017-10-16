@@ -183,11 +183,12 @@ def connectFacebook(fbPage):
             if (pages['data'][i]['name'] == fbPage):
                 print("\tWriting in... ", pages['data'][i]['name'], "\n")
                 graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
+                return(pages['data'][i]['access_token'], pages['data'][i]['id'])
     except:
         print("Facebook authentication failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
-    return(pages['data'][i]['access_token'], pages['data'][i]['id'])
+    return(0,0)
 
 def connectLinkedin():
     config = configparser.ConfigParser()
