@@ -113,20 +113,22 @@ class moduleBlog():
     def obtainPostData(self, i):
         posts = self.getPosts().entries
         theSummary = posts[i]['summary']
+        content = posts[i]['description']
+        theDescription = posts[i]['description']
         theTitle = posts[i]['title']
-        tumblrLink = posts[i]['link']
+        theLink = posts[i]['link']
         theSummaryLinks = ""
 
-        soup = BeautifulSoup(posts[i]['summary'], 'lxml')
+        soup = BeautifulSoup(theDescription, 'lxml')
 
         link = soup.a
         if link is None:
-           theLink = tumblrLink
+           firstLink = theLink 
         else:
-           theLink = link['href']
-           pos = theLink.find('.')
+           firstLink = link['href']
+           pos = firstLink.find('.')
            lenProt = len('http://')
-           if (theLink[lenProt:pos] == theTitle[:pos - lenProt]):
+           if (firstLink[lenProt:pos] == theTitle[:pos - lenProt]):
                # A way to identify retumblings. They have the name of the tumblr at
                # the beggining of the anchor text
                logging.debug("It's a retumblr")
@@ -134,14 +136,16 @@ class moduleBlog():
                logging.debug(theTitle[pos - lenProt + 1:])
                theTitle = theTitle[pos - lenProt + 1:]
 
-        if 'description' in posts[i]:
-            summaryHtml = posts[i]['description']
-        elif 'content' in posts[i]:
-            summaryHtml = posts[i]['content'][0]['value']
-        else:    
-            summaryHtml = posts[i]['summary']
+        #if 'description' in posts[i]:
+        #    content = posts[i]['description']
+        #else:
+        #    content = ""
+        #elif 'content' in posts[i]:
+        #    content = posts[i]['content'][0]['value']
+        #else:    
+        #    content = posts[i]['summary']
 
-        soup = BeautifulSoup(summaryHtml, 'lxml')
+        soup = BeautifulSoup(content, 'lxml')
 
         theSummary = soup.get_text()
         if self.getLinksToAvoid():
@@ -161,8 +165,8 @@ class moduleBlog():
         print("============================================================")
         print("Title:     ", theTitle)
         print("Link:      ", theLink)
-        print("tumb Link: ", tumblrLink)
-        print("Summary:   ", summaryHtml[:200])
+        print("First Link:", firstLink)
+        print("Summary:   ", content[:200])
         print("Sum links: ", theSummaryLinks)
         print("Comment:   ", comment)
         print("Image;     ", theImage)
@@ -171,7 +175,7 @@ class moduleBlog():
         print("\n")
 
 
-        return (theTitle, theLink, tumblrLink, theImage, theSummary, summaryHtml ,theSummaryLinks, comment)
+        return (theTitle, theLink, firstLink, theImage, theSummary, content ,theSummaryLinks, comment)
 
 
 if __name__ == "__main__":
@@ -223,5 +227,7 @@ if __name__ == "__main__":
               + ".last"), "r")
         linkLast = urlFile.read().rstrip()  # Last published
         print(blog.getRssFeed(),blog.getLinkPosition(linkLast))
+        print("description ->", blog.getPosts().entries[5]['description'])
+
 
 

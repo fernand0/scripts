@@ -253,25 +253,25 @@ def checkLimitPosts(api):
 
     return(lenMax, profileList)
 
-def publishBuffer(profileList, title, link, tumblrLink, isDebug, lenMax):
+def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
     if isDebug:
         profileList = []
-        tumblrLink = None
+        firstLink = None
     fail = 'no'
     for profile in profileList:
         line = profile['service']
         #print(profile['service'])
 
-        if (len(title) > 140 - 30):
-        # We are allowing 30 characters for the (short) link 
-            titlePostT = title[:140-30] 
+        if (len(title) > 140 - 24):
+        # We are allowing 24 characters for the (short) link 
+            titlePostT = title[:140-24] 
         else:
             titlePostT = ""
-        post = title + " " + link
+        post = title + " " + firstLink
 
         try:
             if titlePostT and (profile['service'] == 'twitter'):
-                profile.updates.new(urllib.parse.quote(titlePostT + " " + link).encode('utf-8'))
+                profile.updates.new(urllib.parse.quote(titlePostT + " " + firstLink).encode('utf-8'))
             else:
                 profile.updates.new(urllib.parse.quote(post).encode('utf-8'))
             line = line + ' ok'
@@ -286,7 +286,7 @@ def publishBuffer(profileList, title, link, tumblrLink, isDebug, lenMax):
 
             line = line + ' fail'
             failFile = open(os.path.expanduser("~/."
-                       + urllib.parse.urlparse(tumblrLink).netloc
+                       + urllib.parse.urlparse(firstLink).netloc
                        + ".fail"), "w")
             failFile.write(post)
             logging.info("  %s service" % line)
@@ -294,29 +294,28 @@ def publishBuffer(profileList, title, link, tumblrLink, isDebug, lenMax):
             break
 
         logging.info("  %s service" % line)
-        if (fail == 'no' and tumblrLink):
+        if (fail == 'no' and firstLink):
             urlFile = open(os.path.expanduser("~/."
-                           + urllib.parse.urlparse(tumblrLink).netloc
+                           + urllib.parse.urlparse(firstLink).netloc
                            + ".last"), "w")
     
-            urlFile.write(tumblrLink)
+            urlFile.write(firstLink)
             urlFile.close()
 
 def publishTwitter(title, link, comment, twitter):
-    statusTxt = comment + " " + title + " " + link
-    h = HTMLParser()
-    statusTxt = h.unescape(statusTxt)
 
     print("Twitter...\n")
     try:
         t = connectTwitter(twitter)
+        statusTxt = comment + " " + title + " " + link
+        h = HTMLParser()
+        statusTxt = h.unescape(statusTxt)
         t.statuses.update(status=statusTxt)
     except:
         print("Twitter posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
 def publishFacebook(title, link, summaryLinks, image, fbPage):
-
     #publishFacebook("prueba2", "https://www.facebook.com/reflexioneseirreflexiones/", "b", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-9/426052_381657691846622_987775451_n.jpg", "Reflexiones e Irreflexiones")
 
     print("Facebook...\n")
@@ -340,8 +339,8 @@ def publishLinkedin(title, link, summary, image):
     print("Linkedin...\n")
     try:
         application = connectLinkedin()
-        comment = 'Publicado! ' + title 
-        application.submit_share(comment, title, summary, link, image)
+        presentation = 'Publicado! ' + title 
+        application.submit_share(presentation, title, summary, link, image)
     except:
         print("Linkedin posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
@@ -383,7 +382,7 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
         htmlText='<a href="'+link+'">'+title + "</a>\n" + summaryHtml
         soup = BeautifulSoup(htmlText)
         cleanTags(soup)
-        print(soup)
+        #print(soup)
         textToPublish = str(soup)[:4096]
         index = textToPublish.rfind('<')
         index2 = textToPublish.find('>',index)
@@ -488,11 +487,11 @@ def main():
                     break
                 i = i - 1
 
-                (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i))
-                publishBuffer(profileList, title, link, tumblrLink, isDebug, lenMax)
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i))
+                publishBuffer(profileList, title, link, firstLink, isDebug, lenMax)
         else:
             if (i > 0):
-                (title, link, tumblrLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
                 if not isDebug:
                     if 'twitterac' in blog.getSocialNetworks():
                         twitter = blog.getSocialNetworks()['twitterac']
@@ -502,16 +501,16 @@ def main():
                         publishFacebook(title, link, summaryLinks, image, fbPage)
                     if 'telegramac' in blog.getSocialNetworks():
                         telegram = blog.getSocialNetworks()['telegramac']
-                        publishTelegram(telegram, title,link,summary, summaryHtml, summaryLinks, image)
+                        publishTelegram(telegram, title, link, summary, summaryHtml, summaryLinks, image)
 
                     publishLinkedin(title, link, summary, image)
 
-                    if (tumblrLink):
+                    if (firstLink):
                         urlFile = open(os.path.expanduser("~/."
-                                       + urllib.parse.urlparse(tumblrLink).netloc
+                                       + urllib.parse.urlparse(firstLink).netloc
                                        + ".last"), "w")
         
-                        urlFile.write(tumblrLink)
+                        urlFile.write(firstLink)
                         urlFile.close()
 
 
