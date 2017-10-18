@@ -286,7 +286,7 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
 
             line = line + ' fail'
             failFile = open(os.path.expanduser("~/."
-                       + urllib.parse.urlparse(firstLink).netloc
+                       + urllib.parse.urlparse(link).netloc
                        + ".fail"), "w")
             failFile.write(post)
             logging.info("  %s service" % line)
@@ -294,12 +294,12 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
             break
 
         logging.info("  %s service" % line)
-        if (fail == 'no' and firstLink):
+        if (fail == 'no' and link):
             urlFile = open(os.path.expanduser("~/."
-                           + urllib.parse.urlparse(firstLink).netloc
+                           + urllib.parse.urlparse(link).netloc
                            + ".last"), "w")
     
-            urlFile.write(firstLink)
+            urlFile.write(link)
             urlFile.close()
 
 def publishTwitter(title, link, comment, twitter):
@@ -505,7 +505,7 @@ def main():
 
                     publishLinkedin(title, link, summary, image)
 
-                    if (firstLink):
+                    if (link):
                         urlFile = open(os.path.expanduser("~/."
                                        + urllib.parse.urlparse(firstLink).netloc
                                        + ".last"), "w")
