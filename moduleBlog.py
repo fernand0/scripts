@@ -117,6 +117,11 @@ class moduleBlog():
         theDescription = posts[i]['description']
         theTitle = posts[i]['title']
         theLink = posts[i]['link']
+        if ('comment' in posts[i]):
+            comment = posts[i]['comment']
+        else:
+            comment = ""
+
         theSummaryLinks = ""
 
         soup = BeautifulSoup(theDescription, 'lxml')
@@ -129,8 +134,8 @@ class moduleBlog():
            pos = firstLink.find('.')
            lenProt = len('http://')
            if (firstLink[lenProt:pos] == theTitle[:pos - lenProt]):
-               # A way to identify retumblings. They have the name of the tumblr at
-               # the beggining of the anchor text
+               # A way to identify retumblings. They have the name of the
+               # tumblr at the beggining of the anchor text
                logging.debug("It's a retumblr")
                logging.debug(theTitle)
                logging.debug(theTitle[pos - lenProt + 1:])
@@ -145,7 +150,7 @@ class moduleBlog():
         #else:    
         #    content = posts[i]['summary']
 
-        soup = BeautifulSoup(content, 'lxml')
+        #soup = BeautifulSoup(content, 'lxml')
 
         theSummary = soup.get_text()
         if self.getLinksToAvoid():
@@ -153,10 +158,6 @@ class moduleBlog():
         else:
             theSummaryLinks = self.extractLinks(soup, "")
 
-        if ('comment' in posts[i]):
-            comment = posts[i]['comment']
-        else:
-            comment = ""
 
         theImage = self.extractImage(soup)
 
