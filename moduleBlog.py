@@ -161,9 +161,9 @@ class moduleBlog():
 
         theImage = self.extractImage(soup)
 
-        print("============================================================")
+        print("=========")
         print("Results: ")
-        print("============================================================")
+        print("=========")
         print("Title:     ", theTitle)
         print("Link:      ", theLink)
         print("First Link:", firstLink)
@@ -172,7 +172,7 @@ class moduleBlog():
         print("Comment:   ", comment)
         print("Image;     ", theImage)
         print("Post       ", theTitle + " " + theLink)
-        print("============================================================")
+        print("==============================================")
         print("\n")
 
 
