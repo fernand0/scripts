@@ -47,84 +47,6 @@ from buffpy.api import API
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 
-
-def checkPendingPosts(feed, lastLink):
-    posts = []
-    for entry in feed.entries:
-        lenCmp = min(len(entry['link']), len(lastLink))
-        if entry['link'][:lenCmp] == lastLink[:lenCmp]:
-            return posts
-        posts.append(entry) 
-
-    return posts
-
-def selectBlog(sel='a'):
-    config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssBlogs')])
-    print("Configured blogs:")
-
-    feed = []
-    # We are caching the feeds in order to use them later
-
-    i = 1
-    recentPosts = {}
-
-    for section in config.sections():
-        rssFeed = config.get(section, "rssFeed")
-        if 'time' in config[section].keys():
-	# We can put a limit (in hours). If this time has not pased since the
-	# last time we posted we will skip this post. 
-            filename = os.path.expanduser("~/." + urllib.parse.urlparse(rssFeed).netloc + ".last")
-            if ((time.time() - os.path.getmtime(filename))-24*60*60) < 0:
-                continue
-        feed.append(feedparser.parse(rssFeed))
-        lastPost = feed[-1].entries[0]
-        print('%s) %s %s (%s)' % (str(i), section,
-                                  config.get(section, "rssFeed"),
-                                  time.strftime('%Y-%m-%d %H:%M:%SZ',
-                                  lastPost['published_parsed'])))
-        lastLink = checkLastLink(config.get(section, "rssFeed"))
-        lenCmp = min(len(lastLink),len(lastPost['link']))
-
-        if lastLink[:lenCmp] != lastPost['link'][:lenCmp]:
-            # There are new posts
-            recentPosts[section] = {}
-            recentPosts[section]['posts'] = checkPendingPosts(feed[-1], lastLink)
-        if (i == 1) or (recentDate < lastPost['published_parsed']):
-            recentDate = lastPost['published_parsed']
-            recentFeed = feed[-1]
-            recentPost = lastPost
-            recentIndex = str(i)
-        i = i + 1
-
-    if (sel == 'm'):
-        if (int(i) > 1):
-            recentIndex = input('Select one: ')
-            i = int(recentIndex)
-            recentFeed = feed[i - 1]
-        else:
-            i = 1
-            recentIndex = '1'
-
-    if i > 1:
-        recentFeedBase = recentFeed.feed['title_detail']['base']
-        ini = recentFeedBase.find('/')+2
-        fin = recentFeedBase[ini:].find('.')
-        identifier = recentFeedBase[ini:ini+fin] + "_" + \
-            recentFeedBase[ini+fin+1:ini+fin+7]
-        #print("Selected ", recentFeedBase)
-        logging.info("Selected " + recentFeedBase)
-    else:
-        sys.exit()
-
-    selectedBlog = {}
-    for section in recentPosts.keys():
-        for option in config.options(section):
-            recentPosts[section][option] = config.get(section, option)
-        selectedBlog["identifier"] = identifier
-
-    return(recentFeed, selectedBlog, recentPosts)
-
 def test():
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
@@ -257,3 +179,85 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+# Not used
+#def checkPendingPosts(feed, lastLink):
+#    posts = []
+#    for entry in feed.entries:
+#        lenCmp = min(len(entry['link']), len(lastLink))
+#        if entry['link'][:lenCmp] == lastLink[:lenCmp]:
+#            return posts
+#        posts.append(entry) 
+#
+#    return posts
+
+# Not used
+#def selectBlog(sel='a'):
+#    config = configparser.ConfigParser()
+#    config.read([os.path.expanduser('~/.rssBlogs')])
+#    print("Configured blogs:")
+#
+#    feed = []
+#    # We are caching the feeds in order to use them later
+#
+#    i = 1
+#    recentPosts = {}
+#
+#    for section in config.sections():
+#        rssFeed = config.get(section, "rssFeed")
+#        if 'time' in config[section].keys():
+#	# We can put a limit (in hours). If this time has not pased since the
+#	# last time we posted we will skip this post. 
+#            filename = os.path.expanduser("~/." + urllib.parse.urlparse(rssFeed).netloc + ".last")
+#            if ((time.time() - os.path.getmtime(filename))-24*60*60) < 0:
+#                continue
+#        feed.append(feedparser.parse(rssFeed))
+#        lastPost = feed[-1].entries[0]
+#        print('%s) %s %s (%s)' % (str(i), section,
+#                                  config.get(section, "rssFeed"),
+#                                  time.strftime('%Y-%m-%d %H:%M:%SZ',
+#                                  lastPost['published_parsed'])))
+#        lastLink = checkLastLink(config.get(section, "rssFeed"))
+#        lenCmp = min(len(lastLink),len(lastPost['link']))
+#
+#        if lastLink[:lenCmp] != lastPost['link'][:lenCmp]:
+#            # There are new posts
+#            recentPosts[section] = {}
+#            recentPosts[section]['posts'] = checkPendingPosts(feed[-1], lastLink)
+#        if (i == 1) or (recentDate < lastPost['published_parsed']):
+#            recentDate = lastPost['published_parsed']
+#            recentFeed = feed[-1]
+#            recentPost = lastPost
+#            recentIndex = str(i)
+#        i = i + 1
+#
+#    if (sel == 'm'):
+#        if (int(i) > 1):
+#            recentIndex = input('Select one: ')
+#            i = int(recentIndex)
+#            recentFeed = feed[i - 1]
+#        else:
+#            i = 1
+#            recentIndex = '1'
+#
+#    if i > 1:
+#        recentFeedBase = recentFeed.feed['title_detail']['base']
+#        ini = recentFeedBase.find('/')+2
+#        fin = recentFeedBase[ini:].find('.')
+#        identifier = recentFeedBase[ini:ini+fin] + "_" + \
+#            recentFeedBase[ini+fin+1:ini+fin+7]
+#        #print("Selected ", recentFeedBase)
+#        logging.info("Selected " + recentFeedBase)
+#    else:
+#        sys.exit()
+#
+#    selectedBlog = {}
+#    for section in recentPosts.keys():
+#        for option in config.options(section):
+#            recentPosts[section][option] = config.get(section, option)
+#        selectedBlog["identifier"] = identifier
+#
+#    return(recentFeed, selectedBlog, recentPosts)
+
+
