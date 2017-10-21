@@ -431,12 +431,15 @@ def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, imag
 def test():
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
+
+    # We can publish the last entry of a blog in Medium as a draft
     blog = moduleBlog.moduleBlog()
     blog.setRssFeed('http://fernand0.blogalia.com/rss20.xml')
     blog.getBlogPosts()
     (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(0))
     publishMedium("", title, link, summary, summaryHtml, summaryLinks, image)
-    sys.exit()
+
+
     print("Configured blogs:")
 
     feed = []
@@ -553,5 +556,4 @@ def main():
 
 
 if __name__ == '__main__':
-    test()
     main()
