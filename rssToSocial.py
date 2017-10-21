@@ -23,6 +23,7 @@ import feedparser
 import facebook
 from linkedin import linkedin
 from twitter import *
+from medium import Client
 from html.parser import HTMLParser
 import telepot
 import re
@@ -138,12 +139,16 @@ def connectBuffer():
     redirectUrl = config.get("appKeys", "redirect_uri")
     accessToken = config.get("appKeys", "access_token")
 
-    # instantiate the api object
-    api = API(client_id=clientId,
-              client_secret=clientSecret,
-              access_token=accessToken)
+    try:
+        # instantiate the api object
+        api = API(client_id=clientId,
+                  client_secret=clientSecret,
+                  access_token=accessToken)
 
-    logging.debug(api.info)
+        logging.debug(api.info)
+    except:
+        print("Buffer authentication failed!\n")
+        print("Unexpected error:", sys.exc_info()[0])
 
     return(api)
 
@@ -212,7 +217,7 @@ def connectLinkedin():
         application = linkedin.LinkedInApplication(authentication)
 
     except:
-        print("Linkedin posting failed!\n")
+        print("Linkedin authentication failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
     return(application)
@@ -227,10 +232,24 @@ def connectTelegram(channel):
         bot = telepot.Bot(TOKEN)
         meMySelf = bot.getMe()
     except:
-        print("Telegram posting failed!\n")
+        print("Telegram authentication failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
     return(bot)
+
+def connectMedium():
+    config = configparser.ConfigParser()
+    config.read([os.path.expanduser('~/.rssMedium')])
+    client = Client(application_id=config.get("appKeys","ClientID"), application_secret=config.get("appKeys","ClientSecret"))
+    try:
+        client.access_token = config.get("appKeys","access_token")
+        # Get profile details of the user identified by the access token.
+        user = client.get_current_user()
+    except:
+        print("Medium authentication failed!\n")
+        print("Unexpected error:", sys.exc_info()[0])
+
+    return(client, user)
 
 
 def checkLimitPosts(api):
@@ -396,9 +415,28 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
         print("Telegram posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
+def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, image):
+    print("Medium...\n")
+    try:
+        (client, user) = connectMedium()
+
+        post = client.create_post(user_id=user["id"], title=title,
+                content=summaryHtml, canonical_url = link,
+                content_format="html", publish_status="draft")
+        print("My new post!", post["url"])
+    except:
+        print("Medium posting failed!\n")
+        print("Unexpected error:", sys.exc_info()[0])
+
 def test():
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
+    blog = moduleBlog.moduleBlog()
+    blog.setRssFeed('http://fernand0.blogalia.com/rss20.xml')
+    blog.getBlogPosts()
+    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(0))
+    publishMedium("", title, link, summary, summaryHtml, summaryLinks, image)
+    sys.exit()
     print("Configured blogs:")
 
     feed = []
@@ -515,4 +553,5 @@ def main():
 
 
 if __name__ == '__main__':
+    test()
     main()
