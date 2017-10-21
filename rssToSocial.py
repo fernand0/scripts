@@ -543,6 +543,9 @@ def main():
                     if 'telegramac' in blog.getSocialNetworks():
                         telegram = blog.getSocialNetworks()['telegramac']
                         publishTelegram(telegram, title, link, summary, summaryHtml, summaryLinks, image)
+                    if 'mediumac' in blog.getSocialNetworks():
+                        medium = blog.getSocialNetworks()['mediumac']
+                        publishMedium(medium, title, link, summary, summaryHtml, summaryLinks, image)
 
                     publishLinkedin(title, link, summary, image)
 
