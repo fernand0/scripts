@@ -507,10 +507,10 @@ def main():
 
                     if (link):
                         urlFile = open(os.path.expanduser("~/."
-                                       + urllib.parse.urlparse(firstLink).netloc
+                                       + urllib.parse.urlparse(link).netloc
                                        + ".last"), "w")
         
-                        urlFile.write(firstLink)
+                        urlFile.write(link)
                         urlFile.close()
 
 
