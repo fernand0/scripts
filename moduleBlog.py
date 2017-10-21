@@ -2,6 +2,7 @@
 import configparser
 import os
 import time
+import urllib
 import feedparser
 from bs4 import BeautifulSoup
 from bs4 import Tag
@@ -67,6 +68,15 @@ class moduleBlog():
 
     def datePost(self, pos):
         return(self.getPosts().entries[pos]['published_parsed'])
+
+    def checkLastLink(self):
+        rssFeed = self.getRssFeed()
+        urlFile = open(os.path.expanduser("~" + "/."  
+                  + urllib.parse.urlparse(rssFeed).netloc
+                  + ".last"), "r")
+        linkLast = urlFile.read().rstrip()  # Last published
+        return(linkLast)
+
 
     def extractImage(self, soup):
         pageImage = soup.findAll("img")

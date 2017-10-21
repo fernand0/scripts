@@ -48,13 +48,6 @@ from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 
 
-def checkLastLink(rssFeed):
-    urlFile = open(os.path.expanduser("~" + "/."  
-              + urllib.parse.urlparse(rssFeed).netloc
-              + ".last"), "r")
-    linkLast = urlFile.read().rstrip()  # Last published
-    return(linkLast)
-
 def checkPendingPosts(feed, lastLink):
     posts = []
     for entry in feed.entries:
@@ -217,7 +210,7 @@ def main():
         blog.getBlogPosts()
         blogs.append(blog)
         
-        lastLink = checkLastLink(blog.getRssFeed())
+        lastLink = blog.checkLastLink()
         i = blog.getLinkPosition(lastLink)
         print("Position: ", i)
         print("Publishing pending posts\n")
