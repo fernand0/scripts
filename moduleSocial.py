@@ -16,7 +16,7 @@ import telepot
 from buffpy.api import API
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
-
+from medium import Client
 
 def connectBuffer():
     config = configparser.ConfigParser()
@@ -27,12 +27,16 @@ def connectBuffer():
     redirectUrl = config.get("appKeys", "redirect_uri")
     accessToken = config.get("appKeys", "access_token")
 
-    # instantiate the api object
-    api = API(client_id=clientId,
-              client_secret=clientSecret,
-              access_token=accessToken)
+    try:
+        # instantiate the api object
+        api = API(client_id=clientId,
+                  client_secret=clientSecret,
+                  access_token=accessToken)
 
-    logging.debug(api.info)
+        logging.debug(api.info)
+    except:
+        print("Buffer authentication failed!\n")
+        print("Unexpected error:", sys.exc_info()[0])
 
     return(api)
 
@@ -72,11 +76,12 @@ def connectFacebook(fbPage):
             if (pages['data'][i]['name'] == fbPage):
                 print("\tWriting in... ", pages['data'][i]['name'], "\n")
                 graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
+                return(pages['data'][i]['access_token'], pages['data'][i]['id'])
     except:
         print("Facebook authentication failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
-    return(pages['data'][i]['access_token'], pages['data'][i]['id'])
+    return(0,0)
 
 def connectLinkedin():
     config = configparser.ConfigParser()
@@ -100,7 +105,7 @@ def connectLinkedin():
         application = linkedin.LinkedInApplication(authentication)
 
     except:
-        print("Linkedin posting failed!\n")
+        print("Linkedin authentication failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
     return(application)
@@ -115,30 +120,65 @@ def connectTelegram(channel):
         bot = telepot.Bot(TOKEN)
         meMySelf = bot.getMe()
     except:
-        print("Telegram posting failed!\n")
+        print("Telegram authentication failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
     return(bot)
 
-def publishBuffer(profileList, title, link, tumblrLink, isDebug, lenMax):
+def connectMedium():
+    config = configparser.ConfigParser()
+    config.read([os.path.expanduser('~/.rssMedium')])
+    client = Client(application_id=config.get("appKeys","ClientID"), application_secret=config.get("appKeys","ClientSecret"))
+    try:
+        client.access_token = config.get("appKeys","access_token")
+        # Get profile details of the user identified by the access token.
+        user = client.get_current_user()
+    except:
+        print("Medium authentication failed!\n")
+        print("Unexpected error:", sys.exc_info()[0])
+
+    return(client, user)
+
+
+def checkLimitPosts(api):
+    # We can put as many items as the service with most items allow
+    # The limit is ten.
+    # Get all pending updates of a social network profile
+
+    lenMax = 0
+    logging.info("Checking services...")
+
+    profileList = Profiles(api=api).all()
+    for profile in profileList:
+        lenProfile = len(profile.updates.pending)
+        if (lenProfile > lenMax):
+            lenMax = lenProfile
+        logging.info("%s ok" % profile['service'])
+
+    logging.info("There are %d in some buffer, we can put %d" %
+                 (lenMax, 10-lenMax))
+
+    return(lenMax, profileList)
+
+def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
     if isDebug:
         profileList = []
-        tumblrLink = None
+        firstLink = None
     fail = 'no'
     for profile in profileList:
         line = profile['service']
         #print(profile['service'])
 
-        if (len(title) > 140 - 30):
-        # We are allowing 30 characters for the (short) link 
-            titlePostT = title[:140-30] 
+        if (len(title) > 140 - 24):
+        # We are allowing 24 characters for the (short) link 
+            titlePostT = title[:140-24] 
         else:
             titlePostT = ""
-        post = title + " " + link
+        post = title + " " + firstLink
 
         try:
             if titlePostT and (profile['service'] == 'twitter'):
-                profile.updates.new(urllib.parse.quote(titlePostT + " " + link).encode('utf-8'))
+                profile.updates.new(urllib.parse.quote(titlePostT + " " + firstLink).encode('utf-8'))
             else:
                 profile.updates.new(urllib.parse.quote(post).encode('utf-8'))
             line = line + ' ok'
@@ -153,7 +193,7 @@ def publishBuffer(profileList, title, link, tumblrLink, isDebug, lenMax):
 
             line = line + ' fail'
             failFile = open(os.path.expanduser("~/."
-                       + urllib.parse.urlparse(tumblrLink).netloc
+                       + urllib.parse.urlparse(link).netloc
                        + ".fail"), "w")
             failFile.write(post)
             logging.info("  %s service" % line)
@@ -161,29 +201,28 @@ def publishBuffer(profileList, title, link, tumblrLink, isDebug, lenMax):
             break
 
         logging.info("  %s service" % line)
-        if (fail == 'no' and tumblrLink):
+        if (fail == 'no' and link):
             urlFile = open(os.path.expanduser("~/."
-                           + urllib.parse.urlparse(tumblrLink).netloc
+                           + urllib.parse.urlparse(link).netloc
                            + ".last"), "w")
     
-            urlFile.write(tumblrLink)
+            urlFile.write(link)
             urlFile.close()
 
 def publishTwitter(title, link, comment, twitter):
-    statusTxt = comment + " " + title + " " + link
-    h = HTMLParser()
-    statusTxt = h.unescape(statusTxt)
 
     print("Twitter...\n")
     try:
         t = connectTwitter(twitter)
+        statusTxt = comment + " " + title + " " + link
+        h = HTMLParser()
+        statusTxt = h.unescape(statusTxt)
         t.statuses.update(status=statusTxt)
     except:
         print("Twitter posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
 def publishFacebook(title, link, summaryLinks, image, fbPage):
-
     #publishFacebook("prueba2", "https://www.facebook.com/reflexioneseirreflexiones/", "b", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-9/426052_381657691846622_987775451_n.jpg", "Reflexiones e Irreflexiones")
 
     print("Facebook...\n")
@@ -191,6 +230,7 @@ def publishFacebook(title, link, summaryLinks, image, fbPage):
         h = HTMLParser()
         title = h.unescape(title)
         (access, page) = connectFacebook(fbPage)
+        print(page)
         facebook.GraphAPI(access).put_object(page,
                           "feed", message=title + " \n" + summaryLinks,
                           link=link, picture=image,
@@ -206,15 +246,15 @@ def publishLinkedin(title, link, summary, image):
     print("Linkedin...\n")
     try:
         application = connectLinkedin()
-        comment = 'Publicado! ' + title 
-        application.submit_share(comment, title, summary, link, image)
+        presentation = 'Publicado! ' + title 
+        application.submit_share(presentation, title, summary, link, image)
     except:
         print("Linkedin posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
-def cleanTags(soup):
+def cleantags(soup):
     tags = [tag.name for tag in soup.find_all()]
-    validTags = ['b', 'strong', 'i', 'em', 'a', 'code', 'pre']
+    validtags = ['b', 'strong', 'i', 'em', 'a', 'code', 'pre']
 
     quotes = soup.find_all('blockquote')
     for quote in quotes:
@@ -222,7 +262,7 @@ def cleanTags(soup):
         quote.insert_after( '»')
 
     for tag in tags:
-        if tag not in validTags:
+        if tag not in validtags:
             for theTag in soup.find_all(tag):
                 theTag.unwrap()
 
@@ -249,7 +289,7 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
         htmlText='<a href="'+link+'">'+title + "</a>\n" + summaryHtml
         soup = BeautifulSoup(htmlText)
         cleanTags(soup)
-        print(soup)
+        #print(soup)
         textToPublish = str(soup)[:4096]
         index = textToPublish.rfind('<')
         index2 = textToPublish.find('>',index)
@@ -263,9 +303,17 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
         print("Telegram posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
+def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, image):
+    print("Medium...\n")
+    try:
+        (client, user) = connectMedium()
 
-if __name__ == "__main__":
+        post = client.create_post(user_id=user["id"], title=title,
+                content=summaryHtml, canonical_url = link,
+                content_format="html", publish_status="draft")
+        print("My new post!", post["url"])
+    except:
+        print("Medium posting failed!\n")
+        print("Unexpected error:", sys.exc_info()[0])
 
-    import moduleSocial
 
-    # Test pending
