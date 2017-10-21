@@ -2,6 +2,7 @@
 
 import configparser
 import os
+import sys
 import logging
 import facebook
 from linkedin import linkedin
@@ -41,6 +42,9 @@ def connectBuffer():
     return(api)
 
 def connectTwitter(twitterAC):    
+    # In order to obtain the parameters for a new account, just write twitter
+    # and follow the instructions
+    # The result will be at ~/.twitter_oauth
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssTwitter')])
 
@@ -62,7 +66,7 @@ def connectTwitter(twitterAC):
 
     return(t)
 
-def connectFacebook(fbPage):
+def connectFacebook(fbPage = 'me'):
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssFacebook')])
 
@@ -72,11 +76,14 @@ def connectFacebook(fbPage):
         graph = facebook.GraphAPI(oauth_access_token, version='2.7')
         pages = graph.get_connections("me", "accounts")
 
-        for i in range(len(pages['data'])):
-            if (pages['data'][i]['name'] == fbPage):
-                print("\tWriting in... ", pages['data'][i]['name'], "\n")
-                graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
-                return(pages['data'][i]['access_token'], pages['data'][i]['id'])
+        if (fbPage != 'me'):
+            for i in range(len(pages['data'])):
+                if (pages['data'][i]['name'] == fbPage):
+                    print("\tWriting in... ", pages['data'][i]['name'], "\n")
+                    graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
+                    return(graph, pages['data'][i]['id'])
+        else:
+            return(graph, fbPage)
     except:
         print("Facebook authentication failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
@@ -229,9 +236,8 @@ def publishFacebook(title, link, summaryLinks, image, fbPage):
     try:
         h = HTMLParser()
         title = h.unescape(title)
-        (access, page) = connectFacebook(fbPage)
-        print(page)
-        facebook.GraphAPI(access).put_object(page,
+        (graph, page) = connectFacebook(fbPage)
+        graph.put_object(page,
                           "feed", message=title + " \n" + summaryLinks,
                           link=link, picture=image,
                           name=title, caption='',
@@ -316,4 +322,11 @@ def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, imag
         print("Medium posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
+
+if __name__ == "__main__":
+
+    import moduleSocial
+    
+    publishTwitter("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "fernand0Test")
+    publishFacebook("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "me")
 

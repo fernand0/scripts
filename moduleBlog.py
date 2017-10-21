@@ -239,6 +239,3 @@ if __name__ == "__main__":
         linkLast = urlFile.read().rstrip()  # Last published
         print(blog.getRssFeed(),blog.getLinkPosition(linkLast))
         print("description ->", blog.getPosts().entries[5]['description'])
-
-
-
