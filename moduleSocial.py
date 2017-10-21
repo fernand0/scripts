@@ -5,6 +5,8 @@ import os
 import sys
 import logging
 import facebook
+import urllib
+import time
 from linkedin import linkedin
 from twitter import *
 from html.parser import HTMLParser
@@ -174,7 +176,7 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
     fail = 'no'
     for profile in profileList:
         line = profile['service']
-        #print(profile['service'])
+        print(profile['service'])
 
         if (len(title) > 140 - 24):
         # We are allowing 24 characters for the (short) link 
@@ -330,6 +332,6 @@ if __name__ == "__main__":
 
     import moduleSocial
    
-    #publishTwitter("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "fernand0Test")
-    #publishFacebook("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "me")
-    publishLinkedin("Prueba de hola", "", "", "")
+    publishTwitter("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "fernand0Test")
+    publishFacebook("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "me")
+    publishLinkedin("Hola caracola", "", "", "")
