@@ -253,7 +253,10 @@ def publishLinkedin(title, link, summary, image):
     try:
         application = connectLinkedin()
         presentation = 'Publicado! ' + title 
-        application.submit_share(presentation, title, summary, link, image)
+        if link:
+            application.submit_share(presentation, summary, link, image)
+        else:
+            application.submit_share(comment = title)
     except:
         print("Linkedin posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
@@ -326,7 +329,7 @@ def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, imag
 if __name__ == "__main__":
 
     import moduleSocial
-    
-    publishTwitter("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "fernand0Test")
-    publishFacebook("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "me")
-
+   
+    #publishTwitter("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "fernand0Test")
+    #publishFacebook("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "me")
+    publishLinkedin("Prueba de hola", "", "", "")
