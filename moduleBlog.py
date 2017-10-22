@@ -183,7 +183,6 @@ class moduleBlog():
         print("Image;     ", theImage)
         print("Post       ", theTitle + " " + theLink)
         print("==============================================")
-        print("\n")
 
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content ,theSummaryLinks, comment)

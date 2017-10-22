@@ -217,6 +217,7 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
     
             urlFile.write(link)
             urlFile.close()
+        print("")
 
 def publishTwitter(title, link, comment, twitter):
 
