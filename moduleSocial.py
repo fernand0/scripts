@@ -4,6 +4,11 @@ import configparser
 import os
 import sys
 import logging
+from bs4 import BeautifulSoup
+from bs4 import NavigableString
+from bs4 import Tag
+from bs4 import Doctype
+from html.parser import HTMLParser
 import facebook
 import urllib
 import time
@@ -83,8 +88,10 @@ def connectFacebook(fbPage = 'me'):
                 if (pages['data'][i]['name'] == fbPage):
                     print("\tWriting in... ", pages['data'][i]['name'], "\n")
                     graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
-                    return(graph, pages['data'][i]['id'])
+                    # Publishing as the page
+                    return(graph2, pages['data'][i]['id'])
         else:
+            # Publishing as me
             return(graph, fbPage)
     except:
         print("Facebook authentication failed!\n")
@@ -264,7 +271,7 @@ def publishLinkedin(title, link, summary, image):
         print("Linkedin posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
-def cleantags(soup):
+def cleanTags(soup):
     tags = [tag.name for tag in soup.find_all()]
     validtags = ['b', 'strong', 'i', 'em', 'a', 'code', 'pre']
 
@@ -293,7 +300,7 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
 
     print("Telegram...%s\n"%channel)
 
-    try:
+    if True:
         bot = connectTelegram(channel)
 
         h = HTMLParser()
@@ -311,7 +318,7 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
         # Something like: <a href="">< we would 
             textToPublish = str(soup)[:index - 1]+' ...'
         bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
-    except:
+    else:
         print("Telegram posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
