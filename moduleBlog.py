@@ -2,6 +2,7 @@
 import configparser
 import os
 import time
+import urllib
 import feedparser
 from bs4 import BeautifulSoup
 from bs4 import Tag
@@ -68,6 +69,15 @@ class moduleBlog():
     def datePost(self, pos):
         return(self.getPosts().entries[pos]['published_parsed'])
 
+    def checkLastLink(self):
+        rssFeed = self.getRssFeed()
+        urlFile = open(os.path.expanduser("~" + "/."  
+                  + urllib.parse.urlparse(rssFeed).netloc
+                  + ".last"), "r")
+        linkLast = urlFile.read().rstrip()  # Last published
+        return(linkLast)
+
+
     def extractImage(self, soup):
         pageImage = soup.findAll("img")
         #  Only the first one
@@ -117,6 +127,11 @@ class moduleBlog():
         theDescription = posts[i]['description']
         theTitle = posts[i]['title']
         theLink = posts[i]['link']
+        if ('comment' in posts[i]):
+            comment = posts[i]['comment']
+        else:
+            comment = ""
+
         theSummaryLinks = ""
 
         soup = BeautifulSoup(theDescription, 'lxml')
@@ -129,8 +144,8 @@ class moduleBlog():
            pos = firstLink.find('.')
            lenProt = len('http://')
            if (firstLink[lenProt:pos] == theTitle[:pos - lenProt]):
-               # A way to identify retumblings. They have the name of the tumblr at
-               # the beggining of the anchor text
+               # A way to identify retumblings. They have the name of the
+               # tumblr at the beggining of the anchor text
                logging.debug("It's a retumblr")
                logging.debug(theTitle)
                logging.debug(theTitle[pos - lenProt + 1:])
@@ -145,7 +160,7 @@ class moduleBlog():
         #else:    
         #    content = posts[i]['summary']
 
-        soup = BeautifulSoup(content, 'lxml')
+        #soup = BeautifulSoup(content, 'lxml')
 
         theSummary = soup.get_text()
         if self.getLinksToAvoid():
@@ -153,16 +168,12 @@ class moduleBlog():
         else:
             theSummaryLinks = self.extractLinks(soup, "")
 
-        if ('comment' in posts[i]):
-            comment = posts[i]['comment']
-        else:
-            comment = ""
 
         theImage = self.extractImage(soup)
 
-        print("============================================================")
+        print("=========")
         print("Results: ")
-        print("============================================================")
+        print("=========")
         print("Title:     ", theTitle)
         print("Link:      ", theLink)
         print("First Link:", firstLink)
@@ -171,8 +182,7 @@ class moduleBlog():
         print("Comment:   ", comment)
         print("Image;     ", theImage)
         print("Post       ", theTitle + " " + theLink)
-        print("============================================================")
-        print("\n")
+        print("==============================================")
 
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content ,theSummaryLinks, comment)
@@ -228,6 +238,3 @@ if __name__ == "__main__":
         linkLast = urlFile.read().rstrip()  # Last published
         print(blog.getRssFeed(),blog.getLinkPosition(linkLast))
         print("description ->", blog.getPosts().entries[5]['description'])
-
-
-
