@@ -234,10 +234,11 @@ def publishTwitter(title, link, comment, twitter):
         statusTxt = comment + " " + title + " " + link
         h = HTMLParser()
         statusTxt = h.unescape(statusTxt)
-        t.statuses.update(status=statusTxt)
+        return(t.statuses.update(status=statusTxt))
     except:
         print("Twitter posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
+        return("Fail!")
 
 def publishFacebook(title, link, summaryLinks, image, fbPage):
     #publishFacebook("prueba2", "https://www.facebook.com/reflexioneseirreflexiones/", "b", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-9/426052_381657691846622_987775451_n.jpg", "Reflexiones e Irreflexiones")
@@ -340,6 +341,7 @@ if __name__ == "__main__":
 
     import moduleSocial
    
-    publishTwitter("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "fernand0Test")
-    publishFacebook("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "me")
-    publishLinkedin("Hola caracola", "", "", "")
+    res = publishTwitter("Hola ahora devuelve la URL, después de un pequeño fallo", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "fernand0Test")
+    print("Published! Text: ", res['text'], " Url: https://twitter.com/fernand0Test/status/%s"%res['id_str'])
+    #publishFacebook("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "me")
+    #publishLinkedin("Hola caracola", "", "", "")
