@@ -328,6 +328,8 @@ def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, imag
     try:
         (client, user) = connectMedium()
 
+        h = HTMLParser()
+        title = h.unescape(title)
         post = client.create_post(user_id=user["id"], title=title,
                 content=summaryHtml, canonical_url = link,
                 content_format="html", publish_status="public") #draft")
