@@ -248,14 +248,15 @@ def publishFacebook(title, link, summaryLinks, image, fbPage):
         h = HTMLParser()
         title = h.unescape(title)
         (graph, page) = connectFacebook(fbPage)
-        graph.put_object(page,
+        return (page, graph.put_object(page,
                           "feed", message=title + " \n" + summaryLinks,
                           link=link, picture=image,
                           name=title, caption='',
-                          description=summaryLinks.encode('utf-8'))
+                          description=summaryLinks.encode('utf-8')))
     except:
         print("Facebook posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
+        return("Fail!")
 
 
 def publishLinkedin(title, link, summary, image):
@@ -343,7 +344,8 @@ if __name__ == "__main__":
 
     import moduleSocial
    
-    res = publishTwitter("Hola ahora devuelve la URL, después de un pequeño fallo", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "fernand0Test")
-    print("Published! Text: ", res['text'], " Url: https://twitter.com/fernand0Test/status/%s"%res['id_str'])
-    #publishFacebook("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "me")
+    #res = publishTwitter("Hola ahora devuelve la URL, después de un pequeño fallo", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "fernand0Test")
+    #print("Published! Text: ", res['text'], " Url: https://twitter.com/fernand0Test/status/%s"%res['id_str'])
+    res = publishFacebook("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "me")
+    print("Published! Text: %s Url: https://facebook.com/fernando.tricas/posts/%s"% (res[0], res[1]['id'][res[1]['id'].find('_')+1:]))
     #publishLinkedin("Hola caracola", "", "", "")
