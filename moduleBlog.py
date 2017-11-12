@@ -125,7 +125,7 @@ class moduleBlog():
         theSummary = posts[i]['summary']
         content = posts[i]['description']
         theDescription = posts[i]['description']
-        theTitle = posts[i]['title']
+        theTitle = posts[i]['title'].strip('\n')
         theLink = posts[i]['link']
         if ('comment' in posts[i]):
             comment = posts[i]['comment']
