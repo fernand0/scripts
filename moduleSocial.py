@@ -286,6 +286,11 @@ def cleanTags(soup):
         if tag not in validtags:
             for theTag in soup.find_all(tag):
                 theTag.unwrap()
+        elif (tag == 'strong') or (tag == 'b'):
+            # We want to avoid problems with links nested inside these tags.
+            for theTag in soup.find_all(tag):
+                if theTag.find('a'):
+                    theTag.unwrap()
 
     code = [td.find('code') for td in soup.findAll('pre')]
     # github.io inserts code tags inside pre tags
@@ -314,12 +319,17 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
         textToPublish = str(soup)[:4096]
         index = textToPublish.rfind('<')
         index2 = textToPublish.find('>',index)
+        textToPublish2 = ""
         if (index2 < 0):
         # unclosed tag
         # Maybe we can still have an unclosed tag
         # Something like: <a href="">< we would 
             textToPublish = str(soup)[:index - 1]+' ...'
+            textToPublish2 = '... '+ str(soup)[index:]
+
         bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
+        if textToPublish2:
+            bot.sendMessage('@'+channel, textToPublish2, parse_mode='HTML') 
     else:
         print("Telegram posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
