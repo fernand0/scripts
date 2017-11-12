@@ -16,7 +16,9 @@
 #
 
 import moduleBlog
+# https://github.com/fernand0/scripts/blob/master/moduleBlog.py
 import moduleSocial
+# https://github.com/fernand0/scripts/blob/master/moduleSocial.py
 
 import configparser
 import os
