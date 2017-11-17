@@ -146,7 +146,10 @@ class moduleBlog():
         else:
            firstLink = link['href']
            pos = firstLink.find('.')
-           lenProt = len('http://')
+           if firstLink.find('https')>=0:
+               lenProt = len('https://')
+           else:
+               lenProt = len('http://')
            if (firstLink[lenProt:pos] == theTitle[:pos - lenProt]):
                # A way to identify retumblings. They have the name of the
                # tumblr at the beggining of the anchor text
@@ -155,16 +158,6 @@ class moduleBlog():
                logging.debug(theTitle[pos - lenProt + 1:])
                theTitle = theTitle[pos - lenProt + 1:]
 
-        #if 'description' in posts[i]:
-        #    content = posts[i]['description']
-        #else:
-        #    content = ""
-        #elif 'content' in posts[i]:
-        #    content = posts[i]['content'][0]['value']
-        #else:    
-        #    content = posts[i]['summary']
-
-        #soup = BeautifulSoup(content, 'lxml')
 
         theSummary = soup.get_text()
         if self.getLinksToAvoid():
