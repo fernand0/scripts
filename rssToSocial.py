@@ -56,7 +56,7 @@ def test():
     # We can publish the last entry of a blog in Medium as a draft
     blog = moduleBlog.moduleBlog()
     blog.setRssFeed('http://fernand0.blogalia.com/rss20.xml')
-    blog.getBlogPosts()
+    blog.getBlogPostsRss()
     (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(0))
     publishMedium("", title, link, summary, summaryHtml, summaryLinks, image)
 
@@ -117,9 +117,11 @@ def main():
 
     for section in config.sections():
         rssFeed = config.get(section, "rssFeed")
-        print("Blog: ", rssFeed)
+        url = config.get(section, "url")
+        print("Blog: ", url+rssFeed)
         blog = moduleBlog.moduleBlog()
         blog.setRssFeed(rssFeed)
+        blog.setUrl(url)
 
         optFields = ["linksToAvoid", "time", "bufferapp"]
         if ("linksToAvoid" in config.options(section)):
@@ -131,7 +133,7 @@ def main():
             if ('ac' in option) or ('fb' in option):
                 blog.addSocialNetwork((option, config.get(section, option)))
 
-        blog.getBlogPosts()
+        blog.getBlogPostsRss()
         blogs.append(blog)
         
         lastLink = blog.checkLastLink()

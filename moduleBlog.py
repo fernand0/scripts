@@ -198,9 +198,6 @@ class moduleBlog():
            if (firstLink[lenProt:pos] == theTitle[:pos - lenProt]):
                # A way to identify retumblings. They have the name of the
                # tumblr at the beggining of the anchor text
-               logging.debug("It's a retumblr")
-               logging.debug(theTitle)
-               logging.debug(theTitle[pos - lenProt + 1:])
                theTitle = theTitle[pos - lenProt + 1:]
 
 
