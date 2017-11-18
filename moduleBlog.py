@@ -12,7 +12,7 @@ class moduleBlog():
     def __init__(self):
          self.url = ""
          self.rssFeed = ''
-         self.Id
+         self.Id = 0
          self.socialNetworks = {}
          self.linksToAvoid = ""
          self.postsRss = None
