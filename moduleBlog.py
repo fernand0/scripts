@@ -19,7 +19,7 @@ class moduleBlog():
          self.postsXmlrpc = None
          self.time = []
          self.buffer = None
-         self.xmlrpc = ''
+         self.xmlrpc = None
  
     def getUrl(self):
         return(self.url)
@@ -60,8 +60,18 @@ class moduleBlog():
     def getXmlRpc(self):
         return(self.rssFeed)
 
-    def setXmlRpc(self, xmlrpc):
-        self.xmlrpc = xmlrpc
+    def setXmlRpc(self, xmlrpcSrv):
+        conf = configparser.ConfigParser() 
+        conf.read('/home/ftricass/.blogaliarc') 
+        for section in conf.sections(): 
+            usr = conf.get(section,'login') 
+            pwd = conf.get(section,'password') 
+            srv = conf.get(section,'server')
+            domain = self.url[self.url.find('.'):]
+            print('url',domain, srv)
+            if srv.find(domain)>0:
+                self.xmlrpc = xmlrpc.client.ServerProxy(srv)
+                self.setId(self.blogId(srv, usr, pwd))
 
     def getPostsRss(self):
         return(self.postsRss)
@@ -70,19 +80,11 @@ class moduleBlog():
         self.postsRss = posts
 
     def getPostsXmlrpc(self):
-        conf = configparser.ConfigParser() 
-        conf.read('/home/ftricass/.blogaliarc') 
-        for section in conf.sections(): 
-            usr = conf.get(section,'login') 
-            pwd = conf.get(section,'password') 
-            srv = conf.get(section,'server')
-            if (self.url in srv):
-                self.setId(blogId(srv, usr, pws))
-
         return(self.postsRss)
  
     def setPostsXmlrpc(self, posts):
-        self.postsRss = posts
+        if self.xmlrpc and self.Id:
+            self.postsRss = posts
 
     def getId(self):
         return(self.Id)
@@ -94,12 +96,19 @@ class moduleBlog():
         self.setPostsRss(feedparser.parse(self.url+self.rssFeed))
 
     def blogId(self, srv, usr, pwd): 
-        server = xmlrpc.client.ServerProxy(srv)
+        server = self.xmlrpc
         listMet = server.system.listMethods() 
         if 'wp' in listMet[-1]:
             userBlogs = server.wp.getUsersBlogs(usr,pwd)
         else: 
-            server.blogger.getUsersBlogs('',usr,pwd)
+            userBlogs = server.blogger.getUsersBlogs('',usr,pwd)
+        for blog in userBlogs:
+            identifier = self.url[self.url.find('/')+2:self.url.find('.')]
+            print("identifier", identifier)
+            if blog['url'].find(identifier) > 0:
+                return(blog['blogid'])
+
+        return(-1)
 
     def getLinkPosition(self, link):
         i = 0
@@ -282,3 +291,4 @@ if __name__ == "__main__":
         linkLast = urlFile.read().rstrip()  # Last published
         print(blog.getUrl()+blog.getRssFeed(),blog.getLinkPosition(linkLast))
         print("description ->", blog.getPostsRss().entries[5]['description'])
+        print("id ->", blog.getId())
