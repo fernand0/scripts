@@ -60,7 +60,7 @@ class moduleBlog():
     def getXmlRpc(self):
         return(self.rssFeed)
 
-    def setXmlRpc(self, xmlrpcSrv):
+    def setXmlRpc(self):
         conf = configparser.ConfigParser() 
         conf.read('/home/ftricass/.blogaliarc') 
         for section in conf.sections(): 
@@ -68,7 +68,6 @@ class moduleBlog():
             pwd = conf.get(section,'password') 
             srv = conf.get(section,'server')
             domain = self.url[self.url.find('.'):]
-            print('url',domain, srv)
             if srv.find(domain)>0:
                 self.xmlrpc = (xmlrpc.client.ServerProxy(srv), usr, pwd)
                 self.setId(self.blogId(srv, usr, pwd))
@@ -105,7 +104,6 @@ class moduleBlog():
             userBlogs = server.blogger.getUsersBlogs('',usr,pwd)
         for blog in userBlogs:
             identifier = self.url[self.url.find('/')+2:self.url.find('.')]
-            print("identifier", identifier)
             if blog['url'].find(identifier) > 0:
                 return(blog['blogid'])
 
@@ -132,7 +130,7 @@ class moduleBlog():
     def editPost(self, idPost, title, content): 
         server = self.xmlrpc
         data = { 'title': title, 'description': content}
-        server[0].metaWeblog.newPost(idPost, server[1], server[2], data, True)
+        server[0].metaWeblog.editPost(idPost, server[1], server[2], data, True)
     
     def selectPost(self):
         server = self.xmlrpc
@@ -146,6 +144,10 @@ class moduleBlog():
         thePost = int(input("Select one: "))
         print("Post ... %s - %s" % (posts[thePost - 1]['title'], posts[thePost - 1]['postid']))
         return posts[thePost - 1]['title'], posts[thePost - 1]['postid']
+
+    def deletePost(self, idPost): 
+        server = self.xmlrpc
+        server[0].blogger.deletePost('',idPost, server[1], server[2], True)
 
     def checkLastLink(self):
         rssFeed = self.getUrl()+self.getRssFeed()
@@ -285,7 +287,7 @@ if __name__ == "__main__":
         if ("bufferapp" in config.options(section)):
             blog.setBufferapp(config.get(section, "bufferapp"))
         if ("xmlrpc" in config.options(section)):
-            blog.setXmlRpc(config.get(section, "xmlrpc"))
+            blog.setXmlRpc()
 
         for option in config.options(section):
             if ('ac' in option) or ('fb' in option):
