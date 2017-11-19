@@ -70,21 +70,22 @@ class moduleBlog():
             domain = self.url[self.url.find('.'):]
             print('url',domain, srv)
             if srv.find(domain)>0:
-                self.xmlrpc = xmlrpc.client.ServerProxy(srv)
+                self.xmlrpc = (xmlrpc.client.ServerProxy(srv), usr, pwd)
                 self.setId(self.blogId(srv, usr, pwd))
 
     def getPostsRss(self):
         return(self.postsRss)
  
     def setPostsRss(self, posts):
-        self.postsRss = posts
+        self.postsRss = feedparser.parse(self.url+self.rssFeed)
 
     def getPostsXmlrpc(self):
         return(self.postsRss)
  
-    def setPostsXmlrpc(self, posts):
+    def setPostsXmlrpc(self):
         if self.xmlrpc and self.Id:
-            self.postsRss = posts
+            self.postsRss = self.xmlrpc[0].blogger.getRecentPosts('', self.Id, 
+                    self.xmlrpc[1], self.xmlrpc[2], 10)
 
     def getId(self):
         return(self.Id)
@@ -92,11 +93,11 @@ class moduleBlog():
     def setId(self, Id):
         self.Id = Id
 
-    def getBlogPostsRss(self):
-        self.setPostsRss(feedparser.parse(self.url+self.rssFeed))
-
     def blogId(self, srv, usr, pwd): 
-        server = self.xmlrpc
+        server = self.xmlrpc[0]
+        usr = self.xmlrpc[1]
+        pwd = self.xmlrpc[2]
+
         listMet = server.system.listMethods() 
         if 'wp' in listMet[-1]:
             userBlogs = server.wp.getUsersBlogs(usr,pwd)
@@ -130,7 +131,6 @@ class moduleBlog():
                   + ".last"), "r")
         linkLast = urlFile.read().rstrip()  # Last published
         return(linkLast)
-
 
     def extractImage(self, soup):
         pageImage = soup.findAll("img")
@@ -267,7 +267,6 @@ if __name__ == "__main__":
         for option in config.options(section):
             if ('ac' in option) or ('fb' in option):
                 blog.addSocialNetwork((option, config.get(section, option)))
-        blog.getBlogPostsRss()
         blogs.append(blog)
 
     for blog in blogs:
@@ -291,4 +290,8 @@ if __name__ == "__main__":
         linkLast = urlFile.read().rstrip()  # Last published
         print(blog.getUrl()+blog.getRssFeed(),blog.getLinkPosition(linkLast))
         print("description ->", blog.getPostsRss().entries[5]['description'])
-        print("id ->", blog.getId())
+        blog.setPostsXmlrpc()
+        posts = blog.getPostsXmlrpc()
+        for post in posts:
+            if "content" in post:
+                print(post['content'][:100])
