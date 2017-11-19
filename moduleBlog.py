@@ -76,7 +76,7 @@ class moduleBlog():
     def getPostsRss(self):
         return(self.postsRss)
  
-    def setPostsRss(self, posts):
+    def setPostsRss(self):
         self.postsRss = feedparser.parse(self.url+self.rssFeed)
 
     def getPostsXmlrpc(self):
@@ -123,6 +123,29 @@ class moduleBlog():
 
     def datePost(self, pos):
         return(self.getPostsRss().entries[pos]['published_parsed'])
+
+    def newPost(self, title, content): 
+        server = self.xmlrpc
+        data = { 'title': title, 'description': content}
+        server[0].metaWeblog.newPost(self.Id, server[1], server[2], data, True)
+
+    def editPost(self, idPost, title, content): 
+        server = self.xmlrpc
+        data = { 'title': title, 'description': content}
+        server[0].metaWeblog.newPost(idPost, server[1], server[2], data, True)
+    
+    def selectPost(self):
+        server = self.xmlrpc
+        print(server)
+        posts = server[0].metaWeblog.getRecentPosts(self.Id, server[1], server[2], 10)
+        i = 1
+        print("Posts:")
+        for post in posts:
+            print('%d) %s - %s' %(i, post['title'], post['postid']))
+            i = i + 1
+        thePost = int(input("Select one: "))
+        print("Post ... %s - %s" % (posts[thePost - 1]['title'], posts[thePost - 1]['postid']))
+        return posts[thePost - 1]['title'], posts[thePost - 1]['postid']
 
     def checkLastLink(self):
         rssFeed = self.getUrl()+self.getRssFeed()
@@ -275,12 +298,16 @@ if __name__ == "__main__":
         print(blog.getSocialNetworks())
         if 'twitterac' in blog.getSocialNetworks():
             print(blog.getSocialNetworks()['twitterac'])
+        blog.setPostsRss()
         print(blog.getPostsRss().entries[0]['link'])
         print(blog.getLinkPosition(blog.getPostsRss().entries[0]['link']))
         print(time.asctime(blog.datePost(0)))
         print(blog.getLinkPosition(blog.getPostsRss().entries[5]['link']))
         print(time.asctime(blog.datePost(5)))
         blog.obtainPostData(0)
+        if blog.getUrl().find('ando')>0:
+            blog.newPost('Prueba %s' % time.asctime(), 'description %s' % 'prueba')
+            print(blog.selectPost())
 
     for blog in blogs:
         import urllib

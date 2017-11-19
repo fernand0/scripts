@@ -133,7 +133,8 @@ def main():
             if ('ac' in option) or ('fb' in option):
                 blog.addSocialNetwork((option, config.get(section, option)))
 
-        blog.getBlogPostsRss()
+        blog.setPostsRss()
+        blog.getPostsRss()
         blogs.append(blog)
         
         lastLink = blog.checkLastLink()
