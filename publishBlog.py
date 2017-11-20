@@ -21,7 +21,7 @@ def archive(blogId, blogName, blogUrl, text, postId):
     return fileName, blogUrl[:-1]+'.blogalia.com/historias/'+str(postId)
 
 def post(): 
-    f = open('historia', "r", encoding="latin-1")
+    f = open('historia', "r")
     title = f.readline().strip()
     text = title
     title = title.encode('ascii', 'xmlcharrefreplace') 
