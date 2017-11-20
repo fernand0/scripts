@@ -67,8 +67,8 @@ def main():
     elif (selOp == 'n'):
         print("Sending ... %s\n"% blog.getUrl())
         title, body, text = post() 
-        #postId = blog.newPost(title, body)
-        postId = '12345'
+        postId = blog.newPost(title, body)
+        #postId = '12345'
         fileName, theUrl = archive(blog.Id, blog.name, blog.url, text, postId)
     elif (selOp == 'd'):
         print("Deleting ... %s\n"% blog.getUrl())
