@@ -6,7 +6,6 @@ import configparser
 
 def archive(blogId, blogName, blogUrl, text, postId): 
     path = os.path.join(os.path.expanduser('~') , 'Documents/bitacoras/archivo')
-    path = "/tmp"
     fileName = '%s/%s/historia-%s'%(path,blogId,time.strftime("%Y%m%d%H%M%S",time.localtime(time.time())))
     fPost = open(fileName,'w')
     fPost.write(text)
@@ -18,6 +17,7 @@ def archive(blogId, blogName, blogUrl, text, postId):
     fPost.write(str(postId))
     fPost.write('\n')
     fPost.close() 
+    print('Historia guardada en %s' % nombreArchivo)
     return fileName, blogUrl[:-1]+'.blogalia.com/historias/'+str(postId)
 
 def post(): 
@@ -44,7 +44,7 @@ def main():
 
     blog = moduleBlog.moduleBlog()
 
-    section = config.sections()[5]
+    section = config.sections()[1]
     url = config.get(section, "url")
     rpc = config.get(section, "xmlrpc")
     print(url+rpc)
@@ -60,7 +60,7 @@ def main():
         fileName, theUrl = archive(blog.Id, blog.name, blog.url, text, postId)
     elif (selOp == 'n'):
         print("Sending ... %s\n"% blog.getUrl())
-        title, body, text = post()
+        title, body, text = post() 
         postId = blog.newPost(title, body)
         fileName, theUrl = archive(blog.Id, blog.name, blog.url, text, postId)
     elif (selOp == 'd'):

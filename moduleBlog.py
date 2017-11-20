@@ -72,7 +72,7 @@ class moduleBlog():
 
     def setXmlRpc(self):
         conf = configparser.ConfigParser() 
-        conf.read('/home/ftricass/.blogaliarc') 
+        conf.read(os.path.join(os.path.expanduser('~') , '.blogaliarc')) 
         for section in conf.sections(): 
             usr = conf.get(section,'login') 
             pwd = conf.get(section,'password') 
