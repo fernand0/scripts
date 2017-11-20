@@ -5,8 +5,13 @@ import moduleBlog
 import configparser
 
 def archive(blogId, blogName, blogUrl, text, postId): 
+    theTime = time.localtime(time.time())
     path = os.path.join(os.path.expanduser('~') , 'Documents/bitacoras/archivo')
-    fileName = '%s/%s/historia-%s'%(path,blogId,time.strftime("%Y%m%d%H%M%S",time.localtime(time.time())))
+    path = '%s/%s/%s'%(path,blogId,time.strftime("%Y/%m", theTime))
+    if not os.path.isdir(path):
+	    os.makedirs(path)
+    fileName = '%s/historia-%s'%(path,time.strftime("%Y%m%d%H%M%S",theTime))
+    #fileName = '%s/%s/historia-%s'%(path,blogId,time.strftime("%Y%m%d%H%M%S",time.localtime(time.time())))
     fPost = open(fileName,'w')
     fPost.write(text)
     fPost.write('\n Dónde:')
@@ -61,7 +66,8 @@ def main():
     elif (selOp == 'n'):
         print("Sending ... %s\n"% blog.getUrl())
         title, body, text = post() 
-        postId = blog.newPost(title, body)
+        #postId = blog.newPost(title, body)
+        postId = '12345'
         fileName, theUrl = archive(blog.Id, blog.name, blog.url, text, postId)
     elif (selOp == 'd'):
         print("Deleting ... %s\n"% blog.getUrl())
