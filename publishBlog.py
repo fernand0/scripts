@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 import os, time
-import moduleBlog
 import configparser
+import moduleBlog
+# https://github.com/fernand0/scripts/blob/master/moduleBlog.py
 
 def archive(blogId, blogName, blogUrl, text, postId): 
     theTime = time.localtime(time.time())
