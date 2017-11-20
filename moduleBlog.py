@@ -11,6 +11,7 @@ class moduleBlog():
 
     def __init__(self):
          self.url = ""
+         self.name = ""
          self.rssFeed = ''
          self.Id = 0
          self.socialNetworks = {}
@@ -26,6 +27,15 @@ class moduleBlog():
 
     def setUrl(self, url):
         self.url = url
+
+    def getName(self):
+        return(self.name)
+
+    def setName(self, name):
+        if not self.xmlrpc:
+            self.setXmlRpc()
+        else:
+            self.name = name
 
     def getRssFeed(self):
         return(self.rssFeed)
@@ -58,7 +68,7 @@ class moduleBlog():
         self.bufferapp = bufferapp
 
     def getXmlRpc(self):
-        return(self.rssFeed)
+        return(self.xmlrpc)
 
     def setXmlRpc(self):
         conf = configparser.ConfigParser() 
@@ -70,7 +80,9 @@ class moduleBlog():
             domain = self.url[self.url.find('.'):]
             if srv.find(domain)>0:
                 self.xmlrpc = (xmlrpc.client.ServerProxy(srv), usr, pwd)
-                self.setId(self.blogId(srv, usr, pwd))
+                blogId, blogName = self.blogId(srv, usr, pwd)
+                self.setId(blogId)
+                self.setName(blogName)
 
     def getPostsRss(self):
         return(self.postsRss)
@@ -105,7 +117,7 @@ class moduleBlog():
         for blog in userBlogs:
             identifier = self.url[self.url.find('/')+2:self.url.find('.')]
             if blog['url'].find(identifier) > 0:
-                return(blog['blogid'])
+                return(blog['blogid'], blog['blogName'])
 
         return(-1)
 
