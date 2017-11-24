@@ -1,5 +1,82 @@
 #!/usr/bin/env python
 
+# This module is used as a infrastructure for publishing in several social
+# networks using their APIs via different available python modules. 
+#
+# It uses several configuration files to store credentials such as:
+# 
+# .rssBlogs
+# It can contain as many blogs as desired, with different parameters for each
+# one (a blog can have, for example a twtter account, but not Telegram account
+# and  so on).  
+# The structure for one of these blogs is
+# [Blog]
+#     url:
+#     rssFeed:
+#     xmlrpc:
+#     twitterAC:
+#     pageFB:
+#     telegramAC:
+#     mediumAC:
+#     linksToAvoid:
+#      
+# .rssTwitter 
+# We can store the configuration of the app (CONSUMER_KEY and CONSUMER_SECRET)
+# and the configuration for each Twitter account. For just only one Twitter
+# account it could be:
+# [appKeys]
+#CONSUMER_KEY:
+#CONSUMER_SECRET:
+#[user1]
+#TOKEN_KEY:
+#TOKEN_SECRET:
+# 
+# There can be more lines for more Twitter accounts
+# We can store the configuration for publishing in a Facebook page.
+# 
+#
+# .rssFacebook
+# We can store the configuration of the user. The user has to have permission
+# for publishing in the page that will be selected by the program using the
+# module. It has been tested with just one user account and several pages. If
+# you need more than one user account some changes could be needed.
+#[Facebook]
+#oauth_access_token:
+#
+# .rssLinkedin
+# We can store the configuration of the user. If you need more than one user
+# account some changes could be needed.
+# Parameters.
+#[Linkedin]
+#CONSUMER_KEY:
+#CONSUMER_SECRET:
+#USER_TOKEN:
+#USER_SECRET:
+#RETURN_URL:http://localhost:8080/code
+# .rssTelegram
+# We can store the configuration of the bot. If you need more than one user
+# account some changes could be needed.
+#[Telegram]
+#TOKEN:
+#
+# .rssMedium
+# We can store the configuration of the user. If you need more than one user
+# account some changes could be needed.
+#[appKeys]
+#ClientID:
+#ClientSecret:
+#access_token:
+#
+# .rssBuffer
+# We can store the configuration of the user. If you need more than one user
+# account some changes could be needed.
+#[appKeys]
+#client_id:
+#client_secret:
+#redirect_uri:urn:ietf:wg:oauth:2.0:oob
+#access_token:
+#
+
 import configparser
 import os
 import sys
