@@ -343,12 +343,13 @@ def publishLinkedin(title, link, summary, image):
         application = connectLinkedin()
         presentation = 'Publicado! ' + title 
         if link:
-            application.submit_share(presentation, summary, link, image)
+            return(application.submit_share(presentation, summary, link, image))
         else:
-            application.submit_share(comment = title)
+            return(application.submit_share(comment = title))
     except:
         print("Linkedin posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
+        return("Fail!")
 
 def cleanTags(soup):
     tags = [tag.name for tag in soup.find_all()]
