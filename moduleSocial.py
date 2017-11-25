@@ -92,6 +92,7 @@ import time
 from linkedin import linkedin
 from twitter import *
 from html.parser import HTMLParser
+import pickle 
 import telepot
 # sudo pip install buffpy version does not work
 # Better use:
@@ -267,6 +268,17 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
         else:
             titlePostT = ""
         post = title + " " + firstLink
+
+        if (profile['service'] == 'twitter') or (profile['service'] == 'faceook'):
+            # We should add a configuration option in order to check which
+            # services are the ones with immediate posting. For now, we
+            # know that we are using Twitter and Facebook
+            
+            path = os.path.expanduser('~')
+            with open(path + '/.urls.pickle', 'rb') as f:
+                list = pickle.load(f)
+            if link in list:
+                continue
 
         try:
             if titlePostT and (profile['service'] == 'twitter'):
