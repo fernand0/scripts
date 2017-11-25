@@ -262,9 +262,8 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
         line = profile['service']
         print(profile['service'])
 
-        if (len(title) > 140 - 24):
-        # We are allowing 24 characters for the (short) link 
-            titlePostT = title[:140-24] 
+        if (len(title) > 240):
+            titlePostT = title[:240] 
         else:
             titlePostT = ""
         post = title + " " + firstLink
