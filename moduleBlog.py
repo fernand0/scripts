@@ -1,3 +1,6 @@
+# This module provides infrastructure for publishing and updating blog posts
+# using several generic APIs  (XML-RPC, blogger API, Metaweblog API, ...)
+
 import configparser
 import xmlrpc.client
 import os

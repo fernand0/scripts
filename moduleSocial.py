@@ -1,5 +1,82 @@
 #!/usr/bin/env python
 
+# This module is used as a infrastructure for publishing in several social
+# networks using their APIs via different available python modules. 
+#
+# It uses several configuration files to store credentials such as:
+# 
+# .rssBlogs
+# It can contain as many blogs as desired, with different parameters for each
+# one (a blog can have, for example a twtter account, but not Telegram account
+# and  so on).  
+# The structure for one of these blogs is
+# [Blog]
+#     url:
+#     rssFeed:
+#     xmlrpc:
+#     twitterAC:
+#     pageFB:
+#     telegramAC:
+#     mediumAC:
+#     linksToAvoid:
+#      
+# .rssTwitter 
+# We can store the configuration of the app (CONSUMER_KEY and CONSUMER_SECRET)
+# and the configuration for each Twitter account. For just only one Twitter
+# account it could be:
+# [appKeys]
+#CONSUMER_KEY:
+#CONSUMER_SECRET:
+#[user1]
+#TOKEN_KEY:
+#TOKEN_SECRET:
+# 
+# There can be more lines for more Twitter accounts
+# We can store the configuration for publishing in a Facebook page.
+# 
+#
+# .rssFacebook
+# We can store the configuration of the user. The user has to have permission
+# for publishing in the page that will be selected by the program using the
+# module. It has been tested with just one user account and several pages. If
+# you need more than one user account some changes could be needed.
+#[Facebook]
+#oauth_access_token:
+#
+# .rssLinkedin
+# We can store the configuration of the user. If you need more than one user
+# account some changes could be needed.
+# Parameters.
+#[Linkedin]
+#CONSUMER_KEY:
+#CONSUMER_SECRET:
+#USER_TOKEN:
+#USER_SECRET:
+#RETURN_URL:http://localhost:8080/code
+# .rssTelegram
+# We can store the configuration of the bot. If you need more than one user
+# account some changes could be needed.
+#[Telegram]
+#TOKEN:
+#
+# .rssMedium
+# We can store the configuration of the user. If you need more than one user
+# account some changes could be needed.
+#[appKeys]
+#ClientID:
+#ClientSecret:
+#access_token:
+#
+# .rssBuffer
+# We can store the configuration of the user. If you need more than one user
+# account some changes could be needed.
+#[appKeys]
+#client_id:
+#client_secret:
+#redirect_uri:urn:ietf:wg:oauth:2.0:oob
+#access_token:
+#
+
 import configparser
 import os
 import sys
@@ -15,6 +92,7 @@ import time
 from linkedin import linkedin
 from twitter import *
 from html.parser import HTMLParser
+import pickle 
 import telepot
 # sudo pip install buffpy version does not work
 # Better use:
@@ -185,12 +263,22 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
         line = profile['service']
         print(profile['service'])
 
-        if (len(title) > 140 - 24):
-        # We are allowing 24 characters for the (short) link 
-            titlePostT = title[:140-24] 
+        if (len(title) > 240):
+            titlePostT = title[:240] 
         else:
             titlePostT = ""
         post = title + " " + firstLink
+
+        if (profile['service'] == 'twitter') or (profile['service'] == 'faceook'):
+            # We should add a configuration option in order to check which
+            # services are the ones with immediate posting. For now, we
+            # know that we are using Twitter and Facebook
+            
+            path = os.path.expanduser('~')
+            with open(path + '/.urls.pickle', 'rb') as f:
+                list = pickle.load(f)
+            if link in list:
+                continue
 
         try:
             if titlePostT and (profile['service'] == 'twitter'):
@@ -266,12 +354,13 @@ def publishLinkedin(title, link, summary, image):
         application = connectLinkedin()
         presentation = 'Publicado! ' + title 
         if link:
-            application.submit_share(presentation, summary, link, image)
+            return(application.submit_share(presentation, summary, link, image))
         else:
-            application.submit_share(comment = title)
+            return(application.submit_share(comment = title))
     except:
         print("Linkedin posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
+        return("Fail!")
 
 def cleanTags(soup):
     tags = [tag.name for tag in soup.find_all()]
@@ -356,6 +445,6 @@ if __name__ == "__main__":
    
     #res = publishTwitter("Hola ahora devuelve la URL, después de un pequeño fallo", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "fernand0Test")
     #print("Published! Text: ", res['text'], " Url: https://twitter.com/fernand0Test/status/%s"%res['id_str'])
-    res = publishFacebook("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "me")
-    print("Published! Text: %s Url: https://facebook.com/fernando.tricas/posts/%s"% (res[0], res[1]['id'][res[1]['id'].find('_')+1:]))
+    #res = publishFacebook("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "me")
+    #print("Published! Text: %s Url: https://facebook.com/fernando.tricas/posts/%s"% (res[0], res[1]['id'][res[1]['id'].find('_')+1:]))
     #publishLinkedin("Hola caracola", "", "", "")
