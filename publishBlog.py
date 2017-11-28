@@ -23,7 +23,7 @@ def archive(blogId, blogName, blogUrl, text, postId):
     fPost.write(str(postId))
     fPost.write('\n')
     fPost.close() 
-    print('Historia guardada en %s' % nombreArchivo)
+    print('Historia guardada en %s' % fileName)
     return fileName, blogUrl[:-1]+'.blogalia.com/historias/'+str(postId)
 
 def post(): 
