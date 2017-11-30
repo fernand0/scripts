@@ -269,7 +269,7 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
             titlePostT = ""
         post = title + " " + firstLink
 
-        if (profile['service'] == 'twitter') or (profile['service'] == 'faceook'):
+        if (profile['service'] == 'twitter') or (profile['service'] == 'facebook'):
             # We should add a configuration option in order to check which
             # services are the ones with immediate posting. For now, we
             # know that we are using Twitter and Facebook
@@ -277,7 +277,8 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
             path = os.path.expanduser('~')
             with open(path + '/.urls.pickle', 'rb') as f:
                 list = pickle.load(f)
-            if link in list:
+            if link[link.find(':')+2:] in theList:
+                # Without the http or https 
                 continue
 
         try:
