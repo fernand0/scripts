@@ -138,8 +138,16 @@ def main():
         blogs.append(blog)
         
         lastLink = blog.checkLastLink()
-        i = blog.getLinkPosition(lastLink)
-        print("Position: ", i)
+        filename = os.path.expanduser("~/." 
+                + urllib.parse.urlparse(blog.getUrl() 
+                    + blog.getRssFeed()).netloc + ".last")
+        hours = blog.getTime()
+        if hours and (((time.time() - os.path.getmtime(filename)) - int(hours)*60*60) < 0):
+            i = -1
+            print("Not publishing because time restriction\n")
+        else: 
+            i = blog.getLinkPosition(lastLink) 
+            print("Position: ", i)
         print("Publishing pending posts\n")
 
         if ("bufferapp" in config.options(section)):

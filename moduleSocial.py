@@ -255,6 +255,7 @@ def checkLimitPosts(api):
     return(lenMax, profileList)
 
 def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
+    print("Publishing in Buffer:")
     if isDebug:
         profileList = []
         firstLink = None
@@ -276,7 +277,7 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
             
             path = os.path.expanduser('~')
             with open(path + '/.urls.pickle', 'rb') as f:
-                list = pickle.load(f)
+                theList = pickle.load(f)
             if link[link.find(':')+2:] in theList:
                 # Without the http or https 
                 continue
