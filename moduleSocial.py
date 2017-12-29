@@ -255,14 +255,14 @@ def checkLimitPosts(api):
     return(lenMax, profileList)
 
 def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
-    print("Publishing in Buffer:")
+    print("Publishing in Buffer:\n")
     if isDebug:
         profileList = []
         firstLink = None
     fail = 'no'
     for profile in profileList:
         line = profile['service']
-        print(profile['service'])
+        print("  %s" % profile['service'])
 
         if (len(title) > 240):
             titlePostT = title[:240] 
