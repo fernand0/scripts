@@ -191,6 +191,7 @@ class moduleBlog():
         links = soup.find_all(["a","iframe"])
         for link in soup.find_all(["a","iframe"]):
             theLink = ""
+            #print(link)
             if len(link.contents) > 0: 
                 print(link)
                 if not isinstance(link.contents[0], Tag):
