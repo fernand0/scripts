@@ -101,6 +101,10 @@ def test():
 
 def main():
 
+    print("====================================")
+    print("Launched at %s" % time.asctime())
+    print("====================================")
+    print("")
     isDebug = False
     loggingLevel = logging.INFO
 
@@ -188,6 +192,10 @@ def main():
         
                         urlFile.write(link)
                         urlFile.close()
+
+    print("====================================")
+    print("Finished at %s" % time.asctime())
+    print("====================================")
 
 
 if __name__ == '__main__':
