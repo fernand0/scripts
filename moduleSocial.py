@@ -91,6 +91,9 @@ import urllib
 import time
 from linkedin import linkedin
 from twitter import *
+#https://pypi.python.org/pypi/twitter
+#http://mike.verdone.ca/twitter/
+#https://github.com/sixohsix/twitter/tree
 from html.parser import HTMLParser
 import pickle 
 import telepot
@@ -315,6 +318,10 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
             urlFile.write(link)
             urlFile.close()
         print("")
+
+def searchTwitter(search, twitter): 
+    t = connectTwitter(twitter)
+    return(t.search.tweets(q=search)['statuses'])
 
 def publishTwitter(title, link, comment, twitter):
 
