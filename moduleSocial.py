@@ -162,6 +162,7 @@ def connectFacebook(fbPage = 'me'):
         oauth_access_token = config.get("Facebook", "oauth_access_token")
 
         graph = facebook.GraphAPI(oauth_access_token, version='2.7')
+        perms = ['manage_pages','publish_pages']
         pages = graph.get_connections("me", "accounts")
 
         if (fbPage != 'me'):
