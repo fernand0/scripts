@@ -282,33 +282,31 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
             path = os.path.expanduser('~')
             with open(path + '/.urls.pickle', 'rb') as f:
                 theList = pickle.load(f)
-            if link[link.find(':')+2:] in theList:
+            if not (link[link.find(':')+2:] in theList):
                 # Without the http or https 
-                continue
+                try:
+                    if titlePostT and (profile['service'] == 'twitter'):
+                        profile.updates.new(urllib.parse.quote(titlePostT + " " + firstLink).encode('utf-8'))
+                    else:
+                        profile.updates.new(urllib.parse.quote(post).encode('utf-8'))
+                    line = line + ' ok'
+                    time.sleep(3)
+                except:
+                    print("Buffer posting failed!")
+                    print("Unexpected error:", sys.exc_info()[0])
+                    print("Unexpected error:", sys.exc_info()[1])
+                    logging.info("Buffer posting failed!")
+                    logging.info("Unexpected error: %s"% sys.exc_info()[0])
+                    logging.info("Unexpected error: %s"% sys.exc_info()[1])
 
-        try:
-            if titlePostT and (profile['service'] == 'twitter'):
-                profile.updates.new(urllib.parse.quote(titlePostT + " " + firstLink).encode('utf-8'))
-            else:
-                profile.updates.new(urllib.parse.quote(post).encode('utf-8'))
-            line = line + ' ok'
-            time.sleep(3)
-        except:
-            print("Buffer posting failed!")
-            print("Unexpected error:", sys.exc_info()[0])
-            print("Unexpected error:", sys.exc_info()[1])
-            logging.info("Buffer posting failed!")
-            logging.info("Unexpected error: %s"% sys.exc_info()[0])
-            logging.info("Unexpected error: %s"% sys.exc_info()[1])
-
-            line = line + ' fail'
-            failFile = open(os.path.expanduser("~/."
-                       + urllib.parse.urlparse(link).netloc
-                       + ".fail"), "w")
-            failFile.write(post)
-            logging.info("  %s service" % line)
-            fail = 'yes'
-            break
+                    line = line + ' fail'
+                    failFile = open(os.path.expanduser("~/."
+                               + urllib.parse.urlparse(link).netloc
+                               + ".fail"), "w")
+                    failFile.write(post)
+                    logging.info("  %s service" % line)
+                    fail = 'yes'
+                    break
 
         logging.info("  %s service" % line)
         if (fail == 'no' and link):
