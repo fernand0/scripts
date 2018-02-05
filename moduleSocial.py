@@ -282,7 +282,7 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
             path = os.path.expanduser('~')
             with open(path + '/.urls.pickle', 'rb') as f:
                 theList = pickle.load(f)
-            if not (link[link.find(':')+2:] in theList):
+            if not (firstLink[firstLink.find(':')+2:] in theList):
                 # Without the http or https 
                 try:
                     if titlePostT and (profile['service'] == 'twitter'):
@@ -314,7 +314,7 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
                            + urllib.parse.urlparse(link).netloc
                            + ".last"), "w")
     
-            urlFile.write(link)
+            #urlFile.write(link)
             urlFile.close()
         print("")
 
