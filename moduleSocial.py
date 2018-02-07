@@ -282,31 +282,34 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
             path = os.path.expanduser('~')
             with open(path + '/.urls.pickle', 'rb') as f:
                 theList = pickle.load(f)
-            if not (firstLink[firstLink.find(':')+2:] in theList):
-                # Without the http or https 
-                try:
-                    if titlePostT and (profile['service'] == 'twitter'):
-                        profile.updates.new(urllib.parse.quote(titlePostT + " " + firstLink).encode('utf-8'))
-                    else:
-                        profile.updates.new(urllib.parse.quote(post).encode('utf-8'))
-                    line = line + ' ok'
-                    time.sleep(3)
-                except:
-                    print("Buffer posting failed!")
-                    print("Unexpected error:", sys.exc_info()[0])
-                    print("Unexpected error:", sys.exc_info()[1])
-                    logging.info("Buffer posting failed!")
-                    logging.info("Unexpected error: %s"% sys.exc_info()[0])
-                    logging.info("Unexpected error: %s"% sys.exc_info()[1])
+        else:
+            theList = []
 
-                    line = line + ' fail'
-                    failFile = open(os.path.expanduser("~/."
-                               + urllib.parse.urlparse(link).netloc
-                               + ".fail"), "w")
-                    failFile.write(post)
-                    logging.info("  %s service" % line)
-                    fail = 'yes'
-                    break
+        if not (firstLink[firstLink.find(':')+2:] in theList):
+            # Without the http or https 
+            try:
+                if titlePostT and (profile['service'] == 'twitter'):
+                    profile.updates.new(urllib.parse.quote(titlePostT + " " + firstLink).encode('utf-8'))
+                else:
+                    profile.updates.new(urllib.parse.quote(post).encode('utf-8'))
+                line = line + ' ok'
+                time.sleep(3)
+            except:
+                print("Buffer posting failed!")
+                print("Unexpected error:", sys.exc_info()[0])
+                print("Unexpected error:", sys.exc_info()[1])
+                logging.info("Buffer posting failed!")
+                logging.info("Unexpected error: %s"% sys.exc_info()[0])
+                logging.info("Unexpected error: %s"% sys.exc_info()[1])
+
+                line = line + ' fail'
+                failFile = open(os.path.expanduser("~/."
+                           + urllib.parse.urlparse(link).netloc
+                           + ".fail"), "w")
+                failFile.write(post)
+                logging.info("  %s service" % line)
+                fail = 'yes'
+                break
 
         logging.info("  %s service" % line)
         if (fail == 'no' and link):
@@ -314,7 +317,7 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
                            + urllib.parse.urlparse(link).netloc
                            + ".last"), "w")
     
-            #urlFile.write(link)
+            urlFile.write(link)
             urlFile.close()
         print("")
 
