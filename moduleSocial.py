@@ -343,16 +343,35 @@ def publishFacebook(title, link, summaryLinks, image, fbPage):
     #publishFacebook("prueba2", "https://www.facebook.com/reflexioneseirreflexiones/", "b", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-9/426052_381657691846622_987775451_n.jpg", "Reflexiones e Irreflexiones")
 
     print("Facebook...\n")
-    try:
+    textToPublish = ""
+    textToPublish2 = ""
+    if True:
         h = HTMLParser()
         title = h.unescape(title)
         (graph, page) = connectFacebook(fbPage)
-        return (page, graph.put_object(page,
-                          "feed", message=title + " \n" + summaryLinks,
+        textToPublish = (title + " \n" + summaryLinks)[:9980]
+        index = textToPublish.rfind(' ')
+        if index > 0:
+            textToPublish = (title + " \n" + summaryLinks)[:index - 1] + ' (sigue ...)'
+            textToPublish2 = '... ' + (title + " \n" + summaryLinks)[index:] + ' (... continuación)'
+        if textToPublish2: 
+            graph.put_object(page,
+                  "feed", message = textToPublish,
+                  link=link, picture=image,
+                  name=title, caption='',
+                  description=textToPublish.encode('utf-8'))
+            return (page, graph.put_object(page,
+                          "feed", message = textToPublish2,
+                          link=link, picture=image,
+                          name=title, caption='',
+                          description=textToPublish2.encode('utf-8')))
+        else:
+            return (page, graph.put_object(page,
+                          "feed", message = texToPublish,
                           link=link, picture=image,
                           name=title, caption='',
                           description=summaryLinks.encode('utf-8')))
-    except:
+    else:
         print("Facebook posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
         return("Fail!")
@@ -416,17 +435,25 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
         soup = BeautifulSoup(htmlText)
         cleanTags(soup)
         #print(soup)
-        textToPublish = str(soup)[:4096]
+        textToPublish = str(soup)[:4090]
         index = textToPublish.rfind('<')
         index2 = textToPublish.find('>',index)
+        # We need a better way to break texts
         textToPublish2 = ""
         if (index2 < 0):
         # unclosed tag
         # Maybe we can still have an unclosed tag
-        # Something like: <a href="">< we would 
-            textToPublish = str(soup)[:index - 1]+' ...'
-            textToPublish2 = '... '+ str(soup)[index:]
+            if  (textToPublish[index + 1] == '/'):
+                # It is a closing tag <a ....>anchor </...>
+                # We need to find the starting tag
+                indexT = textToPublish[index].rfind('<')
+                if (indexT>=0):
+                    index = indexT
+        textToPublish = str(soup)[:index - 1]+' ...'
+        textToPublish2 = '... '+ str(soup)[index:]
 
+        print("txt->",textToPublish)
+        print("index %s %d"%(textToPublish[index + 1],index))
         bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
         if textToPublish2:
             bot.sendMessage('@'+channel, textToPublish2, parse_mode='HTML') 
@@ -453,7 +480,24 @@ def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, imag
 if __name__ == "__main__":
 
     import moduleSocial
-   
+    import moduleBlog
+
+    blog = moduleBlog.moduleBlog()
+    url = 'http://fernand0.github.io/'
+    rssFeed= 'feed.xml'
+    blog.setUrl(url)
+    blog.setRssFeed(rssFeed)
+    blog.addSocialNetwork(('pagefb', 'fernand0.github.io'))        
+    blog.addSocialNetwork(('telegramac', 'mbpfernand0'))        
+    blog.setPostsRss()
+    blog.getPostsRss()
+    lastLink = blog.checkLastLink()
+    i = blog.getLinkPosition(lastLink) 
+    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
+    fbPage = blog.getSocialNetworks()['pagefb']
+    telegram = blog.getSocialNetworks()['telegramac']
+    moduleSocial.publishTelegram(telegram, title, link, summary, summaryHtml, summaryLinks, image)
+
     #res = publishTwitter("Hola ahora devuelve la URL, después de un pequeño fallo", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "fernand0Test")
     #print("Published! Text: ", res['text'], " Url: https://twitter.com/fernand0Test/status/%s"%res['id_str'])
     #res = publishFacebook("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "me")
