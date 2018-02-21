@@ -349,11 +349,13 @@ def publishFacebook(title, link, summaryLinks, image, fbPage):
         h = HTMLParser()
         title = h.unescape(title)
         (graph, page) = connectFacebook(fbPage)
-        textToPublish = (title + " \n" + summaryLinks)[:9980]
-        index = textToPublish.rfind(' ')
-        if index > 0:
-            textToPublish = (title + " \n" + summaryLinks)[:index - 1] + ' (sigue ...)'
-            textToPublish2 = '... ' + (title + " \n" + summaryLinks)[index:] + ' (... continuación)'
+        textToPublish = title + " \n" + summaryLinks
+        if (len(textToPublish) > 9980):
+            textToPublish = textToPublish[:9980]
+            index = textToPublish.rfind(' ')
+            if index > 0:
+                textToPublish = (title + " \n" + summaryLinks)[:index] + ' (sigue ...)'
+                textToPublish2 = '... ' + (title + " \n" + summaryLinks)[index + 1:] + ' (... continuación)'
         if textToPublish2: 
             graph.put_object(page,
                   "feed", message = textToPublish,
@@ -367,7 +369,7 @@ def publishFacebook(title, link, summaryLinks, image, fbPage):
                           description=textToPublish2.encode('utf-8')))
         else:
             return (page, graph.put_object(page,
-                          "feed", message = texToPublish,
+                          "feed", message = textToPublish,
                           link=link, picture=image,
                           name=title, caption='',
                           description=summaryLinks.encode('utf-8')))
@@ -456,7 +458,11 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
         print("index %s %d"%(textToPublish[index + 1],index))
         bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
         if textToPublish2:
-            bot.sendMessage('@'+channel, textToPublish2, parse_mode='HTML') 
+            try:
+                bot.sendMessage('@'+channel, textToPublish2[:4090], parse_mode='HTML') 
+            except:
+                bot.sendMessage('@'+channel, "Text is longer", parse_mode='HTML') 
+
     else:
         print("Telegram posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
