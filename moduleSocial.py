@@ -437,25 +437,27 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
         soup = BeautifulSoup(htmlText)
         cleanTags(soup)
         #print(soup)
-        textToPublish = str(soup)[:4090]
-        index = textToPublish.rfind('<')
-        index2 = textToPublish.find('>',index)
-        # We need a better way to break texts
-        textToPublish2 = ""
-        if (index2 < 0):
-        # unclosed tag
-        # Maybe we can still have an unclosed tag
-            if  (textToPublish[index + 1] == '/'):
-                # It is a closing tag <a ....>anchor </...>
-                # We need to find the starting tag
-                indexT = textToPublish[index].rfind('<')
-                if (indexT>=0):
-                    index = indexT
-        textToPublish = str(soup)[:index - 1]+' ...'
-        textToPublish2 = '... '+ str(soup)[index:]
+        if len(str(soup)) > 4090:
+            textToPublish = str(soup)[:4090]
+            index = textToPublish.rfind('<')
+            index2 = textToPublish.find('>',index)
+            # We need a better way to break texts
+            textToPublish2 = ""
+            if (index2 < 0):
+            # unclosed tag
+            # Maybe we can still have an unclosed tag
+                if  (textToPublish[index + 1] == '/'):
+                    # It is a closing tag <a ....>anchor </...>
+                    # We need to find the starting tag
+                    indexT = textToPublish[index].rfind('<')
+                    if (indexT>=0):
+                        index = indexT
+            textToPublish = str(soup)[:index - 1]+' ...'
+            textToPublish2 = '... '+ str(soup)[index:]
+        else:
+            textToPublish = str(soup)
+            textToPublish2 = ''
 
-        print("txt->",textToPublish)
-        print("index %s %d"%(textToPublish[index + 1],index))
         bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
         if textToPublish2:
             try:
