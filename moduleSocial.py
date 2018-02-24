@@ -476,9 +476,10 @@ def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, imag
 
         h = HTMLParser()
         title = h.unescape(title)
+        textOrig = '\n\nPublicado originalmente en <a href="%s">%s</a>' % (link, title)
         post = client.create_post(user_id=user["id"], title=title,
-                content="<h4>"+title+"</h4><br />"+summaryHtml, canonical_url = link,
-                content_format="html", publish_status="public") #draft")
+                content="<h4>"+title+"</h4><br />"+summaryHtml+textOrig, canonical_url = link,
+                content_format="html", publish_status="draft") #"public") #draft")
         print("My new post!", post["url"])
     except:
         print("Medium posting failed!\n")
@@ -491,12 +492,13 @@ if __name__ == "__main__":
     import moduleBlog
 
     blog = moduleBlog.moduleBlog()
-    url = 'http://fernand0.github.io/'
-    rssFeed= 'feed.xml'
+    url = 'http://fernand0.blogalia.com/'
+    rssFeed= 'rss20.xml'
     blog.setUrl(url)
     blog.setRssFeed(rssFeed)
     blog.addSocialNetwork(('pagefb', 'fernand0.github.io'))        
     blog.addSocialNetwork(('telegramac', 'mbpfernand0'))        
+    blog.addSocialNetwork(('mediumac', 'fernand0'))        
     blog.setPostsRss()
     blog.getPostsRss()
     lastLink = blog.checkLastLink()
@@ -504,7 +506,9 @@ if __name__ == "__main__":
     (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
     fbPage = blog.getSocialNetworks()['pagefb']
     telegram = blog.getSocialNetworks()['telegramac']
-    moduleSocial.publishTelegram(telegram, title, link, summary, summaryHtml, summaryLinks, image)
+    medium = blog.getSocialNetworks()['mediumac']
+    #moduleSocial.publishTelegram(telegram, title, link, summary, summaryHtml, summaryLinks, image)
+    moduleSocial.publishMedium(medium, title, link, summary, summaryHtml, summaryLinks, image)
 
     #res = publishTwitter("Hola ahora devuelve la URL, después de un pequeño fallo", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "fernand0Test")
     #print("Published! Text: ", res['text'], " Url: https://twitter.com/fernand0Test/status/%s"%res['id_str'])
