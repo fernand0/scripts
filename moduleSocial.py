@@ -479,7 +479,7 @@ def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, imag
         textOrig = '\n\nPublicado originalmente en <a href="%s">%s</a>' % (link, title)
         post = client.create_post(user_id=user["id"], title=title,
                 content="<h4>"+title+"</h4><br />"+summaryHtml+textOrig, canonical_url = link,
-                content_format="html", publish_status="draft") #"public") #draft")
+                content_format="html", publish_status="public") #draft")
         print("My new post!", post["url"])
     except:
         print("Medium posting failed!\n")
