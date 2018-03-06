@@ -109,7 +109,11 @@ def main():
     loggingLevel = logging.INFO
 
     config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssBlogs')])
+    config.read([os.path.expanduser('~/.rssTwitter')])
+    CONSUMER_KEY = config.get("appKeys", "CONSUMER_KEY")
+    CONSUMER_SECRET = config.get("appKeys", "CONSUMER_SECRET")
+    TOKEN_KEY = config.get('fernand0Test', "TOKEN_KEY")
+    TOKEN_SECRET = config.get('fernand0Test', "TOKEN_SECRET")
 
     logging.basicConfig(filename=os.path.expanduser("~") 
                         + "/usr/var/rssSocial_.log",
