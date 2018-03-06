@@ -173,6 +173,7 @@ class moduleBlog():
             urlFile = open(os.path.expanduser("~" + "/."  
                   + urllib.parse.urlparse(rssFeed).netloc
                   + ".last"), "r")
+            linkLast = urlFile.read().rstrip()  # Last published
         else: 
             try: 
                 urlFile = open(os.path.expanduser("~" + "/."  
