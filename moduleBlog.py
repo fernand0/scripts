@@ -127,6 +127,9 @@ class moduleBlog():
     def getLinkPosition(self, link):
         i = 0
         if self.getPostsRss():
+            if not link:
+                print(self.getPostsRss().entries)
+                return(len(self.getPostsRss().entries))
             for entry in self.getPostsRss().entries:
                 lenCmp = min(len(entry['link']), len(link))
                 if entry['link'][:lenCmp] == link[:lenCmp]:
@@ -164,13 +167,37 @@ class moduleBlog():
         server = self.xmlrpc
         server[0].blogger.deletePost('',idPost, server[1], server[2], True)
 
-    def checkLastLink(self):
+    def checkLastLink(self,socialNetwork=()):
         rssFeed = self.getUrl()+self.getRssFeed()
-        urlFile = open(os.path.expanduser("~" + "/."  
+        if not socialNetwork: 
+            urlFile = open(os.path.expanduser("~" + "/."  
                   + urllib.parse.urlparse(rssFeed).netloc
                   + ".last"), "r")
-        linkLast = urlFile.read().rstrip()  # Last published
+        else: 
+            try: 
+                urlFile = open(os.path.expanduser("~" + "/."  
+                  + urllib.parse.urlparse(rssFeed).netloc
+                  + '_'+socialNetwork[0]+'_'+socialNetwork[1]
+                  + ".last"), "r")
+                linkLast = urlFile.read().rstrip()  # Last published
+            except:
+                linkLast = ''  # None published, or non-existent file
+
         return(linkLast)
+
+    def updateLastLink(self,link, socialNetwork=()):
+        rssFeed = self.getUrl()+self.getRssFeed()
+        if not socialNetwork: 
+            urlFile = open(os.path.expanduser("~" + "/."  
+                  + urllib.parse.urlparse(rssFeed).netloc
+                  + ".last"), "w")
+        else: 
+            urlFile = open(os.path.expanduser("~" + "/."  
+              + urllib.parse.urlparse(rssFeed).netloc
+              + '_'+socialNetwork[0]+'_'+socialNetwork[1]
+              + ".last"), "w")
+        urlFile.write(link)
+        urlFile.close()
 
     def extractImage(self, soup):
         pageImage = soup.findAll("img")
