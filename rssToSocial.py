@@ -135,64 +135,112 @@ def main():
             blog.setTime(config.get(section, "time"))
 
         for option in config.options(section):
-            if ('ac' in option) or ('fb' in option):
-                blog.addSocialNetwork((option, config.get(section, option)))
+            if (option 
+                    in ['twitter', 'facebook', 'telegram', 
+                        'medium', 'bufferapp']):
+                nick = config.get(section, option)
+                socialNetwork = (option, nick)
+                blog.addSocialNetwork(socialNetwork)
+                if option != 'bufferapp':
+                    lastLink, lastTime = blog.checkLastLink(socialNetwork)
+                    blog.addLastLinkPublished((option, lastLink))
 
-        blog.setPostsRss()
-        blog.getPostsRss()
-        blogs.append(blog)
-        
-        lastLink = blog.checkLastLink()
-        filename = os.path.expanduser("~/." 
-                + urllib.parse.urlparse(blog.getUrl() 
-                    + blog.getRssFeed()).netloc + ".last")
-        hours = blog.getTime()
-        if hours and (((time.time() - os.path.getmtime(filename)) - int(hours)*60*60) < 0):
-            i = -1
-            print("Not publishing because time restriction\n")
-        else: 
-            i = blog.getLinkPosition(lastLink) 
-            print("Position: ", i)
-        print("Publishing pending posts\n")
+                blog.setPostsRss()
+                blog.getPostsRss()
+                blogs.append(blog)
+                
+                #lastLink = blog.checkLastLink()
+                #filename = os.path.expanduser("~/." 
+                #        + urllib.parse.urlparse(blog.getUrl() 
+                #            + blog.getRssFeed()).netloc + ".last")
+                hours = blog.getTime()
+                if (hours and 
+                        (((time.time() - lastTime) - int(hours)*60*60) < 0)):
+                    i = -1
+                    print("Not publishing because time restriction\n")
+                else: 
+                    i = blog.getLinkPosition(lastLink) 
+                    print("Position: ", i)
+                print("Publishing pending posts\n")
 
-        if ("bufferapp" in config.options(section)):
-            blog.setBufferapp(config.get(section, "bufferapp"))
-            api = moduleSocial.connectBuffer()
-            lenMax, profileList = moduleSocial.checkLimitPosts(api)
-            bufferMax = 10
-            for j in range(bufferMax-lenMax, 0, -1):
-                if (i == 0):
-                    break
-                i = i - 1
+                if ("bufferapp" in config.options(section)):
+                    blog.setBufferapp(config.get(section, "bufferapp"))
+                    api = moduleSocial.connectBuffer()
+                    lenMax, profileList = moduleSocial.checkLimitPosts(api)
+                    bufferMax = 10
+                    for profile in profileList:
+                        lastLink, lastTime = blog.checkLastLink((profile['service'], profile['service_username']))
+                        blog.addLastLinkPublished((option, lastLink))
+                        i = blog.getLinkPosition(lastLink)
+                        print(i,lastLink)
+                        sys.exit()
+                        line = profile['service']
+                        print("  %s" % profile['service'])
+                        if (line[0] in blog.getBufferapp()):
+                            if (len(title) > 240):
+                                titlePostT = title[:240] 
+                            else:
+                                titlePostT = ""
+                            post = title + " " + firstLink
+                
+                            if ((profile['service'] == 'twitter') 
+                               or (profile['service'] == 'facebook')):
+                                # We should add a configuration option in order to check which
+                                # services are the ones with immediate posting. For now, we
+                                # know that we are using Twitter and Facebook
+                                # We are checking the links tha have been published with other
+                                # toolsin order to avoid duplicates
+                                
+                                path = os.path.expanduser('~')
+                                with open(path + '/.urls.pickle', 'rb') as f:
+                                    theList = pickle.load(f)
+                            else:
+                                theList = []
 
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i))
-                moduleSocial.publishBuffer(profileList, title, link, firstLink, isDebug, lenMax)
-        else:
-            if (i > 0):
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
-                if not isDebug:
-                    if 'twitterac' in blog.getSocialNetworks():
-                        twitter = blog.getSocialNetworks()['twitterac']
-                        moduleSocial.publishTwitter(title, link, comment, twitter)
-                    if 'pagefb' in blog.getSocialNetworks():
-                        fbPage = blog.getSocialNetworks()['pagefb']
-                        moduleSocial.publishFacebook(title, link, summaryLinks, image, fbPage)
-                    if 'telegramac' in blog.getSocialNetworks():
-                        telegram = blog.getSocialNetworks()['telegramac']
-                        moduleSocial.publishTelegram(telegram, title, link, summary, summaryHtml, summaryLinks, image)
-                    if 'mediumac' in blog.getSocialNetworks():
-                        medium = blog.getSocialNetworks()['mediumac']
-                        moduleSocial.publishMedium(medium, title, link, summary, summaryHtml, summaryLinks, image)
+                            lastLink = blog.checkLastLink((profile, blog.socialNetwork[profile]))
+                            i = blog.getLinkPosition(lastLink) 
+                            print(i)
+                            sys.exit()
+                
+                
+                    for j in range(bufferMax-lenMax, 0, -1):
+                        if (i == 0):
+                            break
+                        i = i - 1
 
-                    moduleSocial.publishLinkedin(title, link, summary, image)
+                        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i))
+                        moduleSocial.publishBuffer(blog, profileList, title, link, firstLink, isDebug, lenMax)
+                elif ('program' in config.options(section)):
+                    blog.setBufferapp(config.get(section, "program"))
+                else:
+                    i = blog.getLinkPosition(lastLink) 
+                    print(i)
+                    if (i > 0):
+                        sys.exit()
+                        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
+                        if not isDebug:
+                            if 'twitter' in blog.getSocialNetworks():
+                                twitter = blog.getSocialNetworks()['twitter']
+                                moduleSocial.publishTwitter(title, link, comment, twitter)
+                            if 'facebook' in blog.getSocialNetworks():
+                                fbPage = blog.getSocialNetworks()['facebook']
+                                moduleSocial.publishFacebook(title, link, summaryLinks, image, fbPage)
+                            if 'telegram' in blog.getSocialNetworks():
+                                telegram = blog.getSocialNetworks()['telegram']
+                                moduleSocial.publishTelegram(telegram, title, link, summary, summaryHtml, summaryLinks, image)
+                            if 'medium' in blog.getSocialNetworks():
+                                medium = blog.getSocialNetworks()['medium']
+                                moduleSocial.publishMedium(medium, title, link, summary, summaryHtml, summaryLinks, image)
 
-                    if (link):
-                        urlFile = open(os.path.expanduser("~/."
-                                       + urllib.parse.urlparse(link).netloc
-                                       + ".last"), "w")
-        
-                        urlFile.write(link)
-                        urlFile.close()
+                            moduleSocial.publishLinkedin(title, link, summary, image)
+
+                            if (link):
+                                urlFile = open(os.path.expanduser("~/."
+                                               + urllib.parse.urlparse(link).netloc
+                                               + ".last"), "w")
+                
+                                urlFile.write(link)
+                                urlFile.close()
 
     print("====================================")
     print("Finished at %s" % time.asctime())

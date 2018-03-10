@@ -258,7 +258,7 @@ def checkLimitPosts(api):
 
     return(lenMax, profileList)
 
-def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
+def publishBuffer(blog, profileList, title, link, firstLink, isDebug, lenMax):
     print("Publishing in Buffer:\n")
     if isDebug:
         profileList = []
@@ -278,6 +278,8 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
             # We should add a configuration option in order to check which
             # services are the ones with immediate posting. For now, we
             # know that we are using Twitter and Facebook
+            # We are checking the links tha have been published with other
+            # toolsin order to avoid duplicates
             
             path = os.path.expanduser('~')
             with open(path + '/.urls.pickle', 'rb') as f:
@@ -289,11 +291,14 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
             # Without the http or https 
             try:
                 if titlePostT and (profile['service'] == 'twitter'):
-                    profile.updates.new(urllib.parse.quote(titlePostT + " " + firstLink).encode('utf-8'))
+                    entry = urllib.parse.quote(titlePostT + " " + firstLink).encode('utf-8')
                 else:
-                    profile.updates.new(urllib.parse.quote(post).encode('utf-8'))
+                    entry = urllib.parse.quote(post).encode('utf-8')
+
+                profile.updates.new(entry)
+
                 line = line + ' ok'
-                time.sleep(3)
+                time.sleep(2)
             except:
                 print("Buffer posting failed!")
                 print("Unexpected error:", sys.exc_info()[0])
@@ -313,6 +318,8 @@ def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
 
         logging.info("  %s service" % line)
         if (fail == 'no' and link):
+            blog.updateLastLink(link, 
+                (profile['service'], profile['service_username']))
             urlFile = open(os.path.expanduser("~/."
                            + urllib.parse.urlparse(link).netloc
                            + ".last"), "w")
@@ -496,9 +503,9 @@ if __name__ == "__main__":
     rssFeed= 'rss20.xml'
     blog.setUrl(url)
     blog.setRssFeed(rssFeed)
-    blog.addSocialNetwork(('pagefb', 'fernand0.github.io'))        
-    blog.addSocialNetwork(('telegramac', 'mbpfernand0'))        
-    blog.addSocialNetwork(('mediumac', 'fernand0'))        
+    blog.addSocialNetwork(('facebook', 'fernand0.github.io'))        
+    blog.addSocialNetwork(('telegram', 'mbpfernand0'))        
+    blog.addSocialNetwork(('medium', 'fernand0'))        
     blog.setPostsRss()
     blog.getPostsRss()
     lastLink = blog.checkLastLink()
