@@ -23,6 +23,7 @@ class moduleBlog():
          self.postsXmlrpc = None
          self.time = []
          self.buffer = None
+         self.program = None
          self.xmlrpc = None
          self.lastLinkPublished = {}
  
@@ -73,6 +74,12 @@ class moduleBlog():
  
     def setBufferapp(self, bufferapp):
         self.bufferapp = bufferapp
+
+    def getProgram(self):
+        return(self.program)
+ 
+    def setProgram(self, program):
+        self.program = program
 
     def getXmlRpc(self):
         return(self.xmlrpc)

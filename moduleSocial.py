@@ -80,6 +80,7 @@
 import configparser
 import os
 import sys
+import random
 import logging
 from bs4 import BeautifulSoup
 from bs4 import NavigableString
@@ -238,7 +239,7 @@ def connectMedium():
     return(client, user)
 
 
-def checkLimitPosts(api):
+def checkLimitPosts(api,services='tfgl'):
     # We can put as many items as the service with most items allow
     # The limit is ten.
     # Get all pending updates of a social network profile
@@ -248,89 +249,101 @@ def checkLimitPosts(api):
 
     profileList = Profiles(api=api).all()
     for profile in profileList:
-        lenProfile = len(profile.updates.pending)
-        if (lenProfile > lenMax):
-            lenMax = lenProfile
-        logging.info("%s ok" % profile['service'])
+        if (profile['service'][0] in services): 
+            lenProfile = len(profile.updates.pending) 
+            if (lenProfile > lenMax): 
+                lenMax = lenProfile 
+                logging.info("%s ok" % profile['service'])
 
     logging.info("There are %d in some buffer, we can put %d" %
                  (lenMax, 10-lenMax))
 
     return(lenMax, profileList)
 
-def publishBuffer(blog, profileList, title, link, firstLink, isDebug, lenMax):
+def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, services='fglt'):
     print("Publishing in Buffer:\n")
     if isDebug:
         profileList = []
         firstLink = None
     fail = 'no'
-    for profile in profileList:
-        line = profile['service']
-        print("  %s" % profile['service'])
+    line = profile['service']
+    print("  %s" % profile['service'])
 
-        if (len(title) > 240):
-            titlePostT = title[:240] 
-        else:
-            titlePostT = ""
-        post = title + " " + firstLink
+    if (len(title) > 240):
+        titlePostT = title[:240] 
+    else:
+        titlePostT = ""
+    post = title + " " + firstLink
 
-        if (profile['service'] == 'twitter') or (profile['service'] == 'facebook'):
-            # We should add a configuration option in order to check which
-            # services are the ones with immediate posting. For now, we
-            # know that we are using Twitter and Facebook
-            # We are checking the links tha have been published with other
-            # toolsin order to avoid duplicates
-            
-            path = os.path.expanduser('~')
-            with open(path + '/.urls.pickle', 'rb') as f:
-                theList = pickle.load(f)
-        else:
-            theList = []
+    if (profile['service'] == 'twitter') or (profile['service'] == 'facebook'):
+        # We should add a configuration option in order to check which
+        # services are the ones with immediate posting. For now, we
+        # know that we are using Twitter and Facebook
+        # We are checking the links tha have been published with other
+        # toolsin order to avoid duplicates
+        
+        path = os.path.expanduser('~')
+        with open(path + '/.urls.pickle', 'rb') as f:
+            theList = pickle.load(f)
+    else:
+        theList = []
 
-        if not (firstLink[firstLink.find(':')+2:] in theList):
-            # Without the http or https 
-            try:
-                if titlePostT and (profile['service'] == 'twitter'):
-                    entry = urllib.parse.quote(titlePostT + " " + firstLink).encode('utf-8')
-                else:
-                    entry = urllib.parse.quote(post).encode('utf-8')
+    if not (firstLink[firstLink.find(':')+2:] in theList):
+        # Without the http or https 
+        try:
+            if titlePostT and (profile['service'] == 'twitter'):
+                entry = urllib.parse.quote(titlePostT + " " + firstLink).encode('utf-8')
+            else:
+                entry = urllib.parse.quote(post).encode('utf-8')
 
+            if (profile['service'][0] in services): 
                 profile.updates.new(entry)
 
-                line = line + ' ok'
-                time.sleep(2)
-            except:
-                print("Buffer posting failed!")
-                print("Unexpected error:", sys.exc_info()[0])
-                print("Unexpected error:", sys.exc_info()[1])
-                logging.info("Buffer posting failed!")
-                logging.info("Unexpected error: %s"% sys.exc_info()[0])
-                logging.info("Unexpected error: %s"% sys.exc_info()[1])
+            line = line + ' ok'
+            time.sleep(2)
+        except:
+            print("Buffer posting failed!")
+            print("Unexpected error:", sys.exc_info()[0])
+            print("Unexpected error:", sys.exc_info()[1])
+            logging.info("Buffer posting failed!")
+            logging.info("Unexpected error: %s"% sys.exc_info()[0])
+            logging.info("Unexpected error: %s"% sys.exc_info()[1])
 
-                line = line + ' fail'
-                failFile = open(os.path.expanduser("~/."
-                           + urllib.parse.urlparse(link).netloc
-                           + ".fail"), "w")
-                failFile.write(post)
-                logging.info("  %s service" % line)
-                fail = 'yes'
-                break
+            line = line + ' fail'
+            failFile = open(os.path.expanduser("~/."
+                       + urllib.parse.urlparse(link).netloc
+                       + ".fail"), "w")
+            failFile.write(post)
+            logging.info("  %s service" % line)
+            fail = 'yes'
 
-        logging.info("  %s service" % line)
-        if (fail == 'no' and link):
-            blog.updateLastLink(link, 
-                (profile['service'], profile['service_username']))
-            urlFile = open(os.path.expanduser("~/."
-                           + urllib.parse.urlparse(link).netloc
-                           + ".last"), "w")
+    logging.info("  %s service" % line)
+    if (fail == 'no' and link):
+        blog.updateLastLink(link, 
+            (profile['service'], profile['service_username']))
+        urlFile = open(os.path.expanduser("~/."
+                       + urllib.parse.urlparse(link).netloc
+                       + ".last"), "w")
     
-            urlFile.write(link)
-            urlFile.close()
-        print("")
+        urlFile.write(link)
+        urlFile.close()
+    print("")
 
 def searchTwitter(search, twitter): 
     t = connectTwitter(twitter)
     return(t.search.tweets(q=search)['statuses'])
+
+def publishDelayTwitter(listPosts, twitter, timeSlots): 
+    for j in  range(len(listPosts)): 
+        tSleep = random.random()*timeSlots
+        tSleep2 = timeSlots - tSleep
+        print("Waiting ... %s" % str(tSleep)) 
+        time.sleep(tSleep) 
+        print("I'd publish ... %s" % str(listPosts[j])) 
+        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[j - 1]
+        publishTwitter(title, link, comment, twitter)
+        print("Waiting ... %s" % str(tSleep2)) 
+        time.sleep(tSleep2) 
 
 def publishTwitter(title, link, comment, twitter):
 

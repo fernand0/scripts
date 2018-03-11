@@ -23,6 +23,8 @@ import moduleSocial
 import configparser
 import os
 import logging
+import random
+import threading
 import feedparser
 import facebook
 from linkedin import linkedin
@@ -34,6 +36,7 @@ import re
 import sys
 import time
 import datetime
+import pickle
 from bs4 import BeautifulSoup
 from bs4 import NavigableString
 from bs4 import Tag
@@ -135,9 +138,8 @@ def main():
             blog.setTime(config.get(section, "time"))
 
         for option in config.options(section):
-            if (option 
-                    in ['twitter', 'facebook', 'telegram', 
-                        'medium', 'bufferapp']):
+            if (option in ['twitter', 'facebook', 'telegram', 
+                    'medium', 'bufferapp']):
                 nick = config.get(section, option)
                 socialNetwork = (option, nick)
                 blog.addSocialNetwork(socialNetwork)
@@ -166,57 +168,44 @@ def main():
                 if ("bufferapp" in config.options(section)):
                     blog.setBufferapp(config.get(section, "bufferapp"))
                     api = moduleSocial.connectBuffer()
-                    lenMax, profileList = moduleSocial.checkLimitPosts(api)
                     bufferMax = 10
+                    lenMax, profileList = moduleSocial.checkLimitPosts(api,blog.getBufferapp())
                     for profile in profileList:
                         lastLink, lastTime = blog.checkLastLink((profile['service'], profile['service_username']))
                         blog.addLastLinkPublished((option, lastLink))
                         i = blog.getLinkPosition(lastLink)
-                        print(i,lastLink)
-                        sys.exit()
+                        print("lastLink", lastLink, "i",i)
                         line = profile['service']
                         print("  %s" % profile['service'])
                         if (line[0] in blog.getBufferapp()):
-                            if (len(title) > 240):
-                                titlePostT = title[:240] 
-                            else:
-                                titlePostT = ""
-                            post = title + " " + firstLink
-                
                             if ((profile['service'] == 'twitter') 
                                or (profile['service'] == 'facebook')):
-                                # We should add a configuration option in order to check which
-                                # services are the ones with immediate posting. For now, we
-                                # know that we are using Twitter and Facebook
-                                # We are checking the links tha have been published with other
-                                # toolsin order to avoid duplicates
-                                
+                                # We should add a configuration option in order
+                                # to check which services are the ones with
+                                # immediate posting. For now, we know that we
+                                # are using Twitter and Facebook We are
+                                # checking the links tha have been published
+                                # with other toolsin order to avoid duplicates
+
                                 path = os.path.expanduser('~')
                                 with open(path + '/.urls.pickle', 'rb') as f:
                                     theList = pickle.load(f)
                             else:
                                 theList = []
 
-                            lastLink = blog.checkLastLink((profile, blog.socialNetwork[profile]))
-                            i = blog.getLinkPosition(lastLink) 
-                            print(i)
-                            sys.exit()
-                
-                
-                    for j in range(bufferMax-lenMax, 0, -1):
-                        if (i == 0):
-                            break
-                        i = i - 1
+                        lenMax, profileList = moduleSocial.checkLimitPosts(api,line[0])
+                        print("len-> i ->",lenMax, i)
+                        for j in range(bufferMax-lenMax, 0, -1):
+                            if (i == 0):
+                                break
+                            i = i - 1
 
-                        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i))
-                        moduleSocial.publishBuffer(blog, profileList, title, link, firstLink, isDebug, lenMax)
-                elif ('program' in config.options(section)):
-                    blog.setBufferapp(config.get(section, "program"))
+                            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i))
+                            moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
                 else:
                     i = blog.getLinkPosition(lastLink) 
                     print(i)
                     if (i > 0):
-                        sys.exit()
                         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
                         if not isDebug:
                             if 'twitter' in blog.getSocialNetworks():
@@ -235,12 +224,39 @@ def main():
                             moduleSocial.publishLinkedin(title, link, summary, image)
 
                             if (link):
+                                # I think this is not needed anymore
                                 urlFile = open(os.path.expanduser("~/."
                                                + urllib.parse.urlparse(link).netloc
                                                + ".last"), "w")
                 
                                 urlFile.write(link)
                                 urlFile.close()
+                if ('program' in config.options(section)):
+                    blog.setProgram(config.get(section, "program"))
+                    print('program', blog.getProgram())
+                    for socProfile in blog.getSocialNetworks().keys():
+                        print('pr', socProfile, blog.getProgram())
+                        if socProfile[0] in blog.getProgram():
+                            print("prof",  socProfile,blog.getSocialNetworks()[socProfile])
+                            lastLink, lastTime = blog.checkLastLink((socProfile,blog.getSocialNetworks()[socProfile]))
+                            print("last", lastLink, lastTime)
+                            i = blog.getLinkPosition(lastLink) 
+                            num = bufferMax - lenMax
+                            print("num", num)
+                            listPosts = []
+                            for j in range(num, 0, -1):
+                                if (i == 0):
+                                    break
+                                i = i - 1
+                                listPosts.append(blog.obtainPostData(i - 1))
+                                timeSlots = 60*60
+                            if listPosts:
+                                #t = threading.Thread(target=moduleSocial.publishDelayTwitter, 
+                                #        args=(listPosts ,'fernand0Test', timeSlots))
+                                #t.start()
+
+                                link = listPosts[len(listPosts) - 1][1]
+                                #blog.updateLastLink, link, (socProfile,blog.getSocialNetworks()[socProfile])
 
     print("====================================")
     print("Finished at %s" % time.asctime())
