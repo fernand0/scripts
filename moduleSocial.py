@@ -448,7 +448,7 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
 
     print("Telegram...%s\n"%channel)
 
-    if True:
+    try:
         bot = connectTelegram(channel)
 
         h = HTMLParser()
@@ -485,7 +485,7 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
             except:
                 bot.sendMessage('@'+channel, "Text is longer", parse_mode='HTML') 
 
-    else:
+    except:
         print("Telegram posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 

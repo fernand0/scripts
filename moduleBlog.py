@@ -145,7 +145,7 @@ class moduleBlog():
                 #print(entry['link'], link)
                 lenCmp = min(len(entry['link']), len(link))
                 if entry['link'][:lenCmp] == link[:lenCmp]:
-                       return i
+                    return i
                 i = i + 1
         return(-1)
 
@@ -182,9 +182,9 @@ class moduleBlog():
     def checkLastLink(self,socialNetwork=()):
         rssFeed = self.getUrl()+self.getRssFeed()
         if not socialNetwork: 
-            urlFile = open(os.path.expanduser("~" + "/."  
-                  + urllib.parse.urlparse(rssFeed).netloc
-                  + ".last"), "r")
+            filename = os.path.expanduser("~" + "/."  
+                    + urllib.parse.urlparse(rssFeed).netloc + ".last")
+            urlFile = open(filename, "r")
             linkLast = urlFile.read().rstrip()  # Last published
         else: 
             try: 

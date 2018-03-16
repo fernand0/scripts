@@ -157,6 +157,7 @@ def main():
                         blog.setBufferapp(config.get(section, "bufferapp"))
 
             print("Publishing pending posts\n")
+            print(blog.getSocialNetworks())
 
             bufferMax = 10
             if ("bufferapp" in config.options(section)):
@@ -209,6 +210,7 @@ def main():
                         i = blog.getLinkPosition(lastLink) 
                         if (i > 0):
                             twitter = blog.getSocialNetworks()['twitter']
+                            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
                             moduleSocial.publishTwitter(title, link, comment, twitter)
                             blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                     if 'facebook' in blog.getSocialNetworks():
@@ -218,15 +220,18 @@ def main():
                         i = blog.getLinkPosition(lastLink) 
                         if (i > 0): 
                             fbPage = blog.getSocialNetworks()['facebook'] 
+                            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
                             moduleSocial.publishFacebook(title, link, summaryLinks, image, fbPage)
                             blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                     if 'telegram' in blog.getSocialNetworks():
+                        print("sí")
                         socialNetwork = 'telegram'
                         lastLink, lastTime = blog.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                         blog.addLastLinkPublished((option, lastLink)) 
                         i = blog.getLinkPosition(lastLink) 
                         if (i > 0): 
                             telegram = blog.getSocialNetworks()['telegram'] 
+                            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
                             moduleSocial.publishTelegram(telegram, title, link, summary, summaryHtml, summaryLinks, image)
                             blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                     if 'medium' in blog.getSocialNetworks():
@@ -236,12 +241,14 @@ def main():
                         i = blog.getLinkPosition(lastLink) 
                         if (i > 0): 
                             medium = blog.getSocialNetworks()['medium'] 
+                            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
                             moduleSocial.publishMedium(medium, title, link, summary, summaryHtml, summaryLinks, image)
                             blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
 
                     # In this case, we are always publishing the link in
                     # LinkedIn
 
+                    lastLink, lastTime = blog.checkLastLink()
                     i = blog.getLinkPosition(lastLink) 
                     print(i)
 
