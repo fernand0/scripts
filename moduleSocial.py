@@ -337,12 +337,12 @@ def publishDelayTwitter(listPosts, twitter, timeSlots):
     for j in  range(len(listPosts)): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
-        print("Waiting ... %s" % str(tSleep)) 
+        print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep))) 
         time.sleep(tSleep) 
         print("I'd publish ... %s" % str(listPosts[j])) 
         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[j - 1]
-        publishTwitter(title, link, comment, twitter)
-        print("Waiting ... %s" % str(tSleep2)) 
+        publishTwitter(title, firstLink, comment, twitter)
+        print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2)))
         time.sleep(tSleep2) 
 
 def publishTwitter(title, link, comment, twitter):

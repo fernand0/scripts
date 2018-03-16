@@ -149,11 +149,11 @@ def main():
                     nick = config.get(section, option)
                     socialNetwork = (option, nick)
                     blog.addSocialNetwork(socialNetwork)
-                    if (option != 'bufferapp') and (option != 'program'):
-                        lastLink, lastTime = blog.checkLastLink(socialNetwork)
-                        blog.addLastLinkPublished((option, lastLink)) 
-                        i = blog.getLinkPosition(lastLink) 
-                    else: 
+                    #if (option != 'bufferapp') and (option != 'program'):
+                    #    lastLink, lastTime = blog.checkLastLink()
+                    #    #blog.addLastLinkPublished((option, lastLink)) 
+                    #    i = blog.getLinkPosition(lastLink) 
+                    if option == 'bufferapp': 
                         blog.setBufferapp(config.get(section, "bufferapp"))
 
             print("Publishing pending posts\n")
@@ -200,35 +200,66 @@ def main():
                             if listPosts:
                                 print(listPosts)
             else:
-                i = blog.getLinkPosition(lastLink) 
-                print(i)
-                if (i > 0):
-                    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
-                    if not isDebug:
-                        if 'twitter' in blog.getSocialNetworks():
+                if not isDebug:
+                    if 'twitter' in blog.getSocialNetworks():
+                        socialNetwork = 'twitter'
+                        lastLink, lastTime = blog.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
+                        print("--->",socialNetwork, lastLink)
+                        blog.addLastLinkPublished((option, lastLink)) 
+                        i = blog.getLinkPosition(lastLink) 
+                        if (i > 0):
                             twitter = blog.getSocialNetworks()['twitter']
                             moduleSocial.publishTwitter(title, link, comment, twitter)
-                        if 'facebook' in blog.getSocialNetworks():
-                            fbPage = blog.getSocialNetworks()['facebook']
+                            blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
+                    if 'facebook' in blog.getSocialNetworks():
+                        socialNetwork = 'facebook'
+                        lastLink, lastTime = blog.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
+                        blog.addLastLinkPublished((option, lastLink)) 
+                        i = blog.getLinkPosition(lastLink) 
+                        if (i > 0): 
+                            fbPage = blog.getSocialNetworks()['facebook'] 
                             moduleSocial.publishFacebook(title, link, summaryLinks, image, fbPage)
-                        if 'telegram' in blog.getSocialNetworks():
-                            telegram = blog.getSocialNetworks()['telegram']
+                            blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
+                    if 'telegram' in blog.getSocialNetworks():
+                        socialNetwork = 'telegram'
+                        lastLink, lastTime = blog.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
+                        blog.addLastLinkPublished((option, lastLink)) 
+                        i = blog.getLinkPosition(lastLink) 
+                        if (i > 0): 
+                            telegram = blog.getSocialNetworks()['telegram'] 
                             moduleSocial.publishTelegram(telegram, title, link, summary, summaryHtml, summaryLinks, image)
-                        if 'medium' in blog.getSocialNetworks():
-                            medium = blog.getSocialNetworks()['medium']
+                            blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
+                    if 'medium' in blog.getSocialNetworks():
+                        socialNetwork = 'medium'
+                        lastLink, lastTime = blog.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
+                        blog.addLastLinkPublished((option, lastLink)) 
+                        i = blog.getLinkPosition(lastLink) 
+                        if (i > 0): 
+                            medium = blog.getSocialNetworks()['medium'] 
                             moduleSocial.publishMedium(medium, title, link, summary, summaryHtml, summaryLinks, image)
+                            blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
+
+                    # In this case, we are always publishing the link in
+                    # LinkedIn
+
+                    i = blog.getLinkPosition(lastLink) 
+                    print(i)
+
+                    if True:
+                        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
 
                         moduleSocial.publishLinkedin(title, link, summary, image)
 
                         if (link):
-                            # I think this is not needed anymore
-                            urlFile = open(os.path.expanduser("~/."
-                                           + urllib.parse.urlparse(link).netloc
-                                           + ".last"), "w")
+                                # I think this is not needed anymore
+                                urlFile = open(os.path.expanduser("~/."
+                                               + urllib.parse.urlparse(link).netloc
+                                               + ".last"), "w")
             
-                            urlFile.write(link)
-                            urlFile.close()
-            if ('program' in config.options(section)):
+                                urlFile.write(link)
+                                urlFile.close()
+
+            if ('programa' in config.options(section)):
                 blog.setProgram(config.get(section, "program"))
                 lenMax = 6
                 profileList = blog.getSocialNetworks().keys()

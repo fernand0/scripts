@@ -142,6 +142,7 @@ class moduleBlog():
                 print(self.getPostsRss().entries)
                 return(len(self.getPostsRss().entries))
             for entry in self.getPostsRss().entries:
+                #print(entry['link'], link)
                 lenCmp = min(len(entry['link']), len(link))
                 if entry['link'][:lenCmp] == link[:lenCmp]:
                        return i
