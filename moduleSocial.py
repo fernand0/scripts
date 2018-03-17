@@ -341,12 +341,14 @@ def publishDelayTwitter(listPosts, twitter, timeSlots):
         time.sleep(tSleep) 
         print("I'd publish ... %s" % str(listPosts[j])) 
         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[j - 1]
-        publishTwitter(title, firstLink, comment, twitter)
+        publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image)
         print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2)))
         time.sleep(tSleep2) 
 
 def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image):
 
+    twitter = channel
+    comment = ''
     print("Twitter...\n")
     try:
         t = connectTwitter(twitter)
@@ -357,7 +359,7 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
     except:
         print("Twitter posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
-        return("Fail!")
+        return("Fail! %s" % sys.exc_info()[0])
 
 def publishDelayFacebook(listPosts, fbPage, timeSlots): 
     for j in  range(len(listPosts)): 
@@ -538,13 +540,14 @@ if __name__ == "__main__":
     lastLink = blog.checkLastLink()
     i = blog.getLinkPosition(lastLink) 
     (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
-    fbPage = blog.getSocialNetworks()['pagefb']
-    telegram = blog.getSocialNetworks()['telegramac']
-    medium = blog.getSocialNetworks()['mediumac']
+    fbPage = blog.getSocialNetworks()['facebook']
+    telegram = blog.getSocialNetworks()['telegram']
+    medium = blog.getSocialNetworks()['medium']
+    #twitter = blog.getSocialNetworks()['twitter']
     #moduleSocial.publishTelegram(telegram, title, link, summary, summaryHtml, summaryLinks, image)
-    moduleSocial.publishMedium(medium, title, link, summary, summaryHtml, summaryLinks, image)
+    #moduleSocial.publishMedium(medium, title, link, summary, summaryHtml, summaryLinks, image)
 
-    #res = publishTwitter("Hola ahora devuelve la URL, después de un pequeño fallo", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "fernand0Test")
+    res = publishTwitter("fernand0Test","Hola ahora devuelve la URL, después de un pequeño fallo", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "", "")
     #print("Published! Text: ", res['text'], " Url: https://twitter.com/fernand0Test/status/%s"%res['id_str'])
     #res = publishFacebook("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "me")
     #print("Published! Text: %s Url: https://facebook.com/fernando.tricas/posts/%s"% (res[0], res[1]['id'][res[1]['id'].find('_')+1:]))
