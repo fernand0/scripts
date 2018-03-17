@@ -345,7 +345,7 @@ def publishDelayTwitter(listPosts, twitter, timeSlots):
         print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2)))
         time.sleep(tSleep2) 
 
-def publishTwitter(title, link, comment, twitter):
+def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image):
 
     print("Twitter...\n")
     try:
@@ -359,9 +359,23 @@ def publishTwitter(title, link, comment, twitter):
         print("Unexpected error:", sys.exc_info()[0])
         return("Fail!")
 
-def publishFacebook(title, link, summaryLinks, image, fbPage):
+def publishDelayFacebook(listPosts, fbPage, timeSlots): 
+    for j in  range(len(listPosts)): 
+        tSleep = random.random()*timeSlots
+        tSleep2 = timeSlots - tSleep
+        print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep))) 
+        time.sleep(tSleep) 
+        print("I'd publish ... %s" % str(listPosts[j])) 
+        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[j - 1]
+        publishTwitter(title, firstLink, '', '', fbPage)
+        print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2)))
+        time.sleep(tSleep2) 
+
+   
+def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image):
     #publishFacebook("prueba2", "https://www.facebook.com/reflexioneseirreflexiones/", "b", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-9/426052_381657691846622_987775451_n.jpg", "Reflexiones e Irreflexiones")
 
+    fbPage = channel
     print("Facebook...\n")
     textToPublish = ""
     textToPublish2 = ""
@@ -399,7 +413,7 @@ def publishFacebook(title, link, summaryLinks, image, fbPage):
         return("Fail!")
 
 
-def publishLinkedin(title, link, summary, image):
+def publishLinkedin(channel, title, link, summary, summaryHtml, summaryLinks, image):
     # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
     print("Linkedin...\n")
     try:
