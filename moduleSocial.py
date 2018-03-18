@@ -341,7 +341,7 @@ def publishDelayTwitter(listPosts, twitter, timeSlots):
         time.sleep(tSleep) 
         print("I'd publish ... %s" % str(listPosts[j])) 
         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[j - 1]
-        publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image)
+        publishTwitter(twitter, title, link, summary, summaryHtml, summaryLinks, image)
         print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2)))
         time.sleep(tSleep2) 
 
@@ -386,6 +386,7 @@ def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, im
         title = h.unescape(title)
         (graph, page) = connectFacebook(fbPage)
         textToPublish = title + " \n" + summaryLinks
+        print(textToPublish)
         if (len(textToPublish) > 9980):
             textToPublish = textToPublish[:9980]
             index = textToPublish.rfind(' ')

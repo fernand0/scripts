@@ -263,7 +263,7 @@ def main():
                                     args=(listPosts ,'fernand0Test', timeSlots))
                             t.start()
                             t1 = threading.Thread(target=moduleSocial.publishDelayFacebook, 
-                                    args=(listPosts ,'fernand0Test', timeSlots))
+                                    args=(listPosts ,'Fernand0Test', timeSlots))
                             t1.start()
 
 
