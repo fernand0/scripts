@@ -369,7 +369,7 @@ def publishDelayFacebook(listPosts, fbPage, timeSlots):
         time.sleep(tSleep) 
         print("I'd publish ... %s" % str(listPosts[j])) 
         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[j - 1]
-        publishFacebook(fbPage, title, firstLink, summary, summaryHtml, summaryLinks, image)
+        publishFacebook(fbPage, title, firstLink, summary='', summaryHtml='', summaryLinks='', image='')
         print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2)))
         time.sleep(tSleep2) 
 
