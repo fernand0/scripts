@@ -152,7 +152,7 @@ def main():
                     if option == 'bufferapp': 
                         blog.setBufferapp(config.get(section, "bufferapp"))
                     if option == 'program': 
-                        blog.setBufferapp(config.get(section, "program"))
+                        blog.setProgram(config.get(section, "program"))
 
             print("Looking for pending posts in ...", blog.getSocialNetworks())
 
@@ -162,6 +162,7 @@ def main():
                 lenMax, profileList = moduleSocial.checkLimitPosts(api,blog.getBufferapp())
 
                 for profile in profileList:
+                    print(profile['service'],blog.getBufferapp())
                     if (profile['service'][0] in blog.getBufferapp()): 
                         lastLink, lastTime = blog.checkLastLink((profile['service'], profile['service_username']))
                         blog.addLastLinkPublished((profile['service'], lastLink))
