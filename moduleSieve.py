@@ -339,13 +339,15 @@ def addToSieve(msg=""):
     # fs.tosieve(open(FILE_SIEVE, 'w'))
     # fs.tosieve()
     # sys.exit()
+    print(USER)
     fs.tosieve(sieveContent)
-    sieveContent.write(
-"""#Filter:
-if anyof (body :raw :contains "puntoclick.info") {
-    fileinto "Spam";
-    stop;
-}""")
+    with open(os.path.expanduser('~'+USER)+'/sieve/body.sieve') as f:
+        sieveContent.write(f.read())
+#"""#Filter:
+#if anyof (body :raw :contains "puntoclick.info") {
+#    fileinto "Spam";
+#    stop;
+#}""")
 
     #import time
     #time.sleep(5)
