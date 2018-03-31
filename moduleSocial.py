@@ -80,6 +80,7 @@
 import configparser
 import os
 import sys
+import random
 import logging
 from bs4 import BeautifulSoup
 from bs4 import NavigableString
@@ -238,7 +239,7 @@ def connectMedium():
     return(client, user)
 
 
-def checkLimitPosts(api):
+def checkLimitPosts(api,services='tfgl'):
     # We can put as many items as the service with most items allow
     # The limit is ten.
     # Get all pending updates of a social network profile
@@ -248,85 +249,106 @@ def checkLimitPosts(api):
 
     profileList = Profiles(api=api).all()
     for profile in profileList:
-        lenProfile = len(profile.updates.pending)
-        if (lenProfile > lenMax):
-            lenMax = lenProfile
-        logging.info("%s ok" % profile['service'])
+        if (profile['service'][0] in services): 
+            lenProfile = len(profile.updates.pending) 
+            if (lenProfile > lenMax): 
+                lenMax = lenProfile 
+                logging.info("%s ok" % profile['service'])
 
     logging.info("There are %d in some buffer, we can put %d" %
                  (lenMax, 10-lenMax))
 
     return(lenMax, profileList)
 
-def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
+def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, services='fglt'):
     print("Publishing in Buffer:\n")
     if isDebug:
         profileList = []
         firstLink = None
     fail = 'no'
-    for profile in profileList:
-        line = profile['service']
-        print("  %s" % profile['service'])
+    line = profile['service']
+    print("  %s" % profile['service'])
 
-        if (len(title) > 240):
-            titlePostT = title[:240] 
-        else:
-            titlePostT = ""
-        post = title + " " + firstLink
+    if (len(title) > 240):
+        titlePostT = title[:240] 
+    else:
+        titlePostT = ""
+    post = title + " " + firstLink
 
-        if (profile['service'] == 'twitter') or (profile['service'] == 'facebook'):
-            # We should add a configuration option in order to check which
-            # services are the ones with immediate posting. For now, we
-            # know that we are using Twitter and Facebook
-            
-            path = os.path.expanduser('~')
-            with open(path + '/.urls.pickle', 'rb') as f:
-                theList = pickle.load(f)
-        else:
-            theList = []
+    if (profile['service'] == 'twitter') or (profile['service'] == 'facebook'):
+        # We should add a configuration option in order to check which
+        # services are the ones with immediate posting. For now, we
+        # know that we are using Twitter and Facebook
+        # We are checking the links tha have been published with other
+        # toolsin order to avoid duplicates
+        
+        path = os.path.expanduser('~')
+        with open(path + '/.urls.pickle', 'rb') as f:
+            theList = pickle.load(f)
+    else:
+        theList = []
 
-        if not (firstLink[firstLink.find(':')+2:] in theList):
-            # Without the http or https 
-            try:
-                if titlePostT and (profile['service'] == 'twitter'):
-                    profile.updates.new(urllib.parse.quote(titlePostT + " " + firstLink).encode('utf-8'))
-                else:
-                    profile.updates.new(urllib.parse.quote(post).encode('utf-8'))
-                line = line + ' ok'
-                time.sleep(3)
-            except:
-                print("Buffer posting failed!")
-                print("Unexpected error:", sys.exc_info()[0])
-                print("Unexpected error:", sys.exc_info()[1])
-                logging.info("Buffer posting failed!")
-                logging.info("Unexpected error: %s"% sys.exc_info()[0])
-                logging.info("Unexpected error: %s"% sys.exc_info()[1])
+    if not (firstLink[firstLink.find(':')+2:] in theList):
+        # Without the http or https 
+        try:
+            if titlePostT and (profile['service'] == 'twitter'):
+                entry = urllib.parse.quote(titlePostT + " " + firstLink).encode('utf-8')
+            else:
+                entry = urllib.parse.quote(post).encode('utf-8')
 
-                line = line + ' fail'
-                failFile = open(os.path.expanduser("~/."
-                           + urllib.parse.urlparse(link).netloc
-                           + ".fail"), "w")
-                failFile.write(post)
-                logging.info("  %s service" % line)
-                fail = 'yes'
-                break
+            if (profile['service'][0] in services): 
+                profile.updates.new(entry)
 
-        logging.info("  %s service" % line)
-        if (fail == 'no' and link):
-            urlFile = open(os.path.expanduser("~/."
-                           + urllib.parse.urlparse(link).netloc
-                           + ".last"), "w")
+            line = line + ' ok'
+            time.sleep(2)
+        except:
+            print("Buffer posting failed!")
+            print("Unexpected error:", sys.exc_info()[0])
+            print("Unexpected error:", sys.exc_info()[1])
+            logging.info("Buffer posting failed!")
+            logging.info("Unexpected error: %s"% sys.exc_info()[0])
+            logging.info("Unexpected error: %s"% sys.exc_info()[1])
+
+            line = line + ' fail'
+            failFile = open(os.path.expanduser("~/."
+                       + urllib.parse.urlparse(link).netloc
+                       + ".fail"), "w")
+            failFile.write(post)
+            logging.info("  %s service" % line)
+            fail = 'yes'
+
+    logging.info("  %s service" % line)
+    if (fail == 'no' and link):
+        blog.updateLastLink(link, 
+            (profile['service'], profile['service_username']))
+        urlFile = open(os.path.expanduser("~/."
+                       + urllib.parse.urlparse(link).netloc
+                       + ".last"), "w")
     
-            urlFile.write(link)
-            urlFile.close()
-        print("")
+        urlFile.write(link)
+        urlFile.close()
+    print("")
 
 def searchTwitter(search, twitter): 
     t = connectTwitter(twitter)
     return(t.search.tweets(q=search)['statuses'])
 
-def publishTwitter(title, link, comment, twitter):
+def publishDelayTwitter(listPosts, twitter, timeSlots): 
+    for j in  range(len(listPosts)): 
+        tSleep = random.random()*timeSlots
+        tSleep2 = timeSlots - tSleep
+        print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep))) 
+        time.sleep(tSleep) 
+        print("I'd publish ... %s" % str(listPosts[j])) 
+        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[j - 1]
+        publishTwitter(twitter, title, link, summary, summaryHtml, summaryLinks, image)
+        print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2)))
+        time.sleep(tSleep2) 
 
+def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image):
+
+    twitter = channel
+    comment = ''
     print("Twitter...\n")
     try:
         t = connectTwitter(twitter)
@@ -337,11 +359,25 @@ def publishTwitter(title, link, comment, twitter):
     except:
         print("Twitter posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
-        return("Fail!")
+        return("Fail! %s" % sys.exc_info()[0])
 
-def publishFacebook(title, link, summaryLinks, image, fbPage):
+def publishDelayFacebook(listPosts, fbPage, timeSlots): 
+    for j in  range(len(listPosts)): 
+        tSleep = random.random()*timeSlots
+        tSleep2 = timeSlots - tSleep
+        print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep))) 
+        time.sleep(tSleep) 
+        print("I'd publish ... %s" % str(listPosts[j])) 
+        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[j - 1]
+        publishFacebook(fbPage, title, firstLink, summary='', summaryHtml='', summaryLinks='', image='')
+        print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2)))
+        time.sleep(tSleep2) 
+
+   
+def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image):
     #publishFacebook("prueba2", "https://www.facebook.com/reflexioneseirreflexiones/", "b", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-9/426052_381657691846622_987775451_n.jpg", "Reflexiones e Irreflexiones")
 
+    fbPage = channel
     print("Facebook...\n")
     textToPublish = ""
     textToPublish2 = ""
@@ -350,6 +386,7 @@ def publishFacebook(title, link, summaryLinks, image, fbPage):
         title = h.unescape(title)
         (graph, page) = connectFacebook(fbPage)
         textToPublish = title + " \n" + summaryLinks
+        print(textToPublish)
         if (len(textToPublish) > 9980):
             textToPublish = textToPublish[:9980]
             index = textToPublish.rfind(' ')
@@ -379,7 +416,7 @@ def publishFacebook(title, link, summaryLinks, image, fbPage):
         return("Fail!")
 
 
-def publishLinkedin(title, link, summary, image):
+def publishLinkedin(channel, title, link, summary, summaryHtml, summaryLinks, image):
     # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
     print("Linkedin...\n")
     try:
@@ -428,7 +465,7 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
 
     print("Telegram...%s\n"%channel)
 
-    if True:
+    try:
         bot = connectTelegram(channel)
 
         h = HTMLParser()
@@ -465,7 +502,7 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
             except:
                 bot.sendMessage('@'+channel, "Text is longer", parse_mode='HTML') 
 
-    else:
+    except:
         print("Telegram posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
@@ -496,21 +533,22 @@ if __name__ == "__main__":
     rssFeed= 'rss20.xml'
     blog.setUrl(url)
     blog.setRssFeed(rssFeed)
-    blog.addSocialNetwork(('pagefb', 'fernand0.github.io'))        
-    blog.addSocialNetwork(('telegramac', 'mbpfernand0'))        
-    blog.addSocialNetwork(('mediumac', 'fernand0'))        
+    blog.addSocialNetwork(('facebook', 'fernand0.github.io'))        
+    blog.addSocialNetwork(('telegram', 'mbpfernand0'))        
+    blog.addSocialNetwork(('medium', 'fernand0'))        
     blog.setPostsRss()
     blog.getPostsRss()
     lastLink = blog.checkLastLink()
     i = blog.getLinkPosition(lastLink) 
     (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
-    fbPage = blog.getSocialNetworks()['pagefb']
-    telegram = blog.getSocialNetworks()['telegramac']
-    medium = blog.getSocialNetworks()['mediumac']
+    fbPage = blog.getSocialNetworks()['facebook']
+    telegram = blog.getSocialNetworks()['telegram']
+    medium = blog.getSocialNetworks()['medium']
+    #twitter = blog.getSocialNetworks()['twitter']
     #moduleSocial.publishTelegram(telegram, title, link, summary, summaryHtml, summaryLinks, image)
-    moduleSocial.publishMedium(medium, title, link, summary, summaryHtml, summaryLinks, image)
+    #moduleSocial.publishMedium(medium, title, link, summary, summaryHtml, summaryLinks, image)
 
-    #res = publishTwitter("Hola ahora devuelve la URL, después de un pequeño fallo", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "fernand0Test")
+    res = publishTwitter("fernand0Test","Hola ahora devuelve la URL, después de un pequeño fallo", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "", "")
     #print("Published! Text: ", res['text'], " Url: https://twitter.com/fernand0Test/status/%s"%res['id_str'])
     #res = publishFacebook("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "me")
     #print("Published! Text: %s Url: https://facebook.com/fernando.tricas/posts/%s"% (res[0], res[1]['id'][res[1]['id'].find('_')+1:]))

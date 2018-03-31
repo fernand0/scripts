@@ -23,7 +23,9 @@ class moduleBlog():
          self.postsXmlrpc = None
          self.time = []
          self.buffer = None
+         self.program = None
          self.xmlrpc = None
+         self.lastLinkPublished = {}
  
     def getUrl(self):
         return(self.url)
@@ -51,6 +53,9 @@ class moduleBlog():
  
     def addSocialNetwork(self, socialNetwork):
         self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
+
+    def addLastLinkPublished(self, socialNetwork):
+        self.lastLinkPublished[socialNetwork[0]] = socialNetwork[1]
  
     def getLinksToAvoid(self):
         return(self.linksToAvoid)
@@ -69,6 +74,12 @@ class moduleBlog():
  
     def setBufferapp(self, bufferapp):
         self.bufferapp = bufferapp
+
+    def getProgram(self):
+        return(self.program)
+ 
+    def setProgram(self, program):
+        self.program = program
 
     def getXmlRpc(self):
         return(self.xmlrpc)
@@ -131,9 +142,10 @@ class moduleBlog():
                 print(self.getPostsRss().entries)
                 return(len(self.getPostsRss().entries))
             for entry in self.getPostsRss().entries:
+                #print(entry['link'], link)
                 lenCmp = min(len(entry['link']), len(link))
                 if entry['link'][:lenCmp] == link[:lenCmp]:
-                       return i
+                    return i
                 i = i + 1
         return(-1)
 
@@ -170,21 +182,26 @@ class moduleBlog():
     def checkLastLink(self,socialNetwork=()):
         rssFeed = self.getUrl()+self.getRssFeed()
         if not socialNetwork: 
-            urlFile = open(os.path.expanduser("~" + "/."  
-                  + urllib.parse.urlparse(rssFeed).netloc
-                  + ".last"), "r")
+            filename = os.path.expanduser("~" + "/."  
+                    + urllib.parse.urlparse(rssFeed).netloc + ".last")
+            urlFile = open(filename, "r")
             linkLast = urlFile.read().rstrip()  # Last published
         else: 
             try: 
-                urlFile = open(os.path.expanduser("~" + "/."  
-                  + urllib.parse.urlparse(rssFeed).netloc
-                  + '_'+socialNetwork[0]+'_'+socialNetwork[1]
-                  + ".last"), "r")
+                filename = os.path.expanduser("~" + "/."  
+                        + urllib.parse.urlparse(rssFeed).netloc 
+                        + '_'+socialNetwork[0]+'_'+socialNetwork[1] 
+                        + ".last")
+                urlFile = open(filename, "r")
                 linkLast = urlFile.read().rstrip()  # Last published
             except:
+                print(os.path.expanduser("~" + "/."  
+                  + urllib.parse.urlparse(rssFeed).netloc
+                  + '_'+socialNetwork[0]+'_'+socialNetwork[1]
+                  + ".last"))
                 linkLast = ''  # None published, or non-existent file
 
-        return(linkLast)
+        return(linkLast, os.path.getmtime(filename))
 
     def updateLastLink(self,link, socialNetwork=()):
         rssFeed = self.getUrl()+self.getRssFeed()
@@ -331,6 +348,8 @@ if __name__ == "__main__":
             blog.setTime(config.get(section, "time"))
         if ("bufferapp" in config.options(section)):
             blog.setBufferapp(config.get(section, "bufferapp"))
+        if ("program" in config.options(section)):
+            blog.setBufferapp(config.get(section, "program"))
         if ("xmlrpc" in config.options(section)):
             blog.setXmlRpc()
 
