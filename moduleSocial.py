@@ -333,17 +333,39 @@ def searchTwitter(search, twitter):
     t = connectTwitter(twitter)
     return(t.search.tweets(q=search)['statuses'])
 
-def publishDelayTwitter(listPosts, twitter, timeSlots): 
+def publishDelayTwitter(blog, listPosts, twitter, timeSlots): 
+    fileName = os.path.expanduser('~/' 
+            +  urllib.parse.urlparse(blog.getRssFeed()).netloc + ".queue")
+    with open(fileName,'rb') as f:
+        try: 
+            listP = pickle.load(f)
+        except:
+            listP = []
+        listP = listP + listPosts
+    with open(fileName, 'wb') as f:
+        pickle.dump(listP,f)
+
     for j in  range(len(listPosts)): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
         print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep))) 
         time.sleep(tSleep) 
-        print("I'd publish ... %s" % str(listPosts[j])) 
-        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[j - 1]
-        publishTwitter(twitter, title, link, summary, summaryHtml, summaryLinks, image)
-        print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2)))
-        time.sleep(tSleep2) 
+        print("I'd publish ... %s" % str(listPosts[j]))         
+        with open(fileName,'rb') as f: 
+            try: 
+                listPosts = pickle.load(f) 
+            except: 
+                listPosts = []
+        if listPosts: 
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[j - 1]
+            publishTwitter(twitter, title, link, summary, summaryHtml, summaryLinks, image)
+            listPosts = listPosts[1:] 
+
+            with open(fileName, 'wb') as f: 
+                pickle.dump(listPosts,f) 
+                
+            print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2)))
+            time.sleep(tSleep2) 
 
 def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image):
 
@@ -362,22 +384,23 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
         return("Fail! %s" % sys.exc_info()[0])
 
 def publishDelayFacebook(listPosts, fbPage, timeSlots): 
-    with open('test','rb') as f:
+    fileName = os.path.expanduser('~/') + 'test'
+    with open(fileName,'rb') as f:
         try: 
             listP = pickle.load(f)
         except:
             listP = []
-        listP.append(listPosts)
-    with open('test', 'wb') as f:
+        listP = listP + listPosts
+    with open(fileName, 'wb') as f:
         pickle.dump(listP,f)
 
-    for j in  range(len(listPosts)): 
+    for j in range(len(listPosts)): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
         print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep))) 
         time.sleep(tSleep) 
-        print("I'd publish ... %s" % str(listPosts[j])) 
-        with open('test','rb') as f: 
+        #print("I'd publish ... %s" % str(listPosts[j])) 
+        with open(fileName,'rb') as f: 
             try: 
                 listPosts = pickle.load(f) 
             except: 
@@ -386,8 +409,10 @@ def publishDelayFacebook(listPosts, fbPage, timeSlots):
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[0] 
             publishFacebook(fbPage, title, firstLink, summary='', summaryHtml='', summaryLinks='', image='') 
             listPosts = listPosts[1:] 
-            with open('test', 'wb') as f: 
+            
+            with open(fileName, 'wb') as f: 
                 pickle.dump(listPosts,f)
+
             print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2))) 
             time.sleep(tSleep2) 
 

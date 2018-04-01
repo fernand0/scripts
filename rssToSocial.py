@@ -230,6 +230,7 @@ def main():
                 lenMax = 6
                 profileList = blog.getSocialNetworks().keys()
                 for profile in profileList:
+                    print("program: %s" % profile)
                     if profile[0] in blog.getProgram():
                         lastLink, lastTime = blog.checkLastLink((profile, blog.getSocialNetworks()[profile]))
                         blog.addLastLinkPublished((profile, lastLink))
@@ -260,16 +261,15 @@ def main():
                             listPosts.append(blog.obtainPostData(i - 1))
                             timeSlots = 60*60
                         if listPosts:
-                            t = threading.Thread(target=moduleSocial.publishDelayTwitter, 
-                                    args=(listPosts ,'fernand0Test', timeSlots))
-                            t.start()
-                            t1 = threading.Thread(target=moduleSocial.publishDelayFacebook, 
-                                    args=(listPosts ,'Fernand0Test', timeSlots))
-                            t1.start()
-
+                            if (profile == 'twitter'): 
+                                t = threading.Thread(target=moduleSocial.publishDelayTwitter, args=(blog, listPosts ,'fernand0Test', timeSlots)) 
+                                t.start()
+                            if (profile == 'facebook'): 
+                                t1 = threading.Thread(target=moduleSocial.publishDelayFacebook, args=(listPosts ,'Fernand0Test', timeSlots)) 
+                                t1.start()
 
                             link = listPosts[len(listPosts) - 1][1]
-                            blog.updateLastLink, link, (profile,blog.getSocialNetworks()[profile])
+                            blog.updateLastLink( link, (profile,blog.getSocialNetworks()[profile]))
 
             time.sleep(2)
 
