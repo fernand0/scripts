@@ -335,7 +335,9 @@ def searchTwitter(search, twitter):
 
 def publishDelayTwitter(blog, listPosts, twitter, timeSlots): 
     fileName = os.path.expanduser('~/' 
-            +  urllib.parse.urlparse(blog.getRssFeed()).netloc + ".queue")
+            +  urllib.parse.urlparse(blog.getRssFeed()).netloc 
+            + '_twitter'+'_' + twitter 
+            + ".queue")
     with open(fileName,'rb') as f:
         try: 
             listP = pickle.load(f)
