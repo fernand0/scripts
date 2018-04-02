@@ -338,7 +338,7 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
     #        +  urllib.parse.urlparse(blog.getUrl()).netloc 
     #        + '_twitter'+'_' + twitter 
     #        + ".queue")
-    print(fileName)
+    #print(fileName)
     socialNetwork= ('twitter', twitter)
     listP = blog.listPostsCache(socialNetwork)
     #with open(fileName,'rb') as f:
@@ -357,18 +357,20 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
         print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep))) 
         time.sleep(tSleep) 
         print("I'd publish ... %s" % str(listPosts[j]))         
-        with open(fileName,'rb') as f: 
-            try: 
-                listPosts = pickle.load(f) 
-            except: 
-                listPosts = []
+        listPosts = blog.listPostsCache(socialNetwork)
+        #with open(fileName,'rb') as f: 
+        #    try: 
+        #        listPosts = pickle.load(f) 
+        #    except: 
+        #        listPosts = []
         if listPosts: 
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[j - 1]
             publishTwitter(twitter, title, link, summary, summaryHtml, summaryLinks, image)
             listPosts = listPosts[1:] 
 
-            with open(fileName, 'wb') as f: 
-                pickle.dump(listPosts,f) 
+            blog.updatePostsCache(listPosts, socialNetwork)
+            #with open(fileName, 'wb') as f: 
+            #    pickle.dump(listPosts,f) 
                 
             print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2)))
             time.sleep(tSleep2) 

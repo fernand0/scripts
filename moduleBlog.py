@@ -189,7 +189,7 @@ class moduleBlog():
 
     def listPostsCache(self,socialNetwork=()):
         fileName = os.path.expanduser('~/.' 
-                +  urllib.parse.urlparse(blog.getUrl()).netloc 
+                +  urllib.parse.urlparse(self.getUrl()).netloc 
                 + '_twitter'+'_' + twitter 
                 + ".queue")
         with open(fileName,'rb') as f:
