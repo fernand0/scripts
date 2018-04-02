@@ -182,7 +182,7 @@ class moduleBlog():
     def updatePostsCache(self, listPosts, socialNetwork=()):
         fileName = os.path.expanduser('~/.' 
                 +  urllib.parse.urlparse(blog.getUrl()).netloc 
-                + '_twitter'+'_' + twitter 
+                + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
                 + ".queue")
         with open(fileName, 'wb') as f:
             pickle.dump(listP,f)
@@ -190,7 +190,7 @@ class moduleBlog():
     def listPostsCache(self,socialNetwork=()):
         fileName = os.path.expanduser('~/.' 
                 +  urllib.parse.urlparse(self.getUrl()).netloc 
-                + '_twitter'+'_' + twitter 
+                + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
                 + ".queue")
         with open(fileName,'rb') as f:
             try: 
