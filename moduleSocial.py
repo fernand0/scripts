@@ -334,10 +334,11 @@ def searchTwitter(search, twitter):
     return(t.search.tweets(q=search)['statuses'])
 
 def publishDelayTwitter(blog, listPosts, twitter, timeSlots): 
-    fileName = os.path.expanduser('~/' 
-            +  urllib.parse.urlparse(blog.getRssFeed()).netloc 
+    fileName = os.path.expanduser('~/.' 
+            +  urllib.parse.urlparse(blog.getUrl()).netloc 
             + '_twitter'+'_' + twitter 
             + ".queue")
+    print(fileName)
     with open(fileName,'rb') as f:
         try: 
             listP = pickle.load(f)
@@ -574,21 +575,32 @@ if __name__ == "__main__":
     import moduleBlog
 
     blog = moduleBlog.moduleBlog()
-    url = 'http://fernand0.blogalia.com/'
-    rssFeed= 'rss20.xml'
+    url = 'http://fernand0.tumblr.com/'
+    rssFeed= 'rss'
     blog.setUrl(url)
     blog.setRssFeed(rssFeed)
-    blog.addSocialNetwork(('facebook', 'fernand0.github.io'))        
-    blog.addSocialNetwork(('telegram', 'mbpfernand0'))        
-    blog.addSocialNetwork(('medium', 'fernand0'))        
+    blog.addSocialNetwork(('facebook', 'Fernand0Test'))        
+    #blog.addSocialNetwork(('telegram', 'Fernand0Test'))        
+    blog.addSocialNetwork(('twitter', 'fernand0Test'))        
     blog.setPostsRss()
     blog.getPostsRss()
-    lastLink = blog.checkLastLink()
+    lastLink, lastTime = blog.checkLastLink(('twitter', 'fernand0Test'))
     i = blog.getLinkPosition(lastLink) 
     (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
     fbPage = blog.getSocialNetworks()['facebook']
-    telegram = blog.getSocialNetworks()['telegram']
-    medium = blog.getSocialNetworks()['medium']
+    #telegram = blog.getSocialNetworks()['telegram']
+    #medium = blog.getSocialNetworks()['medium']
+    num = 4
+    listPosts= []
+    for j in range(num, 0, -1):
+        if (i == 0):
+            break
+        i = i - 1
+        listPosts.append(blog.obtainPostData(i - 1))
+        timeSlots = 60*60
+    if listPosts:
+        moduleSocial.publishDelayTwitter(blog, listPosts ,'fernand0Test', timeSlots)
+
     #twitter = blog.getSocialNetworks()['twitter']
     #moduleSocial.publishTelegram(telegram, title, link, summary, summaryHtml, summaryLinks, image)
     #moduleSocial.publishMedium(medium, title, link, summary, summaryHtml, summaryLinks, image)
