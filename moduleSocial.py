@@ -334,19 +334,22 @@ def searchTwitter(search, twitter):
     return(t.search.tweets(q=search)['statuses'])
 
 def publishDelayTwitter(blog, listPosts, twitter, timeSlots): 
-    fileName = os.path.expanduser('~/.' 
-            +  urllib.parse.urlparse(blog.getUrl()).netloc 
-            + '_twitter'+'_' + twitter 
-            + ".queue")
+    #fileName = os.path.expanduser('~/.' 
+    #        +  urllib.parse.urlparse(blog.getUrl()).netloc 
+    #        + '_twitter'+'_' + twitter 
+    #        + ".queue")
     print(fileName)
-    with open(fileName,'rb') as f:
-        try: 
-            listP = pickle.load(f)
-        except:
-            listP = []
-        listP = listP + listPosts
-    with open(fileName, 'wb') as f:
-        pickle.dump(listP,f)
+    socialNetwork= ('twitter', twitter)
+    listP = blog.listPostsCache(socialNetwork)
+    #with open(fileName,'rb') as f:
+    #    try: 
+    #        listP = pickle.load(f)
+    #    except:
+    #        listP = []
+    listP = listP + listPosts
+    #with open(fileName, 'wb') as f:
+    #    pickle.dump(listP,f)
+    blog.updatePostsCache(listP, socialNetwork)
 
     for j in  range(len(listPosts)): 
         tSleep = random.random()*timeSlots
@@ -385,6 +388,7 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
         print("Twitter posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
         return("Fail! %s" % sys.exc_info()[0])
+
 
 def publishDelayFacebook(listPosts, fbPage, timeSlots): 
     fileName = os.path.expanduser('~/') + 'test'

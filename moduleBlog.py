@@ -179,6 +179,26 @@ class moduleBlog():
         server = self.xmlrpc
         server[0].blogger.deletePost('',idPost, server[1], server[2], True)
 
+    def updatePostsCache(self, listPosts, socialNetwork=()):
+        fileName = os.path.expanduser('~/.' 
+                +  urllib.parse.urlparse(blog.getUrl()).netloc 
+                + '_twitter'+'_' + twitter 
+                + ".queue")
+        with open(fileName, 'wb') as f:
+            pickle.dump(listP,f)
+
+    def listPostsCache(self,socialNetwork=()):
+        fileName = os.path.expanduser('~/.' 
+                +  urllib.parse.urlparse(blog.getUrl()).netloc 
+                + '_twitter'+'_' + twitter 
+                + ".queue")
+        with open(fileName,'rb') as f:
+            try: 
+                listP = pickle.load(f)
+            except:
+                listP = []
+        return(listP)
+
     def checkLastLink(self,socialNetwork=()):
         rssFeed = self.getUrl()+self.getRssFeed()
         if not socialNetwork: 
