@@ -364,7 +364,7 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
         #    except: 
         #        listPosts = []
         if listPosts: 
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[j - 1]
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[0]
             publishTwitter(twitter, title, link, summary, summaryHtml, summaryLinks, image)
             listPosts = listPosts[1:] 
 

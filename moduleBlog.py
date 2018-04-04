@@ -7,6 +7,7 @@ import os
 import time
 import urllib
 import feedparser
+import pickle
 from bs4 import BeautifulSoup
 from bs4 import Tag
 
@@ -181,11 +182,11 @@ class moduleBlog():
 
     def updatePostsCache(self, listPosts, socialNetwork=()):
         fileName = os.path.expanduser('~/.' 
-                +  urllib.parse.urlparse(blog.getUrl()).netloc 
+                +  urllib.parse.urlparse(self.getUrl()).netloc 
                 + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
                 + ".queue")
         with open(fileName, 'wb') as f:
-            pickle.dump(listP,f)
+            pickle.dump(listPosts,f)
 
     def listPostsCache(self,socialNetwork=()):
         fileName = os.path.expanduser('~/.' 
