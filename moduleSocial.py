@@ -393,15 +393,18 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
 
 
 def publishDelayFacebook(listPosts, fbPage, timeSlots): 
-    fileName = os.path.expanduser('~/') + 'test'
-    with open(fileName,'rb') as f:
-        try: 
-            listP = pickle.load(f)
-        except:
-            listP = []
-        listP = listP + listPosts
-    with open(fileName, 'wb') as f:
-        pickle.dump(listP,f)
+    #fileName = os.path.expanduser('~/') + 'test'
+    socialNetwork=('facebook','Fernand0Test')
+    listP = blog.listPostsCache(socialNetwork)
+    #with open(fileName,'rb') as f:
+    #    try: 
+    #        listP = pickle.load(f)
+    #    except:
+    #        listP = []
+    listP = listP + listPosts
+    #with open(fileName, 'wb') as f:
+    #    pickle.dump(listP,f)
+    blog.updatePostsCache(listP, socialNetwork)
 
     for j in range(len(listPosts)): 
         tSleep = random.random()*timeSlots
@@ -409,18 +412,20 @@ def publishDelayFacebook(listPosts, fbPage, timeSlots):
         print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep))) 
         time.sleep(tSleep) 
         #print("I'd publish ... %s" % str(listPosts[j])) 
-        with open(fileName,'rb') as f: 
-            try: 
-                listPosts = pickle.load(f) 
-            except: 
-                listPosts = []
+        listPosts = blog.listPostsCache(socialNetwork)
+        #with open(fileName,'rb') as f: 
+        #    try: 
+        #        listPosts = pickle.load(f) 
+        #    except: 
+        #        listPosts = []
         if listPosts: 
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[0] 
             publishFacebook(fbPage, title, firstLink, summary='', summaryHtml='', summaryLinks='', image='') 
             listPosts = listPosts[1:] 
             
-            with open(fileName, 'wb') as f: 
-                pickle.dump(listPosts,f)
+            blog.updatePostsCache(listPosts, socialNetwork)
+            #with open(fileName, 'wb') as f: 
+            #    pickle.dump(listPosts,f)
 
             print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2))) 
             time.sleep(tSleep2) 
