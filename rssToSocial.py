@@ -265,7 +265,7 @@ def main():
                                 t = threading.Thread(target=moduleSocial.publishDelayTwitter, args=(blog, listPosts ,'fernand0Test', timeSlots)) 
                                 t.start()
                             if (profile == 'facebook'): 
-                                t1 = threading.Thread(target=moduleSocial.publishDelayFacebook, args=(listPosts ,'Fernand0Test', timeSlots)) 
+                                t1 = threading.Thread(target=moduleSocial.publishDelayFacebook, args=(blog, listPosts ,'Fernand0Test', timeSlots)) 
                                 t1.start()
 
                             link = listPosts[len(listPosts) - 1][1]

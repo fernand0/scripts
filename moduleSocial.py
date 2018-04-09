@@ -373,7 +373,7 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
         return("Fail! %s" % sys.exc_info()[0])
 
 
-def publishDelayFacebook(listPosts, fbPage, timeSlots): 
+def publishDelayFacebook(blog, listPosts, fbPage, timeSlots): 
     socialNetwork=('facebook','Fernand0Test')
     listP = blog.listPostsCache(socialNetwork)
     listP = listP + listPosts
