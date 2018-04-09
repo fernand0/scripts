@@ -334,21 +334,9 @@ def searchTwitter(search, twitter):
     return(t.search.tweets(q=search)['statuses'])
 
 def publishDelayTwitter(blog, listPosts, twitter, timeSlots): 
-    #fileName = os.path.expanduser('~/.' 
-    #        +  urllib.parse.urlparse(blog.getUrl()).netloc 
-    #        + '_twitter'+'_' + twitter 
-    #        + ".queue")
-    #print(fileName)
     socialNetwork= ('twitter', twitter)
     listP = blog.listPostsCache(socialNetwork)
-    #with open(fileName,'rb') as f:
-    #    try: 
-    #        listP = pickle.load(f)
-    #    except:
-    #        listP = []
     listP = listP + listPosts
-    #with open(fileName, 'wb') as f:
-    #    pickle.dump(listP,f)
     blog.updatePostsCache(listP, socialNetwork)
 
     for j in  range(len(listPosts)): 
@@ -358,19 +346,12 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
         time.sleep(tSleep) 
         print("I'd publish ... %s" % str(listPosts[j]))         
         listPosts = blog.listPostsCache(socialNetwork)
-        #with open(fileName,'rb') as f: 
-        #    try: 
-        #        listPosts = pickle.load(f) 
-        #    except: 
-        #        listPosts = []
         if listPosts: 
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[0]
             publishTwitter(twitter, title, link, summary, summaryHtml, summaryLinks, image)
             listPosts = listPosts[1:] 
 
             blog.updatePostsCache(listPosts, socialNetwork)
-            #with open(fileName, 'wb') as f: 
-            #    pickle.dump(listPosts,f) 
                 
             print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2)))
             time.sleep(tSleep2) 
@@ -393,17 +374,9 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
 
 
 def publishDelayFacebook(listPosts, fbPage, timeSlots): 
-    #fileName = os.path.expanduser('~/') + 'test'
     socialNetwork=('facebook','Fernand0Test')
     listP = blog.listPostsCache(socialNetwork)
-    #with open(fileName,'rb') as f:
-    #    try: 
-    #        listP = pickle.load(f)
-    #    except:
-    #        listP = []
     listP = listP + listPosts
-    #with open(fileName, 'wb') as f:
-    #    pickle.dump(listP,f)
     blog.updatePostsCache(listP, socialNetwork)
 
     for j in range(len(listPosts)): 
@@ -413,27 +386,17 @@ def publishDelayFacebook(listPosts, fbPage, timeSlots):
         time.sleep(tSleep) 
         #print("I'd publish ... %s" % str(listPosts[j])) 
         listPosts = blog.listPostsCache(socialNetwork)
-        #with open(fileName,'rb') as f: 
-        #    try: 
-        #        listPosts = pickle.load(f) 
-        #    except: 
-        #        listPosts = []
         if listPosts: 
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[0] 
             publishFacebook(fbPage, title, firstLink, summary='', summaryHtml='', summaryLinks='', image='') 
             listPosts = listPosts[1:] 
             
             blog.updatePostsCache(listPosts, socialNetwork)
-            #with open(fileName, 'wb') as f: 
-            #    pickle.dump(listPosts,f)
 
             print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2))) 
             time.sleep(tSleep2) 
-
    
 def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image):
-    #publishFacebook("prueba2", "https://www.facebook.com/reflexioneseirreflexiones/", "b", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-9/426052_381657691846622_987775451_n.jpg", "Reflexiones e Irreflexiones")
-
     fbPage = channel
     print("Facebook...\n")
     textToPublish = ""
