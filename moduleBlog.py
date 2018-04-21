@@ -279,11 +279,11 @@ class moduleBlog():
                         j = j + 1
     
         if linksTxt != "":
-            theSummaryLinks = soup.get_text().strip('\n') + "\n\n" + linksTxt
+            theSummaryLinks = linksTxt
         else:
-            theSummaryLinks = soup.get_text().strip('\n')
+            theSummaryLinks = ""
     
-        return theSummaryLinks
+        return (soup.get_text().strip('\n'), theSummaryLinks)
 
     def obtainPostData(self, i):
         posts = self.getPostsRss().entries
@@ -319,12 +319,14 @@ class moduleBlog():
 
         theSummary = soup.get_text()
         if self.getLinksToAvoid():
-            theSummaryLinks = self.extractLinks(soup, self.getLinkstoavoid())
+            (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())
         else:
-            theSummaryLinks = self.extractLinks(soup, "")
+            (theContent, theSummaryLinks) = self.extractLinks(soup, "")
 
 
         theImage = self.extractImage(soup)
+        theLinks = theSummaryLinks
+        theSummaryLinks = theContent + theLinks
 
         print("=========")
         print("Results: ")
@@ -334,6 +336,7 @@ class moduleBlog():
         print("First Link:", firstLink)
         print("Summary:   ", content[:200])
         print("Sum links: ", theSummaryLinks)
+        print("the Links"  , theLinks)
         print("Comment:   ", comment)
         print("Image;     ", theImage)
         print("Post       ", theTitle + " " + theLink)
@@ -341,7 +344,7 @@ class moduleBlog():
         print("")
 
 
-        return (theTitle, theLink, firstLink, theImage, theSummary, content ,theSummaryLinks, comment)
+        return (theTitle, theLink, firstLink, theImage, theSummary, content ,theSummaryLinks, theContent, theLinks, comment)
 
 
 if __name__ == "__main__":

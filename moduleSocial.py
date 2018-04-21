@@ -356,7 +356,7 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
             print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2)))
             time.sleep(tSleep2) 
 
-def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image):
+def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
 
     twitter = channel
     comment = ''
@@ -396,7 +396,7 @@ def publishDelayFacebook(blog, listPosts, fbPage, timeSlots):
             print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2))) 
             time.sleep(tSleep2) 
    
-def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image):
+def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     fbPage = channel
     print("Facebook...\n")
     textToPublish = ""
@@ -436,7 +436,7 @@ def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, im
         return("Fail!")
 
 
-def publishLinkedin(channel, title, link, summary, summaryHtml, summaryLinks, image):
+def publishLinkedin(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
     print("Linkedin...\n")
     try:
@@ -480,40 +480,30 @@ def cleanTags(soup):
         tags[0].extract()
     # <!DOCTYPE html> in github.io
 
-def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, image):
+def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     #publishTelegram("reflexioneseirreflexiones","Canal de Reflexiones e Irreflexiones", "http://fernand0.blogalia.com/", "", "", "", "")
 
     print("Telegram...%s\n"%channel)
 
-    try:
+    if True:
         bot = connectTelegram(channel)
 
         h = HTMLParser()
         title = h.unescape(title)
         htmlText='<a href="'+link+'">'+title + "</a>\n" + summaryHtml
-        soup = BeautifulSoup(htmlText)
-        cleanTags(soup)
+        #soup = BeautifulSoup(htmlText)
+        #cleanTags(soup)
         #print(soup)
-        if len(str(soup)) > 4090:
-            textToPublish = str(soup)[:4090]
-            index = textToPublish.rfind('<')
-            index2 = textToPublish.find('>',index)
-            # We need a better way to break texts
-            textToPublish2 = ""
-            if (index2 < 0):
-            # unclosed tag
-            # Maybe we can still have an unclosed tag
-                if  (textToPublish[index + 1] == '/'):
-                    # It is a closing tag <a ....>anchor </...>
-                    # We need to find the starting tag
-                    indexT = textToPublish[index].rfind('<')
-                    if (indexT>=0):
-                        index = indexT
-            textToPublish = str(soup)[:index - 1]+' ...'
-            textToPublish2 = '... '+ str(soup)[index:]
+        text = '<a href="'+link+'">'+title+ "</a>\n" + content + links
+        textToPublish2 = ""
+        if len(text) < 4090:
+            textToPublish = text
         else:
-            textToPublish = str(soup)
-            textToPublish2 = ''
+            text = '<a href="'+link+'">'+title + "</a>\n" + content
+            textToPublish = text[:4080] + ' ...'
+            textToPublish2 = '... '+ text[4081:]
+        print("text to ", textToPublish)
+        print("text to 2", textToPublish2)
 
         bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
         if textToPublish2:
@@ -521,12 +511,14 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
                 bot.sendMessage('@'+channel, textToPublish2[:4090], parse_mode='HTML') 
             except:
                 bot.sendMessage('@'+channel, "Text is longer", parse_mode='HTML') 
+        if links:
+            bot.sendMessage('@'+channel, links, parse_mode='HTML') 
 
-    except:
+    else:
         print("Telegram posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
-def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, image):
+def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
     print("Medium...\n")
     try:
         (client, user) = connectMedium()

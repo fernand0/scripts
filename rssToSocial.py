@@ -202,18 +202,19 @@ def main():
                         lastLink, lastTime = blog.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                         blog.addLastLinkPublished((option, lastLink)) 
                         i = blog.getLinkPosition(lastLink) 
+                        print(i)
                         if (i > 0):
                             nick = blog.getSocialNetworks()[socialNetwork]
-                            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
+                            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1))
                             publishMethod = getattr(moduleSocial, 
                                     'publish'+ socialNetwork.capitalize())
-                            publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image)
+                            publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
                             blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
 
                     lastLink, lastTime = blog.checkLastLink()
                     i = blog.getLinkPosition(lastLink) 
                     if (i > 0):
-                        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
+                        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i - 1))
 
                         if (link):
                             moduleSocial.publishLinkedin('', title, link, summary, '', '', image)
