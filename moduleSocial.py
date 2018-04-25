@@ -494,10 +494,11 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
         #soup = BeautifulSoup(htmlText)
         #cleanTags(soup)
         #print(soup)
-        text = '<a href="'+link+'">'+title+ "</a>\n" + content + links
+        text = '<a href="'+link+'">'+title+ "</a>\n" + content + '\n\n' + links
         textToPublish2 = ""
         if len(text) < 4090:
             textToPublish = text
+            links = ""
         else:
             text = '<a href="'+link+'">'+title + "</a>\n" + content
             textToPublish = text[:4080] + ' ...'
