@@ -191,7 +191,7 @@ def main():
                             i = i - 1
 
                             listPosts.append(blog.obtainPostData(i - 1))
-                            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i))
+                            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i))
                             moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
                             if listPosts:
                                 print(listPosts)

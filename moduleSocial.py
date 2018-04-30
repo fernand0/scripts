@@ -347,7 +347,11 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
         print("I'd publish ... %s" % str(listPosts[j]))         
         listPosts = blog.listPostsCache(socialNetwork)
         if listPosts: 
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[0]
+            try:
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = listPosts[0]
+            except:
+                # backwards compatibility
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[0]
             publishTwitter(twitter, title, link, summary, summaryHtml, summaryLinks, image)
             listPosts = listPosts[1:] 
 
@@ -387,7 +391,11 @@ def publishDelayFacebook(blog, listPosts, fbPage, timeSlots):
         #print("I'd publish ... %s" % str(listPosts[j])) 
         listPosts = blog.listPostsCache(socialNetwork)
         if listPosts: 
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[0] 
+            try: 
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = listPosts[0] 
+            except:
+                #backwards compatibility
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[0] 
             publishFacebook(fbPage, title, firstLink, summary='', summaryHtml='', summaryLinks='', image='') 
             listPosts = listPosts[1:] 
             
