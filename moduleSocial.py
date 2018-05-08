@@ -561,7 +561,7 @@ if __name__ == "__main__":
     blog.getPostsRss()
     lastLink, lastTime = blog.checkLastLink(('twitter', 'fernand0Test'))
     i = blog.getLinkPosition(lastLink) 
-    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
+    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i - 1))
     fbPage = blog.getSocialNetworks()['facebook']
     #telegram = blog.getSocialNetworks()['telegram']
     #medium = blog.getSocialNetworks()['medium']

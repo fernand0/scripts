@@ -344,7 +344,7 @@ class moduleBlog():
         print("")
 
 
-        return (theTitle, theLink, firstLink, theImage, theSummary, content ,theSummaryLinks, theContent, theLinks, comment)
+        return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
 
 if __name__ == "__main__":
