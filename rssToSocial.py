@@ -259,14 +259,16 @@ def main():
                             if (i == 0):
                                 break
                             i = i - 1
-                            listPosts.append(blog.obtainPostData(i - 1))
+                            listPosts.append(blog.obtainPostData(i))
                             timeSlots = 60*60
                         if listPosts:
                             if (profile == 'twitter'): 
-                                t = threading.Thread(target=moduleSocial.publishDelayTwitter, args=(blog, listPosts ,'fernand0Test', timeSlots)) 
+                                theNick = blog.getSocialNetworks()['twitter'])
+                                t = threading.Thread(target=moduleSocial.publishDelayTwitter, args=(blog, listPosts, theNick, timeSlots)) 
                                 t.start()
                             if (profile == 'facebook'): 
-                                t1 = threading.Thread(target=moduleSocial.publishDelayFacebook, args=(blog, listPosts ,'Fernand0Test', timeSlots)) 
+                                theNick = blog.getSocialNetworks()['facebook'])
+                                t1 = threading.Thread(target=moduleSocial.publishDelayFacebook, args=(blog, listPosts, theNick, timeSlots)) 
                                 t1.start()
 
                             link = listPosts[len(listPosts) - 1][1]
