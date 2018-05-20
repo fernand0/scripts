@@ -167,6 +167,7 @@ def main():
                         lastLink, lastTime = blog.checkLastLink((profile['service'], profile['service_username']))
                         blog.addLastLinkPublished((profile['service'], lastLink))
                         i = blog.getLinkPosition(lastLink)
+                        print(i,lastLink)
                         if ((profile['service'] == 'twitter') 
                            or (profile['service'] == 'facebook')):
                             # We should add a configuration option in order
@@ -186,11 +187,11 @@ def main():
 
                         listPosts = []
                         for j in range(num, 0, -1):
-                            if (i == 0):
+                            if (i <= 0):
                                 break
                             i = i - 1
 
-                            listPosts.append(blog.obtainPostData(i - 1))
+                            listPosts.append(blog.obtainPostData(i))
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i))
                             moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
                             if listPosts:
@@ -256,18 +257,18 @@ def main():
                         print("num", num)
                         listPosts = []
                         for j in range(num, 0, -1):
-                            if (i == 0):
+                            if (i <= 0):
                                 break
                             i = i - 1
                             listPosts.append(blog.obtainPostData(i))
-                            timeSlots = 60*60
+                            timeSlots = 60*60 # One hour
                         if listPosts:
                             if (profile == 'twitter'): 
-                                theNick = blog.getSocialNetworks()['twitter'])
+                                theNick = blog.getSocialNetworks()['twitter']
                                 t = threading.Thread(target=moduleSocial.publishDelayTwitter, args=(blog, listPosts, theNick, timeSlots)) 
                                 t.start()
                             if (profile == 'facebook'): 
-                                theNick = blog.getSocialNetworks()['facebook'])
+                                theNick = blog.getSocialNetworks()['facebook']
                                 t1 = threading.Thread(target=moduleSocial.publishDelayFacebook, args=(blog, listPosts, theNick, timeSlots)) 
                                 t1.start()
 

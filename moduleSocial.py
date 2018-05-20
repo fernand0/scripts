@@ -339,7 +339,8 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
     listP = listP + listPosts
     blog.updatePostsCache(listP, socialNetwork)
 
-    for j in  range(len(listPosts)): 
+    numPosts = (4*60*60)/timeSlots
+    for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
         print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep))) 
@@ -352,7 +353,7 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
             except:
                 # backwards compatibility
                 (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[0]
-            publishTwitter(twitter, title, link, summary, summaryHtml, summaryLinks, image)
+            publishTwitter(twitter, title, firstLink, summary, summaryHtml, summaryLinks, image)
             listPosts = listPosts[1:] 
 
             blog.updatePostsCache(listPosts, socialNetwork)
