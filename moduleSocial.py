@@ -384,7 +384,8 @@ def publishDelayFacebook(blog, listPosts, fbPage, timeSlots):
     listP = listP + listPosts
     blog.updatePostsCache(listP, socialNetwork)
 
-    for j in range(len(listPosts)): 
+    numPosts = (4*60*60)/timeSlots
+    for j in range(numPosts): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
         print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep))) 
