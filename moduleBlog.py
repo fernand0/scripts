@@ -8,6 +8,7 @@ import time
 import urllib
 import feedparser
 import pickle
+from slackclient import SlackClient
 from bs4 import BeautifulSoup
 from bs4 import Tag
 
@@ -21,6 +22,7 @@ class moduleBlog():
          self.socialNetworks = {}
          self.linksToAvoid = ""
          self.postsRss = None
+         self.postsSlack = None
          self.postsXmlrpc = None
          self.time = []
          self.buffer = None
@@ -103,7 +105,46 @@ class moduleBlog():
         return(self.postsRss)
  
     def setPostsRss(self):
-        self.postsRss = feedparser.parse(self.url+self.rssFeed)
+        urlRss = self.url+self.rssFeed
+        if urlRss.find('tumblr')>0:
+            print("sí")
+            import subprocess 
+            process = subprocess.Popen("$HOME/usr/src/sh/tumblr.sh", shell=True, stdout=subprocess.PIPE) 
+            process.wait() 
+            print(process.returncode)
+            self.postsRss = feedparser.parse('/tmp/feed.rss')
+            # Workaround until a better solution can be implented due to tumblr
+            # gdpr stupidity
+            # Based on this shellscript:
+            # https://discourse.tt-rss.org/t/change-on-tumblr-rss-feeds-not-working/1158/20
+
+        else:
+            self.postsRss = feedparser.parse(urlRss)
+        print(self.postsRss)
+
+    def setPostsSlack(self): 
+        if not self.postsSlack:
+            self.postsSlack = []
+        config = configparser.ConfigParser() 
+        config.read('/home/ftricass/.rssSlack') 
+        slack_token = config["Slack"].get('api-key') 
+        sc = SlackClient(slack_token) 
+        chanList = sc.api_call("channels.list")['channels'] 
+        for channel in chanList: 
+            chan = 'links' 
+            if channel['name_normalized'] == chan: 
+                theChannel = channel['id'] 
+                history = sc.api_call( "channels.history", channel=theChannel)
+                print(history)
+                for msg in history['messages']: 
+                    if 'attachments' in msg:
+                        if 'original_url' in msg['attachments'][0]: 
+                            self.postsSlack.append(msg['attachments'][0])
+                        sc.api_call("chat.delete", channel=theChannel, ts=msg['ts']) 
+        print(self.postsSlack)
+
+    def getPostsSlack(self):
+        return(self.postsSlack)
 
     def getPostsXmlrpc(self):
         return(self.postsRss)
@@ -148,7 +189,17 @@ class moduleBlog():
                 if entry['link'][:lenCmp] == link[:lenCmp]:
                     return i
                 i = i + 1
-        return(-1)
+        elif self.getPostsSlack():
+            if not link:
+                print(self.getPostsSlack())
+                return(len(self.getPostsSlack()))
+            for entry in self.getPostsSlack():
+                print(entry['original_url'], link)
+                lenCmp = min(len(entry['original_url']), len(link))
+                if entry['original_url'][:lenCmp] == link[:lenCmp]:
+                    return i
+                i = i + 1
+        return(i-1)
 
     def datePost(self, pos):
         return(self.getPostsRss().entries[pos]['published_parsed'])
@@ -286,47 +337,77 @@ class moduleBlog():
         return (soup.get_text().strip('\n'), theSummaryLinks)
 
     def obtainPostData(self, i):
-        posts = self.getPostsRss().entries
-        theSummary = posts[i]['summary']
-        content = posts[i]['description']
-        theDescription = posts[i]['description']
-        theTitle = posts[i]['title'].replace('\n', ' ')
-        theLink = posts[i]['link']
-        if ('comment' in posts[i]):
-            comment = posts[i]['comment']
-        else:
-            comment = ""
+        if self.getPostsRss():
+            posts = self.getPostsRss().entries
+            theSummary = posts[i]['summary']
+            content = posts[i]['description']
+            theDescription = posts[i]['description']
+            theTitle = posts[i]['title'].replace('\n', ' ')
+            theLink = posts[i]['link']
+            if ('comment' in posts[i]):
+                comment = posts[i]['comment']
+            else:
+                comment = ""
 
-        theSummaryLinks = ""
+            theSummaryLinks = ""
 
-        soup = BeautifulSoup(theDescription, 'lxml')
+            soup = BeautifulSoup(theDescription, 'lxml')
 
-        link = soup.a
-        if link is None:
-           firstLink = theLink 
-        else:
-           firstLink = link['href']
-           pos = firstLink.find('.')
-           if firstLink.find('https')>=0:
-               lenProt = len('https://')
-           else:
-               lenProt = len('http://')
-           if (firstLink[lenProt:pos] == theTitle[:pos - lenProt]):
-               # A way to identify retumblings. They have the name of the
-               # tumblr at the beggining of the anchor text
-               theTitle = theTitle[pos - lenProt + 1:]
-
-
-        theSummary = soup.get_text()
-        if self.getLinksToAvoid():
-            (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())
-        else:
-            (theContent, theSummaryLinks) = self.extractLinks(soup, "")
+            link = soup.a
+            if link is None:
+               firstLink = theLink 
+            else:
+               firstLink = link['href']
+               pos = firstLink.find('.')
+               if firstLink.find('https')>=0:
+                   lenProt = len('https://')
+               else:
+                   lenProt = len('http://')
+               if (firstLink[lenProt:pos] == theTitle[:pos - lenProt]):
+                   # A way to identify retumblings. They have the name of the
+                   # tumblr at the beggining of the anchor text
+                   theTitle = theTitle[pos - lenProt + 1:]
 
 
-        theImage = self.extractImage(soup)
-        theLinks = theSummaryLinks
-        theSummaryLinks = theContent + theLinks
+            theSummary = soup.get_text()
+            if self.getLinksToAvoid():
+                (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())
+            else:
+                (theContent, theSummaryLinks) = self.extractLinks(soup, "")
+
+
+            theImage = self.extractImage(soup)
+            theLinks = theSummaryLinks
+            theSummaryLinks = theContent + theLinks
+        elif self.getPostsSlack():
+            posts = self.getPostsSlack()
+            theSummary = posts[i]['text']
+            content = posts[i]['text']
+            theDescription = posts[i]['text']
+            theTitle = posts[i]['title']
+            theLink = posts[i]['original_url']
+            if ('comment' in posts[i]):
+                comment = posts[i]['comment']
+            else:
+                comment = ""
+
+            theSummaryLinks = ""
+
+            soup = BeautifulSoup(theDescription, 'lxml')
+            firstLink = theLink
+
+            if self.getLinksToAvoid():
+                (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())
+            else:
+                (theContent, theSummaryLinks) = self.extractLinks(soup, "") 
+                
+            if 'image_url' in posts[i]:
+                theImage = posts[i]['image_url']
+            else:
+                theImage = ""
+            theLinks = theSummaryLinks
+            theSummaryLinks = theContent + theLinks
+
 
         print("=========")
         print("Results: ")

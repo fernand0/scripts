@@ -124,14 +124,18 @@ def main():
 
     for section in config.sections():
         print("\nSection: ", section)
-        rssFeed = config.get(section, "rssFeed")
-        url = config.get(section, "url")
-        print("Blog: ", url+rssFeed)
         blog = moduleBlog.moduleBlog()
-        blog.setRssFeed(rssFeed)
+        url = config.get(section, "url")
         blog.setUrl(url)
-        blog.setPostsRss()
-        blog.getPostsRss()
+        if ("rssFeed" in config.options(section)):
+            rssFeed = config.get(section, "rssFeed")
+            print("Blog: ", url+rssFeed)
+            blog.setRssFeed(rssFeed)
+            blog.setPostsRss()
+            blog.getPostsRss()
+        elif blog.getUrl().find('slack')>0:
+            blog.setPostsSlack()
+
         blogs.append(blog)
 
         optFields = ["linksToAvoid", "time", "bufferapp"]
@@ -139,6 +143,7 @@ def main():
             blog.setLinksToAvoid(config.get(section, "linksToAvoid"))
         if ("time" in config.options(section)):
             blog.setTime(config.get(section, "time"))
+
         hours = blog.getTime()
         if (hours and (((time.time() - lastTime) - int(hours)*60*60) < 0)): 
             print("Not publishing because time restriction\n") 
@@ -192,6 +197,7 @@ def main():
                             i = i - 1
 
                             listPosts.append(blog.obtainPostData(i))
+
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i))
                             moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
                             if listPosts:
@@ -261,8 +267,8 @@ def main():
                                 break
                             i = i - 1
                             listPosts.append(blog.obtainPostData(i))
-                            timeSlots = 60*60 # One hour
-                        if listPosts:
+                        timeSlots = 60*60 # One hour
+                        if True: #listPosts:
                             if (profile == 'twitter'): 
                                 theNick = blog.getSocialNetworks()['twitter']
                                 t = threading.Thread(target=moduleSocial.publishDelayTwitter, args=(blog, listPosts, theNick, timeSlots)) 
@@ -272,6 +278,7 @@ def main():
                                 t1 = threading.Thread(target=moduleSocial.publishDelayFacebook, args=(blog, listPosts, theNick, timeSlots)) 
                                 t1.start()
 
+                        if listPosts:
                             link = listPosts[len(listPosts) - 1][1]
                             blog.updateLastLink( link, (profile,blog.getSocialNetworks()[profile]))
 
@@ -284,6 +291,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
 
 
