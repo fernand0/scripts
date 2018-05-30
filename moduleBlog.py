@@ -126,7 +126,7 @@ class moduleBlog():
         if not self.postsSlack:
             self.postsSlack = []
         config = configparser.ConfigParser() 
-        config.read('/home/ftricass/.rssSlack') 
+        config.read([os.path.expanduser('~/.rssSlack')])
         slack_token = config["Slack"].get('api-key') 
         sc = SlackClient(slack_token) 
         chanList = sc.api_call("channels.list")['channels'] 
@@ -135,13 +135,17 @@ class moduleBlog():
             if channel['name_normalized'] == chan: 
                 theChannel = channel['id'] 
                 history = sc.api_call( "channels.history", channel=theChannel)
-                print(history)
+                #print(history)
                 for msg in history['messages']: 
                     if 'attachments' in msg:
                         if 'original_url' in msg['attachments'][0]: 
                             self.postsSlack.append(msg['attachments'][0])
-                        sc.api_call("chat.delete", channel=theChannel, ts=msg['ts']) 
-        print(self.postsSlack)
+                            #print("borro....", theChannel, msg['ts']) 
+                            #print(time.asctime(time.gmtime(int(msg['ts'].split('.')[0]))), msg['text'], msg)
+                            #print(sc.api_call("chat.delete", channel=theChannel, ts=msg['ts']))
+                            # We cannot delete all, but maybe we should delete
+                            # posts. Maybe in obtainPostsData?
+        #print(self.postsSlack)
 
     def getPostsSlack(self):
         return(self.postsSlack)

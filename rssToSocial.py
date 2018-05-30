@@ -127,7 +127,8 @@ def main():
         blog = moduleBlog.moduleBlog()
         url = config.get(section, "url")
         blog.setUrl(url)
-        if ("rssFeed" in config.options(section)):
+        if ("rssfeed" in config.options(section)):
+            # It does not preserve case
             rssFeed = config.get(section, "rssFeed")
             print("Blog: ", url+rssFeed)
             blog.setRssFeed(rssFeed)

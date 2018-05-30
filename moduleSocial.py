@@ -343,7 +343,7 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
-        print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep))) 
+        print("Time: %s Waiting ... %s in Twitter" % (time.asctime(), str(tSleep))) 
         time.sleep(tSleep) 
         listPosts = blog.listPostsCache(socialNetwork)
         #print("I'd publish ... %s" % str(listPosts[j]))         
@@ -358,7 +358,7 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
 
             blog.updatePostsCache(listPosts, socialNetwork)
                 
-            print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2)))
+            print("Time: %s Waiting ... %s in Twitter" % (time.asctime(), str(tSleep2)))
             time.sleep(tSleep2) 
 
 def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
@@ -388,7 +388,7 @@ def publishDelayFacebook(blog, listPosts, fbPage, timeSlots):
     for j in range(numPosts): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
-        print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep))) 
+        print("Time: %s Waiting ... %s in Facebook" % (time.asctime(), str(tSleep))) 
         time.sleep(tSleep) 
         #print("I'd publish ... %s" % str(listPosts[j])) 
         listPosts = blog.listPostsCache(socialNetwork)
@@ -403,7 +403,7 @@ def publishDelayFacebook(blog, listPosts, fbPage, timeSlots):
             
             blog.updatePostsCache(listPosts, socialNetwork)
 
-            print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2))) 
+            print("Time: %s Waiting ... %s in Facebook" % (time.asctime(), str(tSleep2))) 
             time.sleep(tSleep2) 
    
 def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
