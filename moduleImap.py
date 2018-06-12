@@ -54,6 +54,8 @@ def stripRe(header):
     Res = ['Fwd', 'Fw', 'Re', 'RV', '(fwd)']
     for h in Res:
         header = header.replace(h+': ', '')
+    if header.startswith('[') and header.endswith(']'):
+        header = header[1:-1]
     return(header)
 
 def headerToString(header):
