@@ -344,21 +344,21 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
-        print("Time: %s Waiting ... %s minutes in Twitter to publish %s" % (time.asctime(), str(tSleep/60), listPosts[j][0])) 
-        time.sleep(tSleep) 
-        listPosts = blog.listPostsCache(socialNetwork)
+        listP = blog.listPostsCache(socialNetwork)
+        if listP: 
+            print("Time: %s Waiting ... %s minutes in Twitter to publish %s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
+            time.sleep(tSleep) 
         #print("I'd publish ... %s" % str(listPosts[j]))         
-        if listPosts: 
             try:
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = listPosts[0]
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = listP[0]
             except:
                 # backwards compatibility
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[0]
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listP[0]
             publishTwitter(twitter, title, firstLink, summary, summaryHtml, summaryLinks, image)
-            listPosts = listPosts[1:] 
+            listP = listP[1:] 
 
-            blog.updatePostsCache(listPosts, socialNetwork)
-                
+            blog.updatePostsCache(listP, socialNetwork)
+               
             print("Time: %s Waiting ... %s minutes in Twitter for scheduling the next post" % (time.asctime(), str(tSleep2/60)))
             time.sleep(tSleep2) 
 
@@ -389,20 +389,21 @@ def publishDelayFacebook(blog, listPosts, fbPage, timeSlots):
     for j in range(numPosts): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
-        print("Time: %s Waiting ... %s minutes in Facebook to publish %s" % (time.asctime(), str(tSleep/60), listPosts[j][0])) 
-        time.sleep(tSleep) 
+
         #print("I'd publish ... %s" % str(listPosts[j])) 
-        listPosts = blog.listPostsCache(socialNetwork)
+        listP = blog.listPostsCache(socialNetwork)
         if listPosts: 
+            print("Time: %s Waiting ... %s minutes in Facebook to publish %s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
+            time.sleep(tSleep)             
             try: 
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = listPosts[0] 
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = listP[0] 
             except:
                 #backwards compatibility
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[0] 
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listP[0] 
             publishFacebook(fbPage, title, firstLink, summary='', summaryHtml='', summaryLinks='', image='') 
-            listPosts = listPosts[1:] 
+            listP = listP[1:] 
             
-            blog.updatePostsCache(listPosts, socialNetwork)
+            blog.updatePostsCache(listP, socialNetwork)
 
             print("Time: %s Waiting ... %s minutes to schedule next post in Facebook" % (time.asctime(), str(tSleep2/60))) 
             time.sleep(tSleep2) 
