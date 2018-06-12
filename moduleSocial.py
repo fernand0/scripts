@@ -303,6 +303,7 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
             time.sleep(2)
         except:
             print("Buffer posting failed!")
+            print("Entry: ", entry)
             print("Unexpected error:", sys.exc_info()[0])
             print("Unexpected error:", sys.exc_info()[1])
             logging.info("Buffer posting failed!")
