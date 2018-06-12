@@ -303,6 +303,7 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
             time.sleep(2)
         except:
             print("Buffer posting failed!")
+            print("Entry: ", entry)
             print("Unexpected error:", sys.exc_info()[0])
             print("Unexpected error:", sys.exc_info()[1])
             logging.info("Buffer posting failed!")
@@ -333,19 +334,35 @@ def searchTwitter(search, twitter):
     t = connectTwitter(twitter)
     return(t.search.tweets(q=search)['statuses'])
 
-def publishDelayTwitter(listPosts, twitter, timeSlots): 
-    for j in  range(len(listPosts)): 
+def publishDelayTwitter(blog, listPosts, twitter, timeSlots): 
+    socialNetwork= ('twitter', twitter)
+    listP = blog.listPostsCache(socialNetwork)
+    listP = listP + listPosts
+    blog.updatePostsCache(listP, socialNetwork)
+
+    numPosts = round((4*60*60)/timeSlots)
+    for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
-        print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep))) 
+        print("Time: %s Waiting ... %s in Twitter" % (time.asctime(), str(tSleep))) 
         time.sleep(tSleep) 
-        print("I'd publish ... %s" % str(listPosts[j])) 
-        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[j - 1]
-        publishTwitter(twitter, title, link, summary, summaryHtml, summaryLinks, image)
-        print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2)))
-        time.sleep(tSleep2) 
+        listPosts = blog.listPostsCache(socialNetwork)
+        #print("I'd publish ... %s" % str(listPosts[j]))         
+        if listPosts: 
+            try:
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = listPosts[0]
+            except:
+                # backwards compatibility
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[0]
+            publishTwitter(twitter, title, firstLink, summary, summaryHtml, summaryLinks, image)
+            listPosts = listPosts[1:] 
 
-def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image):
+            blog.updatePostsCache(listPosts, socialNetwork)
+                
+            print("Time: %s Waiting ... %s in Twitter" % (time.asctime(), str(tSleep2)))
+            time.sleep(tSleep2) 
+
+def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
 
     twitter = channel
     comment = ''
@@ -361,22 +378,36 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
         print("Unexpected error:", sys.exc_info()[0])
         return("Fail! %s" % sys.exc_info()[0])
 
-def publishDelayFacebook(listPosts, fbPage, timeSlots): 
-    for j in  range(len(listPosts)): 
+
+def publishDelayFacebook(blog, listPosts, fbPage, timeSlots): 
+    socialNetwork=('facebook',fbPage)
+    listP = blog.listPostsCache(socialNetwork)
+    listP = listP + listPosts
+    blog.updatePostsCache(listP, socialNetwork)
+
+    numPosts = round((4*60*60)/timeSlots)
+    for j in range(numPosts): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
-        print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep))) 
+        print("Time: %s Waiting ... %s in Facebook" % (time.asctime(), str(tSleep))) 
         time.sleep(tSleep) 
-        print("I'd publish ... %s" % str(listPosts[j])) 
-        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[j - 1]
-        publishFacebook(fbPage, title, firstLink, summary='', summaryHtml='', summaryLinks='', image='')
-        print("Time: %s Waiting ... %s" % (time.asctime(), str(tSleep2)))
-        time.sleep(tSleep2) 
+        #print("I'd publish ... %s" % str(listPosts[j])) 
+        listPosts = blog.listPostsCache(socialNetwork)
+        if listPosts: 
+            try: 
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = listPosts[0] 
+            except:
+                #backwards compatibility
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listPosts[0] 
+            publishFacebook(fbPage, title, firstLink, summary='', summaryHtml='', summaryLinks='', image='') 
+            listPosts = listPosts[1:] 
+            
+            blog.updatePostsCache(listPosts, socialNetwork)
 
+            print("Time: %s Waiting ... %s in Facebook" % (time.asctime(), str(tSleep2))) 
+            time.sleep(tSleep2) 
    
-def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image):
-    #publishFacebook("prueba2", "https://www.facebook.com/reflexioneseirreflexiones/", "b", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-9/426052_381657691846622_987775451_n.jpg", "Reflexiones e Irreflexiones")
-
+def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     fbPage = channel
     print("Facebook...\n")
     textToPublish = ""
@@ -416,7 +447,7 @@ def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, im
         return("Fail!")
 
 
-def publishLinkedin(channel, title, link, summary, summaryHtml, summaryLinks, image):
+def publishLinkedin(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
     print("Linkedin...\n")
     try:
@@ -460,40 +491,31 @@ def cleanTags(soup):
         tags[0].extract()
     # <!DOCTYPE html> in github.io
 
-def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, image):
+def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     #publishTelegram("reflexioneseirreflexiones","Canal de Reflexiones e Irreflexiones", "http://fernand0.blogalia.com/", "", "", "", "")
 
     print("Telegram...%s\n"%channel)
 
-    try:
+    if True:
         bot = connectTelegram(channel)
 
         h = HTMLParser()
         title = h.unescape(title)
         htmlText='<a href="'+link+'">'+title + "</a>\n" + summaryHtml
-        soup = BeautifulSoup(htmlText)
-        cleanTags(soup)
+        #soup = BeautifulSoup(htmlText)
+        #cleanTags(soup)
         #print(soup)
-        if len(str(soup)) > 4090:
-            textToPublish = str(soup)[:4090]
-            index = textToPublish.rfind('<')
-            index2 = textToPublish.find('>',index)
-            # We need a better way to break texts
-            textToPublish2 = ""
-            if (index2 < 0):
-            # unclosed tag
-            # Maybe we can still have an unclosed tag
-                if  (textToPublish[index + 1] == '/'):
-                    # It is a closing tag <a ....>anchor </...>
-                    # We need to find the starting tag
-                    indexT = textToPublish[index].rfind('<')
-                    if (indexT>=0):
-                        index = indexT
-            textToPublish = str(soup)[:index - 1]+' ...'
-            textToPublish2 = '... '+ str(soup)[index:]
+        text = '<a href="'+link+'">'+title+ "</a>\n" + content + '\n\n' + links
+        textToPublish2 = ""
+        if len(text) < 4090:
+            textToPublish = text
+            links = ""
         else:
-            textToPublish = str(soup)
-            textToPublish2 = ''
+            text = '<a href="'+link+'">'+title + "</a>\n" + content
+            textToPublish = text[:4080] + ' ...'
+            textToPublish2 = '... '+ text[4081:]
+        print("text to ", textToPublish)
+        print("text to 2", textToPublish2)
 
         bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
         if textToPublish2:
@@ -501,12 +523,14 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
                 bot.sendMessage('@'+channel, textToPublish2[:4090], parse_mode='HTML') 
             except:
                 bot.sendMessage('@'+channel, "Text is longer", parse_mode='HTML') 
+        if links:
+            bot.sendMessage('@'+channel, links, parse_mode='HTML') 
 
-    except:
+    else:
         print("Telegram posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
 
-def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, image):
+def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
     print("Medium...\n")
     try:
         (client, user) = connectMedium()
@@ -529,21 +553,32 @@ if __name__ == "__main__":
     import moduleBlog
 
     blog = moduleBlog.moduleBlog()
-    url = 'http://fernand0.blogalia.com/'
-    rssFeed= 'rss20.xml'
+    url = 'http://fernand0.tumblr.com/'
+    rssFeed= 'rss'
     blog.setUrl(url)
     blog.setRssFeed(rssFeed)
-    blog.addSocialNetwork(('facebook', 'fernand0.github.io'))        
-    blog.addSocialNetwork(('telegram', 'mbpfernand0'))        
-    blog.addSocialNetwork(('medium', 'fernand0'))        
+    blog.addSocialNetwork(('facebook', 'Fernand0Test'))        
+    #blog.addSocialNetwork(('telegram', 'Fernand0Test'))        
+    blog.addSocialNetwork(('twitter', 'fernand0Test'))        
     blog.setPostsRss()
     blog.getPostsRss()
-    lastLink = blog.checkLastLink()
+    lastLink, lastTime = blog.checkLastLink(('twitter', 'fernand0Test'))
     i = blog.getLinkPosition(lastLink) 
-    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
+    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i - 1))
     fbPage = blog.getSocialNetworks()['facebook']
-    telegram = blog.getSocialNetworks()['telegram']
-    medium = blog.getSocialNetworks()['medium']
+    #telegram = blog.getSocialNetworks()['telegram']
+    #medium = blog.getSocialNetworks()['medium']
+    num = 4
+    listPosts= []
+    for j in range(num, 0, -1):
+        if (i == 0):
+            break
+        i = i - 1
+        listPosts.append(blog.obtainPostData(i - 1))
+        timeSlots = 60*60
+    if listPosts:
+        moduleSocial.publishDelayTwitter(blog, listPosts ,'fernand0Test', timeSlots)
+
     #twitter = blog.getSocialNetworks()['twitter']
     #moduleSocial.publishTelegram(telegram, title, link, summary, summaryHtml, summaryLinks, image)
     #moduleSocial.publishMedium(medium, title, link, summary, summaryHtml, summaryLinks, image)
