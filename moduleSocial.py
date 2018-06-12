@@ -344,7 +344,7 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
-        print("Time: %s Waiting ... %s in Twitter" % (time.asctime(), str(tSleep))) 
+        print("Time: %s Waiting ... %s minutes in Twitter to publish %s" % (time.asctime(), str(tSleep/60), listPosts[j][0])) 
         time.sleep(tSleep) 
         listPosts = blog.listPostsCache(socialNetwork)
         #print("I'd publish ... %s" % str(listPosts[j]))         
@@ -359,7 +359,7 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
 
             blog.updatePostsCache(listPosts, socialNetwork)
                 
-            print("Time: %s Waiting ... %s in Twitter" % (time.asctime(), str(tSleep2)))
+            print("Time: %s Waiting ... %s minutes in Twitter for scheduling the next post" % (time.asctime(), str(tSleep2/60)))
             time.sleep(tSleep2) 
 
 def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
@@ -389,7 +389,7 @@ def publishDelayFacebook(blog, listPosts, fbPage, timeSlots):
     for j in range(numPosts): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
-        print("Time: %s Waiting ... %s in Facebook" % (time.asctime(), str(tSleep))) 
+        print("Time: %s Waiting ... %s minutes in Facebook to publish %s" % (time.asctime(), str(tSleep/60), listPosts[j][0])) 
         time.sleep(tSleep) 
         #print("I'd publish ... %s" % str(listPosts[j])) 
         listPosts = blog.listPostsCache(socialNetwork)
@@ -404,7 +404,7 @@ def publishDelayFacebook(blog, listPosts, fbPage, timeSlots):
             
             blog.updatePostsCache(listPosts, socialNetwork)
 
-            print("Time: %s Waiting ... %s in Facebook" % (time.asctime(), str(tSleep2))) 
+            print("Time: %s Waiting ... %s minutes to schedule next post in Facebook" % (time.asctime(), str(tSleep2/60))) 
             time.sleep(tSleep2) 
    
 def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):

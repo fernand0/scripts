@@ -203,11 +203,11 @@ class moduleBlog():
                 #print(self.getPostsSlack())
                 return(len(self.getPostsSlack()))
             for entry in self.getPostsSlack():
-                #print(entry['original_url'], link)
                 if 'original_url' in entry: 
                     url = entry['original_url']
                 else:
                     url = entry['text'][1:-1]
+                #print(url, link)
                 lenCmp = min(len(url), len(link))
                 if url[:lenCmp] == link[:lenCmp]:
                     return i
