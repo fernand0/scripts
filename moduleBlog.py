@@ -106,47 +106,57 @@ class moduleBlog():
  
     def setPostsRss(self):
         urlRss = self.url+self.rssFeed
-        if urlRss.find('tumblr')>0:
-            print("sí")
-            import subprocess 
-            process = subprocess.Popen("$HOME/usr/src/sh/tumblr.sh", shell=True, stdout=subprocess.PIPE) 
-            process.wait() 
-            print(process.returncode)
-            self.postsRss = feedparser.parse('/tmp/feed.rss')
-            # Workaround until a better solution can be implented due to tumblr
-            # gdpr stupidity
-            # Based on this shellscript:
-            # https://discourse.tt-rss.org/t/change-on-tumblr-rss-feeds-not-working/1158/20
+        #if urlRss.find('tumblr')>0:
+        #    import subprocess 
+        #    process = subprocess.Popen("$HOME/usr/src/sh/tumblr.sh", shell=True, stdout=subprocess.PIPE) 
+        #    # It is not working. Abandoned for the moment
+        #    process.wait() 
+        #    print(process.returncode)
+        #    self.postsRss = feedparser.parse('/tmp/feed.rss')
+        #    # Workaround until a better solution can be implented due to tumblr
+        #    # gdpr stupidity
+        #    # Based on this shellscript:
+        #    # https://discourse.tt-rss.org/t/change-on-tumblr-rss-feeds-not-working/1158/20
 
-        else:
-            self.postsRss = feedparser.parse(urlRss)
+        #else:
+        self.postsRss = feedparser.parse(urlRss)
         #print(self.postsRss)
+
+    def searchChannelSlack(self, sc, name):
+        chanList = sc.api_call("channels.list")['channels'] 
+        for channel in chanList: 
+            if channel['name_normalized'] == name: 
+                return(channel['id']) 
+
+        return(-1)
+
 
     def setPostsSlack(self): 
         if not self.postsSlack:
             self.postsSlack = []
+
+
         config = configparser.ConfigParser() 
         config.read([os.path.expanduser('~/.rssSlack')])
         slack_token = config["Slack"].get('api-key') 
         sc = SlackClient(slack_token) 
-        chanList = sc.api_call("channels.list")['channels'] 
-        for channel in chanList: 
-            chan = 'links' 
-            if channel['name_normalized'] == chan: 
-                theChannel = channel['id'] 
-                history = sc.api_call( "channels.history", channel=theChannel)
-                #print(history)
-                for msg in history['messages']: 
-                    if 'attachments' in msg:
-                        if 'original_url' in msg['attachments'][0]: 
-                            self.postsSlack.append(msg['attachments'][0])
-                    else:
-                            self.postsSlack.append(msg)
-                            #print("borro....", theChannel, msg['ts']) 
-                            #print(time.asctime(time.gmtime(int(msg['ts'].split('.')[0]))), msg['text'], msg)
-                            #print(sc.api_call("chat.delete", channel=theChannel, ts=msg['ts']))
-                            # We cannot delete all, but maybe we should delete
-                            # posts. Maybe in obtainPostsData?
+        theChannel = self.searchChannelSlack(sc, 'links')
+        history = sc.api_call( "channels.history", channel=theChannel)
+        #print(history)
+        for msg in history['messages']: 
+            #if 'attachments' in msg:
+            #    print("attachment", msg['attachments'])
+            #    print(msg)
+            #    if 'original_url' in msg['attachments'][0]: 
+            #        self.postsSlack.append(msg['attachments'][0])
+            #else:
+            #print("msg", msg)
+            self.postsSlack.append(msg)
+            #print("borro....", theChannel, msg['ts']) 
+            #print(time.asctime(time.gmtime(int(msg['ts'].split('.')[0]))), msg['text'], msg)
+                #print(sc.api_call("chat.delete", channel=theChannel, ts=msg['ts']))
+                # We cannot delete all, but maybe we should delete
+                # posts. Maybe in obtainPostsData?
         #print(self.postsSlack)
         #self.postsSlack.reverse()
 
@@ -241,8 +251,23 @@ class moduleBlog():
         return posts[thePost - 1]['title'], posts[thePost - 1]['postid']
 
     def deletePost(self, idPost): 
-        server = self.xmlrpc
-        server[0].blogger.deletePost('',idPost, server[1], server[2], True)
+        if self.xmlrpc:
+            server = self.xmlrpc
+            server[0].blogger.deletePost('',idPost, server[1], server[2], True)
+        elif self.getPostsSlack():
+            # Needs improvement
+            config = configparser.ConfigParser() 
+            config.read('/home/ftricass/.rssSlack')
+            
+            slack_token = config["Slack"].get('api-key')
+
+            sc = SlackClient(slack_token)
+
+            theChannel = self.searchChannelSlack(sc, 'links')
+
+            print("id",idPost)
+            print(sc.api_call("chat.delete", channel=theChannel, ts=idPost))
+
 
     def updatePostsCache(self, listPosts, socialNetwork=()):
         fileName = os.path.expanduser('~/.' 
@@ -265,23 +290,23 @@ class moduleBlog():
         return(listP)
 
     def checkLastLink(self,socialNetwork=()):
-        rssFeed = self.getUrl()+self.getRssFeed()
+        url = self.getUrl()
         if not socialNetwork: 
             filename = os.path.expanduser("~" + "/."  
-                    + urllib.parse.urlparse(rssFeed).netloc + ".last")
+                    + urllib.parse.urlparse(url).netloc + ".last")
             urlFile = open(filename, "r")
             linkLast = urlFile.read().rstrip()  # Last published
         else: 
             try: 
                 filename = os.path.expanduser("~" + "/."  
-                        + urllib.parse.urlparse(rssFeed).netloc 
+                        + urllib.parse.urlparse(url).netloc 
                         + '_'+socialNetwork[0]+'_'+socialNetwork[1] 
                         + ".last")
                 urlFile = open(filename, "r")
                 linkLast = urlFile.read().rstrip()  # Last published
             except:
                 print(os.path.expanduser("~" + "/."  
-                  + urllib.parse.urlparse(rssFeed).netloc
+                  + urllib.parse.urlparse(url).netloc
                   + '_'+socialNetwork[0]+'_'+socialNetwork[1]
                   + ".last"))
                 linkLast = ''  # None published, or non-existent file
@@ -388,31 +413,34 @@ class moduleBlog():
             else:
                 (theContent, theSummaryLinks) = self.extractLinks(soup, "")
 
-
             theImage = self.extractImage(soup)
             theLinks = theSummaryLinks
             theSummaryLinks = theContent + theLinks
         elif self.getPostsSlack():
             posts = self.getPostsSlack()
             #print(posts[i])
-            if 'text' in posts[i]:
-                theSummary = posts[i]['text']
-                content = posts[i]['text']
-                theDescription = posts[i]['text']
+            if 'attachments' in posts[i]:
+                post = posts[i]['attachments'][0]
             else:
-                theSummary = posts[i]['title']
-                content = posts[i]['title']
-                theDescription = posts[i]['title']
-            if 'title' in posts[i]:
-                theTitle = posts[i]['title']
+                post = posts[i]
+            if 'text' in post:
+                theSummary = post['text']
+                content = post['text']
+                theDescription = post['text']
+            else:
+                theSummary = post['title']
+                content = post['title']
+                theDescription = post['title']
+            if 'title' in post:
+                theTitle = post['title']
             else:
                 theTitle = ''
-            if 'original_url' in posts[i]: 
-                theLink = posts[i]['original_url']
+            if 'original_url' in post: 
+                theLink = post['original_url']
             else:
-                theLink = posts[i]['text'][1:-1]
-            if ('comment' in posts[i]):
-                comment = posts[i]['comment']
+                theLink = post['text'][1:-1]
+            if ('comment' in post):
+                comment = post['comment']
             else:
                 comment = ""
 
@@ -426,8 +454,8 @@ class moduleBlog():
             else:
                 (theContent, theSummaryLinks) = self.extractLinks(soup, "") 
                 
-            if 'image_url' in posts[i]:
-                theImage = posts[i]['image_url']
+            if 'image_url' in post:
+                theImage = post['image_url']
             else:
                 theImage = ""
             theLinks = theSummaryLinks
@@ -463,6 +491,13 @@ if __name__ == "__main__":
     print("Configured blogs:")
 
     blogs = []
+
+    #url = 'https://fernand0-errbot.slack.com/'
+    #blog = moduleBlog.moduleBlog()
+    #blog.setPostsSlack()
+    #blog.setUrl(url)
+    #print(blog.getPostsSlack())
+    #sys.exit()
 
     for section in config.sections():
         rssFeed = config.get(section, "rssFeed")

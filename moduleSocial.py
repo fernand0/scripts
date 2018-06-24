@@ -91,6 +91,7 @@ import facebook
 import urllib
 import time
 from linkedin import linkedin
+from tumblpy import Tumblpy
 from twitter import *
 #https://pypi.python.org/pypi/twitter
 #http://mike.verdone.ca/twitter/
@@ -107,6 +108,22 @@ from buffpy.api import API
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 from medium import Client
+
+def connectTumblr():
+    config = configparser.ConfigParser()
+    config.read([os.path.expanduser('~/.rssTumblr')])
+
+    consumer_key = config.get("Buffer1", "consumer_key")
+    consumer_secret = config.get("Buffer1", "consumer_secret")
+    oauth_token = config.get("Buffer1", "oauth_token")
+    oauth_secret = config.get("Buffer1", "oauth_secret")
+
+    client = Tumblpy(consumer_key, consumer_secret, 
+                                       oauth_token, oauth_secret)
+
+    #logging.debug(client.info())
+
+    return(client)
 
 def connectBuffer():
     config = configparser.ConfigParser()
@@ -346,7 +363,7 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
         tSleep2 = timeSlots - tSleep
         listP = blog.listPostsCache(socialNetwork)
         if listP: 
-            print("Time: %s Waiting ... %s minutes in Twitter to publish %s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
+            print("Time: %s Waiting ... %s minutes in Twitter to publish:\n%s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
             time.sleep(tSleep) 
         #print("I'd publish ... %s" % str(listPosts[j]))         
             try:
@@ -362,16 +379,32 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
             print("Time: %s Waiting ... %s minutes in Twitter for scheduling the next post" % (time.asctime(), str(tSleep2/60)))
             time.sleep(tSleep2) 
 
+def publishTumblr(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
+
+    print("Publishing in Tumblr...")
+    client = connectTumblr()                    
+    
+    post = client.post('post', blog_url='http://fernand0.tumblr.com/',
+                            params={'type':'link', 
+                                'state':'queue',
+                                'title': title,
+                                'thumbnail': image, 
+                                'url': link, 
+                                'excerpt': summaryHtml,
+                                'publisher': ''}) 
+
+
 def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
 
     twitter = channel
     comment = ''
-    print("Twitter...\n")
+    print("Publishing in Twitter...")
     try:
         t = connectTwitter(twitter)
         statusTxt = comment + " " + title + " " + link
         h = HTMLParser()
         statusTxt = h.unescape(statusTxt)
+        print("Publishing in Twitter:\n%s" % statusTxt)
         return(t.statuses.update(status=statusTxt))
     except:
         print("Twitter posting failed!\n")
@@ -393,7 +426,7 @@ def publishDelayFacebook(blog, listPosts, fbPage, timeSlots):
         #print("I'd publish ... %s" % str(listPosts[j])) 
         listP = blog.listPostsCache(socialNetwork)
         if listPosts: 
-            print("Time: %s Waiting ... %s minutes in Facebook to publish %s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
+            print("Time: %s Waiting ... %s minutes in Facebook to publish:\n%s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
             time.sleep(tSleep)             
             try: 
                 (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = listP[0] 
@@ -410,7 +443,7 @@ def publishDelayFacebook(blog, listPosts, fbPage, timeSlots):
    
 def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     fbPage = channel
-    print("Facebook...\n")
+    print("Publishing in Facebook...")
     textToPublish = ""
     textToPublish2 = ""
     if True:
@@ -418,7 +451,7 @@ def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, im
         title = h.unescape(title)
         (graph, page) = connectFacebook(fbPage)
         textToPublish = title + " \n" + summaryLinks
-        print(textToPublish)
+        print("Publishing in Facebook:\n%s" % textToPublish)
         if (len(textToPublish) > 9980):
             textToPublish = textToPublish[:9980]
             index = textToPublish.rfind(' ')
@@ -450,10 +483,11 @@ def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, im
 
 def publishLinkedin(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
-    print("Linkedin...\n")
+    print("Publishing in Linkedin...\n")
     try:
         application = connectLinkedin()
         presentation = 'Publicado! ' + title 
+        print("Publishing in Linkedin:\n%s" % title)
         if link:
             return(application.submit_share(presentation, summary, link, image))
         else:

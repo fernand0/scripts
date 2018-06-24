@@ -147,7 +147,7 @@ def main():
 
         for option in config.options(section):
             if (option in ['twitter', 'facebook', 'telegram', 
-                    'medium', 'bufferapp', 'program']):
+                    'medium', 'linkedin','bufferapp', 'program']):
                 nick = config.get(section, option)
                 socialNetwork = (option, nick)
                 blog.addSocialNetwork(socialNetwork)
@@ -219,20 +219,21 @@ def main():
                             publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
                             blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
 
-                lastLink, lastTime = blog.checkLastLink()
-                i = blog.getLinkPosition(lastLink) 
-                if (i > 0):
-                    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i - 1))
+                #lastLink, lastTime = blog.checkLastLink()
+                #i = blog.getLinkPosition(lastLink) 
+                #if (i > 0):
+                #    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i - 1))
 
-                    if (link):
-                        moduleSocial.publishLinkedin('', title, link, summary, '', '', image)
-                        # I think this is not needed anymore
-                        urlFile = open(os.path.expanduser("~/."
-                                       + urllib.parse.urlparse(link).netloc
-                                       + ".last"), "w")
+                #    if (link):
+                #        print("I'd publish ... %s" % link)
+                #        #moduleSocial.publishLinkedin('', title, link, summary, '', '', image)
+                #        # I think this is not needed anymore
+                #        #urlFile = open(os.path.expanduser("~/."
+                #        #               + urllib.parse.urlparse(link).netloc
+                #        #               + ".last"), "w")
         
-                        urlFile.write(link)
-                        urlFile.close()
+                #        #urlFile.write(link)
+                #        #urlFile.close()
 
         if ('program' in config.options(section)):
             blog.setProgram(config.get(section, "program"))
@@ -267,7 +268,10 @@ def main():
                         if (i <= 0):
                             break
                         i = i - 1
-                        listPosts.append(blog.obtainPostData(i))
+                        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i))
+                        listPosts.append((title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment))
+                        #moduleSocial.publishTumblr("", title, firstLink, summary, summaryHtml, summaryLinks, image, content, links)
+
                     timeSlots = 60*60 # One hour
                     if True: #listPosts:
                         if (profile == 'twitter'): 
