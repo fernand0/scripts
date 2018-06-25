@@ -484,7 +484,7 @@ def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, im
 def publishLinkedin(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
     print("Publishing in Linkedin...\n")
-    try:
+    if True:
         application = connectLinkedin()
         presentation = 'Publicado! ' + title 
         print("Publishing in Linkedin:\n%s" % title)
@@ -492,7 +492,7 @@ def publishLinkedin(channel, title, link, summary, summaryHtml, summaryLinks, im
             return(application.submit_share(presentation, summary, link, image))
         else:
             return(application.submit_share(comment = title))
-    except:
+    else:
         print("Linkedin posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
         return("Fail!")

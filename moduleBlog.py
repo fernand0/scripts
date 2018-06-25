@@ -329,6 +329,7 @@ class moduleBlog():
 
     def extractImage(self, soup):
         pageImage = soup.findAll("img")
+        print("soup", soup)
         #  Only the first one
         if len(pageImage) > 0:
             imageLink = (pageImage[0]["src"])
@@ -413,7 +414,11 @@ class moduleBlog():
             else:
                 (theContent, theSummaryLinks) = self.extractLinks(soup, "")
 
-            theImage = self.extractImage(soup)
+            if 'media_content' in posts[i]: 
+                theImage = posts[i]['media_content'][1]['url']
+            else:
+                theImage = self.extractImage(soup)
+            print("theImage", theImage)
             theLinks = theSummaryLinks
             theSummaryLinks = theContent + theLinks
         elif self.getPostsSlack():
@@ -457,7 +462,7 @@ class moduleBlog():
             if 'image_url' in post:
                 theImage = post['image_url']
             else:
-                theImage = ""
+                theImage = None
             theLinks = theSummaryLinks
             theSummaryLinks = theContent + theLinks
 

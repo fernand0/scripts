@@ -133,7 +133,6 @@ def main():
             print("Blog: ", url+rssFeed)
             blog.setRssFeed(rssFeed)
             blog.setPostsRss()
-            blog.getPostsRss()
         elif blog.getUrl().find('slack')>0:
             blog.setPostsSlack()
 
