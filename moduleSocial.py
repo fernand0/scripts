@@ -379,12 +379,11 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
     blog.updatePostsCache(listP, socialNetwork)
 
     numPosts = round((4*60*60)/timeSlots)
-    #numPosts = 1
+
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
-        #tSleep = 1
-        #tSleep2 = 1
+
         listP = blog.listPostsCache(socialNetwork)
         print("Time: %s Waiting ... %s minutes in Twitter to publish:\n%s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
         time.sleep(tSleep) 
@@ -400,8 +399,8 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
         else:
             print("This shouldn't happen")
             sys.exit()
-        #print("I'd publish ... %s" % str(listPosts[j]))         
-        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = listP[0]
+
+        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = element
         publishTwitter(twitter, title, firstLink, summary, summaryHtml, summaryLinks, image)
 
         blog.updatePostsCache(listP, socialNetwork)
@@ -453,24 +452,34 @@ def publishDelayFacebook(blog, listPosts, fbPage, timeSlots):
     blog.updatePostsCache(listP, socialNetwork)
 
     numPosts = round((4*60*60)/timeSlots)
+
     for j in range(numPosts): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
 
-        #print("I'd publish ... %s" % str(listPosts[j])) 
         listP = blog.listPostsCache(socialNetwork)
-        if listP: 
-            print("Time: %s Waiting ... %s minutes in Facebook to publish:\n%s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
-            time.sleep(tSleep)             
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = listP[0] 
-            publishFacebook(fbPage, title, firstLink, summary='', summaryHtml='', summaryLinks='', image='') 
-            listP = listP[1:] 
-            
-            print("listP Fb", listP)
-            blog.updatePostsCache(listP, socialNetwork)
+        print("Time: %s Waiting ... %s minutes in Facebook to publish:\n%s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
+        time.sleep(tSleep)             
 
-            print("Time: %s Waiting ... %s minutes to schedule next post in Facebook" % (time.asctime(), str(tSleep2/60))) 
-            time.sleep(tSleep2) 
+        if listP: 
+            #print("list")
+            element = listP[0]
+            listP = listP[1:] 
+        elif type(listP) == type(()):
+            #print("tuple")
+            element = listP
+            listP = [] 
+        else:
+            print("This shouldn't happen")
+            sys.exit()
+
+        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = element 
+        publishFacebook(fbPage, title, firstLink, summary='', summaryHtml='', summaryLinks='', image='') 
+         
+        blog.updatePostsCache(listP, socialNetwork)
+
+        print("Time: %s Waiting ... %s minutes to schedule next post in Facebook" % (time.asctime(), str(tSleep2/60))) 
+        time.sleep(tSleep2) 
    
 def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     fbPage = channel
