@@ -6,6 +6,7 @@ import xmlrpc.client
 import os
 import time
 import urllib
+import requests
 import feedparser
 import pickle
 from slackclient import SlackClient
@@ -106,6 +107,7 @@ class moduleBlog():
  
     def setPostsRss(self):
         urlRss = self.url+self.rssFeed
+        print(urlRss)
         #if urlRss.find('tumblr')>0:
         #    import subprocess 
         #    process = subprocess.Popen("$HOME/usr/src/sh/tumblr.sh", shell=True, stdout=subprocess.PIPE) 
@@ -132,33 +134,31 @@ class moduleBlog():
 
 
     def setPostsSlack(self): 
-        if not self.postsSlack:
+        if self.postsSlack is None:
             self.postsSlack = []
-
-
-        config = configparser.ConfigParser() 
-        config.read([os.path.expanduser('~/.rssSlack')])
-        slack_token = config["Slack"].get('api-key') 
-        sc = SlackClient(slack_token) 
-        theChannel = self.searchChannelSlack(sc, 'links')
-        history = sc.api_call( "channels.history", channel=theChannel)
-        #print(history)
-        for msg in history['messages']: 
-            #if 'attachments' in msg:
-            #    print("attachment", msg['attachments'])
-            #    print(msg)
-            #    if 'original_url' in msg['attachments'][0]: 
-            #        self.postsSlack.append(msg['attachments'][0])
-            #else:
-            #print("msg", msg)
-            self.postsSlack.append(msg)
-            #print("borro....", theChannel, msg['ts']) 
-            #print(time.asctime(time.gmtime(int(msg['ts'].split('.')[0]))), msg['text'], msg)
-                #print(sc.api_call("chat.delete", channel=theChannel, ts=msg['ts']))
-                # We cannot delete all, but maybe we should delete
-                # posts. Maybe in obtainPostsData?
-        #print(self.postsSlack)
-        #self.postsSlack.reverse()
+            config = configparser.ConfigParser() 
+            config.read([os.path.expanduser('~/.rssSlack')])
+            slack_token = config["Slack"].get('api-key') 
+            sc = SlackClient(slack_token) 
+            theChannel = self.searchChannelSlack(sc, 'links')
+            history = sc.api_call( "channels.history", channel=theChannel)
+            #print(history)
+            for msg in history['messages']: 
+                #if 'attachments' in msg:
+                #    print("attachment", msg['attachments'])
+                #    print(msg)
+                #    if 'original_url' in msg['attachments'][0]: 
+                #        self.postsSlack.append(msg['attachments'][0])
+                #else:
+                #print("msg", msg)
+                self.postsSlack.append(msg)
+                #print("borro....", theChannel, msg['ts']) 
+                #print(time.asctime(time.gmtime(int(msg['ts'].split('.')[0]))), msg['text'], msg)
+                    #print(sc.api_call("chat.delete", channel=theChannel, ts=msg['ts']))
+                    # We cannot delete all, but maybe we should delete
+                    # posts. Maybe in obtainPostsData?
+            #print(self.postsSlack)
+            #self.postsSlack.reverse()
 
     def getPostsSlack(self):
         #print("posts", len(self.postsSlack))
@@ -274,10 +274,25 @@ class moduleBlog():
                 +  urllib.parse.urlparse(self.getUrl()).netloc 
                 + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
                 + ".queue")
+        #import sys 
+        #sys.setrecursionlimit(10000)
+        #for i in range(len(listPosts)):
+        #    print("i ", i)
+        #    with open(fileName, 'wb') as f:
+        #        print("Dumping") 
+        #        print("len %d %s" % (len(listPosts), type(listPosts)))
+        #        #print("Dumping %s \n %s" % (fileName, listPosts)) 
+        #        try:
+        #            pickle.dump(listPosts[i],f, 4)
+        #        except:
+        #            print("Fail ", listPosts[i])
+        #        time.sleep(1)
+        #        #print("Dumped %s \n %s" % (fileName, listPosts)) 
         with open(fileName, 'wb') as f:
-            pickle.dump(listPosts,f)
+             pickle.dump(listPosts,f)
+        return(fileName)
 
-    def listPostsCache(self,socialNetwork=()):
+    def listPostsCache(self,socialNetwork=(), debug = False):
         fileName = os.path.expanduser('~/.' 
                 +  urllib.parse.urlparse(self.getUrl()).netloc 
                 + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
@@ -287,6 +302,11 @@ class moduleBlog():
                 listP = pickle.load(f)
             except:
                 listP = []
+        if debug:
+            print("listPostsCache", socialNetwork[0])
+            for i in range(len(listP)):
+                print("=> ", socialNetwork[0], listP[i][0])
+
         return(listP)
 
     def checkLastLink(self,socialNetwork=()):
@@ -305,10 +325,13 @@ class moduleBlog():
                 urlFile = open(filename, "r")
                 linkLast = urlFile.read().rstrip()  # Last published
             except:
-                print(os.path.expanduser("~" + "/."  
-                  + urllib.parse.urlparse(url).netloc
-                  + '_'+socialNetwork[0]+'_'+socialNetwork[1]
-                  + ".last"))
+                fileName = os.path.expanduser("~" + "/."  
+                        + urllib.parse.urlparse(url).netloc 
+                        + '_'+socialNetwork[0]+'_'+socialNetwork[1] 
+                        + ".last")
+                print(fileName)
+                f = open(fileName, "w")
+                f.close()
                 linkLast = ''  # None published, or non-existent file
 
         return(linkLast, os.path.getmtime(filename))
@@ -375,11 +398,12 @@ class moduleBlog():
     
         return (soup.get_text().strip('\n'), theSummaryLinks)
 
-    def obtainPostData(self, i):
+    def obtainPostData(self, i, debug=True):
         if self.getPostsRss():
             posts = self.getPostsRss().entries
             theSummary = posts[i]['summary']
             content = posts[i]['description']
+            if content.startswith('Anuncios'): content = ''
             theDescription = posts[i]['description']
             theTitle = posts[i]['title'].replace('\n', ' ')
             theLink = posts[i]['link']
@@ -407,15 +431,23 @@ class moduleBlog():
                    # tumblr at the beggining of the anchor text
                    theTitle = theTitle[pos - lenProt + 1:]
 
-
             theSummary = soup.get_text()
             if self.getLinksToAvoid():
                 (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())
+                print("theC", theContent)
+                if theContent.startswith('Anuncios'): 
+                    theContent = ''
+                print("theC", theContent)
             else:
-                (theContent, theSummaryLinks) = self.extractLinks(soup, "")
+                (theContent, theSummaryLinks) = self.extractLinks(soup, "") 
+                print("theC", theContent)
+                if theContent.startswith('Anuncios'): 
+                    theContent = ''
+                print("theC", theContent)
 
+            #print(posts[i])
             if 'media_content' in posts[i]: 
-                theImage = posts[i]['media_content'][1]['url']
+                theImage = posts[i]['media_content'][0]['url']
             else:
                 theImage = self.extractImage(soup)
             print("theImage", theImage)
@@ -423,27 +455,69 @@ class moduleBlog():
             theSummaryLinks = theContent + theLinks
         elif self.getPostsSlack():
             posts = self.getPostsSlack()
-            #print(posts[i])
+            url = ''
+            if debug: 
+                print(posts[i])
+                for j in range(len(posts)): 
+                    print("post ", j, posts[j]['text'])
             if 'attachments' in posts[i]:
                 post = posts[i]['attachments'][0]
             else:
                 post = posts[i]
-            if 'text' in post:
-                theSummary = post['text']
-                content = post['text']
-                theDescription = post['text']
+
+            if 'title' in post:
+                theTitle = post['title']
+                theLink = post['title_link']
+                firstLink = theLink
+                if 'text' in posts: 
+                    content = post['text']
+                else:
+                    content = theLink
+                theSummary = content
+                theSummaryLinks = content
+                if 'image_url' in post:
+                    theImage = post['image_url']
+                elif 'thumb_url' in post:
+                    theImage = post['thumb_url']
+                else:
+                    print("Fail image")
+                    theImage = ''
+            elif 'text' in post:
+                if debug: 
+                    print(post['text'])
+                if post['text'].startswith('<h'):
+                    # It's an url
+                    #print("Starts")
+                    url = post['text'][1:-1]
+                    req = requests.get(url)
+                    if req.text.find('403 Forbidden'):
+                        theTitle = url
+                        theSummary = url
+                        content = url
+                        theDescription = url
+                    else:
+                        soup = BeautifulSoup(req.text, 'lxml')
+                        theTitle = str(soup.title.string)
+                        print("theTitle", theTitle, type(theTitle))
+                        theSummary = str(soup.body.string)
+                        content = theSummary
+                        theDescription = theSummary
+                else:
+                    #print("No Starts")
+                    theSummary = post['text']
+                    content = post['text']
+                    theDescription = post['text']
+                    theTitle = post['text']
             else:
                 theSummary = post['title']
                 content = post['title']
                 theDescription = post['title']
-            if 'title' in post:
-                theTitle = post['title']
-            else:
-                theTitle = ''
             if 'original_url' in post: 
                 theLink = post['original_url']
+            elif url: 
+                theLink = url
             else:
-                theLink = post['text'][1:-1]
+                theLink = post['text']
             if ('comment' in post):
                 comment = post['comment']
             else:
@@ -451,7 +525,7 @@ class moduleBlog():
 
             theSummaryLinks = ""
 
-            soup = BeautifulSoup(theDescription, 'lxml')
+            soup = BeautifulSoup(content, 'lxml')
             firstLink = theLink
 
             if self.getLinksToAvoid():
@@ -467,20 +541,21 @@ class moduleBlog():
             theSummaryLinks = theContent + theLinks
 
 
-        print("=========")
-        print("Results: ")
-        print("=========")
-        print("Title:     ", theTitle)
-        print("Link:      ", theLink)
-        print("First Link:", firstLink)
-        print("Summary:   ", content[:200])
-        print("Sum links: ", theSummaryLinks)
-        print("the Links"  , theLinks)
-        print("Comment:   ", comment)
-        print("Image;     ", theImage)
-        print("Post       ", theTitle + " " + theLink)
-        print("==============================================")
-        print("")
+        if debug:
+            print("=========")
+            print("Results: ")
+            print("=========")
+            print("Title:     ", theTitle)
+            print("Link:      ", theLink)
+            print("First Link:", firstLink)
+            print("Summary:   ", content[:200])
+            print("Sum links: ", theSummaryLinks)
+            print("the Links"  , theLinks)
+            print("Comment:   ", comment)
+            print("Image;     ", theImage)
+            print("Post       ", theTitle + " " + theLink)
+            print("==============================================")
+            print("")
 
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
@@ -505,12 +580,15 @@ if __name__ == "__main__":
     #sys.exit()
 
     for section in config.sections():
-        rssFeed = config.get(section, "rssFeed")
-        print(rssFeed)
+        #print(section)
+        #print(config.options(section))
         blog = moduleBlog.moduleBlog()
         url = config.get(section, "url")
         blog.setUrl(url)
-        blog.setRssFeed(rssFeed)
+        if 'rssfeed' in config.options(section): 
+            rssFeed = config.get(section, "rssFeed")
+            #print(rssFeed) 
+            blog.setRssFeed(rssFeed)
         optFields = ["linksToAvoid", "time", "bufferapp"]
         if ("linksToAvoid" in config.options(section)):
             blog.setLinksToAvoid(config.get(section, "linksToAvoid"))
@@ -527,6 +605,15 @@ if __name__ == "__main__":
             if ('ac' in option) or ('fb' in option):
                 blog.addSocialNetwork((option, config.get(section, option)))
         blogs.append(blog)
+
+    
+    blogs[7].setPostsRss()
+    #print(blogs[7].getPostsRss().entries)
+    numPosts = len(blogs[7].getPostsRss().entries)
+    for i in range(numPosts):
+        print(blog.obtainPostData(numPosts - 1 - i))
+
+    sys.exit()
 
     for blog in blogs:
         print(blog.getUrl())

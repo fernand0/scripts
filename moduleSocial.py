@@ -152,23 +152,27 @@ def connectTwitter(twitterAC):
     # and follow the instructions
     # The result will be at ~/.twitter_oauth
     config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssTwitter')])
-
-    CONSUMER_KEY = config.get("appKeys", "CONSUMER_KEY")
-    CONSUMER_SECRET = config.get("appKeys", "CONSUMER_SECRET")
-    TOKEN_KEY = config.get(twitterAC, "TOKEN_KEY")
-    TOKEN_SECRET = config.get(twitterAC, "TOKEN_SECRET")
-
     try:
-        authentication = OAuth(
-                    TOKEN_KEY,
-                    TOKEN_SECRET,
-                    CONSUMER_KEY,
-                    CONSUMER_SECRET)
-        t = Twitter(auth=authentication)
+        config.read([os.path.expanduser('~/.rssTwitter')])
+
+        CONSUMER_KEY = config.get("appKeys", "CONSUMER_KEY")
+        CONSUMER_SECRET = config.get("appKeys", "CONSUMER_SECRET")
+        TOKEN_KEY = config.get(twitterAC, "TOKEN_KEY")
+        TOKEN_SECRET = config.get(twitterAC, "TOKEN_SECRET")
+
+        try:
+            authentication = OAuth(
+                        TOKEN_KEY,
+                        TOKEN_SECRET,
+                        CONSUMER_KEY,
+                        CONSUMER_SECRET)
+            t = Twitter(auth=authentication)
+        except:
+            print("Twitter authentication failed!\n")
+            print("Unexpected error:", sys.exc_info()[0])
     except:
-        print("Twitter authentication failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
+        print("Account not configured")
+        t = None
 
     return(t)
 
@@ -256,25 +260,42 @@ def connectMedium():
     return(client, user)
 
 
-def checkLimitPosts(api,services='tfgl'):
+def checkLimitPosts(api, url, profileList, services='tfgl'):
     # We can put as many items as the service with most items allow
     # The limit is ten.
     # Get all pending updates of a social network profile
 
     lenMax = 0
-    logging.info("Checking services...")
+    if api:
+        logging.info("Checking services...")
 
-    profileList = Profiles(api=api).all()
-    for profile in profileList:
-        if (profile['service'][0] in services): 
-            lenProfile = len(profile.updates.pending) 
-            if (lenProfile > lenMax): 
-                lenMax = lenProfile 
-                logging.info("%s ok" % profile['service'])
+        profileList = Profiles(api=api).all()
+        for profile in profileList:
+            if (profile['service'][0] in services): 
+                lenProfile = len(profile.updates.pending) 
+                if (lenProfile > lenMax): 
+                    lenMax = lenProfile 
+                    logging.info("%s ok" % profile['service'])
+    elif url:
+        for profile in profileList.keys():
+            if (profile[0] in services): 
+                filename = os.path.expanduser("~" + "/."  
+                        + urllib.parse.urlparse(url).netloc) 
+                print("Program: %s %s" % (profile, profileList[profile])) 
+                filename = filename + "_" + profile + "_" + profileList[profile] + ".queue" 
+                print("File: %s" % filename)
+                with open(filename,'rb') as f: 
+                    try: 
+                        listP = pickle.load(f) 
+                    except: 
+                        listP = [] 
+                    lenProfile = len(listP) 
+                    if (lenProfile > lenMax): 
+                        lenMax = lenProfile 
+                        logging.info("%s ok" % profile)
 
-    logging.info("There are %d in some buffer, we can put %d" %
-                 (lenMax, 10-lenMax))
-
+    logging.info("There are %d in some buffer, we can put %d" % 
+            (lenMax, 10-lenMax))
     return(lenMax, profileList)
 
 def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, services='fglt'):
@@ -358,26 +379,35 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
     blog.updatePostsCache(listP, socialNetwork)
 
     numPosts = round((4*60*60)/timeSlots)
+    #numPosts = 1
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
+        #tSleep = 1
+        #tSleep2 = 1
         listP = blog.listPostsCache(socialNetwork)
-        if listP: 
-            print("Time: %s Waiting ... %s minutes in Twitter to publish:\n%s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
-            time.sleep(tSleep) 
-        #print("I'd publish ... %s" % str(listPosts[j]))         
-            try:
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = listP[0]
-            except:
-                # backwards compatibility
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listP[0]
-            publishTwitter(twitter, title, firstLink, summary, summaryHtml, summaryLinks, image)
-            listP = listP[1:] 
+        print("Time: %s Waiting ... %s minutes in Twitter to publish:\n%s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
+        time.sleep(tSleep) 
 
-            blog.updatePostsCache(listP, socialNetwork)
-               
-            print("Time: %s Waiting ... %s minutes in Twitter for scheduling the next post" % (time.asctime(), str(tSleep2/60)))
-            time.sleep(tSleep2) 
+        if listP: 
+            #print("list")
+            element = listP[0]
+            listP = listP[1:] 
+        elif type(listP) == type(()):
+            #print("tuple")
+            element = listP
+            listP = [] 
+        else:
+            print("This shouldn't happen")
+            sys.exit()
+        #print("I'd publish ... %s" % str(listPosts[j]))         
+        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = listP[0]
+        publishTwitter(twitter, title, firstLink, summary, summaryHtml, summaryLinks, image)
+
+        blog.updatePostsCache(listP, socialNetwork)
+           
+        print("Time: %s Waiting ... %s minutes in Twitter for scheduling the next post" % (time.asctime(), str(tSleep2/60)))
+        time.sleep(tSleep2) 
 
 def publishTumblr(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
 
@@ -399,13 +429,16 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
     twitter = channel
     comment = ''
     print("Publishing in Twitter...")
-    try:
+    try: 
         t = connectTwitter(twitter)
-        statusTxt = comment + " " + title + " " + link
-        h = HTMLParser()
-        statusTxt = h.unescape(statusTxt)
-        print("Publishing in Twitter:\n%s" % statusTxt)
-        return(t.statuses.update(status=statusTxt))
+        if t:
+            statusTxt = comment + " " + title + " " + link
+            h = HTMLParser()
+            statusTxt = h.unescape(statusTxt)
+            print("Publishing in Twitter:\n%s" % statusTxt)
+            return(t.statuses.update(status=statusTxt))
+        else:
+            return("You must configure API access for %s" % twitter)
     except:
         print("Twitter posting failed!\n")
         print("Unexpected error:", sys.exc_info()[0])
@@ -425,17 +458,14 @@ def publishDelayFacebook(blog, listPosts, fbPage, timeSlots):
 
         #print("I'd publish ... %s" % str(listPosts[j])) 
         listP = blog.listPostsCache(socialNetwork)
-        if listPosts: 
+        if listP: 
             print("Time: %s Waiting ... %s minutes in Facebook to publish:\n%s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
             time.sleep(tSleep)             
-            try: 
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = listP[0] 
-            except:
-                #backwards compatibility
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = listP[0] 
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = listP[0] 
             publishFacebook(fbPage, title, firstLink, summary='', summaryHtml='', summaryLinks='', image='') 
             listP = listP[1:] 
             
+            print("listP Fb", listP)
             blog.updatePostsCache(listP, socialNetwork)
 
             print("Time: %s Waiting ... %s minutes to schedule next post in Facebook" % (time.asctime(), str(tSleep2/60))) 
