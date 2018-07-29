@@ -144,21 +144,7 @@ class moduleBlog():
             history = sc.api_call( "channels.history", channel=theChannel)
             #print(history)
             for msg in history['messages']: 
-                #if 'attachments' in msg:
-                #    print("attachment", msg['attachments'])
-                #    print(msg)
-                #    if 'original_url' in msg['attachments'][0]: 
-                #        self.postsSlack.append(msg['attachments'][0])
-                #else:
-                #print("msg", msg)
                 self.postsSlack.append(msg)
-                #print("borro....", theChannel, msg['ts']) 
-                #print(time.asctime(time.gmtime(int(msg['ts'].split('.')[0]))), msg['text'], msg)
-                    #print(sc.api_call("chat.delete", channel=theChannel, ts=msg['ts']))
-                    # We cannot delete all, but maybe we should delete
-                    # posts. Maybe in obtainPostsData?
-            #print(self.postsSlack)
-            #self.postsSlack.reverse()
 
     def getPostsSlack(self):
         #print("posts", len(self.postsSlack))

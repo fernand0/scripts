@@ -414,14 +414,15 @@ def publishTumblr(channel, title, link, summary, summaryHtml, summaryLinks, imag
     print("Publishing in Tumblr...")
     client = connectTumblr()                    
     
-    post = client.post('post', blog_url='http://fernand0.tumblr.com/',
-                            params={'type':'link', 
-                                'state':'queue',
-                                'title': title,
-                                'thumbnail': image, 
-                                'url': link, 
-                                'excerpt': summaryHtml,
-                                'publisher': ''}) 
+    blog_url = client.post('user/info')['user']['blogs'][0]['url']
+    post = client.post('post', blog_url, 
+            params={'type':'link', 
+                'state':'queue', 
+                'title': title, 
+                'thumbnail': image, 
+                'url': link, 
+                'excerpt': summaryHtml, 
+                'publisher': ''}) 
 
 
 def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
