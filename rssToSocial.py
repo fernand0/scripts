@@ -203,7 +203,7 @@ def main():
                                 break
                             i = i - 1
 
-                            listPosts.append(blog.obtainPostData(i))
+                            listPosts.append(blog.obtainPostData(i, False))
 
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i, False))
                             moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
@@ -219,7 +219,7 @@ def main():
                         #print(i)
                         if (i > 0):
                             nick = blog.getSocialNetworks()[socialNetwork]
-                            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1))
+                            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
                             hours = blog.getTime() 
                             if (hours and (((time.time() - lastTime) - int(hours)*60*60) < 0)): 
                                 print("Not publishing because time restriction\n") 
