@@ -109,6 +109,8 @@ from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 from medium import Client
 
+logger = logging.getLogger(__name__)
+
 def connectTumblr():
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssTumblr')])
@@ -121,11 +123,12 @@ def connectTumblr():
     client = Tumblpy(consumer_key, consumer_secret, 
                                        oauth_token, oauth_secret)
 
-    #logging.debug(client.info())
+    logger.debug(client.info())
 
     return(client)
 
 def connectBuffer():
+    logger.info("Connecting Buffer")
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBuffer')])
 
@@ -140,14 +143,15 @@ def connectBuffer():
                   client_secret=clientSecret,
                   access_token=accessToken)
 
-        logging.debug(api.info)
+        logger.debug(api.info)
     except:
-        print("Buffer authentication failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
+        logger.warning("Buffer authentication failed!\n")
+        logger.warning("Unexpected error:", sys.exc_info()[0])
 
     return(api)
 
 def connectTwitter(twitterAC):    
+    logger.info("Connecting Twitter")
     # In order to obtain the parameters for a new account, just write twitter
     # and follow the instructions
     # The result will be at ~/.twitter_oauth
@@ -168,15 +172,16 @@ def connectTwitter(twitterAC):
                         CONSUMER_SECRET)
             t = Twitter(auth=authentication)
         except:
-            print("Twitter authentication failed!\n")
-            print("Unexpected error:", sys.exc_info()[0])
+            logger.warning("Twitter authentication failed!\n")
+            logger.warning("Unexpected error:", sys.exc_info()[0])
     except:
-        print("Account not configured")
+        logger.warning("Account not configured")
         t = None
 
     return(t)
 
 def connectFacebook(fbPage = 'me'):
+    logger.info("Connecting Facebook")
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssFacebook')])
 
@@ -198,12 +203,13 @@ def connectFacebook(fbPage = 'me'):
             # Publishing as me
             return(graph, fbPage)
     except:
-        print("Facebook authentication failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
+        logger.warning("Facebook authentication failed!\n")
+        logger.warning("Unexpected error:", sys.exc_info()[0])
 
     return(0,0)
 
 def connectLinkedin():
+    logger.info("Connecting Linkedin")
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssLinkedin')])
 
@@ -225,12 +231,13 @@ def connectLinkedin():
         application = linkedin.LinkedInApplication(authentication)
 
     except:
-        print("Linkedin authentication failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
+        logger.warning("Linkedin authentication failed!\n")
+        logger.warning("Unexpected error:", sys.exc_info()[0])
 
     return(application)
 
 def connectTelegram(channel):
+    logger.info("Connecting Telegram")
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssTelegram')])
 
@@ -240,12 +247,13 @@ def connectTelegram(channel):
         bot = telepot.Bot(TOKEN)
         meMySelf = bot.getMe()
     except:
-        print("Telegram authentication failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
+        logger.warning("Telegram authentication failed!\n")
+        logger.warning("Unexpected error:", sys.exc_info()[0])
 
     return(bot)
 
 def connectMedium():
+    logger.info("Connecting Medium")
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssMedium')])
     client = Client(application_id=config.get("appKeys","ClientID"), application_secret=config.get("appKeys","ClientSecret"))
@@ -254,8 +262,8 @@ def connectMedium():
         # Get profile details of the user identified by the access token.
         user = client.get_current_user()
     except:
-        print("Medium authentication failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
+        logger.warning("Medium authentication failed!\n")
+        logger.warning("Unexpected error:", sys.exc_info()[0])
 
     return(client, user)
 
@@ -267,7 +275,7 @@ def checkLimitPosts(api, url, profileList, services='tfgl'):
 
     lenMax = 0
     if api:
-        logging.info("Checking services...")
+        logger.info("Checking services...")
 
         profileList = Profiles(api=api).all()
         for profile in profileList:
@@ -275,37 +283,40 @@ def checkLimitPosts(api, url, profileList, services='tfgl'):
                 lenProfile = len(profile.updates.pending) 
                 if (lenProfile > lenMax): 
                     lenMax = lenProfile 
-                    logging.info("%s ok" % profile['service'])
+                    logger.info("%s ok" % profile['service'])
     elif url:
         for profile in profileList.keys():
             if (profile[0] in services): 
-                filename = os.path.expanduser("~" + "/."  
-                        + urllib.parse.urlparse(url).netloc) 
-                print("Program: %s %s" % (profile, profileList[profile])) 
-                filename = filename + "_" + profile + "_" + profileList[profile] + ".queue" 
-                print("File: %s" % filename)
-                with open(filename,'rb') as f: 
+                fileName = os.path.expanduser("~" + "/."
+                        + urllib.parse.urlparse(url).netloc) + "_" + profile 
+                        + "_" + profileList[profile] + ".queue" 
+                logger.info("Program: %s %s" % (profile, profileList[profile])) 
+                logger.info("File: %s" % fileName)
+                with open(fileName,'rb') as f: 
                     try: 
                         listP = pickle.load(f) 
                     except: 
                         listP = [] 
+
                     lenProfile = len(listP) 
+
                     if (lenProfile > lenMax): 
                         lenMax = lenProfile 
-                        logging.info("%s ok" % profile)
+                        logger.info("%s ok" % profile)
 
-    logging.info("There are %d in some buffer, we can put %d" % 
+    logger.info("There are %d in some buffer, we can put %d" % 
             (lenMax, 10-lenMax))
+
     return(lenMax, profileList)
 
 def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, services='fglt'):
-    print("Publishing in Buffer:\n")
+    logger.info("Publishing in Buffer:\n")
     if isDebug:
         profileList = []
         firstLink = None
     fail = 'no'
     line = profile['service']
-    print("  %s" % profile['service'])
+    logger.info("  %s" % profile['service'])
 
     if (len(title) > 240):
         titlePostT = title[:240] 
@@ -340,33 +351,28 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
             line = line + ' ok'
             time.sleep(2)
         except:
-            print("Buffer posting failed!")
-            print("Entry: ", entry)
-            print("Unexpected error:", sys.exc_info()[0])
-            print("Unexpected error:", sys.exc_info()[1])
-            logging.info("Buffer posting failed!")
-            logging.info("Unexpected error: %s"% sys.exc_info()[0])
-            logging.info("Unexpected error: %s"% sys.exc_info()[1])
+            logger.warning("Buffer posting failed!")
+            logger.warning("Entry: ", entry)
+            logger.warning("Unexpected error: %s"% sys.exc_info()[0])
+            logger.warning("Unexpected error: %s"% sys.exc_info()[1])
 
             line = line + ' fail'
             failFile = open(os.path.expanduser("~/."
                        + urllib.parse.urlparse(link).netloc
                        + ".fail"), "w")
             failFile.write(post)
-            logging.info("  %s service" % line)
+            logger.info("  %s service" % line)
             fail = 'yes'
 
-    logging.info("  %s service" % line)
+    logger.info("  %s service" % line)
     if (fail == 'no' and link):
         blog.updateLastLink(link, 
             (profile['service'], profile['service_username']))
-        urlFile = open(os.path.expanduser("~/."
+        fileName = os.path.expanduser("~/."
                        + urllib.parse.urlparse(link).netloc
-                       + ".last"), "w")
-    
-        urlFile.write(link)
-        urlFile.close()
-    print("")
+                       + ".last")
+        with open(fileName, "w") as f: 
+            f.write(link)
 
 def searchTwitter(search, twitter): 
     t = connectTwitter(twitter)
@@ -385,7 +391,7 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
         tSleep2 = timeSlots - tSleep
 
         listP = blog.listPostsCache(socialNetwork)
-        print("Time: %s Waiting ... %s minutes in Twitter to publish:\n%s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
+        logger.info("Time: %s Waiting ... %s minutes in Twitter to publish:\n%s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
         time.sleep(tSleep) 
 
         if listP: 
@@ -397,7 +403,7 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
             element = listP
             listP = [] 
         else:
-            print("This shouldn't happen")
+            logger.warning("This shouldn't happen")
             sys.exit()
 
         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = element
@@ -405,12 +411,12 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
 
         blog.updatePostsCache(listP, socialNetwork)
            
-        print("Time: %s Waiting ... %s minutes in Twitter for scheduling the next post" % (time.asctime(), str(tSleep2/60)))
+        logger.info("Time: %s Waiting ... %s minutes in Twitter for scheduling the next post" % (time.asctime(), str(tSleep2/60)))
         time.sleep(tSleep2) 
 
 def publishTumblr(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
 
-    print("Publishing in Tumblr...")
+    logger.info("Publishing in Tumblr...")
     client = connectTumblr()                    
     
     blog_url = client.post('user/info')['user']['blogs'][0]['url']
@@ -423,25 +429,29 @@ def publishTumblr(channel, title, link, summary, summaryHtml, summaryLinks, imag
                 'excerpt': summaryHtml, 
                 'publisher': ''}) 
 
+    logger.info("Posted!:" post)
+
+    return(post)
 
 def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
 
     twitter = channel
     comment = ''
-    print("Publishing in Twitter...")
+    logger.info("Publishing in Twitter...")
     try: 
         t = connectTwitter(twitter)
         if t:
             statusTxt = comment + " " + title + " " + link
             h = HTMLParser()
             statusTxt = h.unescape(statusTxt)
-            print("Publishing in Twitter:\n%s" % statusTxt)
+            logger.info("Publishing in Twitter:\n%s" % statusTxt)
             return(t.statuses.update(status=statusTxt))
         else:
+            logger.warning("You must configure API access for %s" % twitter)
             return("You must configure API access for %s" % twitter)
     except:
-        print("Twitter posting failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
+        logger.warning("Twitter posting failed!\n")
+        logger.warning("Unexpected error:", sys.exc_info()[0])
         return("Fail! %s" % sys.exc_info()[0])
 
 
@@ -458,7 +468,7 @@ def publishDelayFacebook(blog, listPosts, fbPage, timeSlots):
         tSleep2 = timeSlots - tSleep
 
         listP = blog.listPostsCache(socialNetwork)
-        print("Time: %s Waiting ... %s minutes in Facebook to publish:\n%s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
+        logger.info("Time: %s Waiting ... %s minutes in Facebook to publish:\n%s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
         time.sleep(tSleep)             
 
         if listP: 
@@ -470,7 +480,7 @@ def publishDelayFacebook(blog, listPosts, fbPage, timeSlots):
             element = listP
             listP = [] 
         else:
-            print("This shouldn't happen")
+            logger.critical("This shouldn't happen")
             sys.exit()
 
         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = element 
@@ -478,12 +488,12 @@ def publishDelayFacebook(blog, listPosts, fbPage, timeSlots):
          
         blog.updatePostsCache(listP, socialNetwork)
 
-        print("Time: %s Waiting ... %s minutes to schedule next post in Facebook" % (time.asctime(), str(tSleep2/60))) 
+        logger.info("Time: %s Waiting ... %s minutes to schedule next post in Facebook" % (time.asctime(), str(tSleep2/60))) 
         time.sleep(tSleep2) 
    
 def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     fbPage = channel
-    print("Publishing in Facebook...")
+    logger.info("Publishing in Facebook...")
     textToPublish = ""
     textToPublish2 = ""
     if True:
@@ -491,7 +501,7 @@ def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, im
         title = h.unescape(title)
         (graph, page) = connectFacebook(fbPage)
         textToPublish = title + " \n" + summaryLinks
-        print("Publishing in Facebook:\n%s" % textToPublish)
+        logger.info("Publishing in Facebook:\n%s" % textToPublish)
         if (len(textToPublish) > 9980):
             textToPublish = textToPublish[:9980]
             index = textToPublish.rfind(' ')
@@ -516,25 +526,25 @@ def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, im
                           name=title, caption='',
                           description=summaryLinks.encode('utf-8')))
     else:
-        print("Facebook posting failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
+        logger.warning("Facebook posting failed!\n")
+        logger.warning("Unexpected error:", sys.exc_info()[0])
         return("Fail!")
 
 
 def publishLinkedin(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
-    print("Publishing in Linkedin...\n")
+    logger.info("Publishing in Linkedin...\n")
     if True:
         application = connectLinkedin()
         presentation = 'Publicado! ' + title 
-        print("Publishing in Linkedin:\n%s" % title)
+        logger.info("Publishing in Linkedin:\n%s" % title)
         if link:
             return(application.submit_share(presentation, summary, link, image))
         else:
             return(application.submit_share(comment = title))
     else:
-        print("Linkedin posting failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
+        logger.warning("Linkedin posting failed!\n")
+        logger.warning("Unexpected error:", sys.exc_info()[0])
         return("Fail!")
 
 def cleanTags(soup):
@@ -569,7 +579,7 @@ def cleanTags(soup):
 def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     #publishTelegram("reflexioneseirreflexiones","Canal de Reflexiones e Irreflexiones", "http://fernand0.blogalia.com/", "", "", "", "")
 
-    print("Telegram...%s\n"%channel)
+    logger.info("Telegram...%s\n"%channel)
 
     if True:
         bot = connectTelegram(channel)
@@ -589,8 +599,8 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
             text = '<a href="'+link+'">'+title + "</a>\n" + content
             textToPublish = text[:4080] + ' ...'
             textToPublish2 = '... '+ text[4081:]
-        print("text to ", textToPublish)
-        print("text to 2", textToPublish2)
+        logger.info("text to ", textToPublish)
+        logger.info("text to 2", textToPublish2)
 
         bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
         if textToPublish2:
@@ -602,11 +612,12 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
             bot.sendMessage('@'+channel, links, parse_mode='HTML') 
 
     else:
-        print("Telegram posting failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
+        logger.warning("Telegram posting failed!\n")
+        logger.warning("Unexpected error:", sys.exc_info()[0])
+        return("Fail!")
 
 def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
-    print("Medium...\n")
+    logger.info("Medium...%s\n"%channel)
     try:
         (client, user) = connectMedium()
 
@@ -616,10 +627,11 @@ def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, imag
         post = client.create_post(user_id=user["id"], title=title,
                 content="<h4>"+title+"</h4><br />"+summaryHtml+textOrig, canonical_url = link,
                 content_format="html", publish_status="public") #draft")
-        print("My new post!", post["url"])
+        logger.info("My new post!", post["url"])
     except:
-        print("Medium posting failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
+        logger.warning("Medium posting failed!\n")
+        logger.warning("Unexpected error:", sys.exc_info()[0])
+        return("Fail!")
 
 
 if __name__ == "__main__":

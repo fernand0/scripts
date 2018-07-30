@@ -9,6 +9,7 @@ import urllib
 import requests
 import feedparser
 import pickle
+import logging
 from slackclient import SlackClient
 from bs4 import BeautifulSoup
 from bs4 import Tag
@@ -30,6 +31,7 @@ class moduleBlog():
          self.program = None
          self.xmlrpc = None
          self.lastLinkPublished = {}
+         self.logger = logging.getLogger(__name__)
  
     def getUrl(self):
         return(self.url)
@@ -107,22 +109,8 @@ class moduleBlog():
  
     def setPostsRss(self):
         urlRss = self.url+self.rssFeed
-        print(urlRss)
-        #if urlRss.find('tumblr')>0:
-        #    import subprocess 
-        #    process = subprocess.Popen("$HOME/usr/src/sh/tumblr.sh", shell=True, stdout=subprocess.PIPE) 
-        #    # It is not working. Abandoned for the moment
-        #    process.wait() 
-        #    print(process.returncode)
-        #    self.postsRss = feedparser.parse('/tmp/feed.rss')
-        #    # Workaround until a better solution can be implented due to tumblr
-        #    # gdpr stupidity
-        #    # Based on this shellscript:
-        #    # https://discourse.tt-rss.org/t/change-on-tumblr-rss-feeds-not-working/1158/20
-
-        #else:
+        self.logger.debug(urlRss)
         self.postsRss = feedparser.parse(urlRss)
-        #print(self.postsRss)
 
     def searchChannelSlack(self, sc, name):
         chanList = sc.api_call("channels.list")['channels'] 
@@ -142,13 +130,13 @@ class moduleBlog():
             sc = SlackClient(slack_token) 
             theChannel = self.searchChannelSlack(sc, 'links')
             history = sc.api_call( "channels.history", channel=theChannel)
-            #print(history)
+            self.logger.debug(history)
             for msg in history['messages']: 
                 self.postsSlack.append(msg)
 
     def getPostsSlack(self):
-        #print("posts", len(self.postsSlack))
-        #print(self.postsSlack)
+        self.logger.debug("# posts", len(self.postsSlack))
+        self.logger.debug(self.postsSlack)
         return(self.postsSlack)
 
     def getPostsXmlrpc(self):
@@ -186,17 +174,17 @@ class moduleBlog():
         i = 0
         if self.getPostsRss():
             if not link:
-                #print(self.getPostsRss().entries)
+                self.logger.debug(self.getPostsRss().entries)
                 return(len(self.getPostsRss().entries))
             for entry in self.getPostsRss().entries:
-                #print(entry['link'], link)
+                self.logger.debug(entry['link'], link)
                 lenCmp = min(len(entry['link']), len(link))
                 if entry['link'][:lenCmp] == link[:lenCmp]:
                     return i
                 i = i + 1
         elif self.getPostsSlack():
             if not link:
-                #print(self.getPostsSlack())
+                self.logger.debug(self.getPostsSlack())
                 return(len(self.getPostsSlack()))
             for entry in self.getPostsSlack():
                 if 'original_url' in entry: 
@@ -224,8 +212,9 @@ class moduleBlog():
         server[0].metaWeblog.editPost(idPost, server[1], server[2], data, True)
     
     def selectPost(self):
+        self.logger.info("Selecting post")
         server = self.xmlrpc
-        print(server)
+        self.logger.debug(server)
         posts = server[0].metaWeblog.getRecentPosts(self.Id, server[1], server[2], 10)
         i = 1
         print("Posts:")
@@ -237,13 +226,14 @@ class moduleBlog():
         return posts[thePost - 1]['title'], posts[thePost - 1]['postid']
 
     def deletePost(self, idPost): 
+        self.logger.info("Deleting id",idPost)
         if self.xmlrpc:
             server = self.xmlrpc
-            server[0].blogger.deletePost('',idPost, server[1], server[2], True)
+            result = server[0].blogger.deletePost('',idPost, server[1], server[2], True)
         elif self.getPostsSlack():
             # Needs improvement
             config = configparser.ConfigParser() 
-            config.read('/home/ftricass/.rssSlack')
+            config.read(os.path.expanduser('~/' + '.rssSlack'))
             
             slack_token = config["Slack"].get('api-key')
 
@@ -251,94 +241,81 @@ class moduleBlog():
 
             theChannel = self.searchChannelSlack(sc, 'links')
 
-            print("id",idPost)
-            print(sc.api_call("chat.delete", channel=theChannel, ts=idPost))
+            result = sc.api_call("chat.delete", channel=theChannel, ts=idPost)
 
+        self.logger.info(result)
+        return(result)
 
     def updatePostsCache(self, listPosts, socialNetwork=()):
         fileName = os.path.expanduser('~/.' 
                 +  urllib.parse.urlparse(self.getUrl()).netloc 
                 + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
                 + ".queue")
-        #import sys 
-        #sys.setrecursionlimit(10000)
-        #for i in range(len(listPosts)):
-        #    print("i ", i)
-        #    with open(fileName, 'wb') as f:
-        #        print("Dumping") 
-        #        print("len %d %s" % (len(listPosts), type(listPosts)))
-        #        #print("Dumping %s \n %s" % (fileName, listPosts)) 
-        #        try:
-        #            pickle.dump(listPosts[i],f, 4)
-        #        except:
-        #            print("Fail ", listPosts[i])
-        #        time.sleep(1)
-        #        #print("Dumped %s \n %s" % (fileName, listPosts)) 
+
+        self.logger.info("Updating Posts Cache: %s" % fileName)
+
         with open(fileName, 'wb') as f:
              pickle.dump(listPosts,f)
         return(fileName)
 
-    def listPostsCache(self,socialNetwork=(), debug = False):
+    def listPostsCache(self,socialNetwork=()):
         fileName = os.path.expanduser('~/.' 
                 +  urllib.parse.urlparse(self.getUrl()).netloc 
                 + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
                 + ".queue")
+
+        self.logger.info("Listing Posts Cache: %s" % fileName)
+
         with open(fileName,'rb') as f:
             try: 
                 listP = pickle.load(f)
             except:
                 listP = []
-        if debug:
-            print("listPostsCache", socialNetwork[0])
-            for i in range(len(listP)):
-                print("=> ", socialNetwork[0], listP[i][0])
+
+        self.logger.debug("listPostsCache", socialNetwork[0])
+        for i in range(len(listP)):
+            self.logger.debug("=> ", socialNetwork[0], listP[i][0])
 
         return(listP)
 
     def checkLastLink(self,socialNetwork=()):
         url = self.getUrl()
         if not socialNetwork: 
-            filename = os.path.expanduser("~" + "/."  
+            fileName = os.path.expanduser("~" + "/."  
                     + urllib.parse.urlparse(url).netloc + ".last")
-            urlFile = open(filename, "r")
-            linkLast = urlFile.read().rstrip()  # Last published
-        else: 
-            try: 
-                filename = os.path.expanduser("~" + "/."  
-                        + urllib.parse.urlparse(url).netloc 
-                        + '_'+socialNetwork[0]+'_'+socialNetwork[1] 
-                        + ".last")
-                urlFile = open(filename, "r")
-                linkLast = urlFile.read().rstrip()  # Last published
-            except:
-                fileName = os.path.expanduser("~" + "/."  
-                        + urllib.parse.urlparse(url).netloc 
-                        + '_'+socialNetwork[0]+'_'+socialNetwork[1] 
-                        + ".last")
-                print(fileName)
-                f = open(fileName, "w")
-                f.close()
-                linkLast = ''  # None published, or non-existent file
+        else:    
+            fileName = os.path.expanduser("~" + "/."  +
+                    urllib.parse.urlparse(url).netloc +
+                    '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
+            self.logger.info("Checking last link: %s" % fileName)
 
-        return(linkLast, os.path.getmtime(filename))
+        try: 
+            with open(fileName, "r") as f: 
+                linkLast = f.read().rstrip()  # Last published
+        except:
+            # File does not exist, we need to create it.
+            with open(fileName, "w") as f:
+                self.logger.warning("File %s does not exist. Creating it."
+                        % fileName) 
+                linkLast = ''  # None published, or
+                non-existent file
+
+        return(linkLast, os.path.getmtime(fileName))
 
     def updateLastLink(self,link, socialNetwork=()):
         rssFeed = self.getUrl()+self.getRssFeed()
         if not socialNetwork: 
-            urlFile = open(os.path.expanduser("~" + "/."  
-                  + urllib.parse.urlparse(rssFeed).netloc
-                  + ".last"), "w")
+            fileName = os.path.expanduser("~" + "/."  +
+                    urllib.parse.urlparse(rssFeed).netloc + ".last")
         else: 
-            urlFile = open(os.path.expanduser("~" + "/."  
-              + urllib.parse.urlparse(rssFeed).netloc
-              + '_'+socialNetwork[0]+'_'+socialNetwork[1]
-              + ".last"), "w")
-        urlFile.write(link)
-        urlFile.close()
+            fileName = os.path.expanduser("~" + "/."  +
+                    urllib.parse.urlparse(rssFeed).netloc +
+                    '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
+        with open(fileName, "w") as f: 
+            f.write(link)
 
     def extractImage(self, soup):
         pageImage = soup.findAll("img")
-        # print("soup", soup)
         #  Only the first one
         if len(pageImage) > 0:
             imageLink = (pageImage[0]["src"])
@@ -356,9 +333,7 @@ class moduleBlog():
         links = soup.find_all(["a","iframe"])
         for link in soup.find_all(["a","iframe"]):
             theLink = ""
-            #print(link)
             if len(link.contents) > 0: 
-                #print(link)
                 if not isinstance(link.contents[0], Tag):
                     # We want to avoid embdeded tags (mainly <img ... )
                     if link.has_key('href'):
@@ -384,7 +359,7 @@ class moduleBlog():
     
         return (soup.get_text().strip('\n'), theSummaryLinks)
 
-    def obtainPostData(self, i, debug=True):
+    def obtainPostData(self, i, debug=False):
         if self.getPostsRss():
             posts = self.getPostsRss().entries
             theSummary = posts[i]['summary']
@@ -420,32 +395,29 @@ class moduleBlog():
             theSummary = soup.get_text()
             if self.getLinksToAvoid():
                 (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())
-                if debug: print("theC", theContent)
+                self.logger.debug("theC", theContent)
                 if theContent.startswith('Anuncios'): 
                     theContent = ''
-                if debug: print("theC", theContent)
+                self.logger.debug("theC", theContent)
             else:
                 (theContent, theSummaryLinks) = self.extractLinks(soup, "") 
-                if debug: print("theC", theContent)
+                self.logger.debug("theC", theContent)
                 if theContent.startswith('Anuncios'): 
                     theContent = ''
-                if debug: print("theC", theContent)
+                self.logger.debug("theC", theContent)
 
-            #print(posts[i])
             if 'media_content' in posts[i]: 
                 theImage = posts[i]['media_content'][0]['url']
             else:
                 theImage = self.extractImage(soup)
-            print("theImage", theImage)
+            self.logger.debug("theImage", theImage)
             theLinks = theSummaryLinks
             theSummaryLinks = theContent + theLinks
         elif self.getPostsSlack():
             posts = self.getPostsSlack()
             url = ''
-            if debug: 
-                # print("post",posts[i])
-                for j in range(len(posts)): 
-                    print("post ", j, posts[j]['text'])
+            for j in range(len(posts)): 
+                self.logger.debug("post ", j, posts[j]['text'])
             if 'attachments' in posts[i]:
                 post = posts[i]['attachments'][0]
             else:
@@ -467,13 +439,13 @@ class moduleBlog():
                     theImage = post['thumb_url']
                 else:
                     print("Fail image")
+                    self.logger.warning("Fail image")
                     theImage = ''
             elif 'text' in post:
                 if debug: 
-                    print(post['text'])
+                    self.logger.debug(post['text'])
                 if post['text'].startswith('<h'):
                     # It's an url
-                    #print("Starts")
                     url = post['text'][1:-1]
                     req = requests.get(url)
                     if req.text.find('403 Forbidden'):
@@ -484,12 +456,10 @@ class moduleBlog():
                     else:
                         soup = BeautifulSoup(req.text, 'lxml')
                         theTitle = str(soup.title.string)
-                        #print("theTitle", theTitle, type(theTitle))
                         theSummary = str(soup.body.string)
                         content = theSummary
                         theDescription = theSummary
                 else:
-                    #print("No Starts")
                     theSummary = post['text']
                     content = post['text']
                     theDescription = post['text']
@@ -527,21 +497,20 @@ class moduleBlog():
             theSummaryLinks = theContent + theLinks
 
 
-        if debug:
-            print("=========")
-            print("Results: ")
-            print("=========")
-            print("Title:     ", theTitle)
-            print("Link:      ", theLink)
-            print("First Link:", firstLink)
-            print("Summary:   ", content[:200])
-            print("Sum links: ", theSummaryLinks)
-            print("the Links"  , theLinks)
-            print("Comment:   ", comment)
-            print("Image;     ", theImage)
-            print("Post       ", theTitle + " " + theLink)
-            print("==============================================")
-            print("")
+        self.logger.debug("=========")
+        self.logger.debug("Results: ")
+        self.logger.debug("=========")
+        self.logger.debug("Title:     ", theTitle)
+        self.logger.debug("Link:      ", theLink)
+        self.logger.debug("First Link:", firstLink)
+        self.logger.debug("Summary:   ", content[:200])
+        self.logger.debug("Sum links: ", theSummaryLinks)
+        self.logger.debug("the Links"  , theLinks)
+        self.logger.debug("Comment:   ", comment)
+        self.logger.debug("Image;     ", theImage)
+        self.logger.debug("Post       ", theTitle + " " + theLink)
+        self.logger.debug("==============================================")
+        self.logger.debug("")
 
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)

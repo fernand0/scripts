@@ -104,12 +104,12 @@ def test():
 
 def main():
 
+
     print("====================================")
     print("Launched at %s" % time.asctime())
     print("====================================")
     print("")
 
-    print(sys.argv, len(sys.argv))
 
         
     isDebug = False
@@ -121,25 +121,29 @@ def main():
     logging.basicConfig(filename=os.path.expanduser("~") 
                         + "/usr/var/rssSocial_.log",
                         level=loggingLevel, format='%(asctime)s %(message)s')
+
+    logging.info("Launched at %s" % time.asctime())
+    logging.debug(sys.argv, len(sys.argv))
+
     if len(sys.argv)>1:
         print(sys.argv[1])
         checkBlog = sys.argv[1]
     else:
         checkBlog = ""
 
-    print("Configured blogs:")
+    logging.info("Configured blogs:")
 
     blogs = []
 
     for section in config.sections():
-        print("\nSection: ", section)
+        logging.info("\nSection: ", section)
         blog = moduleBlog.moduleBlog()
         url = config.get(section, "url")
         blog.setUrl(url)
         if ("rssfeed" in config.options(section)):
             # It does not preserve case
             rssFeed = config.get(section, "rssFeed")
-            print("Blog: ", url+rssFeed)
+            logging.info("Blog: ", url+rssFeed)
             blog.setRssFeed(rssFeed)
             blog.setPostsRss()
         elif blog.getUrl().find('slack')>0:
@@ -166,7 +170,7 @@ def main():
                     if option == 'program': 
                         blog.setProgram(config.get(section, "program"))
 
-            print("Looking for pending posts in ...", blog.getSocialNetworks())
+            logging.info("Looking for pending posts in ...", blog.getSocialNetworks())
 
             bufferMax = 10
             if ("bufferapp" in config.options(section)):
@@ -174,12 +178,12 @@ def main():
                 lenMax, profileList = moduleSocial.checkLimitPosts(api,'', '', blog.getBufferapp())
 
                 for profile in profileList:
-                    print(profile['service'],blog.getBufferapp())
+                    logging.info(profile['service'],blog.getBufferapp())
                     if (profile['service'][0] in blog.getBufferapp()): 
                         lastLink, lastTime = blog.checkLastLink((profile['service'], profile['service_username']))
                         blog.addLastLinkPublished((profile['service'], lastLink))
                         i = blog.getLinkPosition(lastLink)
-                        #print("i, lastLink", i,lastLink)
+                        logging.debug("i, lastLink", i,lastLink)
                         if ((profile['service'] == 'twitter') 
                            or (profile['service'] == 'facebook')):
                             # We should add a configuration option in order
@@ -203,32 +207,32 @@ def main():
                                 break
                             i = i - 1
 
-                            listPosts.append(blog.obtainPostData(i))
+                            listPosts.append(blog.obtainPostData(i, False))
 
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i, False))
                             moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
                             if listPosts:
-                                print("listPosts", listPosts)
+                                loggint.info("listPosts", listPosts)
             else:
                 if not isDebug:
                     for socialNetwork in blog.getSocialNetworks().keys():
-                        print(socialNetwork)
+                        loggint.info(socialNetwork)
                         lastLink, lastTime = blog.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                         blog.addLastLinkPublished((option, lastLink)) 
                         i = blog.getLinkPosition(lastLink) 
-                        #print(i)
+                        logging.debug(i)
                         if (i > 0):
                             nick = blog.getSocialNetworks()[socialNetwork]
-                            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1))
+                            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
                             hours = blog.getTime() 
                             if (hours and (((time.time() - lastTime) - int(hours)*60*60) < 0)): 
-                                print("Not publishing because time restriction\n") 
+                                logging.info("Not publishing because time restriction\n") 
                             else:
-                                print("Publishing directly\n") 
+                                logging.info("Publishing directly\n") 
                                 publishMethod = getattr(moduleSocial, 
                                         'publish'+ socialNetwork.capitalize())
                                 publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
-                                print("Updating Link\n") 
+                                logging.info("Updating Link\n") 
                                 blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
 
             if ('program' in config.options(section)):
@@ -236,14 +240,14 @@ def main():
                 lenMax = 6
                 profileList = blog.getSocialNetworks().keys()
                 lenMax, profileList = moduleSocial.checkLimitPosts('', blog.getUrl(), blog.getSocialNetworks(), blog.getProgram())
-                print("Lenmax ", lenMax)
+                logging.debug("Lenmax ", lenMax)
 
                 for profile in profileList:
                     if profile[0] in blog.getProgram():
                         lastLink, lastTime = blog.checkLastLink((profile, blog.getSocialNetworks()[profile]))
                         blog.addLastLinkPublished((profile, lastLink))
                         i = blog.getLinkPosition(lastLink) 
-                        print("lastLink", profile, lastLink, "i",i)
+                        logging.info("lastLink", profile, lastLink, "i",i)
                         if ((profile == 'twitter') or (profile == 'facebook')):
                             # We should add a configuration option in order
                             # to check which services are the ones with
@@ -259,7 +263,7 @@ def main():
                             theList = []
 
                         num = bufferMax - lenMax
-                        print("bufferMax - lenMax = num", bufferMax, lenMax, num)
+                        logging.info("bufferMax - lenMax = num", bufferMax, lenMax, num)
                         listPosts = []
                         for j in range(num, 0, -1):
                             if (i <= 0):
@@ -271,7 +275,7 @@ def main():
 
                         if listPosts:
                             link = listPosts[len(listPosts) - 1][1]
-                            #print("link ->", link) 
+                            loggign.debug("link ->", link) 
                         else: 
                             link = ''
 
@@ -293,6 +297,7 @@ def main():
     print("====================================")
     print("Finished at %s" % time.asctime())
     print("====================================")
+    logging.info("Finished at %s" % time.asctime())
 
 
 if __name__ == '__main__':
