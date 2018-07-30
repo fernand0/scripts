@@ -338,7 +338,7 @@ class moduleBlog():
 
     def extractImage(self, soup):
         pageImage = soup.findAll("img")
-        print("soup", soup)
+        # print("soup", soup)
         #  Only the first one
         if len(pageImage) > 0:
             imageLink = (pageImage[0]["src"])
@@ -358,7 +358,7 @@ class moduleBlog():
             theLink = ""
             #print(link)
             if len(link.contents) > 0: 
-                print(link)
+                #print(link)
                 if not isinstance(link.contents[0], Tag):
                     # We want to avoid embdeded tags (mainly <img ... )
                     if link.has_key('href'):
@@ -420,16 +420,16 @@ class moduleBlog():
             theSummary = soup.get_text()
             if self.getLinksToAvoid():
                 (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())
-                print("theC", theContent)
+                if debug: print("theC", theContent)
                 if theContent.startswith('Anuncios'): 
                     theContent = ''
-                print("theC", theContent)
+                if debug: print("theC", theContent)
             else:
                 (theContent, theSummaryLinks) = self.extractLinks(soup, "") 
-                print("theC", theContent)
+                if debug: print("theC", theContent)
                 if theContent.startswith('Anuncios'): 
                     theContent = ''
-                print("theC", theContent)
+                if debug: print("theC", theContent)
 
             #print(posts[i])
             if 'media_content' in posts[i]: 
@@ -443,7 +443,7 @@ class moduleBlog():
             posts = self.getPostsSlack()
             url = ''
             if debug: 
-                print(posts[i])
+                # print("post",posts[i])
                 for j in range(len(posts)): 
                     print("post ", j, posts[j]['text'])
             if 'attachments' in posts[i]:
@@ -484,7 +484,7 @@ class moduleBlog():
                     else:
                         soup = BeautifulSoup(req.text, 'lxml')
                         theTitle = str(soup.title.string)
-                        print("theTitle", theTitle, type(theTitle))
+                        #print("theTitle", theTitle, type(theTitle))
                         theSummary = str(soup.body.string)
                         content = theSummary
                         theDescription = theSummary

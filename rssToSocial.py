@@ -179,7 +179,7 @@ def main():
                         lastLink, lastTime = blog.checkLastLink((profile['service'], profile['service_username']))
                         blog.addLastLinkPublished((profile['service'], lastLink))
                         i = blog.getLinkPosition(lastLink)
-                        print(i,lastLink)
+                        #print("i, lastLink", i,lastLink)
                         if ((profile['service'] == 'twitter') 
                            or (profile['service'] == 'facebook')):
                             # We should add a configuration option in order
@@ -216,7 +216,7 @@ def main():
                         lastLink, lastTime = blog.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                         blog.addLastLinkPublished((option, lastLink)) 
                         i = blog.getLinkPosition(lastLink) 
-                        print(i)
+                        #print(i)
                         if (i > 0):
                             nick = blog.getSocialNetworks()[socialNetwork]
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1))
@@ -230,22 +230,6 @@ def main():
                                 publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
                                 print("Updating Link\n") 
                                 blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
-
-                    #lastLink, lastTime = blog.checkLastLink()
-                    #i = blog.getLinkPosition(lastLink) 
-                    #if (i > 0):
-                    #    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i - 1))
-
-                    #    if (link):
-                    #        print("I'd publish ... %s" % link)
-                    #        #moduleSocial.publishLinkedin('', title, link, summary, '', '', image)
-                    #        # I think this is not needed anymore
-                    #        #urlFile = open(os.path.expanduser("~/."
-                    #        #               + urllib.parse.urlparse(link).netloc
-                    #        #               + ".last"), "w")
-            
-                    #        #urlFile.write(link)
-                    #        #urlFile.close()
 
             if ('program' in config.options(section)):
                 blog.setProgram(config.get(section, "program"))
