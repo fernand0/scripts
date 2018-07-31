@@ -297,8 +297,8 @@ class moduleBlog():
             with open(fileName, "w") as f:
                 self.logger.warning("File %s does not exist. Creating it."
                         % fileName) 
-                linkLast = ''  # None published, or
-                non-existent file
+                linkLast = ''  
+                # None published, or non-existent file
 
         return(linkLast, os.path.getmtime(fileName))
 
