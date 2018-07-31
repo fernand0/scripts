@@ -392,8 +392,6 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
         tSleep2 = timeSlots - tSleep
 
         listP = blog.listPostsCache(socialNetwork)
-        logger.info("Time: %s Waiting ... %s minutes in Twitter to publish:\n%s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
-        time.sleep(tSleep) 
 
         if listP: 
             #print("list")
@@ -407,12 +405,16 @@ def publishDelayTwitter(blog, listPosts, twitter, timeSlots):
             logger.warning("This shouldn't happen")
             sys.exit()
 
+        logger.info("Time: %s Waiting ... %.2f minutes in Twitter to publish:\n%s" % (time.asctime(), tSleep/60, element))
+
+        time.sleep(tSleep) 
+
         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = element
         publishTwitter(twitter, title, firstLink, summary, summaryHtml, summaryLinks, image)
 
         blog.updatePostsCache(listP, socialNetwork)
            
-        logger.info("Time: %s Waiting ... %s minutes in Twitter for scheduling the next post" % (time.asctime(), str(tSleep2/60)))
+        logger.info("Time: %s Waiting ... %.2f minutes in Twitter for scheduling the next post" % (time.asctime(), tSleep2/60))
         time.sleep(tSleep2) 
 
 def publishTumblr(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
@@ -469,7 +471,7 @@ def publishDelayFacebook(blog, listPosts, fbPage, timeSlots):
         tSleep2 = timeSlots - tSleep
 
         listP = blog.listPostsCache(socialNetwork)
-        logger.info("Time: %s Waiting ... %s minutes in Facebook to publish:\n%s" % (time.asctime(), str(tSleep/60), listP[0][0])) 
+        logger.info("Time: %s Waiting ... %.2f minutes in Facebook to publish:\n%s" % (time.asctime(), tSleep/60, listP[0][0])) 
         time.sleep(tSleep)             
 
         if listP: 
@@ -489,7 +491,7 @@ def publishDelayFacebook(blog, listPosts, fbPage, timeSlots):
          
         blog.updatePostsCache(listP, socialNetwork)
 
-        logger.info("Time: %s Waiting ... %s minutes to schedule next post in Facebook" % (time.asctime(), str(tSleep2/60))) 
+        logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in Facebook" % (time.asctime(), tSleep2/60)) 
         time.sleep(tSleep2) 
    
 def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
