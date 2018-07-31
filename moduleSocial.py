@@ -287,9 +287,10 @@ def checkLimitPosts(api, url, profileList, services='tfgl'):
     elif url:
         for profile in profileList.keys():
             if (profile[0] in services): 
-                fileName = os.path.expanduser("~" + "/."
-                        + urllib.parse.urlparse(url).netloc) + "_" + profile 
-                        + "_" + profileList[profile] + ".queue" 
+                fileName = os.path.expanduser("~" + "/." 
+                        + urllib.parse.urlparse(url).netloc 
+                        + "_" + profile + "_" + profileList[profile] 
+                        + ".queue" )
                 logger.info("Program: %s %s" % (profile, profileList[profile])) 
                 logger.info("File: %s" % fileName)
                 with open(fileName,'rb') as f: 
@@ -429,7 +430,7 @@ def publishTumblr(channel, title, link, summary, summaryHtml, summaryLinks, imag
                 'excerpt': summaryHtml, 
                 'publisher': ''}) 
 
-    logger.info("Posted!:" post)
+    logger.info("Posted!: %s" % post)
 
     return(post)
 

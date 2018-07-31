@@ -226,7 +226,7 @@ class moduleBlog():
         return posts[thePost - 1]['title'], posts[thePost - 1]['postid']
 
     def deletePost(self, idPost): 
-        self.logger.info("Deleting id",idPost)
+        self.logger.info("Deleting id %s" % idPost)
         if self.xmlrpc:
             server = self.xmlrpc
             result = server[0].blogger.deletePost('',idPost, server[1], server[2], True)
@@ -297,8 +297,8 @@ class moduleBlog():
             with open(fileName, "w") as f:
                 self.logger.warning("File %s does not exist. Creating it."
                         % fileName) 
-                linkLast = ''  # None published, or
-                non-existent file
+                linkLast = ''  
+                # None published, or non-existent file
 
         return(linkLast, os.path.getmtime(fileName))
 

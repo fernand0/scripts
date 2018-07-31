@@ -136,14 +136,14 @@ def main():
     blogs = []
 
     for section in config.sections():
-        logging.info("\nSection: ", section)
+        logging.info("\nSection: %s"% section)
         blog = moduleBlog.moduleBlog()
         url = config.get(section, "url")
         blog.setUrl(url)
         if ("rssfeed" in config.options(section)):
             # It does not preserve case
             rssFeed = config.get(section, "rssFeed")
-            logging.info("Blog: ", url+rssFeed)
+            logging.info("Blog: %s"% url+rssFeed)
             blog.setRssFeed(rssFeed)
             blog.setPostsRss()
         elif blog.getUrl().find('slack')>0:
@@ -170,7 +170,7 @@ def main():
                     if option == 'program': 
                         blog.setProgram(config.get(section, "program"))
 
-            logging.info("Looking for pending posts in ...", blog.getSocialNetworks())
+            logging.info("Looking for pending posts in ... %s"% blog.getSocialNetworks())
 
             bufferMax = 10
             if ("bufferapp" in config.options(section)):
@@ -178,12 +178,12 @@ def main():
                 lenMax, profileList = moduleSocial.checkLimitPosts(api,'', '', blog.getBufferapp())
 
                 for profile in profileList:
-                    logging.info(profile['service'],blog.getBufferapp())
+                    logging.info(profile['service']+blog.getBufferapp())
                     if (profile['service'][0] in blog.getBufferapp()): 
                         lastLink, lastTime = blog.checkLastLink((profile['service'], profile['service_username']))
                         blog.addLastLinkPublished((profile['service'], lastLink))
                         i = blog.getLinkPosition(lastLink)
-                        logging.debug("i, lastLink", i,lastLink)
+                        logging.debug("i, lastLink %d %s"% (i,lastLink))
                         if ((profile['service'] == 'twitter') 
                            or (profile['service'] == 'facebook')):
                             # We should add a configuration option in order
@@ -212,11 +212,11 @@ def main():
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i, False))
                             moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
                             if listPosts:
-                                loggint.info("listPosts", listPosts)
+                                logging.info("listPosts: %s"% listPosts)
             else:
                 if not isDebug:
                     for socialNetwork in blog.getSocialNetworks().keys():
-                        loggint.info(socialNetwork)
+                        logging.info(socialNetwork)
                         lastLink, lastTime = blog.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                         blog.addLastLinkPublished((option, lastLink)) 
                         i = blog.getLinkPosition(lastLink) 
@@ -240,14 +240,14 @@ def main():
                 lenMax = 6
                 profileList = blog.getSocialNetworks().keys()
                 lenMax, profileList = moduleSocial.checkLimitPosts('', blog.getUrl(), blog.getSocialNetworks(), blog.getProgram())
-                logging.debug("Lenmax ", lenMax)
+                logging.debug("Lenmax %d"% lenMax)
 
                 for profile in profileList:
                     if profile[0] in blog.getProgram():
                         lastLink, lastTime = blog.checkLastLink((profile, blog.getSocialNetworks()[profile]))
                         blog.addLastLinkPublished((profile, lastLink))
                         i = blog.getLinkPosition(lastLink) 
-                        logging.info("lastLink", profile, lastLink, "i",i)
+                        logging.info("lastLink %s %s %d"% (profile, lastLink, i))
                         if ((profile == 'twitter') or (profile == 'facebook')):
                             # We should add a configuration option in order
                             # to check which services are the ones with
@@ -263,7 +263,8 @@ def main():
                             theList = []
 
                         num = bufferMax - lenMax
-                        logging.info("bufferMax - lenMax = num", bufferMax, lenMax, num)
+                        logging.info("bufferMax - lenMax = num %d %d %d"%
+                                (bufferMax, lenMax, num)) 
                         listPosts = []
                         for j in range(num, 0, -1):
                             if (i <= 0):
@@ -275,7 +276,7 @@ def main():
 
                         if listPosts:
                             link = listPosts[len(listPosts) - 1][1]
-                            loggign.debug("link ->", link) 
+                            logging.debug("link -> %s"% link) 
                         else: 
                             link = ''
 
