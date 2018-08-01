@@ -129,7 +129,7 @@ class moduleBlog():
             slack_token = config["Slack"].get('api-key') 
             sc = SlackClient(slack_token) 
             theChannel = self.searchChannelSlack(sc, 'links')
-            history = sc.api_call( "channels.history", channel=theChannel)
+            history = sc.api_call( "channels.history", count=1000, channel=theChannel)
             self.logger.debug(history)
             for msg in history['messages']: 
                 self.postsSlack.append(msg)
