@@ -187,9 +187,11 @@ def connectFacebook(fbPage = 'me'):
 
     try:
         oauth_access_token = config.get("Facebook", "oauth_access_token")
+        #client_token = config.get("Facebook", "client_token")
+        #app_token = config.get("Facebook", "app_token")
 
-        graph = facebook.GraphAPI(oauth_access_token, version='2.7')
-        perms = ['manage_pages','publish_pages']
+        graph = facebook.GraphAPI(oauth_access_token, version='3.0')
+        perms = ['publish_actions','manage_pages','publish_pages']
         pages = graph.get_connections("me", "accounts")
 
         if (fbPage != 'me'):
@@ -516,20 +518,24 @@ def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, im
         if textToPublish2: 
             graph.put_object(page,
                   "feed", message = textToPublish,
-                  link=link, picture=image,
-                  name=title, caption='',
-                  description=textToPublish.encode('utf-8'))
+                  link=link) 
+           # , picture=image,
+           #       name=title, caption='',
+           #       description=textToPublish.encode('utf-8'))
             return (page, graph.put_object(page,
                           "feed", message = textToPublish2,
-                          link=link, picture=image,
-                          name=title, caption='',
-                          description=textToPublish2.encode('utf-8')))
+                          link=link))
+                          #, picture=image,
+                          
+                          #name=title, caption='',
+                          
+                          #description=textToPublish2.encode('utf-8')))
         else:
             return (page, graph.put_object(page,
                           "feed", message = textToPublish,
-                          link=link, picture=image,
-                          name=title, caption='',
-                          description=summaryLinks.encode('utf-8')))
+                          link=link)) #, picture=image,
+                          #name=title, caption='',
+                          #description=summaryLinks.encode('utf-8')))
     else:
         logger.warning("Facebook posting failed!\n")
         logger.warning("Unexpected error:", sys.exc_info()[0])
