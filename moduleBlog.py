@@ -439,7 +439,7 @@ class moduleBlog():
                     theImage = post['thumb_url']
                 else:
                     print("Fail image")
-                    self.logger.warning("Fail image")
+                    self.logger.warning("Fail image %s", post)
                     theImage = ''
             elif 'text' in post:
                 if debug: 
