@@ -281,7 +281,7 @@ def main():
 
                         timeSlots = 60*60 # One hour
                         socialNetwork = (profile,blog.getSocialNetworks()[profile])
-                        print(socialNetwork)
+                        print("Let's go with %s %s" % socialNetwork)
                         t[socialNetwork[0]] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, listPosts, socialNetwork, timeSlots))
                         t[socialNetwork[0]].start()
 
