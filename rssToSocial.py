@@ -281,6 +281,8 @@ def main():
                             link = ''
 
                         timeSlots = 60*60 # One hour
+                        socialNetwork = (profile,blog.getSocialNetworks()[profile])
+                        print(socialNetwork)
                         if (profile == 'twitter'): 
                             theNick = blog.getSocialNetworks()['twitter']
                             t = threading.Thread(target=moduleSocial.publishDelayTwitter, args=(blog, listPosts, theNick, timeSlots)) 

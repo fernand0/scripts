@@ -503,7 +503,7 @@ def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, im
     logger.info("Publishing in Facebook...")
     textToPublish = ""
     textToPublish2 = ""
-    if True:
+    try:
         h = HTMLParser()
         title = h.unescape(title)
         (graph, page) = connectFacebook(fbPage)
@@ -522,21 +522,19 @@ def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, im
            # , picture=image,
            #       name=title, caption='',
            #       description=textToPublish.encode('utf-8'))
-            return (page, graph.put_object(page,
-                          "feed", message = textToPublish2,
-                          link=link))
+            return (page, graph.put_object(page, 
+                "feed", message = textToPublish2, link=link))
                           #, picture=image,
                           
                           #name=title, caption='',
                           
                           #description=textToPublish2.encode('utf-8')))
         else:
-            return (page, graph.put_object(page,
-                          "feed", message = textToPublish,
-                          link=link)) #, picture=image,
+            return (page, graph.put_object(page, 
+                "feed", message = textToPublish, link=link)) #, picture=image,
                           #name=title, caption='',
                           #description=summaryLinks.encode('utf-8')))
-    else:
+    except:
         logger.warning("Facebook posting failed!\n")
         logger.warning("Unexpected error:", sys.exc_info()[0])
         return("Fail!")
