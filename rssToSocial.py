@@ -101,9 +101,7 @@ def test():
 
     return recentPosts
 
-
 def main():
-
 
     print("====================================")
     print("Launched at %s" % time.asctime())
@@ -236,6 +234,7 @@ def main():
                                 blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
 
             if ('program' in config.options(section)):
+                t = {}
                 blog.setProgram(config.get(section, "program"))
                 lenMax = 6
                 profileList = blog.getSocialNetworks().keys()
@@ -283,14 +282,17 @@ def main():
                         timeSlots = 60*60 # One hour
                         socialNetwork = (profile,blog.getSocialNetworks()[profile])
                         print(socialNetwork)
-                        if (profile == 'twitter'): 
-                            theNick = blog.getSocialNetworks()['twitter']
-                            t = threading.Thread(target=moduleSocial.publishDelayTwitter, args=(blog, listPosts, theNick, timeSlots)) 
-                            t.start()
-                        if (profile == 'facebook'): 
-                            theNick = blog.getSocialNetworks()['facebook']
-                            t1 = threading.Thread(target=moduleSocial.publishDelayFacebook, args=(blog, listPosts, theNick, timeSlots)) 
-                            t1.start()
+                        t[socialNetwork[0]] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, listPosts, socialNetwork, timeSlots))
+                        t[socialNetwork[0]].start()
+
+                        #if (profile == 'twitter'): 
+                        #    theNick = blog.getSocialNetworks()['twitter']
+                        #    t = threading.Thread(target=moduleSocial.publishDelayTwitter, args=(blog, listPosts, theNick, timeSlots)) 
+                        #    t.start()
+                        #if (profile == 'facebook'): 
+                        #    theNick = blog.getSocialNetworks()['facebook']
+                        #    t1 = threading.Thread(target=moduleSocial.publishDelayFacebook, args=(blog, listPosts, theNick, timeSlots)) 
+                        #    t1.start()
 
                         if link:
                             blog.updateLastLink(link, (profile,blog.getSocialNetworks()[profile]))
@@ -302,10 +304,6 @@ def main():
     print("====================================")
     logging.info("Finished at %s" % time.asctime())
 
-
 if __name__ == '__main__':
     main()
-
-
-
 
