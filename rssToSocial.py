@@ -285,15 +285,6 @@ def main():
                         t[socialNetwork[0]] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, listPosts, socialNetwork, timeSlots))
                         t[socialNetwork[0]].start()
 
-                        #if (profile == 'twitter'): 
-                        #    theNick = blog.getSocialNetworks()['twitter']
-                        #    t = threading.Thread(target=moduleSocial.publishDelayTwitter, args=(blog, listPosts, theNick, timeSlots)) 
-                        #    t.start()
-                        #if (profile == 'facebook'): 
-                        #    theNick = blog.getSocialNetworks()['facebook']
-                        #    t1 = threading.Thread(target=moduleSocial.publishDelayFacebook, args=(blog, listPosts, theNick, timeSlots)) 
-                        #    t1.start()
-
                         if link:
                             blog.updateLastLink(link, (profile,blog.getSocialNetworks()[profile]))
 
