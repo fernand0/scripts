@@ -31,7 +31,7 @@ class moduleBlog():
          self.program = None
          self.xmlrpc = None
          self.lastLinkPublished = {}
-         self.logger = logging.getLogger(__name__)
+         #self.logger = logging.getLogger(__name__)
  
     def getUrl(self):
         return(self.url)
@@ -108,8 +108,11 @@ class moduleBlog():
         return(self.postsRss)
  
     def setPostsRss(self):
-        urlRss = self.url+self.rssFeed
-        self.logger.debug(urlRss)
+        if self.rssFeed.find('http')>=0: 
+            urlRss = self.rssFeed
+        else: 
+            urlRss = self.url+self.rssFeed
+        logging.debug(urlRss)
         self.postsRss = feedparser.parse(urlRss)
 
     def searchChannelSlack(self, sc, name):
@@ -130,13 +133,13 @@ class moduleBlog():
             sc = SlackClient(slack_token) 
             theChannel = self.searchChannelSlack(sc, 'links')
             history = sc.api_call( "channels.history", count=1000, channel=theChannel)
-            self.logger.debug(history)
+            logging.debug(history)
             for msg in history['messages']: 
                 self.postsSlack.append(msg)
 
     def getPostsSlack(self):
-        self.logger.debug("# posts", len(self.postsSlack))
-        self.logger.debug(self.postsSlack)
+        logging.debug("# posts", len(self.postsSlack))
+        logging.debug(self.postsSlack)
         return(self.postsSlack)
 
     def getPostsXmlrpc(self):
@@ -174,17 +177,17 @@ class moduleBlog():
         i = 0
         if self.getPostsRss():
             if not link:
-                self.logger.debug(self.getPostsRss().entries)
+                logging.debug(self.getPostsRss().entries)
                 return(len(self.getPostsRss().entries))
             for entry in self.getPostsRss().entries:
-                self.logger.debug(entry['link'], link)
+                logging.debug(entry['link'], link)
                 lenCmp = min(len(entry['link']), len(link))
                 if entry['link'][:lenCmp] == link[:lenCmp]:
                     return i
                 i = i + 1
         elif self.getPostsSlack():
             if not link:
-                self.logger.debug(self.getPostsSlack())
+                logging.debug(self.getPostsSlack())
                 return(len(self.getPostsSlack()))
             for entry in self.getPostsSlack():
                 if 'original_url' in entry: 
@@ -212,9 +215,9 @@ class moduleBlog():
         server[0].metaWeblog.editPost(idPost, server[1], server[2], data, True)
     
     def selectPost(self):
-        self.logger.info("Selecting post")
+        logging.info("Selecting post")
         server = self.xmlrpc
-        self.logger.debug(server)
+        logging.debug(server)
         posts = server[0].metaWeblog.getRecentPosts(self.Id, server[1], server[2], 10)
         i = 1
         print("Posts:")
@@ -226,7 +229,7 @@ class moduleBlog():
         return posts[thePost - 1]['title'], posts[thePost - 1]['postid']
 
     def deletePost(self, idPost): 
-        self.logger.info("Deleting id %s" % idPost)
+        logging.info("Deleting id %s" % idPost)
         if self.xmlrpc:
             server = self.xmlrpc
             result = server[0].blogger.deletePost('',idPost, server[1], server[2], True)
@@ -243,16 +246,17 @@ class moduleBlog():
 
             result = sc.api_call("chat.delete", channel=theChannel, ts=idPost)
 
-        self.logger.info(result)
+        logging.info(result)
         return(result)
 
     def updatePostsCache(self, listPosts, socialNetwork=()):
+        #Now it is duplicated in moduleCache
         fileName = os.path.expanduser('~/.' 
                 +  urllib.parse.urlparse(self.getUrl()).netloc 
                 + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
                 + ".queue")
 
-        self.logger.info("Updating Posts Cache: %s" % fileName)
+        logging.info("Updating Posts Cache: %s" % fileName)
 
         with open(fileName, 'wb') as f:
              pickle.dump(listPosts,f)
@@ -264,7 +268,7 @@ class moduleBlog():
                 + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
                 + ".queue")
 
-        self.logger.info("Listing Posts Cache: %s" % fileName)
+        logging.info("Listing Posts Cache: %s" % fileName)
 
         with open(fileName,'rb') as f:
             try: 
@@ -272,9 +276,9 @@ class moduleBlog():
             except:
                 listP = []
 
-        self.logger.debug("listPostsCache", socialNetwork[0])
+        logging.debug("listPostsCache", socialNetwork[0])
         for i in range(len(listP)):
-            self.logger.debug("=> ", socialNetwork[0], listP[i][0])
+            logging.debug("=> ", socialNetwork[0], listP[i][0])
 
         return(listP)
 
@@ -287,7 +291,7 @@ class moduleBlog():
             fileName = os.path.expanduser("~" + "/."  +
                     urllib.parse.urlparse(url).netloc +
                     '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
-            self.logger.info("Checking last link: %s" % fileName)
+            logging.info("Checking last link: %s" % fileName)
 
         try: 
             with open(fileName, "r") as f: 
@@ -295,7 +299,7 @@ class moduleBlog():
         except:
             # File does not exist, we need to create it.
             with open(fileName, "w") as f:
-                self.logger.warning("File %s does not exist. Creating it."
+                logging.warning("File %s does not exist. Creating it."
                         % fileName) 
                 linkLast = ''  
                 # None published, or non-existent file
@@ -395,29 +399,29 @@ class moduleBlog():
             theSummary = soup.get_text()
             if self.getLinksToAvoid():
                 (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())
-                self.logger.debug("theC", theContent)
+                logging.debug("theC", theContent)
                 if theContent.startswith('Anuncios'): 
                     theContent = ''
-                self.logger.debug("theC", theContent)
+                logging.debug("theC", theContent)
             else:
                 (theContent, theSummaryLinks) = self.extractLinks(soup, "") 
-                self.logger.debug("theC", theContent)
+                logging.debug("theC", theContent)
                 if theContent.startswith('Anuncios'): 
                     theContent = ''
-                self.logger.debug("theC", theContent)
+                logging.debug("theC", theContent)
 
             if 'media_content' in posts[i]: 
                 theImage = posts[i]['media_content'][0]['url']
             else:
                 theImage = self.extractImage(soup)
-            self.logger.debug("theImage", theImage)
+            logging.debug("theImage", theImage)
             theLinks = theSummaryLinks
             theSummaryLinks = theContent + theLinks
         elif self.getPostsSlack():
             posts = self.getPostsSlack()
             url = ''
             for j in range(len(posts)): 
-                self.logger.debug("post ", j, posts[j]['text'])
+                logging.debug("post ", j, posts[j]['text'])
             if 'attachments' in posts[i]:
                 post = posts[i]['attachments'][0]
             else:
@@ -427,7 +431,7 @@ class moduleBlog():
                 theTitle = post['title']
                 theLink = post['title_link']
                 firstLink = theLink
-                if 'text' in posts: 
+                if 'text' in post: 
                     content = post['text']
                 else:
                     content = theLink
@@ -439,11 +443,11 @@ class moduleBlog():
                     theImage = post['thumb_url']
                 else:
                     print("Fail image")
-                    self.logger.warning("Fail image %s", post)
+                    logging.warning("Fail image %s", post)
                     theImage = ''
             elif 'text' in post:
                 if debug: 
-                    self.logger.debug(post['text'])
+                    logging.debug(post['text'])
                 if post['text'].startswith('<h'):
                     # It's an url
                     url = post['text'][1:-1]
@@ -479,6 +483,7 @@ class moduleBlog():
             else:
                 comment = ""
 
+            print("content", content)
             theSummaryLinks = ""
 
             soup = BeautifulSoup(content, 'lxml')
@@ -497,20 +502,20 @@ class moduleBlog():
             theSummaryLinks = theContent + theLinks
 
 
-        self.logger.debug("=========")
-        self.logger.debug("Results: ")
-        self.logger.debug("=========")
-        self.logger.debug("Title:     ", theTitle)
-        self.logger.debug("Link:      ", theLink)
-        self.logger.debug("First Link:", firstLink)
-        self.logger.debug("Summary:   ", content[:200])
-        self.logger.debug("Sum links: ", theSummaryLinks)
-        self.logger.debug("the Links"  , theLinks)
-        self.logger.debug("Comment:   ", comment)
-        self.logger.debug("Image;     ", theImage)
-        self.logger.debug("Post       ", theTitle + " " + theLink)
-        self.logger.debug("==============================================")
-        self.logger.debug("")
+        logging.debug("=========")
+        logging.debug("Results: ")
+        logging.debug("=========")
+        logging.debug("Title:     ", theTitle)
+        logging.debug("Link:      ", theLink)
+        logging.debug("First Link:", firstLink)
+        logging.debug("Summary:   ", content[:200])
+        logging.debug("Sum links: ", theSummaryLinks)
+        logging.debug("the Links"  , theLinks)
+        logging.debug("Comment:   ", comment)
+        logging.debug("Image;     ", theImage)
+        logging.debug("Post       ", theTitle + " " + theLink)
+        logging.debug("==============================================")
+        logging.debug("")
 
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
