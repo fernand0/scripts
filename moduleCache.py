@@ -68,19 +68,20 @@ def getProfiles(api, pp, service=""):
 
     return (profiles)
 
-def getQueueData(fileNameQ):        
+def getPostsCache(blog, socialNetwork):        
+    fileNameQ = fileName(blog,socialNetwork) + ".queue" 
     with open(fileNameQ,'rb') as f: 
         try: 
             listP = pickle.load(f) 
         except: 
             listP = [] 
     return(listP)
- 
 
-def listPosts(profiles, pp, service=""):    
+def listPosts(api, pp, service=""):    
     outputData = {}
     files = []
 
+    profiles = api['profiles']
     logging.info("** %s" % profiles)
     print("** %s" % profiles)
     for profile in profiles:
@@ -92,7 +93,7 @@ def listPosts(profiles, pp, service=""):
         logging.info("Service %s" % serviceName)
 
         outputData[serviceName] = {'sent': [], 'pending': []}
-        listP = getQueueData(fileN)
+        listP = getPostsCache(api['blog'], profile['socialNetwork'])
 
         logging.info("-Posts %s"% listP)
 
@@ -106,63 +107,15 @@ def listPosts(profiles, pp, service=""):
     logging.info("Service posts profiles %s" % profiles)
     return(outputData, profiles)
 
-def listPendingPosts(api, pp, service=""):
-    profiles = getProfiles(api, pp, service)
-    
-    somePending = False
-    outputStr = [] 
-    for i in range(len(profiles)):
-        serviceName = profiles[i].formatted_service
-        logging.debug("Service %d %s" % (i,serviceName))
-        if (profiles[i].counts['pending'] > 0):
-            somePending = True
-            logging.info("Service %s" % serviceName)
-            logging.debug("There are: %d" % profiles[i].counts['pending'])
-            logging.debug(pp.pformat(profiles[i].updates.pending))
-            due_time=""
-            for j in range(profiles[i].counts['pending']):
-                updatesPending = profiles[i].updates.pending[j]
-                update = Update(api=api, id=updatesPending.id)
-                if (due_time == ""):
-                    due_time=update.due_time
-                    outputStr.append("*%s* ( %s )" % (serviceName, due_time))
-
-                logging.debug("Service %s" % pp.pformat(updatesPending))
-                selectionStr = "%d%d) " % (i,j)
-                if ('media' in updatesPending): 
-                    try:
-                        lineTxt = "%s %s %s" % (selectionStr,
-                                updatesPending.text, updatesPending.media.expanded_link)
-                    except:
-                        lineTxt = "%s %s %s" % (selectionStr,
-                                updatesPending.text, updatesPending.media.link)
-                else:
-                    lineTxt = "%s %s" % (selectionStr,updatesPending.text)
-                logging.info(lineTxt)
-                outputStr.append(lineTxt)
-                logging.debug("-- %s" % (pp.pformat(update)))
-                logging.debug("-- %s" % (pp.pformat(dir(update))))
-        else:
-            logging.debug("Service %d %s" % (i, serviceName))
-            logging.debug("No")
-    
-    if somePending:
-        return (outputStr, profiles)
-    else:
-        logging.info("No pending posts")
-        return somePending
-
 def updatePostsCache(blog, listPosts, socialNetwork=()):
     fileNameQ = fileName(blog,socialNetwork) + ".queue" 
 
     logging.info("Updating Posts Cache: %s" % fileNameQ)
     print("Updating Posts Cache: %s" % fileNameQ)
 
-    sys.exit()
     with open(fileNameQ, 'wb') as f:
          pickle.dump(listPosts,f)
     return(fileNameQ)
-
 
 def publishPost(cache, pp, posts, toPublish):
     logging.info("To publish %s" % pp.pformat(toPublish))
@@ -176,8 +129,7 @@ def publishPost(cache, pp, posts, toPublish):
     logging.info("Cache profiles antes %s" % pp.pformat(profiles))
     for profile in profiles: 
         if 'socialNetwork' in profile:
-            serviceName = profile['socialNetwork'][0] 
-            serviceName = serviceName[0].upper()+serviceName[1:]
+            serviceName = profile['socialNetwork'][0].capitalize()
             if (serviceName[0] in profMov) or toPublish[0]=='*': 
                 logging.info("In %s" % pp.pformat(serviceName))
                 logging.info("Profile %s" % pp.pformat(profile))
@@ -201,6 +153,11 @@ def publishPost(cache, pp, posts, toPublish):
                     updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
                 #logging.debug("Profile: %d Publishing item: %d" % (i,j)) 
     return(update)
+
+
+#######################################################
+# These need work
+#######################################################
 
 def deletePost(api, pp, profiles, toPublish):
     logging.info(pp.pformat(toPublish))
@@ -350,7 +307,7 @@ def main():
 
     print("profiles")
     print(api)
-    postsP, profiles = listPosts(api['profiles'], pp, '')
+    postsP, profiles = listPosts(api, pp, '')
     print("-> Posts",postsP)
     #print("-->profiles")
     #print(profiles)
@@ -363,7 +320,6 @@ def main():
     print("-> Posts",posts)
     #print("Posts",profiles)
     print("Keys",posts.keys())
-    posts = listPendingPosts(api, pp, "")
     print(pp.pformat(profiles))
     print("Pending",type(profiles))
     print(pp.pformat(profiles))
