@@ -68,6 +68,20 @@ def getProfiles(api, pp, service=""):
 
     return (profiles)
 
+def getLastLink(fileName):        
+    try: 
+        with open(fileName, "r") as f: 
+            linkLast = f.read().rstrip()  # Last published
+    except:
+        # File does not exist, we need to create it.
+        with open(fileName, "w") as f:
+            logging.warning("File %s does not exist. Creating it."
+                    % fileName) 
+            linkLast = ''  
+            # None published, or non-existent file
+    return(linkLast, os.path.getmtime(fileName))
+
+
 def getPostsCache(blog, socialNetwork):        
     fileNameQ = fileName(blog,socialNetwork) + ".queue" 
     with open(fileNameQ,'rb') as f: 

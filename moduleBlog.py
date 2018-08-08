@@ -13,6 +13,8 @@ import logging
 from slackclient import SlackClient
 from bs4 import BeautifulSoup
 from bs4 import Tag
+import moduleCache
+# https://github.com/fernand0/scripts/blob/master/moduleCache.py
 
 class moduleBlog():
 
@@ -60,8 +62,11 @@ class moduleBlog():
     def addSocialNetwork(self, socialNetwork):
         self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
 
-    def addLastLinkPublished(self, socialNetwork):
-        self.lastLinkPublished[socialNetwork[0]] = socialNetwork[1]
+    def addLastLinkPublished(self, socialNetwork, lastLink, lastTime):
+        self.lastLinkPublished[socialNetwork] = (lastLink, lastTime)
+
+    def getLastLinkPublished(self):
+        return(self.lastLinkPublished)
  
     def getLinksToAvoid(self):
         return(self.linksToAvoid)
@@ -283,28 +288,10 @@ class moduleBlog():
         return(listP)
 
     def checkLastLink(self,socialNetwork=()):
-        url = self.getUrl()
-        if not socialNetwork: 
-            fileName = os.path.expanduser("~" + "/."  
-                    + urllib.parse.urlparse(url).netloc + ".last")
-        else:    
-            fileName = os.path.expanduser("~" + "/."  +
-                    urllib.parse.urlparse(url).netloc +
-                    '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
-            logging.info("Checking last link: %s" % fileName)
-
-        try: 
-            with open(fileName, "r") as f: 
-                linkLast = f.read().rstrip()  # Last published
-        except:
-            # File does not exist, we need to create it.
-            with open(fileName, "w") as f:
-                logging.warning("File %s does not exist. Creating it."
-                        % fileName) 
-                linkLast = ''  
-                # None published, or non-existent file
-
-        return(linkLast, os.path.getmtime(fileName))
+        fileNameL = moduleCache.fileName(self, socialNetwork)+".last"
+        logging.info("Checking last link: %s" % fileNameL)
+        (linkLast, timeLast) = moduleCache.getLastLink(fileNameL)
+        return(linkLast, timeLast)
 
     def updateLastLink(self,link, socialNetwork=()):
         rssFeed = self.getUrl()+self.getRssFeed()
