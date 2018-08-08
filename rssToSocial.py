@@ -214,6 +214,7 @@ def main():
 
                         listPosts = []
                         for j in range(num, 0, -1):
+                            logging.info("j %d - $d", (j,i))
                             if (i <= 0):
                                 break
                             i = i - 1
@@ -281,6 +282,7 @@ def main():
                         
                         listPosts = []
                         for j in range(num, 0, -1):
+                            logging.info("j %d - $d", (j,i))
                             if (i <= 0):
                                 break
                             i = i - 1
