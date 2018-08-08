@@ -270,15 +270,14 @@ def connectMedium():
     return(client, user)
 
 
-def checkLimitPosts(api, url, profileList, services='tfgl'):
+def checkLimitPosts(api, blog):
     # We can put as many items as the service with most items allow
     # The limit is ten.
     # Get all pending updates of a social network profile
 
     lenMax = 0
+    logger.info("Checking services...")
     if api:
-        logger.info("Checking services...")
-
         profileList = Profiles(api=api).all()
         for profile in profileList:
             if (profile['service'][0] in services): 
@@ -286,31 +285,20 @@ def checkLimitPosts(api, url, profileList, services='tfgl'):
                 if (lenProfile > lenMax): 
                     lenMax = lenProfile 
                     logger.info("%s ok" % profile['service'])
-    elif url:
-        for profile in profileList.keys():
-            if (profile[0] in services): 
-                fileName = os.path.expanduser("~" + "/." 
-                        + urllib.parse.urlparse(url).netloc 
-                        + "_" + profile + "_" + profileList[profile] 
-                        + ".queue" )
-                logger.info("Program: %s %s" % (profile, profileList[profile])) 
-                logger.info("File: %s" % fileName)
-                with open(fileName,'rb') as f: 
-                    try: 
-                        listP = pickle.load(f) 
-                    except: 
-                        listP = [] 
+    elif blog:
+        profileList = blog.getSocialNetworks.keys()
+        for profile in blog.getSocialNetworks.keys():
+            if (profile[0] in blog.getProgram()): 
+                listP = moduleCache.getPostsCache(blog.getUrl(),
+                        (profile, socialNetworks[profile]) 
+                lenProfile = len(listP) 
+                if (lenProfile > lenMax): 
+                    lenMax = lenProfile 
+                    logger.info("%s ok" % profile)
 
-                    lenProfile = len(listP) 
+    logger.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
 
-                    if (lenProfile > lenMax): 
-                        lenMax = lenProfile 
-                        logger.info("%s ok" % profile)
-
-    logger.info("There are %d in some buffer, we can put %d" % 
-            (lenMax, 10-lenMax))
-
-    return(lenMax, profileList)
+    return(lenMax, socialNetworks)
 
 def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, services='fglt'):
     logger.info("Publishing in Buffer:\n")
