@@ -406,6 +406,7 @@ def publishDelay(blog, listPosts, socialNetwork, timeSlots):
            
         logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))
         time.sleep(tSleep2) 
+     logger.info("Finished in: %s" % socialNetwork[0])
 
    
 #def publishDelayTwitter(blog, listPosts, twitter, timeSlots): 
