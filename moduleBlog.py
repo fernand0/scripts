@@ -406,9 +406,11 @@ class moduleBlog():
             theSummaryLinks = theContent + theLinks
         elif self.getPostsSlack():
             posts = self.getPostsSlack()
+            theContent = ''
             url = ''
-            for j in range(len(posts)): 
-                logging.debug("post ", j, posts[j]['text'])
+            firstLink = ''
+            print("post", posts[i])
+            print("i", i)
             if 'attachments' in posts[i]:
                 post = posts[i]['attachments'][0]
             else:
@@ -417,6 +419,8 @@ class moduleBlog():
             if 'title' in post:
                 theTitle = post['title']
                 theLink = post['title_link']
+                if theLink.find('tumblr')>0:
+                    theTitle = post['text']
                 firstLink = theLink
                 if 'text' in post: 
                     content = post['text']
@@ -430,24 +434,30 @@ class moduleBlog():
                     theImage = post['thumb_url']
                 else:
                     print("Fail image")
-                    logging.warning("Fail image %s", post)
+                    print("Fail image %s", post)
                     theImage = ''
             elif 'text' in post:
-                if debug: 
-                    logging.debug(post['text'])
                 if post['text'].startswith('<h'):
                     # It's an url
                     url = post['text'][1:-1]
                     req = requests.get(url)
-                    if req.text.find('403 Forbidden'):
+                    if req.text.find('403 Forbidden')>=0:
                         theTitle = url
                         theSummary = url
                         content = url
                         theDescription = url
                     else:
                         soup = BeautifulSoup(req.text, 'lxml')
-                        theTitle = str(soup.title.string)
-                        theSummary = str(soup.body.string)
+                        #print("soup", soup)
+                        theTitle = soup.title
+                        if theTitle:
+                            theTitle = str(theTitle.string)
+                        else:
+                            # The last part of the path, without the dot part, and
+                            # capitized
+                            urlP = urlparse(url)
+                            theTitle = os.path.basename(urlP.path).split('.')[0].capitalize()
+                        theSummary = str(soup.body)
                         content = theSummary
                         theDescription = theSummary
                 else:
@@ -470,11 +480,23 @@ class moduleBlog():
             else:
                 comment = ""
 
-            print("content", content)
+            #print("content", content)
             theSummaryLinks = ""
 
             soup = BeautifulSoup(content, 'lxml')
-            firstLink = theLink
+            link = soup.a
+            if link: 
+                firstLink = link.get('href')
+
+            if not firstLink: 
+                firstLink = ''
+
+            if 'image_url' in post:
+                theImage = post['image_url']
+            else:
+                theImage = None
+            theLinks = theSummaryLinks
+            theSummaryLinks = theContent + theLinks
 
             if self.getLinksToAvoid():
                 (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())

@@ -301,6 +301,8 @@ def checkLimitPosts(api, blog):
                     logger.info("%s ok" % profile)
 
     logger.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
+    print("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
+    sys.exit()
 
     return(lenMax, profileList)
 
