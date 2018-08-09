@@ -29,7 +29,7 @@ class moduleBlog():
          self.postsSlack = None
          self.postsXmlrpc = None
          self.time = []
-         self.buffer = None
+         self.bufferapp = None
          self.program = None
          self.xmlrpc = None
          self.lastLinkPublished = {}
