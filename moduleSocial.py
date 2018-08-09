@@ -108,6 +108,8 @@ from buffpy.api import API
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 from medium import Client
+import moduleCache
+# https://github.com/fernand0/scripts/blob/master/moduleCache.py
 
 logger = logging.getLogger(__name__)
 
@@ -280,17 +282,19 @@ def checkLimitPosts(api, blog):
     if api:
         profileList = Profiles(api=api).all()
         for profile in profileList:
-            if (profile['service'][0] in services): 
+            if (profile['service'][0] in blog.getBufferapp()): 
                 lenProfile = len(profile.updates.pending) 
                 if (lenProfile > lenMax): 
                     lenMax = lenProfile 
                     logger.info("%s ok" % profile['service'])
     elif blog:
-        profileList = blog.getSocialNetworks.keys()
-        for profile in blog.getSocialNetworks.keys():
+        print(blog.getSocialNetworks())
+        profileList = blog.getSocialNetworks().keys()
+        for profile in blog.getSocialNetworks():
+            print("profile", profile)
             if (profile[0] in blog.getProgram()): 
-                listP = moduleCache.getPostsCache(blog.getUrl(),
-                        (profile, socialNetworks[profile]) 
+                listP = moduleCache.getPostsCache(blog,
+                        (profile, blog.getSocialNetworks()[profile])) 
                 lenProfile = len(listP) 
                 if (lenProfile > lenMax): 
                     lenMax = lenProfile 
@@ -298,7 +302,7 @@ def checkLimitPosts(api, blog):
 
     logger.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
 
-    return(lenMax, socialNetworks)
+    return(lenMax, profileList)
 
 def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, services='fglt'):
     logger.info("Publishing in Buffer:\n")
@@ -406,7 +410,7 @@ def publishDelay(blog, listPosts, socialNetwork, timeSlots):
            
         logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))
         time.sleep(tSleep2) 
-     logger.info("Finished in: %s" % socialNetwork[0])
+    logger.info("Finished in: %s" % socialNetwork[0])
 
    
 #def publishDelayTwitter(blog, listPosts, twitter, timeSlots): 
