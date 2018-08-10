@@ -272,37 +272,55 @@ def connectMedium():
     return(client, user)
 
 
-def checkLimitPosts(api, blog):
+def checkLimitPosts(api, blog, service=''):
     # We can put as many items as the service with most items allow
     # The limit is ten.
     # Get all pending updates of a social network profile
 
     lenMax = 0
     logger.info("Checking services...")
+    print("Checking services...")
+    
     if api:
-        profileList = Profiles(api=api).all()
-        for profile in profileList:
-            if (profile['service'][0] in blog.getBufferapp()): 
-                lenProfile = len(profile.updates.pending) 
-                if (lenProfile > lenMax): 
-                    lenMax = lenProfile 
-                    logger.info("%s ok" % profile['service'])
+        #profileList = Profiles(api=api).all()
+        if service: 
+            profile = Profiles(api=api).filter(service=service)
+            print(profile)
+            lenMax = profile[0].counts.pending
+            print(lenMax)
+            profileList = []
+        else:
+            profileList = Profiles(api=api).all()
+            for profile in profileList: 
+               if (profile['service'][0] in blog.getBufferapp()): 
+                   lenProfile = len(profile.updates.pending) 
+                   if (lenProfile > lenMax): 
+                       lenMax = lenProfile 
+                       logger.info("%s ok" % profile['service'])
     elif blog:
         print(blog.getSocialNetworks())
         profileList = blog.getSocialNetworks().keys()
-        for profile in blog.getSocialNetworks():
-            print("profile", profile)
-            if (profile[0] in blog.getProgram()): 
-                listP = moduleCache.getPostsCache(blog,
-                        (profile, blog.getSocialNetworks()[profile])) 
-                lenProfile = len(listP) 
-                if (lenProfile > lenMax): 
-                    lenMax = lenProfile 
-                    logger.info("%s ok" % profile)
+        if service: 
+            print(service)
+            listP = moduleCache.getPostsCache(blog,
+                    (service, blog.getSocialNetworks()[service])) 
+            lenProfile = len(listP) 
+            print(lenProfile)
+            lenMax = lenProfile
+            listProfiles = []
+        else:
+            for profile in blog.getSocialNetworks():
+                print("profile", profile)
+                if (profile[0] in blog.getProgram()): 
+                    listP = moduleCache.getPostsCache(blog,
+                            (profile, blog.getSocialNetworks()[profile])) 
+                    lenProfile = len(listP) 
+                    if (lenProfile > lenMax): 
+                        lenMax = lenProfile 
+                        logger.info("%s ok" % profile)
 
     logger.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
     print("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
-    sys.exit()
 
     return(lenMax, profileList)
 
