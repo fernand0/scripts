@@ -178,12 +178,16 @@ def main():
                     % blog.getSocialNetworks())
 
             bufferMax = 10
+            print("app",blog.getBufferapp())
             if blog.getBufferapp():
                 api = moduleSocial.connectBuffer()
                 lenMax, profileList = moduleSocial.checkLimitPosts(api, blog)
                 logging.debug("Lenmax %d"% lenMax)
 
                 for profile in profileList:
+                    print("prof",profile['service'])
+                    lenMax, profileList = moduleSocial.checkLimitPosts(api, 
+                            blog, profile['service'])
                     logging.info("Service %s" 
                             % profile['service'] + blog.getBufferapp())
                     if (profile['service'][0] in blog.getBufferapp()): 
@@ -254,6 +258,8 @@ def main():
                 logging.debug("Lenmax %d"% lenMax)
 
                 for profile in profileList:
+                    lenMax, profileList = moduleSocial.checkLimitPosts('', 
+                            blog, profile)
                     if profile[0] in blog.getProgram():
                         lastLink, lastTime = blog.checkLastLink((profile, blog.getSocialNetworks()[profile]))
                         blog.addLastLinkPublished(profile, 
