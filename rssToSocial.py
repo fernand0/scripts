@@ -196,7 +196,8 @@ def main():
                                 lastLink, lastTime) 
                         i = blog.getLinkPosition(lastLink)
 
-                        logging.info("lastLink %s %s %d"% (profile, lastLink, i))
+                        logging.debug("profile %s"% profile)
+                        logging.info("lastLink %s %d"% (lastLink, i))
                         if ((profile['service'] == 'twitter') 
                                 or (profile['service'] == 'facebook')):
                             # We should add a configuration option in order
@@ -288,7 +289,7 @@ def main():
                         
                         listPosts = []
                         for j in range(num, 0, -1):
-                            logging.info("j %d - $d", (j,i))
+                            logging.info("j %d - %d"% (j,i))
                             if (i <= 0):
                                 break
                             i = i - 1

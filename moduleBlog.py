@@ -327,12 +327,18 @@ class moduleBlog():
             if len(link.contents) > 0: 
                 if not isinstance(link.contents[0], Tag):
                     # We want to avoid embdeded tags (mainly <img ... )
-                    if link.has_key('href'):
+                    if link.has_attr('href'):
                         theLink = link['href']
                     else:
-                        theLink = link['src']
+                        if 'src' in link: 
+                            theLink = link['src']
+                        else:
+                            continue
             else:
-                theLink = link['src']
+                if 'src' in link: 
+                    theLink = link['src']
+                else:
+                    continue
     
             if ((linksToAvoid == "") or
                (not re.search(linksToAvoid, theLink))):
