@@ -415,8 +415,10 @@ class moduleBlog():
             theContent = ''
             url = ''
             firstLink = ''
-            print("post", posts[i])
+            logging.debug("i %d", i)
+            logging.debug("post %s", posts[i])
             print("i", i)
+            print("post", posts[i])
             if 'attachments' in posts[i]:
                 post = posts[i]['attachments'][0]
             else:
@@ -461,7 +463,7 @@ class moduleBlog():
                         else:
                             # The last part of the path, without the dot part, and
                             # capitized
-                            urlP = urlparse(url)
+                            urlP = urllib.parse.urlparse(url)
                             theTitle = os.path.basename(urlP.path).split('.')[0].capitalize()
                         theSummary = str(soup.body)
                         content = theSummary

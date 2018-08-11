@@ -310,7 +310,6 @@ def checkLimitPosts(api, blog, service=''):
             listProfiles = []
         else:
             for profile in blog.getSocialNetworks():
-                print("profile", profile)
                 if (profile[0] in blog.getProgram()): 
                     listP = moduleCache.getPostsCache(blog,
                             (profile, blog.getSocialNetworks()[profile])) 

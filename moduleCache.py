@@ -40,7 +40,7 @@ def API(Blog, pp):
     return(api)
 
 def fileName(blog, socialNetwork):
-    print('blog', blog)
+    #print('blog', blog)
     theName = os.path.expanduser('~/.' 
                     + urllib.parse.urlparse(blog.getUrl()).netloc + '_' 
                     + socialNetwork[0] + '_' + socialNetwork[1])
