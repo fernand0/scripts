@@ -178,7 +178,6 @@ def main():
                     % blog.getSocialNetworks())
 
             bufferMax = 10
-            print("app",blog.getBufferapp())
             if blog.getBufferapp():
                 api = moduleSocial.connectBuffer()
                 lenMax, profileList = moduleSocial.checkLimitPosts(api, blog)
@@ -303,7 +302,6 @@ def main():
 
                         timeSlots = 60*60 # One hour
                         socialNetwork = (profile,blog.getSocialNetworks()[profile])
-                        print("Let's go with %s %s" % socialNetwork)
                         t[socialNetwork[0]] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, listPosts, socialNetwork, timeSlots))
                         t[socialNetwork[0]].start()
 
