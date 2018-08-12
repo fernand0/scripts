@@ -495,9 +495,12 @@ class moduleBlog():
             link = soup.a
             if link: 
                 firstLink = link.get('href')
+                if firstLink:
+                    if firstLink[0] != 'h': 
+                        firstLink = theLink
 
             if not firstLink: 
-                firstLink = ''
+                firstLink = theLink
 
             if 'image_url' in post:
                 theImage = post['image_url']
