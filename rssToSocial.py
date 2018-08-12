@@ -300,12 +300,13 @@ def main():
                         else: 
                             link = ''
 
-                        timeSlots = 60*60 # One hour
                         socialNetwork = (profile,blog.getSocialNetworks()[profile])
-                        t[socialNetwork[0]] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, listPosts, socialNetwork, timeSlots))
+                        timeSlots = 60*60 # One hour
+                        t[socialNetwork[0]] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, listPosts, socialNetwork, 1, timeSlots))
                         t[socialNetwork[0]].start()
 
                         if link:
+                            logging.info("Updating link %s" % profile)
                             blog.updateLastLink(link, (profile,blog.getSocialNetworks()[profile]))
 
             time.sleep(2)
