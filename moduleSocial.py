@@ -392,13 +392,11 @@ def searchTwitter(search, twitter):
     t = connectTwitter(twitter)
     return(t.search.tweets(q=search)['statuses'])
 
-def publishDelay(blog, listPosts, socialNetwork, timeSlots): 
+def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots): 
 
     listP = blog.listPostsCache(socialNetwork)
     listP = listP + listPosts
     blog.updatePostsCache(listP, socialNetwork)
-
-    numPosts = round((4*60*60)/timeSlots)
 
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
@@ -432,50 +430,6 @@ def publishDelay(blog, listPosts, socialNetwork, timeSlots):
     logger.info("Finished in: %s" % socialNetwork[0])
 
    
-#def publishDelayTwitter(blog, listPosts, twitter, timeSlots): 
-#    socialNetwork= ('twitter', twitter)
-#    listP = blog.listPostsCache(socialNetwork)
-#    listP = listP + listPosts
-#    blog.updatePostsCache(listP, socialNetwork)
-#
-#    numPosts = round((4*60*60)/timeSlots)
-#
-#    print(socialNetwork, blog.getUrl(), listP)
-#    for j in  range(numPosts): 
-#        tSleep = random.random()*timeSlots
-#        tSleep2 = timeSlots - tSleep
-#
-#        listP = blog.listPostsCache(socialNetwork)
-#
-#        if listP: 
-#            #print("list")
-#            element = listP[0]
-#            listP = listP[1:] 
-#        elif type(listP) == type(()):
-#            #print("tuple")
-#            element = listP
-#            listP = [] 
-#        else:
-#            logger.warning("This shouldn't happen")
-#            sys.exit()
-#
-#        logger.info("Time: %s Waiting ... %.2f minutes in %s to publish:\n%s" % (time.asctime(), tSleep/60, socialNetwork[0], element[0]))
-#
-#        time.sleep(tSleep) 
-#
-#        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = element
-#        publishMethod = getattr(moduleSocial, 'publish'+ socialNetwork.capitalize())
-#        nick = socialNetwork[1]
-#        print(nick, publishMethod)
-#        print(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
-#        sys.exit()
-#        publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
-#
-#        blog.updatePostsCache(listP, socialNetwork)
-#           
-#        logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))
-#        time.sleep(tSleep2) 
-
 def publishTumblr(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
 
     logger.info("Publishing in Tumblr...")
@@ -516,43 +470,6 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
         logger.warning("Unexpected error:", sys.exc_info()[0])
         return("Fail! %s" % sys.exc_info()[0])
 
-#def publishDelayFacebook(blog, listPosts, fbPage, timeSlots): 
-#    socialNetwork=('facebook',fbPage)
-#    listP = blog.listPostsCache(socialNetwork)
-#    listP = listP + listPosts
-#    blog.updatePostsCache(listP, socialNetwork)
-#
-#    numPosts = round((4*60*60)/timeSlots)
-#
-#    for j in range(numPosts): 
-#        tSleep = random.random()*timeSlots
-#        tSleep2 = timeSlots - tSleep
-#
-#        listP = blog.listPostsCache(socialNetwork)
-#
-#        if listP: 
-#            #print("list")
-#            element = listP[0]
-#            listP = listP[1:] 
-#        elif type(listP) == type(()):
-#            #print("tuple")
-#            element = listP
-#            listP = [] 
-#        else:
-#            logger.critical("This shouldn't happen")
-#            sys.exit()
-#
-#        logger.info("Time: %s Waiting ... %.2f minutes in %s to publish:\n%s" % (time.asctime(), tSleep/60, socialNetwork[0], element[0])) 
-#
-#        time.sleep(tSleep)             
-#
-#        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = element 
-#        publishFacebook(fbPage, title, firstLink, summary='', summaryHtml='', summaryLinks='', image='') 
-#         
-#        blog.updatePostsCache(listP, socialNetwork)
-#
-#        logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0])) 
-#        time.sleep(tSleep2) 
    
 def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     fbPage = channel
