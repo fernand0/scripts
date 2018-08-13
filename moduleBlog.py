@@ -491,13 +491,14 @@ class moduleBlog():
             #print("content", content)
             theSummaryLinks = ""
 
-            soup = BeautifulSoup(content, 'lxml')
-            link = soup.a
-            if link: 
-                firstLink = link.get('href')
-                if firstLink:
-                    if firstLink[0] != 'h': 
-                        firstLink = theLink
+            if not content.startswith('http'):
+                soup = BeautifulSoup(content, 'lxml')
+                link = soup.a
+                if link: 
+                    firstLink = link.get('href')
+                    if firstLink:
+                        if firstLink[0] != 'h': 
+                            firstLink = theLink
 
             if not firstLink: 
                 firstLink = theLink
