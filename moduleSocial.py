@@ -279,15 +279,14 @@ def checkLimitPosts(api, blog, service=''):
 
     lenMax = 0
     logger.info("Checking services...")
-    print("Checking services...")
+    #print("Checking services...")
     
     if api:
         #profileList = Profiles(api=api).all()
         if service: 
             profile = Profiles(api=api).filter(service=service)
-            print(profile)
+            logging.debug("Profile %s" % profile)
             lenMax = profile[0].counts.pending
-            print(lenMax)
             profileList = []
         else:
             profileList = Profiles(api=api).all()
@@ -319,7 +318,6 @@ def checkLimitPosts(api, blog, service=''):
                         logger.info("%s ok" % profile)
 
     logger.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
-    print("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
 
     return(lenMax, profileList)
 
