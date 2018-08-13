@@ -417,8 +417,8 @@ class moduleBlog():
             firstLink = ''
             logging.debug("i %d", i)
             logging.debug("post %s", posts[i])
-            print("i", i)
-            print("post", posts[i])
+            #print("i", i)
+            #print("post", posts[i])
             if 'attachments' in posts[i]:
                 post = posts[i]['attachments'][0]
             else:
