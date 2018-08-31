@@ -441,8 +441,8 @@ class moduleBlog():
                 elif 'thumb_url' in post:
                     theImage = post['thumb_url']
                 else:
-                    print("Fail image")
-                    print("Fail image %s", post)
+                    logging.info("Fail image")
+                    logging.info("Fail image %s", post)
                     theImage = ''
             elif 'text' in post:
                 if post['text'].startswith('<h'):

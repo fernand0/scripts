@@ -111,17 +111,6 @@ def main():
     print("")
         
     isDebug = False
-    loggingLevel = logging.INFO
-
-    config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssBlogs')])
-
-    logging.basicConfig(filename=os.path.expanduser("~") 
-                        + "/usr/var/rssSocial_.log",
-                        level=loggingLevel, format='%(asctime)s %(message)s')
-
-    logging.info("Launched at %s" % time.asctime())
-    logging.debug(sys.argv, len(sys.argv))
 
     if len(sys.argv)>1:
         print(sys.argv[1])
@@ -129,7 +118,19 @@ def main():
     else:
         checkBlog = ""
 
+    loggingLevel = logging.INFO
+    logging.basicConfig(filename=os.path.expanduser("~") 
+                        + "/usr/var/rssSocial_.log",
+                        level=loggingLevel, format='%(asctime)s %(message)s')
+
+    logging.info("Launched at %s" % time.asctime())
+
+    logging.debug("Parameters %s, %d" % (sys.argv, len(sys.argv)))
+
     logging.info("Configured blogs:")
+
+    config = configparser.ConfigParser()
+    config.read([os.path.expanduser('~/.rssBlogs')])
 
     blogs = []
 
