@@ -173,28 +173,28 @@ def publishPost(cache, pp, posts, toPublish):
 # These need work
 #######################################################
 
-def deletePost(api, pp, profiles, toPublish):
+def deletePost(cache, pp, posts, toPublish):
+    logging.info("To publish %s" % pp.pformat(toPublish))
+
+    profMov = toPublish[0]
+    j = toPublish[1]
     logging.info(pp.pformat(toPublish))
-    i = 0
-    profMov = ""
-    while toPublish[i].isalpha():
-        print(i)
-        profMov = profMov + toPublish[i]
-        i = i + 1
 
-    postsP = listPostsProgram(['.fernand0-errbot.slack.com_facebook_me.queue','.fernand0-errbot.slack.com_twitter_fernand0.queue'], pp, "")
-
-    print(postsP)
-    sys.exit()
-
-    j = int(toPublish[-1])    
-    for i in range(len(profiles)):
-        serviceName = profiles[i].formatted_service
-        if (serviceName[0] in profMov) or toPublish[0]=='*':
-            logging.debug("%d %d"  % (i,j))
-            update = Update(api=api, id=profiles[i].updates.pending[j].id)
-            logging.debug(pp.pformat(update))
-            update.delete()
+    update = ""
+    logging.info("Cache antes %s" % pp.pformat(cache))
+    profiles = cache['profiles']
+    logging.info("Cache profiles antes %s" % pp.pformat(profiles))
+    for profile in profiles: 
+        if 'socialNetwork' in profile:
+            serviceName = profile['socialNetwork'][0].capitalize()
+            if (serviceName[0] in profMov) or toPublish[0]=='*': 
+                logging.info("In %s" % pp.pformat(serviceName))
+                logging.info("Profile %s" % pp.pformat(profile))
+                logging.info("Profile posts %s" % pp.pformat(posts))
+                posts[serviceName]['pending'] = posts[serviceName]['pending'][:j] +  posts[serviceName]['pending'][j+1:]
+                logging.info("Profile posts after %s" % pp.pformat(posts))
+                updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
+    return(update)
 
 def copyPost(api, log, pp, profiles, toCopy, toWhere):
     logging.info(pp.pformat(toCopy+' '+toWhere))
