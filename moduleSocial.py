@@ -187,7 +187,7 @@ def connectFacebook(fbPage = 'me'):
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssFacebook')])
 
-    try:
+    if True:
         oauth_access_token = config.get("Facebook", "oauth_access_token")
         #client_token = config.get("Facebook", "client_token")
         #app_token = config.get("Facebook", "app_token")
@@ -198,6 +198,7 @@ def connectFacebook(fbPage = 'me'):
 
         if (fbPage != 'me'):
             for i in range(len(pages['data'])):
+                logger.info(pages['data'][i]['name'], fbPage)
                 if (pages['data'][i]['name'] == fbPage):
                     print("\tWriting in... ", pages['data'][i]['name'], "\n")
                     graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
@@ -206,9 +207,10 @@ def connectFacebook(fbPage = 'me'):
         else:
             # Publishing as me
             return(graph, fbPage)
-    except:
+    else:
         logger.warning("Facebook authentication failed!\n")
         logger.warning("Unexpected error:", sys.exc_info()[0])
+        print("Fail!")
 
     return(0,0)
 
@@ -463,7 +465,7 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
             return(t.statuses.update(status=statusTxt))
         else:
             logger.warning("You must configure API access for %s" % twitter)
-            return("You must configure API access for %s" % twitter)
+            return("Fail! You must configure API access for %s" % twitter)
     except:
         logger.warning("Twitter posting failed!\n")
         logger.warning("Unexpected error:", sys.exc_info()[0])
@@ -478,7 +480,9 @@ def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, im
     try:
         h = HTMLParser()
         title = h.unescape(title)
+        logger.info("Publishing in Facebook page %s" % fbPage)
         (graph, page) = connectFacebook(fbPage)
+        logger.info("Publishing in Facebook page %s" % page)
         textToPublish = title + " \n" + summaryLinks
         logger.info("Publishing in Facebook:\n%s" % textToPublish)
         if (len(textToPublish) > 9980):
