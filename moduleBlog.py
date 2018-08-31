@@ -491,8 +491,8 @@ class moduleBlog():
             #print("content", content)
             theSummaryLinks = ""
 
+            soup = BeautifulSoup(content, 'lxml')
             if not content.startswith('http'):
-                soup = BeautifulSoup(content, 'lxml')
                 link = soup.a
                 if link: 
                     firstLink = link.get('href')
@@ -509,7 +509,7 @@ class moduleBlog():
                 theImage = None
             theLinks = theSummaryLinks
             theSummaryLinks = theContent + theLinks
-
+            
             if self.getLinksToAvoid():
                 (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())
             else:
