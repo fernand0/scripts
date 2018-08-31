@@ -245,8 +245,9 @@ def main():
                             logging.info("Not publishing because time restriction\n") 
                         else:
                             logging.info("Publishing directly\n") 
+                            serviceName = socialNetwork.capitalize()
                             publishMethod = getattr(moduleSocial, 
-                                    'publish'+ socialNetwork.capitalize())
+                                    'publish'+ serviceName)
                             publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
                             logging.info("Updating Link\n") 
                             blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))

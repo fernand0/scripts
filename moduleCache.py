@@ -142,30 +142,29 @@ def publishPost(cache, pp, posts, toPublish):
     profiles = cache['profiles']
     logging.info("Cache profiles antes %s" % pp.pformat(profiles))
     for profile in profiles: 
+        logging.info("Social Network %s" % profile)
         if 'socialNetwork' in profile:
             serviceName = profile['socialNetwork'][0].capitalize()
+            nick = profile['socialNetwork'][1]
             if (serviceName[0] in profMov) or toPublish[0]=='*': 
                 logging.info("In %s" % pp.pformat(serviceName))
                 logging.info("Profile %s" % pp.pformat(profile))
                 logging.info("Profile posts %s" % pp.pformat(posts))
+                logging.info("Service name %s" % serviceName)
                 (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[serviceName]['pending'][j])
-                if serviceName == 'Twitter':
-                    update = moduleSocial.publishTwitter(posts[profile['socialNetwork']][1],
-                            title, link, summary, summaryHtml, summaryLinks,
-                            image, content , links) 
-                    profiles[i]['posts'] = profiles[i]['posts'][:j] + profiles[i]['posts'][j+1:]
-                    logging.info("Updating %s" % pp.pformat(profiles[i]))
-                    updatePostsCache(cache['blog'], profiles[i]['posts'], profiles[i]['socialNetwork'])
-                elif serviceName == 'Facebook':
-                    update = moduleSocial.publishFacebook(profile['socialNetwork'][1],
-                            title, link, summary, summaryHtml, summaryLinks, 
-                            image, content , links) 
-                    logging.info("Publishing title: %s" % title)
+                publishMethod = getattr(moduleSocial, 
+                        'publish'+ serviceName)
+                logging.info("Publishing title: %s" % title)
+                logging.info("Social network: %s Nick: %s" % (serviceName, nick))
+                update = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
+                if not isinstance(update, str) or (isinstance(update, str) and update[:4] != "Fail"):
                     posts[serviceName]['pending'] = posts[serviceName]['pending'][:j] + posts[serviceName]['pending'][j+1:]
                     logging.info("Updating %s" % pp.pformat(posts))
                     logging.info("Blog %s" % pp.pformat(cache['blog']))
                     updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
-                #logging.debug("Profile: %d Publishing item: %d" % (i,j)) 
+                    if 'text' in update:
+                        update = update['text']
+
     return(update)
 
 
