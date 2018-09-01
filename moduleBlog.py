@@ -258,7 +258,7 @@ class moduleBlog():
 
     def updatePostsCache(self, listPosts, socialNetwork=()):
         #Now it is duplicated in moduleCache
-        fileName = (DATADIR
+        fileName = (DATADIR + '/' 
                 + urllib.parse.urlparse(self.getUrl()).netloc 
                 + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
                 + ".queue")
@@ -270,7 +270,7 @@ class moduleBlog():
         return(fileName)
 
     def listPostsCache(self,socialNetwork=()):
-        fileName = (DATADIR 
+        fileName = (DATADIR  + '/' 
                 +  urllib.parse.urlparse(self.getUrl()).netloc 
                 + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
                 + ".queue")
@@ -298,9 +298,11 @@ class moduleBlog():
     def updateLastLink(self,link, socialNetwork=()):
         rssFeed = self.getUrl()+self.getRssFeed()
         if not socialNetwork: 
-            fileName = DATADIR + urllib.parse.urlparse(rssFeed).netloc + ".last"
+            fileName = (DATADIR  + '/' 
+                   + urllib.parse.urlparse(rssFeed).netloc + ".last")
         else: 
-            fileName = (DATADIR + urllib.parse.urlparse(rssFeed).netloc +
+            fileName = (DATADIR + '/'
+                    + urllib.parse.urlparse(rssFeed).netloc +
                     '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
         with open(fileName, "w") as f: 
             f.write(link)
@@ -615,7 +617,7 @@ if __name__ == "__main__":
 
     for blog in blogs:
         import urllib
-        urlFile = open(DATADIR  
+        urlFile = open(DATADIR + '/' 
               + urllib.parse.urlparse(blog.getUrl()+blog.getRssFeed()).netloc
               + ".last", "r")
         linkLast = urlFile.read().rstrip()  # Last published

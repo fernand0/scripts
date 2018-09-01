@@ -372,7 +372,7 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
             logger.warning("Unexpected error: %s"% sys.exc_info()[1])
 
             line = line + ' fail'
-            failFile = open(DATADIR
+            failFile = open(DATADIR + '/'
                        + urllib.parse.urlparse(link).netloc
                        + ".fail", "w")
             failFile.write(post)
@@ -383,7 +383,7 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
     if (fail == 'no' and link):
         blog.updateLastLink(link, 
             (profile['service'], profile['service_username']))
-        fileName = DATADIR + urllib.parse.urlparse(link).netloc + ".last"
+        fileName = DATADIR + '/' + urllib.parse.urlparse(link).netloc + ".last"
         with open(fileName, "w") as f: 
             f.write(link)
 
