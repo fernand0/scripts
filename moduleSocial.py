@@ -111,6 +111,8 @@ from medium import Client
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
 
+from config import *
+
 logger = logging.getLogger(__name__)
 
 def connectTumblr():
@@ -132,7 +134,7 @@ def connectTumblr():
 def connectBuffer():
     logger.info("Connecting Buffer")
     config = configparser.ConfigParser()
-    config.read(CONFIGDIR + '/.rssBuffer')])
+    config.read(CONFIGDIR + '/.rssBuffer')
 
     clientId = config.get("appKeys", "client_id")
     clientSecret = config.get("appKeys", "client_secret")
@@ -372,7 +374,7 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
             line = line + ' fail'
             failFile = open(DATADIR
                        + urllib.parse.urlparse(link).netloc
-                       + ".fail"), "w")
+                       + ".fail", "w")
             failFile.write(post)
             logger.info("  %s service" % line)
             fail = 'yes'
@@ -381,7 +383,7 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
     if (fail == 'no' and link):
         blog.updateLastLink(link, 
             (profile['service'], profile['service_username']))
-        fileName = DATADIR + urllib.parse.urlparse(link).netloc + ".last")
+        fileName = DATADIR + urllib.parse.urlparse(link).netloc + ".last"
         with open(fileName, "w") as f: 
             f.write(link)
 

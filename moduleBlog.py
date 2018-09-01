@@ -16,6 +16,8 @@ from bs4 import Tag
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
 
+from config import *
+
 class moduleBlog():
 
     def __init__(self):
@@ -256,10 +258,10 @@ class moduleBlog():
 
     def updatePostsCache(self, listPosts, socialNetwork=()):
         #Now it is duplicated in moduleCache
-        fileName = DATADIR
-                +  urllib.parse.urlparse(self.getUrl()).netloc 
+        fileName = (DATADIR
+                + urllib.parse.urlparse(self.getUrl()).netloc 
                 + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
-                + ".queue"
+                + ".queue")
 
         logging.info("Updating Posts Cache: %s" % fileName)
 
@@ -268,10 +270,10 @@ class moduleBlog():
         return(fileName)
 
     def listPostsCache(self,socialNetwork=()):
-        fileName = DATADIR 
+        fileName = (DATADIR 
                 +  urllib.parse.urlparse(self.getUrl()).netloc 
                 + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
-                + ".queue"
+                + ".queue")
 
         logging.info("Listing Posts Cache: %s" % fileName)
 
@@ -298,7 +300,7 @@ class moduleBlog():
         if not socialNetwork: 
             fileName = DATADIR + urllib.parse.urlparse(rssFeed).netloc + ".last"
         else: 
-            fileName = DATADIR + urllib.parse.urlparse(rssFeed).netloc +
+            fileName = (DATADIR + urllib.parse.urlparse(rssFeed).netloc +
                     '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
         with open(fileName, "w") as f: 
             f.write(link)

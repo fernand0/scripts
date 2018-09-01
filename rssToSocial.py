@@ -54,11 +54,7 @@ from buffpy.api import API
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 
-HOME = os.path.expanduser("~")
-LOGDIR = HOME + "/usr/var/log"
-APPDIR = HOME + "/.mySocial"
-CONFIGDIR = APPDIR + "/config"
-DATADIR = APPDIR + "/data"
+import config
 
 def test():
     config = configparser.ConfigParser()

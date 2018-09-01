@@ -26,10 +26,12 @@ importlib.reload(sys)
 import moduleBlog
 import moduleSocial
 
+from config import *
+
 def API(Blog, pp):
     api = {}
     config = configparser.ConfigParser() 
-    config.read(CONFIGDIR + '/.rssBlogs')]) 
+    config.read(CONFIGDIR + '/.rssBlogs') 
     blog = moduleBlog.moduleBlog() 
 
     url = config.get(Blog, "url")
@@ -41,7 +43,7 @@ def API(Blog, pp):
 
 def fileName(blog, socialNetwork):
     #print('blog', blog)
-    theName = os.path.expanduser(DATADIR 
+    theName = os.path.expanduser(DATADIR + '/' 
                     + urllib.parse.urlparse(blog.getUrl()).netloc + '_' 
                     + socialNetwork[0] + '_' + socialNetwork[1])
     return(theName)
