@@ -54,7 +54,7 @@ from buffpy.api import API
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 
-import config
+from config import *
 
 def test():
     config = configparser.ConfigParser()
