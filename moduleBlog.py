@@ -16,7 +16,7 @@ from bs4 import Tag
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
 
-from config import *
+from configMod import *
 
 class moduleBlog():
 

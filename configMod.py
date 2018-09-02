@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 
 HOME = os.path.expanduser("~")

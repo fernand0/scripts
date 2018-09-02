@@ -26,19 +26,22 @@ importlib.reload(sys)
 import moduleBlog
 import moduleSocial
 
-from config import *
+from configMod import *
 
 def API(Blog, pp):
     api = {}
-    config = configparser.ConfigParser() 
-    config.read(CONFIGDIR + '/.rssBlogs') 
+    conf = configparser.ConfigParser() 
+    logging.info("Config...%s" % CONFIGDIR)
+    conf.read(CONFIGDIR + '/.rssBlogs') 
+
+    logging.info("Config...%s" % conf.sections())
     blog = moduleBlog.moduleBlog() 
 
-    url = config.get(Blog, "url")
+    url = conf.get(Blog, "url")
     blog.setUrl(url)
 
     api['blog'] = blog
-    api['profiles'] = getProfiles((blog, config[Blog]), pp)
+    api['profiles'] = getProfiles((blog, conf[Blog]), pp)
     return(api)
 
 def fileName(blog, socialNetwork):

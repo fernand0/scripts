@@ -111,7 +111,7 @@ from medium import Client
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
 
-from config import *
+from configMod import *
 
 logger = logging.getLogger(__name__)
 
