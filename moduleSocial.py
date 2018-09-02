@@ -200,7 +200,7 @@ def connectFacebook(fbPage = 'me'):
 
         if (fbPage != 'me'):
             for i in range(len(pages['data'])):
-                logger.info(pages['data'][i]['name'], fbPage)
+                logger.info("%s %s"% (pages['data'][i]['name'], fbPage))
                 if (pages['data'][i]['name'] == fbPage):
                     print("\tWriting in... ", pages['data'][i]['name'], "\n")
                     graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
