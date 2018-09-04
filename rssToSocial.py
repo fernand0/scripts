@@ -54,6 +54,8 @@ from buffpy.api import API
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 
+from configMod import *
+
 def test():
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
@@ -102,7 +104,6 @@ def test():
          print("post links",i,theSummaryLinks)
 
     return recentPosts
-
 def main():
 
     print("====================================")
@@ -119,8 +120,7 @@ def main():
         checkBlog = ""
 
     loggingLevel = logging.INFO
-    logging.basicConfig(filename=os.path.expanduser("~") 
-                        + "/usr/var/rssSocial_.log",
+    logging.basicConfig(filename = LOGDIR + "/rssSocial_.log",
                         level=loggingLevel, format='%(asctime)s %(message)s')
 
     logging.info("Launched at %s" % time.asctime())
@@ -130,7 +130,7 @@ def main():
     logging.info("Configured blogs:")
 
     config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssBlogs')])
+    config.read(CONFIGDIR + '/.rssBlogs')
 
     blogs = []
 
@@ -207,8 +207,7 @@ def main():
                             # have been published with other toolsin order to avoid
                             # duplicates
 
-                            path = os.path.expanduser('~')
-                            with open(path + '/.urls.pickle', 'rb') as f:
+                            with open(DATADIR + '/.urls.pickle', 'rb') as f:
                                 theList = pickle.load(f)
                         else:
                             theList = []
@@ -278,8 +277,7 @@ def main():
                             # checking the links tha have been published
                             # with other toolsin order to avoid duplicates
 
-                            path = os.path.expanduser('~')
-                            with open(path + '/.urls.pickle', 'rb') as f:
+                            with open(DATADIR + '/.urls.pickle', 'rb') as f:
                                 theList = pickle.load(f)
                         else:
                             theList = []
@@ -294,7 +292,9 @@ def main():
                             if (i <= 0):
                                 break
                             i = i - 1
-                            listPosts.append(blog.obtainPostData(i, False))
+                            post = blog.obtainPostData(i, False)
+                            listPosts.append(post)
+                            print("Scheduling post %s\n", post[0])
 
                         if listPosts:
                             link = listPosts[len(listPosts) - 1][1]

@@ -16,6 +16,8 @@ from bs4 import Tag
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
 
+from configMod import *
+
 class moduleBlog():
 
     def __init__(self):
@@ -97,7 +99,7 @@ class moduleBlog():
 
     def setXmlRpc(self):
         conf = configparser.ConfigParser() 
-        conf.read(os.path.join(os.path.expanduser('~') , '.blogaliarc')) 
+        conf.read(CONFIGDIR + '/.blogaliarca')
         for section in conf.sections(): 
             usr = conf.get(section,'login') 
             pwd = conf.get(section,'password') 
@@ -133,7 +135,7 @@ class moduleBlog():
         if self.postsSlack is None:
             self.postsSlack = []
             config = configparser.ConfigParser() 
-            config.read([os.path.expanduser('~/.rssSlack')])
+            config.read(CONFIGDIR + '/.rssSlack')
             slack_token = config["Slack"].get('api-key') 
             sc = SlackClient(slack_token) 
             theChannel = self.searchChannelSlack(sc, 'links')
@@ -241,7 +243,7 @@ class moduleBlog():
         elif self.getPostsSlack():
             # Needs improvement
             config = configparser.ConfigParser() 
-            config.read(os.path.expanduser('~/' + '.rssSlack'))
+            config.read(CONFIGDIR + '/.rssSlack')
             
             slack_token = config["Slack"].get('api-key')
 
@@ -256,8 +258,8 @@ class moduleBlog():
 
     def updatePostsCache(self, listPosts, socialNetwork=()):
         #Now it is duplicated in moduleCache
-        fileName = os.path.expanduser('~/.' 
-                +  urllib.parse.urlparse(self.getUrl()).netloc 
+        fileName = (DATADIR + '/' 
+                + urllib.parse.urlparse(self.getUrl()).netloc 
                 + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
                 + ".queue")
 
@@ -268,7 +270,7 @@ class moduleBlog():
         return(fileName)
 
     def listPostsCache(self,socialNetwork=()):
-        fileName = os.path.expanduser('~/.' 
+        fileName = (DATADIR  + '/' 
                 +  urllib.parse.urlparse(self.getUrl()).netloc 
                 + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
                 + ".queue")
@@ -296,11 +298,11 @@ class moduleBlog():
     def updateLastLink(self,link, socialNetwork=()):
         rssFeed = self.getUrl()+self.getRssFeed()
         if not socialNetwork: 
-            fileName = os.path.expanduser("~" + "/."  +
-                    urllib.parse.urlparse(rssFeed).netloc + ".last")
+            fileName = (DATADIR  + '/' 
+                   + urllib.parse.urlparse(rssFeed).netloc + ".last")
         else: 
-            fileName = os.path.expanduser("~" + "/."  +
-                    urllib.parse.urlparse(rssFeed).netloc +
+            fileName = (DATADIR + '/'
+                    + urllib.parse.urlparse(rssFeed).netloc +
                     '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
         with open(fileName, "w") as f: 
             f.write(link)
@@ -547,7 +549,7 @@ if __name__ == "__main__":
     import moduleBlog
     
     config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssBlogs')])
+    config.read(CONFIGDIR + '/.rssBlogs')
 
     print("Configured blogs:")
 
@@ -615,9 +617,9 @@ if __name__ == "__main__":
 
     for blog in blogs:
         import urllib
-        urlFile = open(os.path.expanduser("~" + "/."  
+        urlFile = open(DATADIR + '/' 
               + urllib.parse.urlparse(blog.getUrl()+blog.getRssFeed()).netloc
-              + ".last"), "r")
+              + ".last", "r")
         linkLast = urlFile.read().rstrip()  # Last published
         print(blog.getUrl()+blog.getRssFeed(),blog.getLinkPosition(linkLast))
         print("description ->", blog.getPostsRss().entries[5]['description'])

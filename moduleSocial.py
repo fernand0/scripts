@@ -111,11 +111,13 @@ from medium import Client
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
 
+from configMod import *
+
 logger = logging.getLogger(__name__)
 
 def connectTumblr():
     config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssTumblr')])
+    config.read(CONFIGDIR + '/.rssTumblr')
 
     consumer_key = config.get("Buffer1", "consumer_key")
     consumer_secret = config.get("Buffer1", "consumer_secret")
@@ -132,7 +134,7 @@ def connectTumblr():
 def connectBuffer():
     logger.info("Connecting Buffer")
     config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssBuffer')])
+    config.read(CONFIGDIR + '/.rssBuffer')
 
     clientId = config.get("appKeys", "client_id")
     clientSecret = config.get("appKeys", "client_secret")
@@ -159,7 +161,7 @@ def connectTwitter(twitterAC):
     # The result will be at ~/.twitter_oauth
     config = configparser.ConfigParser()
     try:
-        config.read([os.path.expanduser('~/.rssTwitter')])
+        config.read(CONFIGDIR + '/.rssTwitter')
 
         CONSUMER_KEY = config.get("appKeys", "CONSUMER_KEY")
         CONSUMER_SECRET = config.get("appKeys", "CONSUMER_SECRET")
@@ -185,7 +187,7 @@ def connectTwitter(twitterAC):
 def connectFacebook(fbPage = 'me'):
     logger.info("Connecting Facebook")
     config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssFacebook')])
+    config.read(CONFIGDIR + '/.rssFacebook')
 
     if True:
         oauth_access_token = config.get("Facebook", "oauth_access_token")
@@ -198,7 +200,7 @@ def connectFacebook(fbPage = 'me'):
 
         if (fbPage != 'me'):
             for i in range(len(pages['data'])):
-                logger.info(pages['data'][i]['name'], fbPage)
+                logger.info("%s %s"% (pages['data'][i]['name'], fbPage))
                 if (pages['data'][i]['name'] == fbPage):
                     print("\tWriting in... ", pages['data'][i]['name'], "\n")
                     graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
@@ -217,7 +219,7 @@ def connectFacebook(fbPage = 'me'):
 def connectLinkedin():
     logger.info("Connecting Linkedin")
     config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssLinkedin')])
+    config.read(CONFIGDIR + '/.rssLinkedin')
 
     CONSUMER_KEY = config.get("Linkedin", "CONSUMER_KEY")
     CONSUMER_SECRET = config.get("Linkedin", "CONSUMER_SECRET")
@@ -245,7 +247,7 @@ def connectLinkedin():
 def connectTelegram(channel):
     logger.info("Connecting Telegram")
     config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssTelegram')])
+    config.read(CONFIGDIR + '/.rssTelegram')
 
     TOKEN = config.get("Telegram", "TOKEN")
 
@@ -261,7 +263,7 @@ def connectTelegram(channel):
 def connectMedium():
     logger.info("Connecting Medium")
     config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssMedium')])
+    config.read(CONFIGDIR + '/.rssMedium')
     client = Client(application_id=config.get("appKeys","ClientID"), application_secret=config.get("appKeys","ClientSecret"))
     try:
         client.access_token = config.get("appKeys","access_token")
@@ -345,8 +347,7 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
         # We are checking the links tha have been published with other
         # toolsin order to avoid duplicates
         
-        path = os.path.expanduser('~')
-        with open(path + '/.urls.pickle', 'rb') as f:
+        with open(DATADIR + '/.urls.pickle', 'rb') as f:
             theList = pickle.load(f)
     else:
         theList = []
@@ -371,9 +372,9 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
             logger.warning("Unexpected error: %s"% sys.exc_info()[1])
 
             line = line + ' fail'
-            failFile = open(os.path.expanduser("~/."
+            failFile = open(DATADIR + '/'
                        + urllib.parse.urlparse(link).netloc
-                       + ".fail"), "w")
+                       + ".fail", "w")
             failFile.write(post)
             logger.info("  %s service" % line)
             fail = 'yes'
@@ -382,9 +383,7 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
     if (fail == 'no' and link):
         blog.updateLastLink(link, 
             (profile['service'], profile['service_username']))
-        fileName = os.path.expanduser("~/."
-                       + urllib.parse.urlparse(link).netloc
-                       + ".last")
+        fileName = DATADIR + '/' + urllib.parse.urlparse(link).netloc + ".last"
         with open(fileName, "w") as f: 
             f.write(link)
 
@@ -425,7 +424,7 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
 
         blog.updatePostsCache(listP, socialNetwork)
            
-        if i < numPosts:
+        if j < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))
             time.sleep(tSleep2) 
     logger.info("Finished in: %s" % socialNetwork[0].capitalize())
