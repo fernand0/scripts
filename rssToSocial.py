@@ -54,7 +54,7 @@ from buffpy.api import API
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 
-from config import *
+from configMod import *
 
 def test():
     config = configparser.ConfigParser()
@@ -292,7 +292,9 @@ def main():
                             if (i <= 0):
                                 break
                             i = i - 1
-                            listPosts.append(blog.obtainPostData(i, False))
+                            post = blog.obtainPostData(i, False)
+                            listPosts.append(post)
+                            print("Scheduling post %s\n", post[0])
 
                         if listPosts:
                             link = listPosts[len(listPosts) - 1][1]

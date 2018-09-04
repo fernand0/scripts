@@ -243,7 +243,7 @@ class moduleBlog():
         elif self.getPostsSlack():
             # Needs improvement
             config = configparser.ConfigParser() 
-            config.read(CONFIGDIR + '.rssSlack')
+            config.read(CONFIGDIR + '/.rssSlack')
             
             slack_token = config["Slack"].get('api-key')
 
