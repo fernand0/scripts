@@ -495,12 +495,14 @@ class moduleBlog():
                 theSummary = post['title']
                 content = post['title']
                 theDescription = post['title']
+
             if 'original_url' in post: 
                 theLink = post['original_url']
             elif url: 
                 theLink = url
             else:
                 theLink = post['text']
+
             if ('comment' in post):
                 comment = post['comment']
             else:
@@ -571,12 +573,13 @@ if __name__ == "__main__":
 
     blogs = []
 
-    #url = 'https://fernand0-errbot.slack.com/'
-    #blog = moduleBlog.moduleBlog()
-    #blog.setPostsSlack()
-    #blog.setUrl(url)
+    url = 'https://fernand0-errbot.slack.com/'
+    blog = moduleBlog.moduleBlog()
+    blog.setPostsSlack()
+    blog.setUrl(url)
+    print(blog.obtainPostData(29))
     #print(blog.getPostsSlack())
-    #sys.exit()
+    sys.exit()
 
     for section in config.sections():
         #print(section)
