@@ -464,6 +464,10 @@ class moduleBlog():
                             with open(nameFile,'wb') as f:
                                 f.write(req.content)
                             theTitle = PdfReader(nameFile).Info.Title
+                            if theTitle:
+                                theTitle = theTitle[1:-1]
+                            else:
+                                theTitle = url
                             theUrl = url
                             theSummary = ''
                             content = theSummary
