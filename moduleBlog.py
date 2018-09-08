@@ -459,7 +459,7 @@ class moduleBlog():
                         content = url
                         theDescription = url
                     else:
-                        if url.lower.endswith('pdf'):
+                        if url.lower().endswith('pdf'):
                             nameFile = '/tmp/kkkkk.pdf'
                             with open(nameFile,'wb') as f:
                                 f.write(req.content)
