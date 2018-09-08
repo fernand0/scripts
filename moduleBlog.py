@@ -13,6 +13,7 @@ import logging
 from slackclient import SlackClient
 from bs4 import BeautifulSoup
 from bs4 import Tag
+from pdfrw import PdfReader
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
 
@@ -451,25 +452,36 @@ class moduleBlog():
                     # It's an url
                     url = post['text'][1:-1]
                     req = requests.get(url)
+                        
                     if req.text.find('403 Forbidden')>=0:
                         theTitle = url
                         theSummary = url
                         content = url
                         theDescription = url
                     else:
-                        soup = BeautifulSoup(req.text, 'lxml')
-                        #print("soup", soup)
-                        theTitle = soup.title
-                        if theTitle:
-                            theTitle = str(theTitle.string)
+                        if url.lower.endswith('pdf'):
+                            nameFile = '/tmp/kkkkk.pdf'
+                            with open(nameFile,'wb') as f:
+                                f.write(req.content)
+                            theTitle = PdfReader(nameFile).Info.Title
+                            theUrl = url
+                            theSummary = ''
+                            content = theSummary
+                            theDescription = theSummary
                         else:
-                            # The last part of the path, without the dot part, and
-                            # capitized
-                            urlP = urllib.parse.urlparse(url)
-                            theTitle = os.path.basename(urlP.path).split('.')[0].capitalize()
-                        theSummary = str(soup.body)
-                        content = theSummary
-                        theDescription = theSummary
+                            soup = BeautifulSoup(req.text, 'lxml')
+                            #print("soup", soup)
+                            theTitle = soup.title
+                            if theTitle:
+                                theTitle = str(theTitle.string)
+                            else:
+                                # The last part of the path, without the dot part, and
+                                # capitized
+                                urlP = urllib.parse.urlparse(url)
+                                theTitle = os.path.basename(urlP.path).split('.')[0].capitalize()
+                            theSummary = str(soup.body)
+                            content = theSummary
+                            theDescription = theSummary
                 else:
                     theSummary = post['text']
                     content = post['text']
