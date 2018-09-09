@@ -221,8 +221,9 @@ def main():
                             if (i <= 0):
                                 break
                             i = i - 1
-
-                            listPosts.append(blog.obtainPostData(i, False))
+                            post = blog.obtainPostData(i, False)
+                            listPosts.append(post)
+                            print("Scheduling post %s\n" % post[0])
 
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i, False))
                             moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
