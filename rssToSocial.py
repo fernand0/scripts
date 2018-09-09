@@ -175,8 +175,7 @@ def main():
 
             logging.info("Looking for pending posts in ...\n\t%s"
                     % blog.getSocialNetworks())
-            print("Looking for pending posts in ... \n\t%s" 
-                    % blog.getSocialNetworks())
+            print("Looking for pending posts ... \n" )
 
             bufferMax = 10
             if blog.getBufferapp():
@@ -185,7 +184,7 @@ def main():
                 logging.debug("Lenmax %d"% lenMax)
 
                 for profile in profileList:
-                    print("prof",profile['service'])
+                    print("In %s" % profile['service'])
                     lenMax, profileList = moduleSocial.checkLimitPosts(api, 
                             blog, profile['service'])
                     logging.info("Service %s" 
@@ -230,6 +229,7 @@ def main():
                             logging.debug("listPosts: %s"% listPosts)
             else:
                 for socialNetwork in blog.getSocialNetworks().keys():
+                    print("In %s" % socialNetwork)
                     logging.info("Social Network %s" % socialNetwork)
                     lastLink, lastTime = blog.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                     blog.addLastLinkPublished(socialNetwork, 
@@ -294,7 +294,7 @@ def main():
                             i = i - 1
                             post = blog.obtainPostData(i, False)
                             listPosts.append(post)
-                            print("Scheduling post %s\n", post[0])
+                            print("Scheduling post %s\n" % post[0])
 
                         if listPosts:
                             link = listPosts[len(listPosts) - 1][1]

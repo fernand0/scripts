@@ -301,7 +301,7 @@ def checkLimitPosts(api, blog, service=''):
                        lenMax = lenProfile 
                        logger.info("%s ok" % profile['service'])
     elif blog:
-        print(blog.getSocialNetworks())
+        #print(blog.getSocialNetworks())
         profileList = blog.getSocialNetworks().keys()
         if service: 
             print(service)
