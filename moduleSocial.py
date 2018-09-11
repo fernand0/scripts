@@ -189,7 +189,7 @@ def connectFacebook(fbPage = 'me'):
     config = configparser.ConfigParser()
     config.read(CONFIGDIR + '/.rssFacebook')
 
-    if True:
+    try:
         oauth_access_token = config.get("Facebook", "oauth_access_token")
         #client_token = config.get("Facebook", "client_token")
         #app_token = config.get("Facebook", "app_token")
@@ -202,14 +202,14 @@ def connectFacebook(fbPage = 'me'):
             for i in range(len(pages['data'])):
                 logger.info("%s %s"% (pages['data'][i]['name'], fbPage))
                 if (pages['data'][i]['name'] == fbPage):
-                    print("\tWriting in... ", pages['data'][i]['name'], "\n")
+                    logger.info("\tWriting in... ", pages['data'][i]['name'], "\n")
                     graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
                     # Publishing as the page
                     return(graph2, pages['data'][i]['id'])
         else:
             # Publishing as me
             return(graph, fbPage)
-    else:
+    except:
         logger.warning("Facebook authentication failed!\n")
         logger.warning("Unexpected error:", sys.exc_info()[0])
         print("Fail!")
@@ -304,11 +304,11 @@ def checkLimitPosts(api, blog, service=''):
         #print(blog.getSocialNetworks())
         profileList = blog.getSocialNetworks().keys()
         if service: 
-            print(service)
+            #print(service)
             listP = moduleCache.getPostsCache(blog,
                     (service, blog.getSocialNetworks()[service])) 
             lenProfile = len(listP) 
-            print(lenProfile)
+            #print(lenProfile)
             lenMax = lenProfile
             listProfiles = []
         else:
@@ -383,9 +383,9 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
     if (fail == 'no' and link):
         blog.updateLastLink(link, 
             (profile['service'], profile['service_username']))
-        fileName = DATADIR + '/' + urllib.parse.urlparse(link).netloc + ".last"
-        with open(fileName, "w") as f: 
-            f.write(link)
+        #fileName = DATADIR + '/' + urllib.parse.urlparse(link).netloc + ".last"
+        #with open(fileName, "w") as f: 
+        #    f.write(link)
 
 def searchTwitter(search, twitter): 
     t = connectTwitter(twitter)
