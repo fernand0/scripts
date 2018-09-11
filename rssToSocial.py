@@ -175,7 +175,7 @@ def main():
 
             logging.info("Looking for pending posts in ...%s"
                     % blog.getSocialNetworks())
-            print("Looking for pending posts ... \n" )
+            print("Looking for pending posts ... " )
 
             bufferMax = 10
             if blog.getBufferapp():
@@ -223,7 +223,7 @@ def main():
                             i = i - 1
                             post = blog.obtainPostData(i, False)
                             listPosts.append(post)
-                            print("Scheduling post %s\n" % post[0])
+                            print("\tScheduling post %s\n" % post[0])
 
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i, False))
                             moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
@@ -295,7 +295,7 @@ def main():
                             i = i - 1
                             post = blog.obtainPostData(i, False)
                             listPosts.append(post)
-                            print("Scheduling post %s\n" % post[0])
+                            print("\tScheduling post %s\n" % post[0])
 
                         if listPosts:
                             link = listPosts[len(listPosts) - 1][1]
