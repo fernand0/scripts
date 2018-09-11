@@ -136,9 +136,9 @@ def main():
 
     for section in config.sections():
         logging.info("\nSection: %s"% section)
-        print("\nSection: %s"% section)
         blog = moduleBlog.moduleBlog()
         url = config.get(section, "url")
+        print("\nSection: %s %s"% (section, url))
         blog.setUrl(url)
 
         if ("rssfeed" in config.options(section)):
@@ -173,7 +173,7 @@ def main():
                     socialNetwork = (option, nick)
                     blog.addSocialNetwork(socialNetwork)
 
-            logging.info("Looking for pending posts in ...\n\t%s"
+            logging.info("Looking for pending posts in ...%s"
                     % blog.getSocialNetworks())
             print("Looking for pending posts ... \n" )
 
@@ -184,7 +184,7 @@ def main():
                 logging.debug("Lenmax %d"% lenMax)
 
                 for profile in profileList:
-                    print("In %s" % profile['service'])
+                    print("\t%s" % profile['service'])
                     lenMax, profileList = moduleSocial.checkLimitPosts(api, 
                             blog, profile['service'])
                     logging.info("Service %s" 
@@ -230,7 +230,7 @@ def main():
                             logging.debug("listPosts: %s"% listPosts)
             else:
                 for socialNetwork in blog.getSocialNetworks().keys():
-                    print("In %s" % socialNetwork)
+                    print("\t%s" % socialNetwork)
                     logging.info("Social Network %s" % socialNetwork)
                     lastLink, lastTime = blog.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                     blog.addLastLinkPublished(socialNetwork, 
