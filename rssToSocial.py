@@ -54,6 +54,8 @@ from buffpy.api import API
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 
+from configMod import *
+
 def test():
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
@@ -102,7 +104,6 @@ def test():
          print("post links",i,theSummaryLinks)
 
     return recentPosts
-
 def main():
 
     print("====================================")
@@ -119,8 +120,7 @@ def main():
         checkBlog = ""
 
     loggingLevel = logging.INFO
-    logging.basicConfig(filename=os.path.expanduser("~") 
-                        + "/usr/var/rssSocial_.log",
+    logging.basicConfig(filename = LOGDIR + "/rssSocial_.log",
                         level=loggingLevel, format='%(asctime)s %(message)s')
 
     logging.info("Launched at %s" % time.asctime())
@@ -130,15 +130,15 @@ def main():
     logging.info("Configured blogs:")
 
     config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssBlogs')])
+    config.read(CONFIGDIR + '/.rssBlogs')
 
     blogs = []
 
     for section in config.sections():
         logging.info("\nSection: %s"% section)
-        print("\nSection: %s"% section)
         blog = moduleBlog.moduleBlog()
         url = config.get(section, "url")
+        print("\nSection: %s %s"% (section, url))
         blog.setUrl(url)
 
         if ("rssfeed" in config.options(section)):
@@ -173,10 +173,9 @@ def main():
                     socialNetwork = (option, nick)
                     blog.addSocialNetwork(socialNetwork)
 
-            logging.info("Looking for pending posts in ...\n\t%s"
+            logging.info("Looking for pending posts in ...%s"
                     % blog.getSocialNetworks())
-            print("Looking for pending posts in ... \n\t%s" 
-                    % blog.getSocialNetworks())
+            print("Looking for pending posts ... " )
 
             bufferMax = 10
             if blog.getBufferapp():
@@ -185,7 +184,7 @@ def main():
                 logging.debug("Lenmax %d"% lenMax)
 
                 for profile in profileList:
-                    print("prof",profile['service'])
+                    print("\t%s" % profile['service'])
                     lenMax, profileList = moduleSocial.checkLimitPosts(api, 
                             blog, profile['service'])
                     logging.info("Service %s" 
@@ -207,8 +206,7 @@ def main():
                             # have been published with other toolsin order to avoid
                             # duplicates
 
-                            path = os.path.expanduser('~')
-                            with open(path + '/.urls.pickle', 'rb') as f:
+                            with open(DATADIR + '/.urls.pickle', 'rb') as f:
                                 theList = pickle.load(f)
                         else:
                             theList = []
@@ -223,14 +221,16 @@ def main():
                             if (i <= 0):
                                 break
                             i = i - 1
-
-                            listPosts.append(blog.obtainPostData(i, False))
+                            post = blog.obtainPostData(i, False)
+                            listPosts.append(post)
+                            print("\tScheduling post %s\n" % post[0])
 
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i, False))
                             moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
                             logging.debug("listPosts: %s"% listPosts)
             else:
                 for socialNetwork in blog.getSocialNetworks().keys():
+                    print("\t%s" % socialNetwork)
                     logging.info("Social Network %s" % socialNetwork)
                     lastLink, lastTime = blog.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                     blog.addLastLinkPublished(socialNetwork, 
@@ -278,8 +278,7 @@ def main():
                             # checking the links tha have been published
                             # with other toolsin order to avoid duplicates
 
-                            path = os.path.expanduser('~')
-                            with open(path + '/.urls.pickle', 'rb') as f:
+                            with open(DATADIR + '/.urls.pickle', 'rb') as f:
                                 theList = pickle.load(f)
                         else:
                             theList = []
@@ -294,7 +293,9 @@ def main():
                             if (i <= 0):
                                 break
                             i = i - 1
-                            listPosts.append(blog.obtainPostData(i, False))
+                            post = blog.obtainPostData(i, False)
+                            listPosts.append(post)
+                            print("\tScheduling post %s\n" % post[0])
 
                         if listPosts:
                             link = listPosts[len(listPosts) - 1][1]

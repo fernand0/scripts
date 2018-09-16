@@ -13,8 +13,11 @@ import logging
 from slackclient import SlackClient
 from bs4 import BeautifulSoup
 from bs4 import Tag
+from pdfrw import PdfReader
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
+
+from configMod import *
 
 class moduleBlog():
 
@@ -97,7 +100,7 @@ class moduleBlog():
 
     def setXmlRpc(self):
         conf = configparser.ConfigParser() 
-        conf.read(os.path.join(os.path.expanduser('~') , '.blogaliarc')) 
+        conf.read(CONFIGDIR + '/.blogaliarca')
         for section in conf.sections(): 
             usr = conf.get(section,'login') 
             pwd = conf.get(section,'password') 
@@ -133,7 +136,7 @@ class moduleBlog():
         if self.postsSlack is None:
             self.postsSlack = []
             config = configparser.ConfigParser() 
-            config.read([os.path.expanduser('~/.rssSlack')])
+            config.read(CONFIGDIR + '/.rssSlack')
             slack_token = config["Slack"].get('api-key') 
             sc = SlackClient(slack_token) 
             theChannel = self.searchChannelSlack(sc, 'links')
@@ -241,7 +244,7 @@ class moduleBlog():
         elif self.getPostsSlack():
             # Needs improvement
             config = configparser.ConfigParser() 
-            config.read(os.path.expanduser('~/' + '.rssSlack'))
+            config.read(CONFIGDIR + '/.rssSlack')
             
             slack_token = config["Slack"].get('api-key')
 
@@ -256,8 +259,8 @@ class moduleBlog():
 
     def updatePostsCache(self, listPosts, socialNetwork=()):
         #Now it is duplicated in moduleCache
-        fileName = os.path.expanduser('~/.' 
-                +  urllib.parse.urlparse(self.getUrl()).netloc 
+        fileName = (DATADIR + '/' 
+                + urllib.parse.urlparse(self.getUrl()).netloc 
                 + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
                 + ".queue")
 
@@ -268,7 +271,7 @@ class moduleBlog():
         return(fileName)
 
     def listPostsCache(self,socialNetwork=()):
-        fileName = os.path.expanduser('~/.' 
+        fileName = (DATADIR  + '/' 
                 +  urllib.parse.urlparse(self.getUrl()).netloc 
                 + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
                 + ".queue")
@@ -296,11 +299,11 @@ class moduleBlog():
     def updateLastLink(self,link, socialNetwork=()):
         rssFeed = self.getUrl()+self.getRssFeed()
         if not socialNetwork: 
-            fileName = os.path.expanduser("~" + "/."  +
-                    urllib.parse.urlparse(rssFeed).netloc + ".last")
+            fileName = (DATADIR  + '/' 
+                   + urllib.parse.urlparse(rssFeed).netloc + ".last")
         else: 
-            fileName = os.path.expanduser("~" + "/."  +
-                    urllib.parse.urlparse(rssFeed).netloc +
+            fileName = (DATADIR + '/'
+                    + urllib.parse.urlparse(rssFeed).netloc +
                     '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
         with open(fileName, "w") as f: 
             f.write(link)
@@ -449,25 +452,40 @@ class moduleBlog():
                     # It's an url
                     url = post['text'][1:-1]
                     req = requests.get(url)
+                        
                     if req.text.find('403 Forbidden')>=0:
                         theTitle = url
                         theSummary = url
                         content = url
                         theDescription = url
                     else:
-                        soup = BeautifulSoup(req.text, 'lxml')
-                        #print("soup", soup)
-                        theTitle = soup.title
-                        if theTitle:
-                            theTitle = str(theTitle.string)
+                        if url.lower().endswith('pdf'):
+                            nameFile = '/tmp/kkkkk.pdf'
+                            with open(nameFile,'wb') as f:
+                                f.write(req.content)
+                            theTitle = PdfReader(nameFile).Info.Title
+                            if theTitle:
+                                theTitle = theTitle[1:-1]
+                            else:
+                                theTitle = url
+                            theUrl = url
+                            theSummary = ''
+                            content = theSummary
+                            theDescription = theSummary
                         else:
-                            # The last part of the path, without the dot part, and
-                            # capitized
-                            urlP = urllib.parse.urlparse(url)
-                            theTitle = os.path.basename(urlP.path).split('.')[0].capitalize()
-                        theSummary = str(soup.body)
-                        content = theSummary
-                        theDescription = theSummary
+                            soup = BeautifulSoup(req.text, 'lxml')
+                            #print("soup", soup)
+                            theTitle = soup.title
+                            if theTitle:
+                                theTitle = str(theTitle.string)
+                            else:
+                                # The last part of the path, without the dot part, and
+                                # capitized
+                                urlP = urllib.parse.urlparse(url)
+                                theTitle = os.path.basename(urlP.path).split('.')[0].capitalize()
+                            theSummary = str(soup.body)
+                            content = theSummary
+                            theDescription = theSummary
                 else:
                     theSummary = post['text']
                     content = post['text']
@@ -477,12 +495,14 @@ class moduleBlog():
                 theSummary = post['title']
                 content = post['title']
                 theDescription = post['title']
+
             if 'original_url' in post: 
                 theLink = post['original_url']
             elif url: 
                 theLink = url
             else:
                 theLink = post['text']
+
             if ('comment' in post):
                 comment = post['comment']
             else:
@@ -547,18 +567,19 @@ if __name__ == "__main__":
     import moduleBlog
     
     config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssBlogs')])
+    config.read(CONFIGDIR + '/.rssBlogs')
 
     print("Configured blogs:")
 
     blogs = []
 
-    #url = 'https://fernand0-errbot.slack.com/'
-    #blog = moduleBlog.moduleBlog()
-    #blog.setPostsSlack()
-    #blog.setUrl(url)
+    url = 'https://fernand0-errbot.slack.com/'
+    blog = moduleBlog.moduleBlog()
+    blog.setPostsSlack()
+    blog.setUrl(url)
+    print(blog.obtainPostData(29))
     #print(blog.getPostsSlack())
-    #sys.exit()
+    sys.exit()
 
     for section in config.sections():
         #print(section)
@@ -615,9 +636,9 @@ if __name__ == "__main__":
 
     for blog in blogs:
         import urllib
-        urlFile = open(os.path.expanduser("~" + "/."  
+        urlFile = open(DATADIR + '/' 
               + urllib.parse.urlparse(blog.getUrl()+blog.getRssFeed()).netloc
-              + ".last"), "r")
+              + ".last", "r")
         linkLast = urlFile.read().rstrip()  # Last published
         print(blog.getUrl()+blog.getRssFeed(),blog.getLinkPosition(linkLast))
         print("description ->", blog.getPostsRss().entries[5]['description'])
