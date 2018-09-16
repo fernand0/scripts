@@ -100,7 +100,7 @@ class moduleBlog():
 
     def setXmlRpc(self):
         conf = configparser.ConfigParser() 
-        conf.read(CONFIGDIR + '/.blogaliarca')
+        conf.read(CONFIGDIR + '/.blogaliarc')
         for section in conf.sections(): 
             usr = conf.get(section,'login') 
             pwd = conf.get(section,'password') 
