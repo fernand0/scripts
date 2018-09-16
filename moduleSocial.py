@@ -108,6 +108,7 @@ from buffpy.api import API
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 from medium import Client
+from pocket import Pocket, PocketException
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
 
@@ -275,6 +276,19 @@ def connectMedium():
 
     return(client, user)
 
+def connectPocket():
+    logger.info("Connecting Pocket")
+    config = configparser.ConfigParser()
+    config.read(CONFIGDIR + '/.rssPocket')
+    consumer_key = config.get("appKeys", "consumer_key")
+    access_token = config.get("appKeys", "access_token")
+    try: 
+        p = Pocket(consumer_key=consumer_key, access_token=access_token)
+    except:
+        logger.warning("Pocket authentication failed!\n")
+        logger.warning("Unexpected error:", sys.exc_info()[0])
+
+    return(p)
 
 def checkLimitPosts(api, blog, service=''):
     # We can put as many items as the service with most items allow
@@ -614,6 +628,16 @@ def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, imag
         logger.info("My new post!", post["url"])
     except:
         logger.warning("Medium posting failed!\n")
+        logger.warning("Unexpected error:", sys.exc_info()[0])
+        return("Fail!")
+
+def publishPocket(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
+    logger.info("Pocket...%s\n"%channel)
+    try:
+        pc = connectPocket()
+        pc.add(link)
+    except:
+        logger.warning("Pocket posting failed!\n")
         logger.warning("Unexpected error:", sys.exc_info()[0])
         return("Fail!")
 

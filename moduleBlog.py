@@ -131,18 +131,17 @@ class moduleBlog():
 
         return(-1)
 
-
-    def setPostsSlack(self): 
+    def setPostsSlack(self):
         if self.postsSlack is None:
             self.postsSlack = []
-            config = configparser.ConfigParser() 
+            config = configparser.ConfigParser()
             config.read(CONFIGDIR + '/.rssSlack')
-            slack_token = config["Slack"].get('api-key') 
-            sc = SlackClient(slack_token) 
+            slack_token = config["Slack"].get('api-key')
+            sc = SlackClient(slack_token)
             theChannel = self.searchChannelSlack(sc, 'links')
             history = sc.api_call( "channels.history", count=1000, channel=theChannel)
             logging.debug(history)
-            for msg in history['messages']: 
+            for msg in history['messages']:
                 self.postsSlack.append(msg)
 
     def getPostsSlack(self):
