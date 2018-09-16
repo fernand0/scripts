@@ -239,6 +239,7 @@ def main():
                     i = blog.getLinkPosition(lastLink) 
 
                     logging.debug("i, lastLink %d %s"% (i,lastLink))
+                    print("i, lastLink %d %s"% (i,lastLink))
                     if (i > 0):
                         nick = blog.getSocialNetworks()[socialNetwork]
                         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
