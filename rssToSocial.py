@@ -104,6 +104,7 @@ def test():
          print("post links",i,theSummaryLinks)
 
     return recentPosts
+
 def main():
 
     print("====================================")
@@ -166,7 +167,7 @@ def main():
                 blog.setProgram(config.get(section, "program"))
 
             socialNetworksOpt = ['twitter', 'facebook', 'telegram', 
-                    'medium', 'linkedin'] 
+                    'medium', 'linkedin','pocket'] 
             for option in config.options(section):
                 if (option in socialNetworksOpt):
                     nick = config.get(section, option)
@@ -249,6 +250,8 @@ def main():
                             serviceName = socialNetwork.capitalize()
                             publishMethod = getattr(moduleSocial, 
                                     'publish'+ serviceName)
+                            print(publishMethod)
+                            sys.exit()
                             publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
                             logging.info("Updating Link\n") 
                             blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
