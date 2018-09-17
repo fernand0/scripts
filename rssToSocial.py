@@ -185,7 +185,7 @@ def main():
                 logging.debug("Lenmax %d"% lenMax)
 
                 for profile in profileList:
-                    print("\t%s" % profile['service'])
+                    print("\tgetBuffer %s" % profile['service'])
                     lenMax, profileList = moduleSocial.checkLimitPosts(api, 
                             blog, profile['service'])
                     logging.info("Service %s" 
@@ -231,7 +231,7 @@ def main():
                             logging.debug("listPosts: %s"% listPosts)
             else:
                 for socialNetwork in blog.getSocialNetworks().keys():
-                    print("\t%s" % socialNetwork)
+                    print("\tNot buffer %s" % socialNetwork)
                     logging.info("Social Network %s" % socialNetwork)
                     lastLink, lastTime = blog.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                     blog.addLastLinkPublished(socialNetwork, 
@@ -239,7 +239,7 @@ def main():
                     i = blog.getLinkPosition(lastLink) 
 
                     logging.debug("i, lastLink %d %s"% (i,lastLink))
-                    print("i, lastLink %d %s"% (i,lastLink))
+                    #print("i, lastLink %d %s"% (i,lastLink))
                     if (i > 0):
                         nick = blog.getSocialNetworks()[socialNetwork]
                         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
@@ -265,6 +265,7 @@ def main():
                     lenMax, profileList = moduleSocial.checkLimitPosts('', 
                             blog, profile)
                     if profile[0] in blog.getProgram():
+                        print("\tgetProgram %s" % profile)
                         lastLink, lastTime = blog.checkLastLink((profile, blog.getSocialNetworks()[profile]))
                         blog.addLastLinkPublished(profile, 
                             lastLink, lastTime)

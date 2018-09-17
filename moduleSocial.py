@@ -203,7 +203,7 @@ def connectFacebook(fbPage = 'me'):
             for i in range(len(pages['data'])):
                 logger.info("%s %s"% (pages['data'][i]['name'], fbPage))
                 if (pages['data'][i]['name'] == fbPage):
-                    logger.info("\tWriting in... ", pages['data'][i]['name'], "\n")
+                    logger.info("\tWriting in... %s"% pages['data'][i]['name'], "\n")
                     graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
                     # Publishing as the page
                     return(graph2, pages['data'][i]['id'])
