@@ -176,7 +176,7 @@ def main():
 
             logging.info("Looking for pending posts in ...%s"
                     % blog.getSocialNetworks())
-            print("Looking for pending posts ... " )
+            print("    Looking for pending posts ... " )
 
             bufferMax = 10
             if blog.getBufferapp():
@@ -185,7 +185,7 @@ def main():
                 logging.debug("Lenmax %d"% lenMax)
 
                 for profile in profileList:
-                    print("\tgetBuffer %s" % profile['service'])
+                    print("        getBuffer %s" % profile['service'])
                     lenMax, profileList = moduleSocial.checkLimitPosts(api, 
                             blog, profile['service'])
                     logging.info("Service %s" 
@@ -224,14 +224,14 @@ def main():
                             i = i - 1
                             post = blog.obtainPostData(i, False)
                             listPosts.append(post)
-                            print("\tScheduling post %s\n" % post[0])
+                            print("          Scheduling post %s\n" % post[0])
 
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i, False))
                             moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
                             logging.debug("listPosts: %s"% listPosts)
             else:
                 for socialNetwork in blog.getSocialNetworks().keys():
-                    print("\tNot buffer %s" % socialNetwork)
+                    print("        Not buffer %s" % socialNetwork)
                     logging.info("Social Network %s" % socialNetwork)
                     lastLink, lastTime = blog.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                     blog.addLastLinkPublished(socialNetwork, 
@@ -265,7 +265,7 @@ def main():
                     lenMax, profileList = moduleSocial.checkLimitPosts('', 
                             blog, profile)
                     if profile[0] in blog.getProgram():
-                        print("\tgetProgram %s" % profile)
+                        print("        getProgram %s" % profile)
                         lastLink, lastTime = blog.checkLastLink((profile, blog.getSocialNetworks()[profile]))
                         blog.addLastLinkPublished(profile, 
                             lastLink, lastTime)
@@ -298,7 +298,7 @@ def main():
                             i = i - 1
                             post = blog.obtainPostData(i, False)
                             listPosts.append(post)
-                            print("\tScheduling post %s\n" % post[0])
+                            print("          Scheduling post %s\n" % post[0])
 
                         if listPosts:
                             link = listPosts[len(listPosts) - 1][1]
@@ -317,7 +317,7 @@ def main():
 
             time.sleep(2)
         else:
-            print("\tSkip")
+            print("    Skip")
 
     print("====================================")
     print("Finished at %s" % time.asctime())
