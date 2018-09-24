@@ -370,9 +370,9 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
         # Without the http or https 
         try:
             if titlePostT and (profile['service'] == 'twitter'):
-                entry = urllib.parse.quote(titlePostT + " " + firstLink).encode('utf-8')
+                entry = urllib.parse.quote(titlePostT + " " + firstLink)#.encode('utf-8')
             else:
-                entry = urllib.parse.quote(post).encode('utf-8')
+                entry = urllib.parse.quote(post)#.encode('utf-8')
 
             if (profile['service'][0] in services): 
                 profile.updates.new(entry)
