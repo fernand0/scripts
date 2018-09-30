@@ -203,7 +203,7 @@ def connectFacebook(fbPage = 'me'):
             for i in range(len(pages['data'])):
                 logger.info("%s %s"% (pages['data'][i]['name'], fbPage))
                 if (pages['data'][i]['name'] == fbPage):
-                    logger.info("\tWriting in... ", pages['data'][i]['name'], "\n")
+                    logger.info("\tWriting in... %s"% pages['data'][i]['name'], "\n")
                     graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
                     # Publishing as the page
                     return(graph2, pages['data'][i]['id'])
@@ -370,9 +370,9 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
         # Without the http or https 
         try:
             if titlePostT and (profile['service'] == 'twitter'):
-                entry = urllib.parse.quote(titlePostT + " " + firstLink).encode('utf-8')
+                entry = urllib.parse.quote(titlePostT + " " + firstLink)#.encode('utf-8')
             else:
-                entry = urllib.parse.quote(post).encode('utf-8')
+                entry = urllib.parse.quote(post)#.encode('utf-8')
 
             if (profile['service'][0] in services): 
                 profile.updates.new(entry)
