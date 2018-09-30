@@ -16,19 +16,29 @@
 #
 
 import moduleBlog
+# https://github.com/fernand0/scripts/blob/master/moduleBlog.py
+import moduleSocial
+# https://github.com/fernand0/scripts/blob/master/moduleSocial.py
+import moduleCache
+# https://github.com/fernand0/scripts/blob/master/moduleCache.py
+
 import configparser
 import os
 import logging
+import random
+import threading
 import feedparser
 import facebook
 from linkedin import linkedin
 from twitter import *
+from medium import Client
 from html.parser import HTMLParser
 import telepot
 import re
 import sys
 import time
 import datetime
+import pickle
 from bs4 import BeautifulSoup
 from bs4 import NavigableString
 from bs4 import Tag
@@ -44,361 +54,20 @@ from buffpy.api import API
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 
-
-def checkLastLink(rssFeed):
-    urlFile = open(os.path.expanduser("~" + "/."  
-              + urllib.parse.urlparse(rssFeed).netloc
-              + ".last"), "r")
-    linkLast = urlFile.read().rstrip()  # Last published
-    return(linkLast)
-
-def checkPendingPosts(feed, lastLink):
-    posts = []
-    for entry in feed.entries:
-        lenCmp = min(len(entry['link']), len(lastLink))
-        if entry['link'][:lenCmp] == lastLink[:lenCmp]:
-            return posts
-        posts.append(entry) 
-
-    return posts
-
-def selectBlog(sel='a'):
-    config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssBlogs')])
-    print("Configured blogs:")
-
-    feed = []
-    # We are caching the feeds in order to use them later
-
-    i = 1
-    recentPosts = {}
-
-    for section in config.sections():
-        rssFeed = config.get(section, "rssFeed")
-        if 'time' in config[section].keys():
-	# We can put a limit (in hours). If this time has not pased since the
-	# last time we posted we will skip this post. 
-            filename = os.path.expanduser("~/." + urllib.parse.urlparse(rssFeed).netloc + ".last")
-            if ((time.time() - os.path.getmtime(filename))-24*60*60) < 0:
-                continue
-        feed.append(feedparser.parse(rssFeed))
-        lastPost = feed[-1].entries[0]
-        print('%s) %s %s (%s)' % (str(i), section,
-                                  config.get(section, "rssFeed"),
-                                  time.strftime('%Y-%m-%d %H:%M:%SZ',
-                                  lastPost['published_parsed'])))
-        lastLink = checkLastLink(config.get(section, "rssFeed"))
-        lenCmp = min(len(lastLink),len(lastPost['link']))
-
-        if lastLink[:lenCmp] != lastPost['link'][:lenCmp]:
-            # There are new posts
-            recentPosts[section] = {}
-            recentPosts[section]['posts'] = checkPendingPosts(feed[-1], lastLink)
-        if (i == 1) or (recentDate < lastPost['published_parsed']):
-            recentDate = lastPost['published_parsed']
-            recentFeed = feed[-1]
-            recentPost = lastPost
-            recentIndex = str(i)
-        i = i + 1
-
-    if (sel == 'm'):
-        if (int(i) > 1):
-            recentIndex = input('Select one: ')
-            i = int(recentIndex)
-            recentFeed = feed[i - 1]
-        else:
-            i = 1
-            recentIndex = '1'
-
-    if i > 1:
-        recentFeedBase = recentFeed.feed['title_detail']['base']
-        ini = recentFeedBase.find('/')+2
-        fin = recentFeedBase[ini:].find('.')
-        identifier = recentFeedBase[ini:ini+fin] + "_" + \
-            recentFeedBase[ini+fin+1:ini+fin+7]
-        #print("Selected ", recentFeedBase)
-        logging.info("Selected " + recentFeedBase)
-    else:
-        sys.exit()
-
-    selectedBlog = {}
-    for section in recentPosts.keys():
-        for option in config.options(section):
-            recentPosts[section][option] = config.get(section, option)
-        selectedBlog["identifier"] = identifier
-
-    return(recentFeed, selectedBlog, recentPosts)
-
-def connectBuffer():
-    config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssBuffer')])
-
-    clientId = config.get("appKeys", "client_id")
-    clientSecret = config.get("appKeys", "client_secret")
-    redirectUrl = config.get("appKeys", "redirect_uri")
-    accessToken = config.get("appKeys", "access_token")
-
-    # instantiate the api object
-    api = API(client_id=clientId,
-              client_secret=clientSecret,
-              access_token=accessToken)
-
-    logging.debug(api.info)
-
-    return(api)
-
-def connectTwitter(twitterAC):    
-    config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssTwitter')])
-
-    CONSUMER_KEY = config.get("appKeys", "CONSUMER_KEY")
-    CONSUMER_SECRET = config.get("appKeys", "CONSUMER_SECRET")
-    TOKEN_KEY = config.get(twitterAC, "TOKEN_KEY")
-    TOKEN_SECRET = config.get(twitterAC, "TOKEN_SECRET")
-
-    try:
-        authentication = OAuth(
-                    TOKEN_KEY,
-                    TOKEN_SECRET,
-                    CONSUMER_KEY,
-                    CONSUMER_SECRET)
-        t = Twitter(auth=authentication)
-    except:
-        print("Twitter authentication failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
-
-    return(t)
-
-def connectFacebook(fbPage):
-    config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssFacebook')])
-
-    try:
-        oauth_access_token = config.get("Facebook", "oauth_access_token")
-
-        graph = facebook.GraphAPI(oauth_access_token, version='2.7')
-        pages = graph.get_connections("me", "accounts")
-
-        for i in range(len(pages['data'])):
-            if (pages['data'][i]['name'] == fbPage):
-                print("\tWriting in... ", pages['data'][i]['name'], "\n")
-                graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
-                return(pages['data'][i]['access_token'], pages['data'][i]['id'])
-    except:
-        print("Facebook authentication failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
-
-    return(0,0)
-
-def connectLinkedin():
-    config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssLinkedin')])
-
-    CONSUMER_KEY = config.get("Linkedin", "CONSUMER_KEY")
-    CONSUMER_SECRET = config.get("Linkedin", "CONSUMER_SECRET")
-    USER_TOKEN = config.get("Linkedin", "USER_TOKEN")
-    USER_SECRET = config.get("Linkedin", "USER_SECRET")
-    RETURN_URL = config.get("Linkedin", "RETURN_URL"),
-
-    try:
-        authentication = linkedin.LinkedInDeveloperAuthentication(
-                         CONSUMER_KEY,
-                         CONSUMER_SECRET,
-                         USER_TOKEN,
-                         USER_SECRET,
-                         RETURN_URL,
-                         linkedin.PERMISSIONS.enums.values())
-
-        application = linkedin.LinkedInApplication(authentication)
-
-    except:
-        print("Linkedin posting failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
-
-    return(application)
-
-def connectTelegram(channel):
-    config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssTelegram')])
-
-    TOKEN = config.get("Telegram", "TOKEN")
-
-    try:
-        bot = telepot.Bot(TOKEN)
-        meMySelf = bot.getMe()
-    except:
-        print("Telegram posting failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
-
-    return(bot)
-
-
-def checkLimitPosts(api):
-    # We can put as many items as the service with most items allow
-    # The limit is ten.
-    # Get all pending updates of a social network profile
-
-    lenMax = 0
-    logging.info("Checking services...")
-
-    profileList = Profiles(api=api).all()
-    for profile in profileList:
-        lenProfile = len(profile.updates.pending)
-        if (lenProfile > lenMax):
-            lenMax = lenProfile
-        logging.info("%s ok" % profile['service'])
-
-    logging.info("There are %d in some buffer, we can put %d" %
-                 (lenMax, 10-lenMax))
-
-    return(lenMax, profileList)
-
-def publishBuffer(profileList, title, link, firstLink, isDebug, lenMax):
-    if isDebug:
-        profileList = []
-        firstLink = None
-    fail = 'no'
-    for profile in profileList:
-        line = profile['service']
-        #print(profile['service'])
-
-        if (len(title) > 140 - 24):
-        # We are allowing 24 characters for the (short) link 
-            titlePostT = title[:140-24] 
-        else:
-            titlePostT = ""
-        post = title + " " + firstLink
-
-        try:
-            if titlePostT and (profile['service'] == 'twitter'):
-                profile.updates.new(urllib.parse.quote(titlePostT + " " + firstLink).encode('utf-8'))
-            else:
-                profile.updates.new(urllib.parse.quote(post).encode('utf-8'))
-            line = line + ' ok'
-            time.sleep(3)
-        except:
-            print("Buffer posting failed!")
-            print("Unexpected error:", sys.exc_info()[0])
-            print("Unexpected error:", sys.exc_info()[1])
-            logging.info("Buffer posting failed!")
-            logging.info("Unexpected error: %s"% sys.exc_info()[0])
-            logging.info("Unexpected error: %s"% sys.exc_info()[1])
-
-            line = line + ' fail'
-            failFile = open(os.path.expanduser("~/."
-                       + urllib.parse.urlparse(link).netloc
-                       + ".fail"), "w")
-            failFile.write(post)
-            logging.info("  %s service" % line)
-            fail = 'yes'
-            break
-
-        logging.info("  %s service" % line)
-        if (fail == 'no' and link):
-            urlFile = open(os.path.expanduser("~/."
-                           + urllib.parse.urlparse(link).netloc
-                           + ".last"), "w")
-    
-            urlFile.write(link)
-            urlFile.close()
-
-def publishTwitter(title, link, comment, twitter):
-
-    print("Twitter...\n")
-    try:
-        t = connectTwitter(twitter)
-        statusTxt = comment + " " + title + " " + link
-        h = HTMLParser()
-        statusTxt = h.unescape(statusTxt)
-        t.statuses.update(status=statusTxt)
-    except:
-        print("Twitter posting failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
-
-def publishFacebook(title, link, summaryLinks, image, fbPage):
-    #publishFacebook("prueba2", "https://www.facebook.com/reflexioneseirreflexiones/", "b", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-9/426052_381657691846622_987775451_n.jpg", "Reflexiones e Irreflexiones")
-
-    print("Facebook...\n")
-    try:
-        h = HTMLParser()
-        title = h.unescape(title)
-        (access, page) = connectFacebook(fbPage)
-        print(page)
-        facebook.GraphAPI(access).put_object(page,
-                          "feed", message=title + " \n" + summaryLinks,
-                          link=link, picture=image,
-                          name=title, caption='',
-                          description=summaryLinks.encode('utf-8'))
-    except:
-        print("Facebook posting failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
-
-
-def publishLinkedin(title, link, summary, image):
-    # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
-    print("Linkedin...\n")
-    try:
-        application = connectLinkedin()
-        presentation = 'Publicado! ' + title 
-        application.submit_share(presentation, title, summary, link, image)
-    except:
-        print("Linkedin posting failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
-
-def cleanTags(soup):
-    tags = [tag.name for tag in soup.find_all()]
-    validTags = ['b', 'strong', 'i', 'em', 'a', 'code', 'pre']
-
-    quotes = soup.find_all('blockquote')
-    for quote in quotes:
-        quote.insert_before('«')
-        quote.insert_after( '»')
-
-    for tag in tags:
-        if tag not in validTags:
-            for theTag in soup.find_all(tag):
-                theTag.unwrap()
-
-    code = [td.find('code') for td in soup.findAll('pre')]
-    # github.io inserts code tags inside pre tags
-    for cod in code:
-        cod.unwrap()
-
-    tags = soup.findAll(text=lambda text:isinstance(text, Doctype))
-    if (len(tags)>0):
-        tags[0].extract()
-    # <!DOCTYPE html> in github.io
-
-def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, image):
-    #publishTelegram("reflexioneseirreflexiones","Canal de Reflexiones e Irreflexiones", "http://fernand0.blogalia.com/", "", "", "", "")
-
-    print("Telegram...%s\n"%channel)
-
-    try:
-        bot = connectTelegram(channel)
-
-        h = HTMLParser()
-        title = h.unescape(title)
-        htmlText='<a href="'+link+'">'+title + "</a>\n" + summaryHtml
-        soup = BeautifulSoup(htmlText)
-        cleanTags(soup)
-        #print(soup)
-        textToPublish = str(soup)[:4096]
-        index = textToPublish.rfind('<')
-        index2 = textToPublish.find('>',index)
-        if (index2 < 0):
-        # unclosed tag
-        # Maybe we can still have an unclosed tag
-        # Something like: <a href="">< we would 
-            textToPublish = str(soup)[:index - 1]+' ...'
-        bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
-    except:
-        print("Telegram posting failed!\n")
-        print("Unexpected error:", sys.exc_info()[0])
+from configMod import *
 
 def test():
     config = configparser.ConfigParser()
     config.read([os.path.expanduser('~/.rssBlogs')])
+
+    # We can publish the last entry of a blog in Medium as a draft
+    blog = moduleBlog.moduleBlog()
+    blog.setRssFeed('http://fernand0.blogalia.com/rss20.xml')
+    blog.getBlogPostsRss()
+    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(0))
+    publishMedium("", title, link, summary, summaryHtml, summaryLinks, image)
+
+
     print("Configured blogs:")
 
     feed = []
@@ -436,83 +105,225 @@ def test():
 
     return recentPosts
 
-
 def main():
 
+    print("====================================")
+    print("Launched at %s" % time.asctime())
+    print("====================================")
+    print("")
+        
     isDebug = False
+
+    if len(sys.argv)>1:
+        print(sys.argv[1])
+        checkBlog = sys.argv[1]
+    else:
+        checkBlog = ""
+
     loggingLevel = logging.INFO
-
-    config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssBlogs')])
-
-    logging.basicConfig(filename=os.path.expanduser("~") 
-                        + "/usr/var/rssSocial_.log",
+    logging.basicConfig(filename = LOGDIR + "/rssSocial_.log",
                         level=loggingLevel, format='%(asctime)s %(message)s')
 
-    print("Configured blogs:")
+    logging.info("Launched at %s" % time.asctime())
+
+    logging.debug("Parameters %s, %d" % (sys.argv, len(sys.argv)))
+
+    logging.info("Configured blogs:")
+
+    config = configparser.ConfigParser()
+    config.read(CONFIGDIR + '/.rssBlogs')
 
     blogs = []
 
     for section in config.sections():
-        rssFeed = config.get(section, "rssFeed")
-        print("Blog: ", rssFeed)
+        logging.info("\nSection: %s"% section)
         blog = moduleBlog.moduleBlog()
-        blog.setRssFeed(rssFeed)
+        url = config.get(section, "url")
+        print("\nSection: %s %s"% (section, url))
+        blog.setUrl(url)
 
-        optFields = ["linksToAvoid", "time", "bufferapp"]
-        if ("linksToAvoid" in config.options(section)):
-            blog.setLinksToAvoid(config.get(section, "linksToAvoid"))
-        if ("time" in config.options(section)):
-            blog.setTime(config.get(section, "time"))
+        if ("rssfeed" in config.options(section)):
+            # It does not preserve case
+            rssFeed = config.get(section, "rssFeed")
+            logging.info("Blog RSS: %s"% rssFeed)
+            blog.setRssFeed(rssFeed)
+            blog.setPostsRss()
+        elif blog.getUrl().find('slack')>0:
+            logging.info("Blog Slack: %s"% blog.getUrl())
+            blog.setPostsSlack()
 
-        for option in config.options(section):
-            if ('ac' in option) or ('fb' in option):
-                blog.addSocialNetwork((option, config.get(section, option)))
+        if section.find(checkBlog) >= 0:
+            # If checkBlog is empty it will add all of them
 
-        blog.getBlogPosts()
-        blogs.append(blog)
-        
-        lastLink = checkLastLink(blog.getRssFeed())
-        i = blog.getLinkPosition(lastLink)
-        print("Position: ", i)
-        print("Publishing pending posts\n")
+            blogs.append(blog)
 
-        if ("bufferapp" in config.options(section)):
-            blog.setBufferapp(config.get(section, "bufferapp"))
-            api = connectBuffer()
-            lenMax, profileList = checkLimitPosts(api)
+            if ("linksToAvoid" in config.options(section)):
+                blog.setLinksToAvoid(config.get(section, "linksToAvoid"))
+            if ("time" in config.options(section)):
+                blog.setTime(config.get(section, "time"))
+            if ('bufferapp' in config.options(section)): 
+                blog.setBufferapp(config.get(section, "bufferapp"))
+            if ('program' in config.options(section)): 
+                blog.setProgram(config.get(section, "program"))
+
+            socialNetworksOpt = ['twitter', 'facebook', 'telegram', 
+                    'medium', 'linkedin','pocket'] 
+            for option in config.options(section):
+                if (option in socialNetworksOpt):
+                    nick = config.get(section, option)
+                    socialNetwork = (option, nick)
+                    blog.addSocialNetwork(socialNetwork)
+
+            logging.info("Looking for pending posts in ...%s"
+                    % blog.getSocialNetworks())
+            print("    Looking for pending posts ... " )
+
             bufferMax = 10
-            for j in range(bufferMax-lenMax, 0, -1):
-                if (i == 0):
-                    break
-                i = i - 1
+            if blog.getBufferapp():
+                api = moduleSocial.connectBuffer()
+                lenMax, profileList = moduleSocial.checkLimitPosts(api, blog)
+                logging.debug("Lenmax %d"% lenMax)
 
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i))
-                publishBuffer(profileList, title, link, firstLink, isDebug, lenMax)
+                for profile in profileList:
+                    print("        getBuffer %s" % profile['service'])
+                    lenMax, profileList = moduleSocial.checkLimitPosts(api, 
+                            blog, profile['service'])
+                    logging.info("Service %s" 
+                            % profile['service'] + blog.getBufferapp())
+                    if (profile['service'][0] in blog.getBufferapp()): 
+                        lastLink, lastTime = blog.checkLastLink((profile['service'], profile['service_username']))
+                        blog.addLastLinkPublished(profile['service'], 
+                                lastLink, lastTime) 
+                        i = blog.getLinkPosition(lastLink)
+
+                        logging.debug("profile %s"% profile)
+                        logging.info("lastLink %s %d"% (lastLink, i))
+                        if ((profile['service'] == 'twitter') 
+                                or (profile['service'] == 'facebook')):
+                            # We should add a configuration option in order
+                            # to check which services are the ones with
+                            # immediate posting. For now, we know that we are using
+                            # Twitter and Facebook We are checking the links tha
+                            # have been published with other toolsin order to avoid
+                            # duplicates
+
+                            with open(DATADIR + '/.urls.pickle', 'rb') as f:
+                                theList = pickle.load(f)
+                        else:
+                            theList = []
+
+                        num = bufferMax - lenMax
+                        logging.info("bufferMax - lenMax = num %d %d %d"%
+                                (bufferMax, lenMax, num)) 
+
+                        listPosts = []
+                        for j in range(num, 0, -1):
+                            logging.info("j %d - %d"% (j,i))
+                            if (i <= 0):
+                                break
+                            i = i - 1
+                            post = blog.obtainPostData(i, False)
+                            listPosts.append(post)
+                            print("          Scheduling post %s\n" % post[0])
+
+                            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i, False))
+                            moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
+                            logging.debug("listPosts: %s"% listPosts)
+            else:
+                for socialNetwork in blog.getSocialNetworks().keys():
+                    print("        Not buffer %s" % socialNetwork)
+                    logging.info("Social Network %s" % socialNetwork)
+                    lastLink, lastTime = blog.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
+                    blog.addLastLinkPublished(socialNetwork, 
+                            lastLink, lastTime) 
+                    i = blog.getLinkPosition(lastLink) 
+
+                    logging.debug("i, lastLink %d %s"% (i,lastLink))
+                    #print("i, lastLink %d %s"% (i,lastLink))
+                    if (i > 0):
+                        nick = blog.getSocialNetworks()[socialNetwork]
+                        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
+                        hours = blog.getTime() 
+                        if (hours and (((time.time() - lastTime) - int(hours)*60*60) < 0)): 
+                            logging.info("Not publishing because time restriction\n") 
+                        else:
+                            logging.info("Publishing directly\n") 
+                            serviceName = socialNetwork.capitalize()
+                            publishMethod = getattr(moduleSocial, 
+                                    'publish'+ serviceName)
+                            publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
+                            logging.info("Updating Link\n") 
+                            blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
+
+            if blog.getProgram():
+                t = {}
+                lenMax = 6
+                lenMax, profileList = moduleSocial.checkLimitPosts('', blog)
+                logging.debug("Lenmax %d"% lenMax)
+
+                for profile in profileList:
+                    lenMax, profileList = moduleSocial.checkLimitPosts('', 
+                            blog, profile)
+                    if profile[0] in blog.getProgram():
+                        print("        getProgram %s" % profile)
+                        lastLink, lastTime = blog.checkLastLink((profile, blog.getSocialNetworks()[profile]))
+                        blog.addLastLinkPublished(profile, 
+                            lastLink, lastTime)
+                        i = blog.getLinkPosition(lastLink) 
+
+                        logging.info("lastLink %s %s %d"% (profile, lastLink, i))
+                        if ((profile == 'twitter') 
+                                or (profile == 'facebook')):
+                            # We should add a configuration option in order
+                            # to check which services are the ones with
+                            # immediate posting. For now, we know that we
+                            # are using Twitter and Facebook We are
+                            # checking the links tha have been published
+                            # with other toolsin order to avoid duplicates
+
+                            with open(DATADIR + '/.urls.pickle', 'rb') as f:
+                                theList = pickle.load(f)
+                        else:
+                            theList = []
+
+                        num = bufferMax - lenMax
+                        logging.info("bufferMax - lenMax = num %d %d %d"%
+                                (bufferMax, lenMax, num)) 
+                        
+                        listPosts = []
+                        for j in range(num, 0, -1):
+                            logging.info("j %d - %d"% (j,i))
+                            if (i <= 0):
+                                break
+                            i = i - 1
+                            post = blog.obtainPostData(i, False)
+                            listPosts.append(post)
+                            print("          Scheduling post %s\n" % post[0])
+
+                        if listPosts:
+                            link = listPosts[len(listPosts) - 1][1]
+                            logging.debug("link -> %s"% link) 
+                        else: 
+                            link = ''
+
+                        socialNetwork = (profile,blog.getSocialNetworks()[profile])
+                        timeSlots = 60*60 # One hour
+                        t[socialNetwork[0]] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, listPosts, socialNetwork, 1, timeSlots))
+                        t[socialNetwork[0]].start()
+
+                        if link:
+                            logging.info("Updating link %s" % profile)
+                            blog.updateLastLink(link, (profile,blog.getSocialNetworks()[profile]))
+
+            time.sleep(2)
         else:
-            if (i > 0):
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(i - 1))
-                if not isDebug:
-                    if 'twitterac' in blog.getSocialNetworks():
-                        twitter = blog.getSocialNetworks()['twitterac']
-                        publishTwitter(title, link, comment, twitter)
-                    if 'pagefb' in blog.getSocialNetworks():
-                        fbPage = blog.getSocialNetworks()['pagefb']
-                        publishFacebook(title, link, summaryLinks, image, fbPage)
-                    if 'telegramac' in blog.getSocialNetworks():
-                        telegram = blog.getSocialNetworks()['telegramac']
-                        publishTelegram(telegram, title, link, summary, summaryHtml, summaryLinks, image)
+            print("    Skip")
 
-                    publishLinkedin(title, link, summary, image)
-
-                    if (link):
-                        urlFile = open(os.path.expanduser("~/."
-                                       + urllib.parse.urlparse(firstLink).netloc
-                                       + ".last"), "w")
-        
-                        urlFile.write(firstLink)
-                        urlFile.close()
-
+    print("====================================")
+    print("Finished at %s" % time.asctime())
+    print("====================================")
+    logging.info("Finished at %s" % time.asctime())
 
 if __name__ == '__main__':
     main()
+

@@ -76,7 +76,6 @@ def organize():
         moveSent(M)
         end = selectMessagesNew(M)
 
-
 def main():
 
     if (len(sys.argv)>1 and (sys.argv[1] == "-d")):

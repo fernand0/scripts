@@ -113,7 +113,7 @@ def extractActions(p):
                     rules[theKey] = []
                     rules[theKey].append("fileinto")
                     rules[theKey].append(tests)
-                    #print("rules..++",rules)
+                    print("rules..++",rules)
             elif (type(key) == sievelib.commands.RedirectCommand):
                 # print i, ") Redirect ", key['address']
                 tests = r.arguments['test'].arguments['tests']
@@ -169,11 +169,12 @@ def constructActions(rules, more):
 
 
 def constructFilterSet(actions):
+    print(actions)
     fs = FiltersSet("test")
     for action in actions:
         #print("cfS-> act ", action)
         conditions = action[0][2]
-        #print("cfS-> cond", conditions)
+        #print("cfSS-> cond", conditions)
         cond = []
         for condition in conditions:
             #print("cfS condition -> ", condition)
@@ -183,12 +184,13 @@ def constructFilterSet(actions):
             (key1, key2, key3) = list(condition.arguments.keys())
             #print("keys",key1, key2, key3)
             #print("keys",condition.arguments[key1], condition.arguments[key2], condition.arguments[key3])
-            head = head + (condition.arguments['match-type'].strip('"'),
-                           condition.arguments['header-names'].strip('"'),
-                           condition.arguments['key-list'].strip('"'))#.decode('utf-8'))
+            head = head + (condition.arguments['header-names'].strip('"'),
+                    condition.arguments['match-type'].strip('"'),
+                    condition.arguments['key-list'].strip('"'))#.decode('utf-8'))
             # We will need to take care of these .decode's
-            #print(head)
+            #print("head", head)
             cond.append(head)
+            #print("cond", cond)
 
         # print "cond ->", cond
         act = []
@@ -300,6 +302,7 @@ def addToSieve(msg=""):
     script = c.getscript('sieve-script')
     p = Parser()
     p.parse(script)
+    #print("p.result",p.result)
 
     (rules, more) = extractActions(p)
 
@@ -331,10 +334,20 @@ def addToSieve(msg=""):
     fs = constructFilterSet(newActions)
 
     sieveContent = io.StringIO()
+    # We need to add the require in order to use the body section
+    sieveContent.write('require ["body"];\n')
     # fs.tosieve(open(FILE_SIEVE, 'w'))
     # fs.tosieve()
     # sys.exit()
+    print(USER)
     fs.tosieve(sieveContent)
+    with open(os.path.expanduser('~'+USER)+'/sieve/body.sieve') as f:
+        sieveContent.write(f.read())
+#"""#Filter:
+#if anyof (body :raw :contains "puntoclick.info") {
+#    fileinto "Spam";
+#    stop;
+#}""")
 
     #import time
     #time.sleep(5)

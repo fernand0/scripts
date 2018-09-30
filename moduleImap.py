@@ -54,6 +54,8 @@ def stripRe(header):
     Res = ['Fwd', 'Fw', 'Re', 'RV', '(fwd)']
     for h in Res:
         header = header.replace(h+': ', '')
+    if header.startswith('[') and header.endswith(']'):
+        header = header[1:-1]
     return(header)
 
 def headerToString(header):
@@ -473,6 +475,7 @@ def selectMessagesNew(M):
        msgs = ""
        listMsgs = ""
        moreMessages = ""
+       badSel = ""
        while not moreMessages:
             (folder, msg, msgNumber) = selectMessageAndFolder(M)
             if msgNumber == -1:
@@ -481,16 +484,20 @@ def selectMessagesNew(M):
                 if (folder != "."):
                     sbj = msg['Subject']
                     ok = ""
+                    badSel = ""
                     sens = 0
                     while not ok:
                         (msgs, distMsgs) = selectMessageSubject(folder, M, sbj, sens)
                         printMessageHeaders(M, msgs)
-                        isOk = input("Less messages [-] More messages [+] ")
+                        isOk = input("Less messages [-] More messages [+] Wrong message selected [x] ")
                         if isOk == '-':
                            sens = sens + 1
                         elif isOk == '+':
                            moreMessages = ""
                            ok = "ok"
+                        elif isOk == 'x':
+                           ok = "ok"
+                           badSel = "yes"
                         else:
                            ok = "ok"
                 else:
@@ -510,7 +517,7 @@ def selectMessagesNew(M):
                 end = 'x'
                 moreMessages = end
 
-       if listMsgs:
+       if listMsgs and not badSel:
             printMessageHeaders(M, listMsgs)
             if isOk:
                 moreMessages = isOk    
@@ -519,6 +526,9 @@ def selectMessagesNew(M):
             #folder = nameFolder(folder) 
             #print("Selected folder (final): ", folder)
             moveMails(M,listMsgs, folder)
+       elif badSel == "yes": 
+           listMsgs = ""
+
     return(0)
 
 def cleanHtml(html):
