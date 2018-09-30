@@ -251,9 +251,10 @@ def main():
                             serviceName = socialNetwork.capitalize()
                             publishMethod = getattr(moduleSocial, 
                                     'publish'+ serviceName)
-                            publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
+                            result = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
                             logging.info("Updating Link\n") 
-                            blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
+                            if result != "Fail!":
+                                blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
 
             if blog.getProgram():
                 t = {}
