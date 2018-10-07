@@ -224,7 +224,7 @@ def main():
                             i = i - 1
                             post = blog.obtainPostData(i, False)
                             listPosts.append(post)
-                            print("          Scheduling post %s\n" % post[0])
+                            print("          Scheduling post %s" % post[0])
 
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i, False))
                             moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
@@ -299,7 +299,7 @@ def main():
                             i = i - 1
                             post = blog.obtainPostData(i, False)
                             listPosts.append(post)
-                            print("          Scheduling post %s\n" % post[0])
+                            print("          Scheduling post %s" % post[0])
 
                         if listPosts:
                             link = listPosts[len(listPosts) - 1][1]
