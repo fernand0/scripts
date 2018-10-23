@@ -179,10 +179,10 @@ def publishPost(cache, pp, posts, toPublish):
 
 def deletePost(cache, pp, posts, toPublish):
     logging.info("To publish %s" % pp.pformat(toPublish))
+    logging.info(pp.pformat(toPublish))
 
     profMov = toPublish[0]
     j = toPublish[1]
-    logging.info(pp.pformat(toPublish))
 
     update = ""
     logging.info("Cache antes %s" % pp.pformat(cache))
