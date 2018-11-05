@@ -456,7 +456,7 @@ def publishTumblr(channel, title, link, summary, summaryHtml, summaryLinks, imag
                 'title': title, 
                 'thumbnail': image, 
                 'url': link, 
-                'excerpt': summaryHtml, 
+                #'excerpt': summaryHtml, 
                 'publisher': ''}) 
 
     logger.info("Posted!: %s" % post)
