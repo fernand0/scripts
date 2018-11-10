@@ -46,6 +46,7 @@ def API(Blog, pp):
 
 def fileName(blog, socialNetwork):
     #print('blog', blog)
+    #print(socialNetwork)
     theName = os.path.expanduser(DATADIR + '/' 
                     + urllib.parse.urlparse(blog.getUrl()).netloc + '_' 
                     + socialNetwork[0] + '_' + socialNetwork[1])
@@ -179,10 +180,10 @@ def publishPost(cache, pp, posts, toPublish):
 
 def deletePost(cache, pp, posts, toPublish):
     logging.info("To publish %s" % pp.pformat(toPublish))
+    logging.info(pp.pformat(toPublish))
 
     profMov = toPublish[0]
     j = toPublish[1]
-    logging.info(pp.pformat(toPublish))
 
     update = ""
     logging.info("Cache antes %s" % pp.pformat(cache))
