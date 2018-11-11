@@ -50,7 +50,7 @@ def getPostsCache(api):
     listP = []
     for draft in drafts: 
         message = api.users().drafts().get(userId="me", id=draft['id']).execute()
-        listP.append(message)
+        listP.insert(0,message)
 
     return(listP)
 
