@@ -67,7 +67,7 @@ def listPosts(api, pp, service=""):
     for draft in listDrafts: 
         for header in draft['message']['payload']['headers']: 
             if header['name'] == 'Subject': 
-                listP.append((listDrafts[0]['id'], header['value']))
+                listP.append((header['value'], listDrafts[0]['id'], ''))
 
 
     logging.info("-Posts %s"% listP)
