@@ -67,7 +67,7 @@ def listPosts(api, pp, service=""):
     for draft in listDrafts: 
         for header in draft['message']['payload']['headers']: 
             if header['name'] == 'Subject': 
-                listP.append((header['value'], listDrafts[0]['id'], ''))
+                listP.append((header['value'], '', '', '', '', '', '', '', listDrafts[0]['id'], ''))
 
 
     logging.info("-Posts %s"% listP)
@@ -100,31 +100,37 @@ def publishPost(cache, pp, posts, toPublish):
 
     update = ""
     logging.info("Cache antes %s" % pp.pformat(cache))
-    profiles = cache['profiles']
+    profiles = ["Gmail"] #cache['profiles']
+    print(profiles)
     logging.info("Cache profiles antes %s" % pp.pformat(profiles))
+    print("Cache profiles antes %s" % pp.pformat(profiles))
     for profile in profiles: 
+        print(profile)
         logging.info("Social Network %s" % profile)
-        if 'socialNetwork' in profile:
-            serviceName = profile['socialNetwork'][0].capitalize()
-            nick = profile['socialNetwork'][1]
-            if (serviceName[0] in profMov) or toPublish[0]=='*': 
-                logging.info("In %s" % pp.pformat(serviceName))
-                logging.info("Profile %s" % pp.pformat(profile))
-                logging.info("Profile posts %s" % pp.pformat(posts))
-                logging.info("Service name %s" % serviceName)
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[serviceName]['pending'][j])
-                publishMethod = getattr(moduleSocial, 
-                        'publish'+ serviceName)
-                logging.info("Publishing title: %s" % title)
-                logging.info("Social network: %s Nick: %s" % (serviceName, nick))
-                update = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
-                if not isinstance(update, str) or (isinstance(update, str) and update[:4] != "Fail"):
-                    posts[serviceName]['pending'] = posts[serviceName]['pending'][:j] + posts[serviceName]['pending'][j+1:]
-                    logging.info("Updating %s" % pp.pformat(posts))
-                    logging.info("Blog %s" % pp.pformat(cache['blog']))
-                    updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
-                    if 'text' in update:
-                        update = update['text']
+        #if 'socialNetwork' in profile:
+        serviceName = profile[0].capitalize()
+        #nick = profile['socialNetwork'][1]
+        if (serviceName[0] in profMov) or toPublish[0]=='*': 
+            print("In %s" % pp.pformat(serviceName))
+            print("Profile %s" % pp.pformat(profile))
+            print("Profile posts %s" % pp.pformat(posts))
+            print("Service name %s" % serviceName)
+            print(posts[serviceName])
+            print(posts[serviceName]['pending'])
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[serviceName]['pending'][j])
+            print(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
+            publishMethod = getattr(moduleSocial, 
+                    'publish'+ serviceName)
+            logging.info("Publishing title: %s" % title)
+            logging.info("Social network: %s Nick: %s" % (serviceName, nick))
+            update = publishMethod(cache, title, link, summary, summaryHtml, summaryLinks, image, content, links)
+            if not isinstance(update, str) or (isinstance(update, str) and update[:4] != "Fail"):
+                posts[serviceName]['pending'] = posts[serviceName]['pending'][:j] + posts[serviceName]['pending'][j+1:]
+                logging.info("Updating %s" % pp.pformat(posts))
+                logging.info("Blog %s" % pp.pformat(cache['blog']))
+                updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
+                if 'text' in update:
+                    update = update['text']
 
     return(update)
 
@@ -283,6 +289,7 @@ def main():
     print(api)
     postsP, profiles = listPosts(api, pp, '')
     print("-> Posts",postsP)
+    publishPost(api, pp, postsP, ('G',1))
     sys.exit()
 
     publishPost(api, pp, profiles, ('F',1))
