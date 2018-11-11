@@ -58,7 +58,7 @@ def listPosts(api, pp, service=""):
     outputData = {}
     files = []
 
-    serviceName = 'Gmail'
+    serviceName = 'Mail'
 
     outputData[serviceName] = {'sent': [], 'pending': []}
     listDrafts = getPostsCache(api)
@@ -100,7 +100,7 @@ def publishPost(cache, pp, posts, toPublish):
 
     update = ""
     logging.info("Cache antes %s" % pp.pformat(cache))
-    profiles = ["Gmail"] #cache['profiles']
+    profiles = ["Mail"] #cache['profiles']
     print(profiles)
     logging.info("Cache profiles antes %s" % pp.pformat(profiles))
     print("Cache profiles antes %s" % pp.pformat(profiles))
@@ -111,24 +111,27 @@ def publishPost(cache, pp, posts, toPublish):
         serviceName = profile[0].capitalize()
         #nick = profile['socialNetwork'][1]
         if (serviceName[0] in profMov) or toPublish[0]=='*': 
-            print("In %s" % pp.pformat(serviceName))
-            print("Profile %s" % pp.pformat(profile))
-            print("Profile posts %s" % pp.pformat(posts))
-            print("Service name %s" % serviceName)
-            print(posts[serviceName])
-            print(posts[serviceName]['pending'])
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[serviceName]['pending'][j])
+            logging.info("In %s" % pp.pformat(serviceName))
+            logging.info("Profile %s" % pp.pformat(profile))
+            logging.info("Profile posts %s" % pp.pformat(posts))
+            logging.info("Service name %s" % serviceName)
+            numPosts = len(posts[profile]['pending'])
+            # We have reordered the posts for the presentation
+            # Maybe we could improve this
+            j = numPosts - (j + 1)
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[profile]['pending'][j])
             print(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
             publishMethod = getattr(moduleSocial, 
-                    'publish'+ serviceName)
+                    'publish'+ profile)
             logging.info("Publishing title: %s" % title)
-            logging.info("Social network: %s Nick: %s" % (serviceName, nick))
+            logging.info("Social network: %s Nick: (pending)"  % profile)
+            logging.info(cache, title, link, summary, summaryHtml, summaryLinks, image, content , links )
             update = publishMethod(cache, title, link, summary, summaryHtml, summaryLinks, image, content, links)
             if not isinstance(update, str) or (isinstance(update, str) and update[:4] != "Fail"):
-                posts[serviceName]['pending'] = posts[serviceName]['pending'][:j] + posts[serviceName]['pending'][j+1:]
+                posts[profile]['pending'] = posts[profile]['pending'][:j] + posts[profile]['pending'][j+1:]
                 logging.info("Updating %s" % pp.pformat(posts))
                 logging.info("Blog %s" % pp.pformat(cache['blog']))
-                updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
+                #updatePostsCache(cache['blog'], posts[profile]['pending'], profile['socialNetwork'])
                 if 'text' in update:
                     update = update['text']
 
