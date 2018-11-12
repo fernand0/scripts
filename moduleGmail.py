@@ -48,9 +48,9 @@ def getPostsCache(api):
     drafts = drafts['drafts']
 
     listP = []
-    for draft in drafts: 
+    for draft in reversed(drafts): 
         message = api.users().drafts().get(userId="me", id=draft['id']).execute()
-        listP.insert(0,message)
+        listP.append(message)
 
     return(listP)
 
@@ -116,9 +116,6 @@ def publishPost(cache, pp, posts, toPublish):
             logging.info("Profile posts %s" % pp.pformat(posts))
             logging.info("Service name %s" % serviceName)
             numPosts = len(posts[profile]['pending'])
-            # We have reordered the posts for the presentation
-            # Maybe we could improve this
-            j = numPosts - (j + 1)
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[profile]['pending'][j])
             print(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
             publishMethod = getattr(moduleSocial, 
@@ -130,7 +127,7 @@ def publishPost(cache, pp, posts, toPublish):
             if not isinstance(update, str) or (isinstance(update, str) and update[:4] != "Fail"):
                 posts[profile]['pending'] = posts[profile]['pending'][:j] + posts[profile]['pending'][j+1:]
                 logging.info("Updating %s" % pp.pformat(posts))
-                logging.info("Blog %s" % pp.pformat(cache['blog']))
+                #logging.info("Blog %s" % pp.pformat(cache['blog']))
                 #updatePostsCache(cache['blog'], posts[profile]['pending'], profile['socialNetwork'])
                 if 'text' in update:
                     update = update['text']
