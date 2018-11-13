@@ -67,7 +67,7 @@ def listPosts(api, pp, service=""):
     for draft in listDrafts: 
         for header in draft['message']['payload']['headers']: 
             if header['name'] == 'Subject': 
-                listP.append((header['value'], '', '', '', '', '', '', '', listDrafts[0]['id'], ''))
+                listP.append((header['value'], '', '', '', '', '', '', '', draft['id'], ''))
 
 
     logging.info("-Posts %s"% listP)
@@ -97,6 +97,7 @@ def publishPost(cache, pp, posts, toPublish):
 
     profMov = toPublish[0]
     j = toPublish[1]
+    logging.info("Profile %s position %d" % (profMov, j))
 
     update = ""
     logging.info("Cache antes %s" % pp.pformat(cache))
@@ -117,7 +118,7 @@ def publishPost(cache, pp, posts, toPublish):
             logging.info("Service name %s" % serviceName)
             numPosts = len(posts[profile]['pending'])
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[profile]['pending'][j])
-            print(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
+            logging.info(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
             publishMethod = getattr(moduleSocial, 
                     'publish'+ profile)
             logging.info("Publishing title: %s" % title)
@@ -129,8 +130,9 @@ def publishPost(cache, pp, posts, toPublish):
                 logging.info("Updating %s" % pp.pformat(posts))
                 #logging.info("Blog %s" % pp.pformat(cache['blog']))
                 #updatePostsCache(cache['blog'], posts[profile]['pending'], profile['socialNetwork'])
-                if 'text' in update:
-                    update = update['text']
+                if update:
+                    if 'text' in update: 
+                        update = update['text']
 
     return(update)
 
