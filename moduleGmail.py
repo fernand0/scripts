@@ -24,7 +24,7 @@ from oauth2client import file, client, tools
 
 from configMod import *
 
-def API(pp):
+def API(Acc, pp):
     # based on get_credentials from 
     # Code from
     # https://developers.google.com/gmail/api/v1/reference/users/messages/list
@@ -33,10 +33,14 @@ def API(pp):
 
     SCOPES = 'https://www.googleapis.com/auth/gmail.modify'
     api = {}
-    #conf = configparser.ConfigParser() 
+    config = configparser.ConfigParser() 
+    config.read(CONFIGDIR + '/.oauthG.cfg')
     #logging.info("Config...%s" % CONFIGDIR)
-    credential_dir = CONFIGDIR
-    store = file.Storage(credential_dir+'/token.json')
+    #credential_dir = CONFIGDIR
+    fileStore = confName(api, (config.get(Acc,'server'), config.get(Acc,'user'))) 
+
+    print(fileStore)
+    store = file.Storage(fileStore)
     credentials = store.get()
 
     service = build('gmail', 'v1', http=credentials.authorize(Http()))
@@ -58,7 +62,7 @@ def listPosts(api, pp, service=""):
     outputData = {}
     files = []
 
-    serviceName = 'Mail'
+    serviceName = 'Mail'+service
 
     outputData[serviceName] = {'sent': [], 'pending': []}
     listDrafts = getPostsCache(api)
@@ -79,6 +83,13 @@ def listPosts(api, pp, service=""):
     #logging.info("Service posts profiles %s" % profiles)
     profiles = None
     return(outputData, profiles)
+
+def confName(api, acc):
+    theName = os.path.expanduser(CONFIGDIR + '/' 
+                    + '.' + acc[0]+ '_' 
+                    + acc[1]+ '.json')
+    return(theName)
+
 
 # Pending work \/ \/ \/ \/
 
@@ -101,17 +112,30 @@ def publishPost(cache, pp, posts, toPublish):
 
     update = ""
     logging.info("Cache antes %s" % pp.pformat(cache))
-    profiles = ["Mail"] #cache['profiles']
+    profiles = posts #cache['profiles']
     print(profiles)
     logging.info("Cache profiles antes %s" % pp.pformat(profiles))
     print("Cache profiles antes %s" % pp.pformat(profiles))
     for profile in profiles: 
-        print(profile)
         logging.info("Social Network %s" % profile)
         #if 'socialNetwork' in profile:
         serviceName = profile[0].capitalize()
         #nick = profile['socialNetwork'][1]
         if (serviceName[0] in profMov) or toPublish[0]=='*': 
+            if (len(toPublish) == 3):
+                logging.info("Which one?") 
+                acc = toPublish[2]
+                if acc != profile[-1]: 
+                    logging.info("Not this one %s" % profile)
+                    continue
+                else:
+                    # We are in the adequate account, we can drop de qualifier
+                    # for the publishing method
+                    method = profile[:-1]
+                    cache = cache[int(profile[-1])]
+            else:
+                method = profile
+
             logging.info("In %s" % pp.pformat(serviceName))
             logging.info("Profile %s" % pp.pformat(profile))
             logging.info("Profile posts %s" % pp.pformat(posts))
@@ -120,7 +144,7 @@ def publishPost(cache, pp, posts, toPublish):
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[profile]['pending'][j])
             logging.info(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
             publishMethod = getattr(moduleSocial, 
-                    'publish'+ profile)
+                    'publish'+ method)
             logging.info("Publishing title: %s" % title)
             logging.info("Social network: %s Nick: (pending)"  % profile)
             logging.info(cache, title, link, summary, summaryHtml, summaryLinks, image, content , links )
@@ -281,7 +305,7 @@ def main():
     pp = pprint.PrettyPrinter(indent=4)
 
     # instantiate the api object 
-    api = API(pp)
+    api = API('ACC2',pp)
 
     logging.basicConfig(#filename='example.log',
                             level=logging.DEBUG,format='%(asctime)s %(message)s')
@@ -291,7 +315,7 @@ def main():
     print(api)
     postsP, profiles = listPosts(api, pp, '')
     print("-> Posts",postsP)
-    publishPost(api, pp, postsP, ('G',1))
+    #publishPost(api, pp, postsP, ('G',1))
     sys.exit()
 
     publishPost(api, pp, profiles, ('F',1))
