@@ -52,6 +52,8 @@ def getPostsCache(api):
     if drafts:
         if 'drafts' in drafts:
             drafts = drafts['drafts']
+        else:
+            drafts = []
 
     listP = []
     for draft in reversed(drafts): 
