@@ -49,7 +49,8 @@ def API(Acc, pp):
 
 def getPostsCache(api):        
     drafts = api.users().drafts().list(userId='me').execute()
-    drafts = drafts['drafts']
+    if drafts:
+        drafts = drafts['drafts']
 
     listP = []
     for draft in reversed(drafts): 
