@@ -49,6 +49,7 @@ def API(Acc, pp):
 
 def getPostsCache(api):        
     drafts = api.users().drafts().list(userId='me').execute()
+    print("drafts", drafts)
     if drafts:
         if 'drafts' in drafts:
             drafts = drafts['drafts']
@@ -110,7 +111,7 @@ def publishPost(cache, pp, posts, toPublish):
     logging.info("Cache profiles antes %s" % pp.pformat(profiles))
     for profile in profiles: 
         logging.info("Social Network %s" % profile)
-        if 'Mail' in profile:
+        if 'gmail' in cache._baseUrl:
             serviceName = profile[0].capitalize()
             #nick = profile['socialNetwork'][1]
             if (serviceName[0] in profMov) or toPublish[0]=='*': 
@@ -297,7 +298,7 @@ def main():
     pp = pprint.PrettyPrinter(indent=4)
 
     # instantiate the api object 
-    api = API('ACC2',pp)
+    api = API('ACC4',pp)
 
     logging.basicConfig(#filename='example.log',
                             level=logging.DEBUG,format='%(asctime)s %(message)s')
