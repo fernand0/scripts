@@ -305,7 +305,7 @@ def main():
 
 
     print("profiles")
-    print(api)
+    print(api.users().getProfile(userId='me').execute())
     postsP, profiles = listPosts(api, pp, '')
     print("-> Posts",postsP)
     #publishPost(api, pp, postsP, ('G',1))
