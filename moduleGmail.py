@@ -33,13 +33,13 @@ def API(Acc, pp):
 
     SCOPES = 'https://www.googleapis.com/auth/gmail.modify'
     api = {}
+
     config = configparser.ConfigParser() 
     config.read(CONFIGDIR + '/.oauthG.cfg')
-    #logging.info("Config...%s" % CONFIGDIR)
-    #credential_dir = CONFIGDIR
-    fileStore = confName(api, (config.get(Acc,'server'), config.get(Acc,'user'))) 
+    
+    fileStore = confName(api, 
+            (config.get(Acc,'server'), config.get(Acc,'user'))) 
 
-    print(fileStore)
     store = file.Storage(fileStore)
     credentials = store.get()
 
@@ -94,18 +94,8 @@ def confName(api, acc):
                     + acc[1]+ '.json')
     return(theName)
 
-
-# Pending work \/ \/ \/ \/
-
 def updatePostsCache(blog, listPosts, socialNetwork=()):
-    fileNameQ = fileName(blog,socialNetwork) + ".queue" 
-
-    logging.info("Updating Posts Cache: %s" % fileNameQ)
-    print("Updating Posts Cache: %s" % fileNameQ)
-
-    with open(fileNameQ, 'wb') as f:
-         pickle.dump(listPosts,f)
-    return(fileNameQ)
+    pass
 
 def publishPost(cache, pp, posts, toPublish):
     logging.info("To publish %s" % pp.pformat(toPublish))
@@ -117,9 +107,7 @@ def publishPost(cache, pp, posts, toPublish):
     update = ""
     logging.info("Cache antes %s" % pp.pformat(cache))
     profiles = posts #cache['profiles']
-    print(profiles)
     logging.info("Cache profiles antes %s" % pp.pformat(profiles))
-    print("Cache profiles antes %s" % pp.pformat(profiles))
     for profile in profiles: 
         logging.info("Social Network %s" % profile)
         #if 'socialNetwork' in profile:
