@@ -162,29 +162,35 @@ def deletePost(cache, pp, posts, toPublish):
 
     update = ""
     logging.info("Cache antes %s" % pp.pformat(cache))
-    profiles = posts # cache['profiles']
+    profiles = cache
     logging.info("Cache profiles antes %s" % pp.pformat(profiles))
+    accC = 0
     for profile in profiles: 
-        if 'gmail' in cache._baseUrl:
-        #if 'socialNetwork' in profile:
-            serviceName = profile[0].capitalize()
+        if 'gmail' in profile._baseUrl:
+            print(profile)
+            print(profile._baseUrl)
+            print(profile.users().getProfile(userId='me').execute())
+            serviceName = 'Mail'
             if (serviceName[0] in profMov) or toPublish[0]=='*':
                 if (len(toPublish) == 3):
                     logging.info("Which one?") 
                     acc = toPublish[2]
-                    if acc != profile[-1]: 
+                    if int(acc) != accC: 
                         logging.info("Not this one %s" % profile)
                         continue
                     else:
                         # We are in the adequate account, we can drop de qualifier
                         # for the publishing method
                         #method = profile[:-1]
-                        cache = cache[int(profile[-1])]
+                        posts = posts[serviceName+str(accC)]
+                else:
+                        posts = posts[serviceName]
 
-                idPost = posts[profile]['pending'][j]
+                print(posts)
+                idPost = posts['pending'][j]
                 print(idPost)
                 idPost = idPost[8]
-                update = cache.users().drafts().delete(userId='me', id=idPost).execute()
+                update = profile.users().drafts().delete(userId='me', id=idPost).execute()
     return(update)
 
 #######################################################
@@ -309,18 +315,18 @@ def main():
     pp = pprint.PrettyPrinter(indent=4)
 
     # instantiate the api object 
-    api = API('ACC2',pp)
+    api = [API('ACC4',pp)]
 
     logging.basicConfig(#filename='example.log',
                             level=logging.DEBUG,format='%(asctime)s %(message)s')
 
 
     print("profiles")
-    print(api.users().getProfile(userId='me').execute())
-    postsP, profiles = listPosts(api, pp, '')
+    print(api[0].users().getProfile(userId='me').execute())
+    postsP, profiles = listPosts(api[0], pp, '')
     print("-> Posts",postsP)
     #publishPost(api, pp, postsP, ('G',1))
-    deletePost(api, pp, postsP, ('M0',1))
+    deletePost(api, pp, postsP, ('M0',0))
     sys.exit()
 
     publishPost(api, pp, profiles, ('F',1))
