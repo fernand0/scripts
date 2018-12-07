@@ -109,9 +109,9 @@ def publishPost(cache, pp, posts, toPublish):
     logging.info("Cache antes %s" % pp.pformat(cache))
     profiles = posts #cache['profiles']
     logging.info("Cache profiles antes %s" % pp.pformat(profiles))
-    for profile in cache: 
+    for profile in profiles: 
         logging.info("Social Network %s" % profile)
-        if 'gmail' in profile._baseUrl:
+        if 'gmail' in cache._baseUrl:
             serviceName = profile[0].capitalize()
             #nick = profile['socialNetwork'][1]
             if (serviceName[0] in profMov) or toPublish[0]=='*': 
