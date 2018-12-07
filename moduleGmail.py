@@ -298,7 +298,7 @@ def main():
     pp = pprint.PrettyPrinter(indent=4)
 
     # instantiate the api object 
-    api = API('ACC4',pp)
+    api = API('ACC2',pp)
 
     logging.basicConfig(#filename='example.log',
                             level=logging.DEBUG,format='%(asctime)s %(message)s')
