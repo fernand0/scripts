@@ -177,6 +177,7 @@ def deletePost(cache, pp, posts, toPublish):
                     acc = toPublish[2]
                     if int(acc) != accC: 
                         logging.info("Not this one %s" % profile)
+                        accC = accC + 1
                         continue
                     else:
                         # We are in the adequate account, we can drop de qualifier
@@ -191,6 +192,7 @@ def deletePost(cache, pp, posts, toPublish):
                 print(idPost)
                 idPost = idPost[8]
                 update = profile.users().drafts().delete(userId='me', id=idPost).execute()
+                accC = accC + 1
     return(update)
 
 #######################################################
