@@ -138,11 +138,11 @@ def publishPost(cache, pp, posts, toPublish):
                 (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts['pending'][j])
                 logging.info(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
                 publishMethod = getattr(moduleSocial, 
-                        'publish'+ method)
+                        'publish'+ serviceName)
                 logging.info("Publishing title: %s" % title)
                 logging.info("Social network: %s Nick: (pending)"  % profile)
                 logging.info(cache, title, link, summary, summaryHtml, summaryLinks, image, content , links )
-                update = publishMethod(cache, title, link, summary, summaryHtml, summaryLinks, image, content, links)
+                update = publishMethod(profile, title, link, summary, summaryHtml, summaryLinks, image, content, links)
                 if update:
                         if 'text' in update: 
                             update = update['text']
