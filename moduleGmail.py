@@ -107,34 +107,35 @@ def publishPost(cache, pp, posts, toPublish):
 
     update = ""
     logging.info("Cache antes %s" % pp.pformat(cache))
-    profiles = posts #cache['profiles']
+    profiles = cache #['profiles']
     logging.info("Cache profiles antes %s" % pp.pformat(profiles))
+    accC = 0
     for profile in profiles: 
         logging.info("Social Network %s" % profile)
-        if 'gmail' in cache._baseUrl:
-            serviceName = profile[0].capitalize()
+        if 'gmail' in profile._baseUrl:
+            serviceName = 'Mail'
             #nick = profile['socialNetwork'][1]
             if (serviceName[0] in profMov) or toPublish[0]=='*': 
                 if (len(toPublish) == 3):
                     logging.info("Which one?") 
                     acc = toPublish[2]
-                    if acc != profile[-1]: 
+                    if int(acc) != accC: 
                         logging.info("Not this one %s" % profile)
+                        accC = accC + 1
                         continue
                     else:
                         # We are in the adequate account, we can drop de qualifier
                         # for the publishing method
-                        method = profile[:-1]
-                        cache = cache[int(profile[-1])]
+                        posts = posts[serviceName+str(accC)]
                 else:
-                    method = profile
+                    posts = posts[serviceName+str(accC)]
 
                 logging.info("In %s" % pp.pformat(serviceName))
                 logging.info("Profile %s" % pp.pformat(profile))
                 logging.info("Profile posts %s" % pp.pformat(posts))
                 logging.info("Service name %s" % serviceName)
-                numPosts = len(posts[profile]['pending'])
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[profile]['pending'][j])
+                numPosts = len(posts['pending'])
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts['pending'][j])
                 logging.info(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
                 publishMethod = getattr(moduleSocial, 
                         'publish'+ method)
@@ -142,12 +143,7 @@ def publishPost(cache, pp, posts, toPublish):
                 logging.info("Social network: %s Nick: (pending)"  % profile)
                 logging.info(cache, title, link, summary, summaryHtml, summaryLinks, image, content , links )
                 update = publishMethod(cache, title, link, summary, summaryHtml, summaryLinks, image, content, links)
-                if not isinstance(update, str) or (isinstance(update, str) and update[:4] != "Fail"):
-                    posts[profile]['pending'] = posts[profile]['pending'][:j] + posts[profile]['pending'][j+1:]
-                    logging.info("Updating %s" % pp.pformat(posts))
-                    #logging.info("Blog %s" % pp.pformat(cache['blog']))
-                    #updatePostsCache(cache['blog'], posts[profile]['pending'], profile['socialNetwork'])
-                    if update:
+                if update:
                         if 'text' in update: 
                             update = update['text']
 
@@ -166,10 +162,11 @@ def deletePost(cache, pp, posts, toPublish):
     logging.info("Cache profiles antes %s" % pp.pformat(profiles))
     accC = 0
     for profile in profiles: 
+        logging.info("Social Network %s" % profile)
         if 'gmail' in profile._baseUrl:
-            print(profile)
-            print(profile._baseUrl)
-            print(profile.users().getProfile(userId='me').execute())
+            #print(profile)
+            #print(profile._baseUrl)
+            #print(profile.users().getProfile(userId='me').execute())
             serviceName = 'Mail'
             if (serviceName[0] in profMov) or toPublish[0]=='*':
                 if (len(toPublish) == 3):
@@ -185,7 +182,7 @@ def deletePost(cache, pp, posts, toPublish):
                         #method = profile[:-1]
                         posts = posts[serviceName+str(accC)]
                 else:
-                        posts = posts[serviceName]
+                    posts = posts[serviceName]
 
                 print(posts)
                 idPost = posts['pending'][j]
