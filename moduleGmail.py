@@ -153,11 +153,6 @@ def publishPost(cache, pp, posts, toPublish):
 
     return(update)
 
-
-#######################################################
-# These need work
-#######################################################
-
 def deletePost(cache, pp, posts, toPublish):
     logging.info("To publish %s" % pp.pformat(toPublish))
     logging.info(pp.pformat(toPublish))
@@ -167,19 +162,35 @@ def deletePost(cache, pp, posts, toPublish):
 
     update = ""
     logging.info("Cache antes %s" % pp.pformat(cache))
-    profiles = cache['profiles']
+    profiles = posts # cache['profiles']
     logging.info("Cache profiles antes %s" % pp.pformat(profiles))
     for profile in profiles: 
-        if 'socialNetwork' in profile:
-            serviceName = profile['socialNetwork'][0].capitalize()
-            if (serviceName[0] in profMov) or toPublish[0]=='*': 
-                logging.info("In %s" % pp.pformat(serviceName))
-                logging.info("Profile %s" % pp.pformat(profile))
-                logging.info("Profile posts %s" % pp.pformat(posts))
-                posts[serviceName]['pending'] = posts[serviceName]['pending'][:j] +  posts[serviceName]['pending'][j+1:]
-                logging.info("Profile posts after %s" % pp.pformat(posts))
-                updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
+        if 'gmail' in cache._baseUrl:
+        #if 'socialNetwork' in profile:
+            serviceName = profile[0].capitalize()
+            if (serviceName[0] in profMov) or toPublish[0]=='*':
+                if (len(toPublish) == 3):
+                    logging.info("Which one?") 
+                    acc = toPublish[2]
+                    if acc != profile[-1]: 
+                        logging.info("Not this one %s" % profile)
+                        continue
+                    else:
+                        # We are in the adequate account, we can drop de qualifier
+                        # for the publishing method
+                        #method = profile[:-1]
+                        cache = cache[int(profile[-1])]
+
+                idPost = posts[profile]['pending'][j]
+                print(idPost)
+                idPost = idPost[8]
+                update = cache.users().drafts().delete(userId='me', id=idPost).execute()
     return(update)
+
+#######################################################
+# These need work
+#######################################################
+
 
 def copyPost(api, log, pp, profiles, toCopy, toWhere):
     logging.info(pp.pformat(toCopy+' '+toWhere))
@@ -305,10 +316,11 @@ def main():
 
 
     print("profiles")
-    print(api)
+    print(api.users().getProfile(userId='me').execute())
     postsP, profiles = listPosts(api, pp, '')
     print("-> Posts",postsP)
     #publishPost(api, pp, postsP, ('G',1))
+    deletePost(api, pp, postsP, ('M0',1))
     sys.exit()
 
     publishPost(api, pp, profiles, ('F',1))
