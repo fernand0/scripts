@@ -147,6 +147,7 @@ def showPost(cache, pp, posts, toPublish):
     logging.info("Cache antes %s" % pp.pformat(cache))
     profiles = cache['profiles']
     logging.info("Cache profiles antes %s" % pp.pformat(profiles))
+    title = None
     for profile in profiles: 
         logging.info("Social Network %s" % profile)
         if 'socialNetwork' in profile:
@@ -156,7 +157,10 @@ def showPost(cache, pp, posts, toPublish):
                 (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[serviceName]['pending'][j])
                 
 
-    return(title+link)
+    if title:
+        return(title+link)
+    else:
+        return(None)
 
 def publishPost(cache, pp, posts, toPublish):
     logging.info("To publish %s" % pp.pformat(toPublish))
