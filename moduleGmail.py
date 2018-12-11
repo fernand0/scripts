@@ -50,6 +50,16 @@ def API(Acc, pp):
 
     return(service)
 
+def lookForLabel(api, name):
+    results = api.users().labels().list(userId='me').execute() 
+    for label in results['labels']: 
+        if label['name'] == name: 
+            labelId = label['id'] 
+            break
+
+    return(labelId)
+
+
 def getPostsCache(api):        
     drafts = api.users().drafts().list(userId='me').execute()
     print("drafts", drafts)

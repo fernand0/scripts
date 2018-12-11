@@ -879,12 +879,7 @@ def moveMailsRemote(M, msgs, folder):
     else:
         pp = pprint.PrettyPrinter(indent=4)
         service = moduleGmail.API(acc,pp)    
-        # This lookForLabel in moduleGmail
-        results = service.users().labels().list(userId='me').execute() 
-        for label in results['labels']: 
-            if label['name'] == 'imported': 
-                labelId = label['id'] 
-                break
+        labelId = moduleGmail.lookForLabel(service, 'imported')
 
         i = 0
         for msgId in range(20): #msgs.split(','): #[:25]:
