@@ -820,38 +820,110 @@ def moveSent(M):
         moveMails(M,  msgs, 'INBOX')
 
 def moveMailsRemote(M, msgs, folder):
-    pos = folder.rfind('@')
     # We start at the end because we can have accounts where the user includes
     # an @ (there can be two): user@host@mailhost
 
+    pos = folder.rfind('@')
+
     SERVERD = folder[pos+1:]
     USERD   = folder[:pos]
-    PASSWORDD = getPassword(SERVERD, USERD)
+    config = configparser.ConfigParser()
+    config.read(os.expandpath('~/'+CONFIGDIR+'.mySocial/config/.oauthG.cfg'))
+    method = 'imap'
+    for sect in config.sections():
+        if SERVERD in config[i].get('server'): 
+            if USERD in config[i].get('user'):
+                method = 'oauth'
+                acc = sect
+                break
+    if method == 'imap':
+        PASSWORDD = getPassword(SERVERD, USERD)
 
-    MD = makeConnection(SERVERD, USERD, PASSWORDD)
-    MD.select('INBOX')
+        MD = makeConnection(SERVERD, USERD, PASSWORDD)
+        MD.select('INBOX')
     
-    i = 0
-    for msgId in msgs.split(','): #[:25]:
-        #print('.', end='')
-        typ, data = M.fetch(msgId, '(RFC822)')
-        M.store(msgId, "-FLAGS", "\\Seen")
+        i = 0
+        for msgId in msgs.split(','): #[:25]:
+            #print('.', end='')
+            typ, data = M.fetch(msgId, '(RFC822)')
+            M.store(msgId, "-FLAGS", "\\Seen")
+            
+            if (typ == 'OK'): 
+                message = data[0][1]
         
-        if (typ == 'OK'): 
-            message = data[0][1]
-    
-            flags = '' 
-    
-            msg = email.message_from_bytes(message);
-            msgDate = email.utils.parsedate(msg['Date'])
+                flags = '' 
+        
+                msg = email.message_from_bytes(message);
+                msgDate = email.utils.parsedate(msg['Date'])
+                
+                res = MD.append('INBOX',flags, msgDate, message)
+                
+                if res[0] == 'OK':
+                    M.store(msgId, "+FLAGS", "\\Seen")
+            i = i + 1
+        MD.close()
+        MD.logout()
+    else:
+        service = moduleGmail.API(acc,pp)    
+        # This lookForLabel in moduleGmail
+        results = service.users().labels().list(userId='me').execute() 
+        for label in results['labels']: 
+            if label['name'] == 'imported': 
+                labelId = label['id'] 
+                break
+
+        i = 0
+        for msgId in msgs.split(','): #[:25]:
+            #print('.', end='')
+            typ, data = M.fetch(msgId, '(RFC822)')
+            M.store(msgId, "-FLAGS", "\\Seen")
             
-            res = MD.append('INBOX',flags, msgDate, message)
-            
-            if res[0] == 'OK':
-                M.store(msgId, "+FLAGS", "\\Seen")
-        i = i + 1
-    MD.close()
-    MD.logout()
+            if (typ == 'OK'): 
+                # This moveMail in moduleGmail
+                message = data[0][1]
+                mesGE = base64.urlsafe_b64encode(message).decode()
+                mesT = email.message_from_bytes(message)
+                subj = email.header.decode_header(mesT['subject'])[0][0]
+                logging.info("Subject %s",subj)
+
+                try:
+                    messageR = service.users().messages().import_(
+                              userId='me',
+                              fields='id',
+                              neverMarkSpam=True,
+                              processForCalendar=False,
+                              internalDateSource='dateHeader',
+                              body={'raw': mesGE}).execute(num_retries=5)
+                   #           media_body=media).execute(num_retries=1)
+                except: 
+                    # When the message is too big
+                    # https://github.com/google/import-mailbox-to-gmail/blob/master/import-mailbox-to-gmail.py
+
+                    print("Fail 2")
+                    try:
+                        mesGS = BytesParser().parsebytes(mesG).as_string()
+                        media =  MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
+                        messageR = service.users().messages().import_(
+                                  userId='me',
+                                  fields='id',
+                                  neverMarkSpam=True,
+                                  processForCalendar=False,
+                                  internalDateSource='dateHeader',
+                                  body={},
+                                  media_body=media).execute(num_retries=3)
+                    except: 
+                        print(mesGS) 
+                        sys.exit()
+                msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
+
+                messageR = service.users().messages().modify(userId='me', id=message['id'],
+                                                        body=msg_labels).execute()
+
+                time.sleep(1)
+
+
+
+
     # We are returning a different code from 'OK' because we do not want to
     # delte these messages.
     if (i == len(msgs.split(','))):
