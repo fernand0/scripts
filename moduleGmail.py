@@ -213,9 +213,6 @@ def deletePost(cache, pp, posts, toPublish):
     for profile in profiles: 
         logging.info("Social Network %s" % profile)
         if 'gmail' in profile._baseUrl:
-            #print(profile)
-            #print(profile._baseUrl)
-            #print(profile.users().getProfile(userId='me').execute())
             serviceName = 'Mail'
             if (serviceName[0] in profMov) or toPublish[0]=='*':
                 if (len(toPublish) == 3):
