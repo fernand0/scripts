@@ -39,6 +39,7 @@ def API(Acc, pp):
     
     fileStore = confName(api, 
             (config.get(Acc,'server'), config.get(Acc,'user'))) 
+    print("fileStore", fileStore)
 
     store = file.Storage(fileStore)
     credentials = store.get()
