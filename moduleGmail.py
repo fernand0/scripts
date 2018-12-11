@@ -40,8 +40,10 @@ def API(Acc, pp):
     fileStore = confName(api, 
             (config.get(Acc,'server'), config.get(Acc,'user'))) 
 
+    logging.debug("Filestore %s"% fileStore)
     store = file.Storage(fileStore)
     credentials = store.get()
+    
 
     service = build('gmail', 'v1', http=credentials.authorize(Http()))
 
@@ -79,7 +81,7 @@ def listPosts(api, pp, service=""):
                 listP.append((header['value'], '', '', '', '', '', '', '', draft['id'], ''))
 
 
-    logging.info("-Posts %s"% listP)
+    logging.debug("-Posts %s"% listP)
 
     if len(listP) > 0: 
         for element in listP: 
@@ -106,9 +108,9 @@ def publishPost(cache, pp, posts, toPublish):
     logging.info("Profile %s position %d" % (profMov, j))
 
     update = ""
-    logging.info("Cache antes %s" % pp.pformat(cache))
+    logging.debug("Cache antes %s" % pp.pformat(cache))
     profiles = cache #['profiles']
-    logging.info("Cache profiles antes %s" % pp.pformat(profiles))
+    logging.debug("Cache profiles antes %s" % pp.pformat(profiles))
     accC = 0
     for profile in profiles: 
         logging.info("Social Network %s" % profile)
@@ -130,10 +132,10 @@ def publishPost(cache, pp, posts, toPublish):
                 else:
                     posts = posts[serviceName+str(accC)]
 
-                logging.info("In %s" % pp.pformat(serviceName))
-                logging.info("Profile %s" % pp.pformat(profile))
-                logging.info("Profile posts %s" % pp.pformat(posts))
-                logging.info("Service name %s" % serviceName)
+                logging.debug("In %s" % pp.pformat(serviceName))
+                logging.debug("Profile %s" % pp.pformat(profile))
+                logging.debug("Profile posts %s" % pp.pformat(posts))
+                logging.debug("Service name %s" % serviceName)
                 numPosts = len(posts['pending'])
                 (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts['pending'][j])
                 logging.info(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
@@ -157,9 +159,9 @@ def deletePost(cache, pp, posts, toPublish):
     j = toPublish[1]
 
     update = ""
-    logging.info("Cache antes %s" % pp.pformat(cache))
+    logging.debug("Cache antes %s" % pp.pformat(cache))
     profiles = cache
-    logging.info("Cache profiles antes %s" % pp.pformat(profiles))
+    logging.debug("Cache profiles antes %s" % pp.pformat(profiles))
     accC = 0
     for profile in profiles: 
         logging.info("Social Network %s" % profile)
