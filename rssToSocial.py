@@ -282,8 +282,11 @@ def main():
                             # checking the links tha have been published
                             # with other toolsin order to avoid duplicates
 
-                            with open(DATADIR + '/.urls.pickle', 'rb') as f:
-                                theList = pickle.load(f)
+                            try:
+                                with open(DATADIR + '/.urls.pickle', 'rb') as f:
+                                    theList = pickle.load(f)
+                            except:
+                                theList = []
                         else:
                             theList = []
 

@@ -33,11 +33,11 @@ def API(Blog, pp):
     conf = configparser.ConfigParser() 
     logging.info("Config...%s" % CONFIGDIR)
     conf.read(CONFIGDIR + '/.rssBlogs') 
+    url = conf.get(Blog, "url")
 
     logging.info("Config...%s" % conf.sections())
-    blog = moduleBlog.moduleBlog() 
 
-    url = conf.get(Blog, "url")
+    blog = moduleBlog.moduleBlog() 
     blog.setUrl(url)
 
     api['blog'] = blog
@@ -137,6 +137,31 @@ def updatePostsCache(blog, listPosts, socialNetwork=()):
          pickle.dump(listPosts,f)
     return(fileNameQ)
 
+def showPost(cache, pp, posts, toPublish):
+    logging.info("To publish %s" % pp.pformat(toPublish))
+
+    profMov = toPublish[0]
+    j = toPublish[1]
+
+    update = ""
+    logging.info("Cache antes %s" % pp.pformat(cache))
+    profiles = cache['profiles']
+    logging.info("Cache profiles antes %s" % pp.pformat(profiles))
+    title = None
+    for profile in profiles: 
+        logging.info("Social Network %s" % profile)
+        if 'socialNetwork' in profile:
+            serviceName = profile['socialNetwork'][0].capitalize()
+            nick = profile['socialNetwork'][1]
+            if (serviceName[0] in profMov) or toPublish[0]=='*': 
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[serviceName]['pending'][j])
+                
+
+    if title:
+        return(title+link)
+    else:
+        return(None)
+
 def publishPost(cache, pp, posts, toPublish):
     logging.info("To publish %s" % pp.pformat(toPublish))
 
@@ -153,10 +178,10 @@ def publishPost(cache, pp, posts, toPublish):
             serviceName = profile['socialNetwork'][0].capitalize()
             nick = profile['socialNetwork'][1]
             if (serviceName[0] in profMov) or toPublish[0]=='*': 
-                logging.info("In %s" % pp.pformat(serviceName))
-                logging.info("Profile %s" % pp.pformat(profile))
-                logging.info("Profile posts %s" % pp.pformat(posts))
-                logging.info("Service name %s" % serviceName)
+                logging.debug("In %s" % pp.pformat(serviceName))
+                logging.debug("Profile %s" % pp.pformat(profile))
+                logging.debug("Profile posts %s" % pp.pformat(posts))
+                logging.debug("Service name %s" % serviceName)
                 (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[serviceName]['pending'][j])
                 publishMethod = getattr(moduleSocial, 
                         'publish'+ serviceName)

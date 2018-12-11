@@ -24,7 +24,7 @@ from oauth2client import file, client, tools
 
 from configMod import *
 
-def API(pp):
+def API(Acc, pp):
     # based on get_credentials from 
     # Code from
     # https://developers.google.com/gmail/api/v1/reference/users/messages/list
@@ -33,11 +33,18 @@ def API(pp):
 
     SCOPES = 'https://www.googleapis.com/auth/gmail.modify'
     api = {}
-    #conf = configparser.ConfigParser() 
-    #logging.info("Config...%s" % CONFIGDIR)
-    credential_dir = CONFIGDIR
-    store = file.Storage(credential_dir+'/token.json')
+
+    config = configparser.ConfigParser() 
+    config.read(CONFIGDIR + '/.oauthG.cfg')
+    
+    fileStore = confName(api, 
+            (config.get(Acc,'server'), config.get(Acc,'user'))) 
+    print("fileStore", fileStore)
+
+    logging.debug("Filestore %s"% fileStore)
+    store = file.Storage(fileStore)
     credentials = store.get()
+    
 
     service = build('gmail', 'v1', http=credentials.authorize(Http()))
 
@@ -45,12 +52,17 @@ def API(pp):
 
 def getPostsCache(api):        
     drafts = api.users().drafts().list(userId='me').execute()
-    drafts = drafts['drafts']
+    print("drafts", drafts)
+    if drafts:
+        if 'drafts' in drafts:
+            drafts = drafts['drafts']
+        else:
+            drafts = []
 
     listP = []
-    for draft in drafts: 
+    for draft in reversed(drafts): 
         message = api.users().drafts().get(userId="me", id=draft['id']).execute()
-        listP.insert(0,message)
+        listP.append(message)
 
     return(listP)
 
@@ -58,7 +70,7 @@ def listPosts(api, pp, service=""):
     outputData = {}
     files = []
 
-    serviceName = 'Mail'
+    serviceName = 'Mail'+service
 
     outputData[serviceName] = {'sent': [], 'pending': []}
     listDrafts = getPostsCache(api)
@@ -67,10 +79,10 @@ def listPosts(api, pp, service=""):
     for draft in listDrafts: 
         for header in draft['message']['payload']['headers']: 
             if header['name'] == 'Subject': 
-                listP.append((header['value'], '', '', '', '', '', '', '', listDrafts[0]['id'], ''))
+                listP.append((header['value'], '', '', '', '', '', '', '', draft['id'], ''))
 
 
-    logging.info("-Posts %s"% listP)
+    logging.debug("-Posts %s"% listP)
 
     if len(listP) > 0: 
         for element in listP: 
@@ -80,67 +92,111 @@ def listPosts(api, pp, service=""):
     profiles = None
     return(outputData, profiles)
 
-# Pending work \/ \/ \/ \/
+def confName(api, acc):
+    theName = os.path.expanduser(CONFIGDIR + '/' 
+                    + '.' + acc[0]+ '_' 
+                    + acc[1]+ '.json')
+    return(theName)
 
 def updatePostsCache(blog, listPosts, socialNetwork=()):
-    fileNameQ = fileName(blog,socialNetwork) + ".queue" 
+    pass
 
-    logging.info("Updating Posts Cache: %s" % fileNameQ)
-    print("Updating Posts Cache: %s" % fileNameQ)
+def showPost(cache, pp, posts, toPublish):
+    logging.info("To publish %s" % pp.pformat(toPublish))
 
-    with open(fileNameQ, 'wb') as f:
-         pickle.dump(listPosts,f)
-    return(fileNameQ)
+    profMov = toPublish[0]
+    j = toPublish[1]
+    logging.info("Profile %s position %d" % (profMov, j))
+
+    update = ""
+    logging.debug("Cache antes %s" % pp.pformat(cache))
+    profiles = cache #['profiles']
+    logging.debug("Cache profiles antes %s" % pp.pformat(profiles))
+    title = None
+    accC = 0
+    for profile in profiles: 
+        logging.info("Social Network %s" % profile)
+        if 'gmail' in profile._baseUrl:
+            serviceName = 'Mail'
+            #nick = profile['socialNetwork'][1]
+            if (serviceName[0] in profMov) or toPublish[0]=='*': 
+                if (len(toPublish) == 3):
+                    logging.info("Which one?") 
+                    acc = toPublish[2]
+                    if int(acc) != accC: 
+                        logging.info("Not this one %s" % profile)
+                        accC = accC + 1
+                        continue
+                    else:
+                        # We are in the adequate account, we can drop de qualifier
+                        # for the publishing method
+                        posts = posts[serviceName+str(accC)]
+                else:
+                    posts = posts[serviceName+str(accC)]
+
+                logging.debug("In %s" % pp.pformat(serviceName))
+                logging.debug("Profile %s" % pp.pformat(profile))
+                logging.debug("Profile posts %s" % pp.pformat(posts))
+                logging.debug("Service name %s" % serviceName)
+                numPosts = len(posts['pending'])
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts['pending'][j])
+
+    if title: 
+        return(title+link)
+    else:
+        return(None)
+
 
 def publishPost(cache, pp, posts, toPublish):
     logging.info("To publish %s" % pp.pformat(toPublish))
 
     profMov = toPublish[0]
     j = toPublish[1]
+    logging.info("Profile %s position %d" % (profMov, j))
 
     update = ""
-    logging.info("Cache antes %s" % pp.pformat(cache))
-    profiles = ["Mail"] #cache['profiles']
-    print(profiles)
-    logging.info("Cache profiles antes %s" % pp.pformat(profiles))
-    print("Cache profiles antes %s" % pp.pformat(profiles))
+    logging.debug("Cache antes %s" % pp.pformat(cache))
+    profiles = cache #['profiles']
+    logging.debug("Cache profiles antes %s" % pp.pformat(profiles))
+    accC = 0
     for profile in profiles: 
-        print(profile)
         logging.info("Social Network %s" % profile)
-        #if 'socialNetwork' in profile:
-        serviceName = profile[0].capitalize()
-        #nick = profile['socialNetwork'][1]
-        if (serviceName[0] in profMov) or toPublish[0]=='*': 
-            logging.info("In %s" % pp.pformat(serviceName))
-            logging.info("Profile %s" % pp.pformat(profile))
-            logging.info("Profile posts %s" % pp.pformat(posts))
-            logging.info("Service name %s" % serviceName)
-            numPosts = len(posts[profile]['pending'])
-            # We have reordered the posts for the presentation
-            # Maybe we could improve this
-            j = numPosts - (j + 1)
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[profile]['pending'][j])
-            print(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
-            publishMethod = getattr(moduleSocial, 
-                    'publish'+ profile)
-            logging.info("Publishing title: %s" % title)
-            logging.info("Social network: %s Nick: (pending)"  % profile)
-            logging.info(cache, title, link, summary, summaryHtml, summaryLinks, image, content , links )
-            update = publishMethod(cache, title, link, summary, summaryHtml, summaryLinks, image, content, links)
-            if not isinstance(update, str) or (isinstance(update, str) and update[:4] != "Fail"):
-                posts[profile]['pending'] = posts[profile]['pending'][:j] + posts[profile]['pending'][j+1:]
-                logging.info("Updating %s" % pp.pformat(posts))
-                logging.info("Blog %s" % pp.pformat(cache['blog']))
-                #updatePostsCache(cache['blog'], posts[profile]['pending'], profile['socialNetwork'])
-                if 'text' in update:
-                    update = update['text']
+        if 'gmail' in profile._baseUrl:
+            serviceName = 'Mail'
+            #nick = profile['socialNetwork'][1]
+            if (serviceName[0] in profMov) or toPublish[0]=='*': 
+                if (len(toPublish) == 3):
+                    logging.info("Which one?") 
+                    acc = toPublish[2]
+                    if int(acc) != accC: 
+                        logging.info("Not this one %s" % profile)
+                        accC = accC + 1
+                        continue
+                    else:
+                        # We are in the adequate account, we can drop de qualifier
+                        # for the publishing method
+                        posts = posts[serviceName+str(accC)]
+                else:
+                    posts = posts[serviceName+str(accC)]
+
+                logging.debug("In %s" % pp.pformat(serviceName))
+                logging.debug("Profile %s" % pp.pformat(profile))
+                logging.debug("Profile posts %s" % pp.pformat(posts))
+                logging.debug("Service name %s" % serviceName)
+                numPosts = len(posts['pending'])
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts['pending'][j])
+                logging.info(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
+                publishMethod = getattr(moduleSocial, 
+                        'publish'+ serviceName)
+                logging.info("Publishing title: %s" % title)
+                logging.info("Social network: %s Nick: (pending)"  % profile)
+                logging.info(cache, title, link, summary, summaryHtml, summaryLinks, image, content , links )
+                update = publishMethod(profile, title, link, summary, summaryHtml, summaryLinks, image, content, links)
+                if update:
+                        if 'text' in update: 
+                            update = update['text']
 
     return(update)
-
-
-#######################################################
-# These need work
-#######################################################
 
 def deletePost(cache, pp, posts, toPublish):
     logging.info("To publish %s" % pp.pformat(toPublish))
@@ -150,20 +206,42 @@ def deletePost(cache, pp, posts, toPublish):
     j = toPublish[1]
 
     update = ""
-    logging.info("Cache antes %s" % pp.pformat(cache))
-    profiles = cache['profiles']
-    logging.info("Cache profiles antes %s" % pp.pformat(profiles))
+    logging.debug("Cache antes %s" % pp.pformat(cache))
+    profiles = cache
+    logging.debug("Cache profiles antes %s" % pp.pformat(profiles))
+    accC = 0
     for profile in profiles: 
-        if 'socialNetwork' in profile:
-            serviceName = profile['socialNetwork'][0].capitalize()
-            if (serviceName[0] in profMov) or toPublish[0]=='*': 
-                logging.info("In %s" % pp.pformat(serviceName))
-                logging.info("Profile %s" % pp.pformat(profile))
-                logging.info("Profile posts %s" % pp.pformat(posts))
-                posts[serviceName]['pending'] = posts[serviceName]['pending'][:j] +  posts[serviceName]['pending'][j+1:]
-                logging.info("Profile posts after %s" % pp.pformat(posts))
-                updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
+        logging.info("Social Network %s" % profile)
+        if 'gmail' in profile._baseUrl:
+            serviceName = 'Mail'
+            if (serviceName[0] in profMov) or toPublish[0]=='*':
+                if (len(toPublish) == 3):
+                    logging.info("Which one?") 
+                    acc = toPublish[2]
+                    if int(acc) != accC: 
+                        logging.info("Not this one %s" % profile)
+                        accC = accC + 1
+                        continue
+                    else:
+                        # We are in the adequate account, we can drop de qualifier
+                        # for the publishing method
+                        #method = profile[:-1]
+                        posts = posts[serviceName+str(accC)]
+                else:
+                    posts = posts[serviceName]
+
+                print(posts)
+                idPost = posts['pending'][j]
+                print(idPost)
+                idPost = idPost[8]
+                update = profile.users().drafts().delete(userId='me', id=idPost).execute()
+                accC = accC + 1
     return(update)
+
+#######################################################
+# These need work
+#######################################################
+
 
 def copyPost(api, log, pp, profiles, toCopy, toWhere):
     logging.info(pp.pformat(toCopy+' '+toWhere))
@@ -282,17 +360,18 @@ def main():
     pp = pprint.PrettyPrinter(indent=4)
 
     # instantiate the api object 
-    api = API(pp)
+    api = [API('ACC4',pp)]
 
     logging.basicConfig(#filename='example.log',
                             level=logging.DEBUG,format='%(asctime)s %(message)s')
 
 
     print("profiles")
-    print(api)
-    postsP, profiles = listPosts(api, pp, '')
+    print(api[0].users().getProfile(userId='me').execute())
+    postsP, profiles = listPosts(api[0], pp, '')
     print("-> Posts",postsP)
-    publishPost(api, pp, postsP, ('G',1))
+    #publishPost(api, pp, postsP, ('G',1))
+    deletePost(api, pp, postsP, ('M0',0))
     sys.exit()
 
     publishPost(api, pp, profiles, ('F',1))
