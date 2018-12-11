@@ -137,6 +137,27 @@ def updatePostsCache(blog, listPosts, socialNetwork=()):
          pickle.dump(listPosts,f)
     return(fileNameQ)
 
+def showPost(cache, pp, posts, toPublish):
+    logging.info("To publish %s" % pp.pformat(toPublish))
+
+    profMov = toPublish[0]
+    j = toPublish[1]
+
+    update = ""
+    logging.info("Cache antes %s" % pp.pformat(cache))
+    profiles = cache['profiles']
+    logging.info("Cache profiles antes %s" % pp.pformat(profiles))
+    for profile in profiles: 
+        logging.info("Social Network %s" % profile)
+        if 'socialNetwork' in profile:
+            serviceName = profile['socialNetwork'][0].capitalize()
+            nick = profile['socialNetwork'][1]
+            if (serviceName[0] in profMov) or toPublish[0]=='*': 
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[serviceName]['pending'][j])
+                
+
+    return(link)
+
 def publishPost(cache, pp, posts, toPublish):
     logging.info("To publish %s" % pp.pformat(toPublish))
 
