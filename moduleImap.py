@@ -25,6 +25,18 @@ import click
 
 import ssl
 
+from configMod import *
+import moduleGmail
+import pprint
+from googleapiclient.discovery import build
+from httplib2 import Http
+from oauth2client import file, client, tools
+from apiclient.http import MediaIoBaseUpload
+from email.parser import BytesParser
+import base64
+import email
+
+
 msgHeaders = ['List-Id', 'From', 'Sender', 'Subject', 'To', 
               'X-Original-To', 'X-Envelope-From', 
               'X-Spam-Flag', 'X-Forward']
@@ -828,11 +840,12 @@ def moveMailsRemote(M, msgs, folder):
     SERVERD = folder[pos+1:]
     USERD   = folder[:pos]
     config = configparser.ConfigParser()
-    config.read(os.expandpath('~/'+CONFIGDIR+'.mySocial/config/.oauthG.cfg'))
+    config.read(os.path.expanduser(CONFIGDIR+'/.oauthG.cfg'))
+
     method = 'imap'
     for sect in config.sections():
-        if SERVERD in config[i].get('server'): 
-            if USERD in config[i].get('user'):
+        if SERVERD == config[sect].get('server'): 
+            if USERD == config[sect].get('user'):
                 method = 'oauth'
                 acc = sect
                 break
@@ -864,6 +877,7 @@ def moveMailsRemote(M, msgs, folder):
         MD.close()
         MD.logout()
     else:
+        pp = pprint.PrettyPrinter(indent=4)
         service = moduleGmail.API(acc,pp)    
         # This lookForLabel in moduleGmail
         results = service.users().labels().list(userId='me').execute() 
@@ -873,10 +887,11 @@ def moveMailsRemote(M, msgs, folder):
                 break
 
         i = 0
-        for msgId in msgs.split(','): #[:25]:
+        for msgId in range(20): #msgs.split(','): #[:25]:
             #print('.', end='')
-            typ, data = M.fetch(msgId, '(RFC822)')
-            M.store(msgId, "-FLAGS", "\\Seen")
+            print(msgId)
+            typ, data = M.fetch(str(msgId+1), '(RFC822)')
+            M.store(str(msgId+1), "-FLAGS", "\\Seen")
             
             if (typ == 'OK'): 
                 # This moveMail in moduleGmail
@@ -916,7 +931,7 @@ def moveMailsRemote(M, msgs, folder):
                         sys.exit()
                 msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
 
-                messageR = service.users().messages().modify(userId='me', id=message['id'],
+                messageR = service.users().messages().modify(userId='me', id=messageR['id'],
                                                         body=msg_labels).execute()
 
                 time.sleep(1)
@@ -1004,7 +1019,7 @@ def main():
     PASSWORD = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
     M.select()
 
-    listMessages(M, 'INBOX')
+    moveMailsRemote(M, None, 'fernand0movilizado@gmail.com')
 
 if __name__ == "__main__":
     main()
