@@ -156,7 +156,7 @@ def showPost(cache, pp, posts, toPublish):
                 (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[serviceName]['pending'][j])
                 
 
-    return(link)
+    return(title+link)
 
 def publishPost(cache, pp, posts, toPublish):
     logging.info("To publish %s" % pp.pformat(toPublish))
