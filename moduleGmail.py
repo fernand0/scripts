@@ -41,8 +41,10 @@ def API(Acc, pp):
             (config.get(Acc,'server'), config.get(Acc,'user'))) 
     print("fileStore", fileStore)
 
+    logging.debug("Filestore %s"% fileStore)
     store = file.Storage(fileStore)
     credentials = store.get()
+    
 
     service = build('gmail', 'v1', http=credentials.authorize(Http()))
 
@@ -80,7 +82,7 @@ def listPosts(api, pp, service=""):
                 listP.append((header['value'], '', '', '', '', '', '', '', draft['id'], ''))
 
 
-    logging.info("-Posts %s"% listP)
+    logging.debug("-Posts %s"% listP)
 
     if len(listP) > 0: 
         for element in listP: 
@@ -99,7 +101,7 @@ def confName(api, acc):
 def updatePostsCache(blog, listPosts, socialNetwork=()):
     pass
 
-def publishPost(cache, pp, posts, toPublish):
+def showPost(cache, pp, posts, toPublish):
     logging.info("To publish %s" % pp.pformat(toPublish))
 
     profMov = toPublish[0]
@@ -107,9 +109,10 @@ def publishPost(cache, pp, posts, toPublish):
     logging.info("Profile %s position %d" % (profMov, j))
 
     update = ""
-    logging.info("Cache antes %s" % pp.pformat(cache))
+    logging.debug("Cache antes %s" % pp.pformat(cache))
     profiles = cache #['profiles']
-    logging.info("Cache profiles antes %s" % pp.pformat(profiles))
+    logging.debug("Cache profiles antes %s" % pp.pformat(profiles))
+    title = None
     accC = 0
     for profile in profiles: 
         logging.info("Social Network %s" % profile)
@@ -131,10 +134,55 @@ def publishPost(cache, pp, posts, toPublish):
                 else:
                     posts = posts[serviceName+str(accC)]
 
-                logging.info("In %s" % pp.pformat(serviceName))
-                logging.info("Profile %s" % pp.pformat(profile))
-                logging.info("Profile posts %s" % pp.pformat(posts))
-                logging.info("Service name %s" % serviceName)
+                logging.debug("In %s" % pp.pformat(serviceName))
+                logging.debug("Profile %s" % pp.pformat(profile))
+                logging.debug("Profile posts %s" % pp.pformat(posts))
+                logging.debug("Service name %s" % serviceName)
+                numPosts = len(posts['pending'])
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts['pending'][j])
+
+    if title: 
+        return(title+link)
+    else:
+        return(None)
+
+
+def publishPost(cache, pp, posts, toPublish):
+    logging.info("To publish %s" % pp.pformat(toPublish))
+
+    profMov = toPublish[0]
+    j = toPublish[1]
+    logging.info("Profile %s position %d" % (profMov, j))
+
+    update = ""
+    logging.debug("Cache antes %s" % pp.pformat(cache))
+    profiles = cache #['profiles']
+    logging.debug("Cache profiles antes %s" % pp.pformat(profiles))
+    accC = 0
+    for profile in profiles: 
+        logging.info("Social Network %s" % profile)
+        if 'gmail' in profile._baseUrl:
+            serviceName = 'Mail'
+            #nick = profile['socialNetwork'][1]
+            if (serviceName[0] in profMov) or toPublish[0]=='*': 
+                if (len(toPublish) == 3):
+                    logging.info("Which one?") 
+                    acc = toPublish[2]
+                    if int(acc) != accC: 
+                        logging.info("Not this one %s" % profile)
+                        accC = accC + 1
+                        continue
+                    else:
+                        # We are in the adequate account, we can drop de qualifier
+                        # for the publishing method
+                        posts = posts[serviceName+str(accC)]
+                else:
+                    posts = posts[serviceName+str(accC)]
+
+                logging.debug("In %s" % pp.pformat(serviceName))
+                logging.debug("Profile %s" % pp.pformat(profile))
+                logging.debug("Profile posts %s" % pp.pformat(posts))
+                logging.debug("Service name %s" % serviceName)
                 numPosts = len(posts['pending'])
                 (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts['pending'][j])
                 logging.info(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
@@ -158,9 +206,9 @@ def deletePost(cache, pp, posts, toPublish):
     j = toPublish[1]
 
     update = ""
-    logging.info("Cache antes %s" % pp.pformat(cache))
+    logging.debug("Cache antes %s" % pp.pformat(cache))
     profiles = cache
-    logging.info("Cache profiles antes %s" % pp.pformat(profiles))
+    logging.debug("Cache profiles antes %s" % pp.pformat(profiles))
     accC = 0
     for profile in profiles: 
         logging.info("Social Network %s" % profile)
