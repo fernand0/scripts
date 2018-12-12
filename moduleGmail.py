@@ -22,6 +22,9 @@ from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
 
+import base64
+import email
+
 from configMod import *
 
 def API(Acc, pp):
@@ -58,6 +61,47 @@ def lookForLabel(api, name):
             break
 
     return(labelId)
+
+def moveMessage(api,  message):
+    labelId = lookForLabel(api, 'imported')
+    mesGE = base64.urlsafe_b64encode(message).decode()
+    mesT = email.message_from_bytes(message)
+    subj = email.header.decode_header(mesT['subject'])[0][0]
+    logging.info("Subject %s",subj)
+
+    try:
+        messageR = api.users().messages().import_(userId='me',
+                  fields='id',
+                  neverMarkSpam=True,
+                  processForCalendar=False,
+                  internalDateSource='dateHeader',
+                  body={'raw': mesGE}).execute(num_retries=5)
+       #           media_body=media).execute(num_retries=1)
+    except: 
+        # When the message is too big
+        # https://github.com/google/import-mailbox-to-gmail/blob/master/import-mailbox-to-gmail.py
+
+        print("Fail 2")
+        try:
+            mesGS = BytesParser().parsebytes(mesG).as_string()
+            media =  MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
+            messageR = api.users().messages().import_(userId='me',
+                      fields='id',
+                      neverMarkSpam=True,
+                      processForCalendar=False,
+                      internalDateSource='dateHeader',
+                      body={},
+                      media_body=media).execute(num_retries=3)
+        except: 
+            print(mesGS) 
+            sys.exit()
+    msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
+
+    messageR = api.users().messages().modify(userId='me', id=messageR['id'],
+                                                        body=msg_labels).execute()
+
+    return(messageR)
+
 
 
 def getPostsCache(api):        

@@ -33,8 +33,6 @@ from httplib2 import Http
 from oauth2client import file, client, tools
 from apiclient.http import MediaIoBaseUpload
 from email.parser import BytesParser
-import base64
-import email
 
 
 msgHeaders = ['List-Id', 'From', 'Sender', 'Subject', 'To', 
@@ -879,58 +877,21 @@ def moveMailsRemote(M, msgs, folder):
     else:
         pp = pprint.PrettyPrinter(indent=4)
         service = moduleGmail.API(acc,pp)    
-        labelId = moduleGmail.lookForLabel(service, 'imported')
 
         i = 0
         for msgId in range(20): #msgs.split(','): #[:25]:
             #print('.', end='')
             print(msgId)
             typ, data = M.fetch(str(msgId+1), '(RFC822)')
-            M.store(str(msgId+1), "-FLAGS", "\\Seen")
+            #M.store(str(msgId+1), "-FLAGS", "\\Seen")
             
             if (typ == 'OK'): 
                 # This moveMail in moduleGmail
                 message = data[0][1]
-                mesGE = base64.urlsafe_b64encode(message).decode()
-                mesT = email.message_from_bytes(message)
-                subj = email.header.decode_header(mesT['subject'])[0][0]
-                logging.info("Subject %s",subj)
-
-                try:
-                    messageR = service.users().messages().import_(
-                              userId='me',
-                              fields='id',
-                              neverMarkSpam=True,
-                              processForCalendar=False,
-                              internalDateSource='dateHeader',
-                              body={'raw': mesGE}).execute(num_retries=5)
-                   #           media_body=media).execute(num_retries=1)
-                except: 
-                    # When the message is too big
-                    # https://github.com/google/import-mailbox-to-gmail/blob/master/import-mailbox-to-gmail.py
-
-                    print("Fail 2")
-                    try:
-                        mesGS = BytesParser().parsebytes(mesG).as_string()
-                        media =  MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
-                        messageR = service.users().messages().import_(
-                                  userId='me',
-                                  fields='id',
-                                  neverMarkSpam=True,
-                                  processForCalendar=False,
-                                  internalDateSource='dateHeader',
-                                  body={},
-                                  media_body=media).execute(num_retries=3)
-                    except: 
-                        print(mesGS) 
-                        sys.exit()
-                msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
-
-                messageR = service.users().messages().modify(userId='me', id=messageR['id'],
-                                                        body=msg_labels).execute()
-
+                rep = moduleGmail.moveMessage(service, message)
+                print(rep)
+                sys.exit()
                 time.sleep(1)
-
 
 
 
