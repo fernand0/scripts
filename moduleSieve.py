@@ -84,14 +84,31 @@ def extractActions(p):
     for r in p.result:
         # print("children", r.children)
         if r.children:
+            tests = r.arguments['test'].arguments['tests']
             # print type(r.children[0])
             key = r.children[0]
             if len(r.children) > 2:
-                # If there are more actions (just one more
-                # action, in fact), we will store it in more
-                theKey = key['address'].strip('"') 
-                more[theKey] = []
-                more[theKey].append(r.children[1]['address'])
+                print(r.children)
+                key = ()
+                for i in range(len(r.children)): 
+                    print(r.children[i]) 
+                    if 'address' in r.children[i]: 
+                        key = key + (r.children[i]['address'], )
+                    elif 'mailbox' in r.children[i]:
+                        key = key + (r.children[i]['mailbox'], ) 
+
+                print("keys", key)
+                ## If there are more actions (just one more
+                ## action, in fact), we will store it in more
+                #theKey = key['address'].strip('"') 
+                #more[theKey] = []
+                #print("---->", r)
+                #print("---->", r.children)
+                #print("---->", r.children[1])
+                #if 'address' in r.children[1]: 
+                #    more[theKey].append(r.children[1]['address'])
+                #elif 'mailbox' in r.children[1]:
+                #    more[theKey].append(r.children[1]['mailbox'])
             if (type(key) == sievelib.commands.FileintoCommand):
                 # print(i, ") Folder   ", key['mailbox'])
                 tests = r.arguments['test'].arguments['tests']
@@ -113,7 +130,7 @@ def extractActions(p):
                     rules[theKey] = []
                     rules[theKey].append("fileinto")
                     rules[theKey].append(tests)
-                    print("rules..++",rules)
+                    #print("rules..++",rules)
             elif (type(key) == sievelib.commands.RedirectCommand):
                 # print i, ") Redirect ", key['address']
                 tests = r.arguments['test'].arguments['tests']
@@ -124,8 +141,14 @@ def extractActions(p):
                     rules[theKey] = []
                     rules[theKey].append("redirect")
                     rules[theKey].append(tests)
+            elif type(key) == tuple:
+                # We are not managing rules with several actions, just pass 
+                # them 
+                rules[key] = r
+                #print("key----", key, rules[key])
             else:
                 print(i, ") Not implented ", type(key))
+
         else:
             print(i, ") Not implented ", type(r))
 
@@ -147,10 +170,27 @@ def constructActions(rules, more):
         #printRule(rules[rule])
         #print("more",more)
         #print("rule",rule)
+        #print("rule[rule]",rules[rule])
         act = []
-        if rule in more:
-            action.append((rules[rule][0],
-                          (rule, more[rule][0]), rules[rule][1]))
+        #if rule in more:
+        #    action.append((rules[rule][0],
+        #                  (rule, more[rule][0]), rules[rule][1]))
+        if type(rule) == tuple:
+            #print("rule---", rule)
+            #print("rule---", rules[rule])
+            action = rules[rule]
+            #for r in rules[rule]:
+            #    print("r...", r)
+            #    if 'address' in r: 
+            #        action.append(r) #('redirect', (r['address'],) , rules[rule][1]))
+            #        #print(rules[rule][0])
+            #        #print(rules[rule][2])
+            #    elif 'mailbox' in r:
+            #        action.append(r)#('fileinto', (r['mailbox'],) , rules[rule][1]))
+            #        #print("0", rules[rule][0])
+            #        #print("1", rules[rule][1])
+            #        #print("2", rules[rule][2])
+            #print("action---",action)
         else:
             #print("actions",rules[rule][0], rule, rules[rule][1])
             #if not rules[rule][0].startswith(('"', "'")):
@@ -161,6 +201,7 @@ def constructActions(rules, more):
             theRule = rule
             #print("actions 2",rules[rule][0], theRule, rules[rule][1])
             action.append((rules[rule][0], (theRule,), rules[rule][1]))
+            print("action///", action)
         # action.append(act)
 
         actions.append(action)
@@ -169,48 +210,61 @@ def constructActions(rules, more):
 
 
 def constructFilterSet(actions):
+    moreSieve = ""
     print(actions)
     fs = FiltersSet("test")
+    sieveContent = io.StringIO()
     for action in actions:
-        #print("cfS-> act ", action)
-        conditions = action[0][2]
-        #print("cfSS-> cond", conditions)
-        cond = []
-        for condition in conditions:
-            #print("cfS condition -> ", condition)
-            # print(type(condition))
-            #print(condition.arguments)
-            head = ()
-            (key1, key2, key3) = list(condition.arguments.keys())
-            #print("keys",key1, key2, key3)
-            #print("keys",condition.arguments[key1], condition.arguments[key2], condition.arguments[key3])
-            head = head + (condition.arguments['header-names'].strip('"'),
-                    condition.arguments['match-type'].strip('"'),
-                    condition.arguments['key-list'].strip('"'))#.decode('utf-8'))
-            # We will need to take care of these .decode's
-            #print("head", head)
-            cond.append(head)
-            #print("cond", cond)
+        print("cfS-> act ", action)
+        print("type---", type(action))
+        if type(action) == sievelib.commands.IfCommand: 
+            #print("cfS-> act0 type tosieve", action.tosieve())
+            #fs.addfilter(action.name, action['test'], action.children) 
+            action.tosieve(target=sieveContent)
+            #print(sieveContent.read())
+            moreSieve = moreSieve + "# Filter:\n" + sieveContent.getvalue()
+            #print("moreSieve", moreSieve)
+        else:
+            conditions = action[0][2]
+            #print("cfSS-> cond", conditions)
+            cond = []
+            #print("cond....", cond)
+            #print(conditions)
+            for condition in conditions:
+                #print("cfS condition -> ", condition)
+                # print(type(condition))
+                #print(condition.arguments)
+                head = ()
+                (key1, key2, key3) = list(condition.arguments.keys())
+                #print("keys",key1, key2, key3)
+                #print("keys",condition.arguments[key1], condition.arguments[key2], condition.arguments[key3])
+                head = head + (condition.arguments['header-names'].strip('"'),
+                        condition.arguments['match-type'].strip('"'),
+                        condition.arguments['key-list'].strip('"'))#.decode('utf-8'))
+                # We will need to take care of these .decode's
+                #print("head", head)
+                cond.append(head)
+                #print("cond", cond)
 
-        # print "cond ->", cond
-        act = []
-        for i in range(len(action[0][1])):
-            act.append((action[0][0], action[0][1][i]))
-        act.append(("stop",))
-        #print("cfS cond ->", cond)
-        #print("cfS act ->", act)
-        aList = [()]
-        #for a in cond[0]:
-        #    print("cfS ",a)
-        #    aList[0] = aList[0] + (a.strip('"'),)
-        #print("cfS aList", aList)
-        #print("cfS cond", cond)
-        #print("cfS act", act)
-        fs.addfilter("", cond, act)
-        #fs.addfilter("", aList, act)
-        # print "added!"
+            # print "cond ->", cond
+            act = []
+            for i in range(len(action[0][1])):
+                act.append((action[0][0], action[0][1][i]))
+            act.append(("stop",))
+            #print("cfS cond ->", cond)
+            #print("cfS act ->", act)
+            aList = [()]
+            #for a in cond[0]:
+            #    print("cfS ",a)
+            #    aList[0] = aList[0] + (a.strip('"'),)
+            #print("cfS aList", aList)
+            #print("cfS cond", cond)
+            #print("cfS act", act)
+            fs.addfilter("", cond, act)
+            #fs.addfilter("", aList, act)
+            # print "added!"
 
-    return fs
+    return (fs, moreSieve)
 
 def selectAction(p, M):  # header="", textHeader=""):
     i = 1
@@ -331,18 +385,21 @@ def addToSieve(msg=""):
     #print("nA 0",newActions[0][0][2][0].tosieve())
     #print("nA 0")
 
-    fs = constructFilterSet(newActions)
+    (fs, moreSieve) = constructFilterSet(newActions)
 
     sieveContent = io.StringIO()
     # We need to add the require in order to use the body section
     sieveContent.write('require ["body"];\n')
     # fs.tosieve(open(FILE_SIEVE, 'w'))
-    # fs.tosieve()
-    # sys.exit()
+    #fs.tosieve()
+    #print(moreSieve)
+    #sys.exit()
     print(USER)
     fs.tosieve(sieveContent)
+    sieveContent.write(moreSieve)
     with open(os.path.expanduser('~'+USER)+'/sieve/body.sieve') as f:
         sieveContent.write(f.read())
+    print(sieveContent.getvalue())
 #"""#Filter:
 #if anyof (body :raw :contains "puntoclick.info") {
 #    fileinto "Spam";

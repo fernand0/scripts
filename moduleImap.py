@@ -25,6 +25,16 @@ import click
 
 import ssl
 
+from configMod import *
+import moduleGmail
+import pprint
+from googleapiclient.discovery import build
+from httplib2 import Http
+from oauth2client import file, client, tools
+from apiclient.http import MediaIoBaseUpload
+from email.parser import BytesParser
+
+
 msgHeaders = ['List-Id', 'From', 'Sender', 'Subject', 'To', 
               'X-Original-To', 'X-Envelope-From', 
               'X-Spam-Flag', 'X-Forward']
@@ -385,6 +395,7 @@ def selectHash(M, folder, hashSelect):
 
 def selectAllMessages(folder, M):
     msgs = ""
+    print("folder",folder)
     M.select(folder)
     data = M.sort('ARRIVAL', 'UTF-8', 'ALL')
     if (data[0] == 'OK'):
@@ -820,38 +831,78 @@ def moveSent(M):
         moveMails(M,  msgs, 'INBOX')
 
 def moveMailsRemote(M, msgs, folder):
-    pos = folder.rfind('@')
     # We start at the end because we can have accounts where the user includes
     # an @ (there can be two): user@host@mailhost
 
+    pos = folder.rfind('@')
+
     SERVERD = folder[pos+1:]
     USERD   = folder[:pos]
-    PASSWORDD = getPassword(SERVERD, USERD)
+    logging.info("Datos.... %s %s" %(SERVERD, USERD))
+    method = 'imap'
+    try:
+        config = configparser.ConfigParser()
+        config.read(os.path.expanduser(CONFIGDIR+'/.oauthG.cfg'))
+        for sect in config.sections():
+            if SERVERD == config[sect].get('server'): 
+                if USERD == config[sect].get('user'):
+                    method = 'oauth'
+                    acc = sect
+                    break
+    except:
+        logging.info("No oauth config!")
 
-    MD = makeConnection(SERVERD, USERD, PASSWORDD)
-    MD.select('INBOX')
     
-    i = 0
-    for msgId in msgs.split(','): #[:25]:
-        #print('.', end='')
-        typ, data = M.fetch(msgId, '(RFC822)')
-        M.store(msgId, "-FLAGS", "\\Seen")
+    logging.info("Method %s" % method)
+    if method == 'imap':
+        PASSWORDD = getPassword(SERVERD, USERD)
+
+        MD = makeConnection(SERVERD, USERD, PASSWORDD)
+        MD.select('INBOX')
+    
+        i = 0
+        for msgId in msgs.split(','): #[:25]:
+            #print('.', end='')
+            typ, data = M.fetch(msgId, '(RFC822)')
+            M.store(msgId, "-FLAGS", "\\Seen")
+            
+            if (typ == 'OK'): 
+                message = data[0][1]
         
-        if (typ == 'OK'): 
-            message = data[0][1]
-    
-            flags = '' 
-    
-            msg = email.message_from_bytes(message);
-            msgDate = email.utils.parsedate(msg['Date'])
+                flags = '' 
+        
+                msg = email.message_from_bytes(message);
+                msgDate = email.utils.parsedate(msg['Date'])
+                
+                res = MD.append('INBOX',flags, msgDate, message)
+                
+                if res[0] == 'OK':
+                    M.store(msgId, "+FLAGS", "\\Seen")
+            i = i + 1
+        MD.close()
+        MD.logout()
+    else:
+        pp = pprint.PrettyPrinter(indent=4)
+        service = moduleGmail.API(acc,pp)    
+
+        i = 0
+        for msgId in msgs.split(','): #[:25]:
+            #print('.', end='')
+            logging.info("Message %s" % msgId)
+            typ, data = M.fetch(msgId, '(RFC822)')
+            M.store(msgId, "-FLAGS", "\\Seen")
             
-            res = MD.append('INBOX',flags, msgDate, message)
-            
-            if res[0] == 'OK':
-                M.store(msgId, "+FLAGS", "\\Seen")
-        i = i + 1
-    MD.close()
-    MD.logout()
+            logging.info("Typ %s" % typ)
+            if (typ == 'OK'): 
+                message = data[0][1]
+                rep = moduleGmail.moveMessage(service, message)
+                logging.info("Reply %s" %rep)
+                if rep != "Fail!":
+                    M.store(msgId, "+FLAGS", "\\Seen")
+                time.sleep(1)
+
+
+
     # We are returning a different code from 'OK' because we do not want to
     # delte these messages.
     if (i == len(msgs.split(','))):
@@ -861,7 +912,7 @@ def moveMailsRemote(M, msgs, folder):
 
 
 def moveMails(M, msgs, folder):
-    print("Copying ", msgs, " in ", folder)
+    logging.info("Copying %s in %s" % (msgs, folder))
     (status, resultMsg) = M.copy(msgs, folder)
     if status == 'OK':
         # If the list of messages is too long it won't work
@@ -874,7 +925,7 @@ def moveMails(M, msgs, folder):
 
 def printMessageHeaders(M, msgs):
     if msgs:
-        print (msgs)
+        logging.info(msgs)
         for i in msgs.split(','):
             typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[HEADER.FIELDS (SUBJECT FROM)])')
             for response_part in msg_data_fetch:
@@ -932,7 +983,7 @@ def main():
     PASSWORD = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
     M.select()
 
-    listMessages(M, 'INBOX')
+    moveMailsRemote(M, None, 'fernand0movilizado@gmail.com')
 
 if __name__ == "__main__":
     main()
