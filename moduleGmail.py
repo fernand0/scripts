@@ -68,7 +68,6 @@ def moveMessage(api,  message):
     mesT = email.message_from_bytes(message)
     subj = email.header.decode_header(mesT['subject'])[0][0]
     logging.info("Subject %s",subj)
-    print(subj)
 
     try:
         messageR = api.users().messages().import_(userId='me',
@@ -82,7 +81,7 @@ def moveMessage(api,  message):
         # When the message is too big
         # https://github.com/google/import-mailbox-to-gmail/blob/master/import-mailbox-to-gmail.py
 
-        print("Fail 2")
+        logging.info("Fail 2")
         try:
             mesGS = BytesParser().parsebytes(mesG).as_string()
             media =  MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
@@ -94,8 +93,8 @@ def moveMessage(api,  message):
                       body={},
                       media_body=media).execute(num_retries=3)
         except: 
-            print(mesGS) 
-            sys.exit()
+            logging.info("Error with message %s" % mesGS) 
+            return("Fail!")
     msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
 
     messageR = api.users().messages().modify(userId='me', id=messageR['id'],

@@ -395,6 +395,7 @@ def selectHash(M, folder, hashSelect):
 
 def selectAllMessages(folder, M):
     msgs = ""
+    print("folder",folder)
     M.select(folder)
     data = M.sort('ARRIVAL', 'UTF-8', 'ALL')
     if (data[0] == 'OK'):
@@ -837,16 +838,22 @@ def moveMailsRemote(M, msgs, folder):
 
     SERVERD = folder[pos+1:]
     USERD   = folder[:pos]
-    config = configparser.ConfigParser()
-    config.read(os.path.expanduser(CONFIGDIR+'/.oauthG.cfg'))
-
+    logging.info("Datos.... %s %s" %(SERVERD, USERD))
     method = 'imap'
-    for sect in config.sections():
-        if SERVERD == config[sect].get('server'): 
-            if USERD == config[sect].get('user'):
-                method = 'oauth'
-                acc = sect
-                break
+    try:
+        config = configparser.ConfigParser()
+        config.read(os.path.expanduser(CONFIGDIR+'/.oauthG.cfg'))
+        for sect in config.sections():
+            if SERVERD == config[sect].get('server'): 
+                if USERD == config[sect].get('user'):
+                    method = 'oauth'
+                    acc = sect
+                    break
+    except:
+        logging.info("No oauth config!")
+
+    
+    logging.info("Method %s" % method)
     if method == 'imap':
         PASSWORDD = getPassword(SERVERD, USERD)
 
@@ -879,18 +886,19 @@ def moveMailsRemote(M, msgs, folder):
         service = moduleGmail.API(acc,pp)    
 
         i = 0
-        for msgId in range(20): #msgs.split(','): #[:25]:
+        for msgId in msgs.split(','): #[:25]:
             #print('.', end='')
-            print(msgId)
-            typ, data = M.fetch(str(msgId+1), '(RFC822)')
-            #M.store(str(msgId+1), "-FLAGS", "\\Seen")
+            logging.info("Message %s" % msgId)
+            typ, data = M.fetch(msgId, '(RFC822)')
+            M.store(msgId, "-FLAGS", "\\Seen")
             
+            logging.info("Typ %s" % typ)
             if (typ == 'OK'): 
-                # This moveMail in moduleGmail
                 message = data[0][1]
                 rep = moduleGmail.moveMessage(service, message)
-                print(rep)
-                sys.exit()
+                logging.info("Reply %s" %rep)
+                if rep != "Fail!":
+                    M.store(msgId, "+FLAGS", "\\Seen")
                 time.sleep(1)
 
 
@@ -904,7 +912,7 @@ def moveMailsRemote(M, msgs, folder):
 
 
 def moveMails(M, msgs, folder):
-    print("Copying ", msgs, " in ", folder)
+    logging.info("Copying %s in %s" % (msgs, folder))
     (status, resultMsg) = M.copy(msgs, folder)
     if status == 'OK':
         # If the list of messages is too long it won't work
@@ -917,7 +925,7 @@ def moveMails(M, msgs, folder):
 
 def printMessageHeaders(M, msgs):
     if msgs:
-        print (msgs)
+        logging.info(msgs)
         for i in msgs.split(','):
             typ, msg_data_fetch = M.fetch(i, '(BODY.PEEK[HEADER.FIELDS (SUBJECT FROM)])')
             for response_part in msg_data_fetch:
