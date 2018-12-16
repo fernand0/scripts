@@ -68,6 +68,7 @@ def moveMessage(api,  message):
     mesT = email.message_from_bytes(message)
     subj = email.header.decode_header(mesT['subject'])[0][0]
     logging.info("Subject %s",subj)
+    print(subj)
 
     try:
         messageR = api.users().messages().import_(userId='me',
