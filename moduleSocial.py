@@ -116,6 +116,7 @@ from configMod import *
 
 logger = logging.getLogger(__name__)
 
+
 def connectTumblr():
     config = configparser.ConfigParser()
     config.read(CONFIGDIR + '/.rssTumblr')
@@ -339,6 +340,22 @@ def checkLimitPosts(api, blog, service=''):
 
     return(lenMax, profileList)
 
+def publishMail(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
+    # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
+    logger.info("Publishing in Gmail...\n") 
+    logger.info("--%s, %s, %s, %s, %s, %s, %s, %s, %s" % (channel, title, link, summary, summaryHtml, summaryLinks, image, content , links))
+    if True:
+        application = channel #connectLinkedin()
+        #presentation = 'Publicado! ' + title 
+        logger.info("Publishing in Gmail:\n%s" % title)
+        logger.info("Publishing in Gmail:\n%s" % content)
+        
+        message = application.users().drafts().send(userId='me', body={ 'id': links}).execute()
+    else:
+        logger.warning("Gmail posting failed!\n")
+        logger.warning("Unexpected error:", sys.exc_info()[0])
+        return("Fail!")
+
 def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, services='fglt'):
     logger.info("Publishing in Buffer:\n")
     if isDebug:
@@ -456,7 +473,7 @@ def publishTumblr(channel, title, link, summary, summaryHtml, summaryLinks, imag
                 'title': title, 
                 'thumbnail': image, 
                 'url': link, 
-                'excerpt': summaryHtml, 
+                #'excerpt': summaryHtml, 
                 'publisher': ''}) 
 
     logger.info("Posted!: %s" % post)
