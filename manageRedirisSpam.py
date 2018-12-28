@@ -12,6 +12,13 @@ from robobrowser import RoboBrowser
 from requests import Session
 from robobrowser import RoboBrowser
 
+import time
+
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.options import Options
+
+
 # https://github.com/jmcarp/robobrowser
 
 # This program tries to provide a command line interface for the puc.rediris.es
@@ -182,7 +189,7 @@ def selectMessages(logging, browser, link):
 
 def main():
     config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.SERVERS.cfg')])
+    config.read([os.path.expanduser('~/.IMAP.cfg')])
     
     rows, columns = os.popen('stty size', 'r').read().split()
 
@@ -200,14 +207,88 @@ def main():
         USER = config.get(config.sections()[int(selection) - 1], 'user')
         PASSWORD = getPassword(SERVER, USER)
 
-        url = 'http://'+SERVER+'/'
+        url = 'https://'+SERVER+'/'
+
+
+        chrome_options = Options() 
+        chrome_options.add_argument("--headless") 
+        chrome_options.binary_location = '/usr/bin/chromium-browser' 
+        driver = webdriver.Chrome(executable_path=os.path.expanduser('~/usr/bin/chromedriver'),   chrome_options=chrome_options) 
+        driver.get(url)
+        time.sleep(1)
+        driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk1.png'))
+
+
+        elemU = driver.find_element_by_name("username")
+        while elemU:
+            print("Identifying...")
+            elemP = driver.find_element_by_name("password")
+            elemU.clear()
+            elemU.send_keys(USER)
+            elemP.clear()
+            elemP.send_keys(PASSWORD)
+
+            driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk2.png'))
+
+            elemP.send_keys(Keys.RETURN)
+            time.sleep(30)
+            try: 
+                elemU = driver.find_element_by_name("username").clear()
+            except: 
+                elemU = None
+
+        driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk3.png'))
+
+        #lists = driver.find_element_by_tag_name('table')
+        tr = driver.find_elements_by_tag_name('td')
+        tr[0].click()
+        time.sleep(2)
+        driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk4.png'))
+
+        delete = driver.find_elements_by_class_name('fActionLink')
+
+
+        # Identificar instrucciones relevantes
+        commands = {}
+        for tri in delete:
+            operation = tri.get_attribute('data-ng-click')
+            print(operation)
+            if operation == 'deleteMessage()':
+                commands['delete'] = tri
+            elif operation == 'toggleSelectAll()':
+                commands['select'] = tri
+            elif operation == 'refreshMailbox()':
+                commands['refresh'] = tri
+            elif operation == 'releaseMessages()':
+                commands['release'] = tri
+
+        commands['delete'].click() 
+
+        time.sleep(2)
+        commands['refresh'].click()
+        time.sleep(30)
+        driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk5.png'))
+
+        print(commands.keys())
+        commands['select'].click()
+        time.sleep(1)
+
+        driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk6.png'))
+
+
+        sys.exit()
+
+
 
         session = Session()
         session.verify = False
         # Dealing with bad certificate
         browser = RoboBrowser(history=True, session=session)
         browser.open(url)
+        print("browser", browser)
         form = browser.get_form(action='')
+        print(form)
+        sys.exit()
         form['login'].value = USER
         form['pass'].value = PASSWORD
         
@@ -304,3 +385,42 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
+# compactFolder()
+# markAllAsRead()
+# showEmptyConfirmationDialog()
+# toggleselectall()
+# refreshMailbox()
+# releaseMessages()
+# None
+# markAsRead(true)
+# markAsRead(false)
+# addToWhiteBlackList(true)
+# addToWhiteBlackList(false)
+# saveAsMessage()
+# None
+# loadFirstPage()
+# loadLastPage()
+# loadPreviousPage()
+# loadNextPage()
+# None
+# selectQuickFilter(filter)
+# selectQuickFilter(filter)
+# selectQuickFilter(filter)
+# deleteMessage()
+
+#<ul data-ng-show="isMailMenuVisible()" class="nav mails-top-links navbar-right" style="margin-right: 12px">
+#        <li data-ng-style="{'visibility': loading?'hidden':'visible'}" style="visibility: visible;">
+#            <span class="fActionLink" data-ng-click="deleteMessage()" data-ng-show="!deleteInProgress" title="">
+#                <i class="fa fa-trash"></i>
+#                <!-- ngIf: !uiMainState.isSmallDesktop --><span data-ng-if="!uiMainState.isSmallDesktop" class="ng-binding ng-scope">&nbsp;Borrar</span><!-- end ngIf: !uiMainState.isSmallDesktop -->
+#            </span>
+#            <span class="disabled ng-hide" data-ng-show="deleteInProgress">
+#                <i class="fa fa-trash"></i>
+#                <!-- ngIf: !uiMainState.isSmallDesktop --><span data-ng-if="!uiMainState.isSmallDesktop" class="ng-binding ng-scope">&nbsp;Borrar</span><!-- end ngIf: !uiMainState.isSmallDesktop -->
+#            </span>
+#        </li>
+#    </ul>
+
+#css=.nav:nth-child(6) .fActionLink > .ng-binding
+
