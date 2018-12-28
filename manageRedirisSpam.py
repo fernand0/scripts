@@ -102,53 +102,14 @@ def getMessage(logging, browser, link, number, sel):
 
     return options.pop(), cellsA[0]['title'], cellsS[0]['title']
 
-def listMessages(logging, browser, link):
-
-    linkFollowing = link
-    page = 0
+def listMessages(logging, driver):
+    tr = driver.find_elements_by_tag_name('td')
     listMsg = []
-    linkMsg = []
+    for i in range(25):
+        num = 5*i
+        listMsg.append((tr[num+1].text,tr[num+2].text, tr[num+3].text, tr[num+4].text))
 
-    while (linkFollowing):
-        #print("link Following", linkFollowing)
-        linkMsg.append(linkFollowing)
-        browser.follow_link(linkFollowing)
-        forms = browser.get_forms()
-        
-        if len(forms) >= 4:
-            form  = forms[3]
-        # We need a copy
-            options = list(form['mails[]'].options)
-            options.reverse()
-            
-            logging.debug("Message ids %s" % options)
-
-            trList = browser.find_all("tr")
-            subjects = {}
-            
-            for row in trList:
-                cellsS = row.find_all("td", { "class" : "subject clickable"})
-                cellsA = row.find_all("td", { "class" : "sender clickable"})
-                if cellsS:
-                   listMsg.append((options.pop(), cellsA[0]['title'], cellsS[0]['title'], page))
-            
-            links = browser.get_links(title = "página siguiente")
-            logging.debug("------------------links %s %d %s" % (type(links),len(links), links))
-            matches = links #list(x for x in links if (x[0].contents and x[0].contents[0].find('siguiente')))
-            logging.debug("------------------matches %s" % matches)
-            if matches:
-                linkFollowing = matches[0]
-                page = page + 1
-            else:
-                linkFollowing = ""
-            logging.debug("Link following %s"% linkFollowing)
-        else:
-             listMsg = []
-             form = []
-             linkFollowing = ""
-    logging.debug("%d, %s " % (len(listMsg), listMsg))
-    logging.debug("%s", linkMsg)
-    return (listMsg, form, linkMsg)
+    return listMsg
 
 def showMessages(logging, listMsg):
     i = 0
@@ -157,7 +118,7 @@ def showMessages(logging, listMsg):
     #    numMsg = 10
     print("")
     for row in listMsg[0:numMsg]:
-        print("%2d) %-20s %-40s" % (i, listMsg[i][1][:25].ljust(25), listMsg[i][2][:50].ljust(50)))
+        print("%2d) %-10s %-40s" % (i, listMsg[i][0][:10].ljust(10), listMsg[i][1][:40].ljust(40)))
         i = i + 1
         if i % 10 == 0:
             print("---------------------------")
@@ -186,6 +147,26 @@ def selectMessages(logging, browser, link):
         else:
            return("", [], listMsg, linkMsg)
     return (sel, form, listMsg, linkMsg)
+
+def getCommands(logging, driver):
+
+    actionLinks = driver.find_elements_by_class_name('fActionLink')
+
+    # Identificar instrucciones relevantes
+    commands = {}
+    for tri in actionLinks:
+        operation = tri.get_attribute('data-ng-click')
+        if operation == 'deleteMessage()':
+            commands['delete'] = tri
+        elif operation == 'toggleSelectAll()':
+            commands['select'] = tri
+        elif operation == 'refreshMailbox()':
+            commands['refresh'] = tri
+        elif operation == 'releaseMessages()':
+            commands['release'] = tri
+
+    return(commands)
+
 
 def main():
     config = configparser.ConfigParser()
@@ -239,33 +220,26 @@ def main():
 
         driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk3.png'))
 
-        #lists = driver.find_element_by_tag_name('table')
-        tr = driver.find_elements_by_tag_name('td')
-        print(len(tr))
-        for i in range(100):
-            num = 6*i
-            print(tr[num+1].text,tr[num+2].text, tr[num+3].text, tr[num+4].text, tr[num+5].text)
+        listMsg = listMessages(logging, driver)
+        showMessages(logging, listMsg)
+        commands = getCommands(logging, driver)
+        #print(commands)
+
+        rep = input("Borrar todos? (s/n) ")
+        if (rep == 's'):
+            print("Borraré")
+            commands['select'].click()
+
+            time.sleep(1)
+            commands['delete'].click() 
+        elif rep.isdigit():
+            print("Salvar %s" % rep)
+            
+        
         sys.exit()
         tr[0].click()
         time.sleep(2)
         driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk4.png'))
-
-        delete = driver.find_elements_by_class_name('fActionLink')
-
-
-        # Identificar instrucciones relevantes
-        commands = {}
-        for tri in delete:
-            operation = tri.get_attribute('data-ng-click')
-            print(operation)
-            if operation == 'deleteMessage()':
-                commands['delete'] = tri
-            elif operation == 'toggleSelectAll()':
-                commands['select'] = tri
-            elif operation == 'refreshMailbox()':
-                commands['refresh'] = tri
-            elif operation == 'releaseMessages()':
-                commands['release'] = tri
 
         commands['delete'].click() 
 
