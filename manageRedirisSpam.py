@@ -241,6 +241,11 @@ def main():
 
         #lists = driver.find_element_by_tag_name('table')
         tr = driver.find_elements_by_tag_name('td')
+        print(len(tr))
+        for i in range(100):
+            num = 6*i
+            print(tr[num+1].text,tr[num+2].text, tr[num+3].text, tr[num+4].text, tr[num+5].text)
+        sys.exit()
         tr[0].click()
         time.sleep(2)
         driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk4.png'))
