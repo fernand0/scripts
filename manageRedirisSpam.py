@@ -17,6 +17,10 @@ import time
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 
 
 # https://github.com/jmcarp/robobrowser
@@ -107,7 +111,7 @@ def listMessages(logging, driver):
     listMsg = []
     for i in range(25):
         num = 5*i
-        listMsg.append((tr[num+1].text,tr[num+2].text, tr[num+3].text, tr[num+4].text))
+        listMsg.append((tr[num], tr[num+1].text,tr[num+2].text, tr[num+3].text, tr[num+4].text))
 
     return listMsg
 
@@ -118,10 +122,10 @@ def showMessages(logging, listMsg):
     #    numMsg = 10
     print("")
     for row in listMsg[0:numMsg]:
-        print("%2d) %-10s %-40s" % (i, listMsg[i][0][:10].ljust(10), listMsg[i][1][:40].ljust(40)))
+        print("%2d) %-10s %-40s" % (i, listMsg[i][1][:10].ljust(10), listMsg[i][2][:40].ljust(40)))
         i = i + 1
-        if i % 10 == 0:
-            print("---------------------------")
+        #if i % 10 == 0:
+        #    print("---------------------------")
 
 def selectMessageText(logging, browser, text, link):
     links = link
@@ -164,6 +168,10 @@ def getCommands(logging, driver):
             commands['refresh'] = tri
         elif operation == 'releaseMessages()':
             commands['release'] = tri
+        elif operation == 'loadNextPage()':
+            commands['next'] = tri
+        elif operation == 'loadPreviousPage()':
+            commands['prev'] = tri
 
     return(commands)
 
@@ -211,8 +219,18 @@ def main():
 
             driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk2.png'))
 
-            elemP.send_keys(Keys.RETURN)
+            elemP.send_keys(Keys.RETURN) 
+            #wait=WebDriverWait(driver, 60) 
+            #wait.until(EC.text_to_be_present_in_element_value("data-ng-if","loadingIsDone"))
+
+            #print("Waiting...")
+            #driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kkEnd.png'))
+            #print("End...")
+            #driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kkEnd.png'))
+
+            #sys.exit()
             time.sleep(30)
+            driver.page_source)
             try: 
                 elemU = driver.find_element_by_name("username").clear()
             except: 
@@ -221,21 +239,32 @@ def main():
         driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk3.png'))
 
         listMsg = listMessages(logging, driver)
-        showMessages(logging, listMsg)
-        commands = getCommands(logging, driver)
-        #print(commands)
+        while listMsg:
+            showMessages(logging, listMsg)
+            commands = getCommands(logging, driver)
+            #print(commands)
 
-        rep = input("Borrar todos? (s/n) ")
-        if (rep == 's'):
-            print("Borraré")
-            commands['select'].click()
+            rep = input("Borrar todos? (s/n) ")
+            if (rep == 's'):
+                print("Borraré")
+                commands['select'].click()
+                time.sleep(2)
+                driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kkSelAll.png'))
+                commands['delete'].click() 
+            elif rep.isdigit():
+                print("Salvar %s" % rep)
+                print(listMsg[int(rep)])
+                listMsg[int(rep)][0].click()
+                time.sleep(2)
+                driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kkSelect.png'))
+                commands['delete'].click() 
+                time.sleep(1)
 
-            time.sleep(1)
-            commands['delete'].click() 
-        elif rep.isdigit():
-            print("Salvar %s" % rep)
+            commands['refresh'].click()
+            time.sleep(30)
+            driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kkNew.png'))
+            listMsg = listMessages(logging, driver)
             
-        
         sys.exit()
         tr[0].click()
         time.sleep(2)
