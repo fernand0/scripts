@@ -107,11 +107,21 @@ def getMessage(logging, browser, link, number, sel):
     return options.pop(), cellsA[0]['title'], cellsS[0]['title']
 
 def listMessages(logging, driver):
-    tr = driver.find_elements_by_tag_name('td')
-    listMsg = []
-    for i in range(25):
-        num = 5*i
-        listMsg.append((tr[num], tr[num+1].text,tr[num+2].text, tr[num+3].text, tr[num+4].text))
+    tr = []
+    i = 0
+    while(not tr):
+        try:
+            driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk3'+str(i)+'.png'))
+            tr = driver.find_elements_by_tag_name('td')
+            print(tr)
+            listMsg = []
+            for i in range(25):
+                num = 5*i
+                listMsg.append((tr[num], tr[num+1].text,tr[num+2].text, tr[num+3].text, tr[num+4].text))
+        except: 
+            print("Wait...")
+            time.sleep(4)
+        i = i + 1
 
     return listMsg
 
@@ -220,6 +230,7 @@ def main():
             driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk2.png'))
 
             elemP.send_keys(Keys.RETURN) 
+            time.sleep(1)
             #wait=WebDriverWait(driver, 60) 
             #wait.until(EC.text_to_be_present_in_element_value("data-ng-if","loadingIsDone"))
 
@@ -229,8 +240,6 @@ def main():
             #driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kkEnd.png'))
 
             #sys.exit()
-            time.sleep(30)
-            driver.page_source)
             try: 
                 elemU = driver.find_element_by_name("username").clear()
             except: 
@@ -238,7 +247,15 @@ def main():
 
         driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk3.png'))
 
-        listMsg = listMessages(logging, driver)
+        while True:
+            if True: 
+                listMsg = listMessages(logging, driver) 
+                break
+            else: 
+                print("Wait...")
+                time.sleep(2)
+            print(driver.page_source)
+
         while listMsg:
             showMessages(logging, listMsg)
             commands = getCommands(logging, driver)
