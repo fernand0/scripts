@@ -119,6 +119,7 @@ def listMessages(logging, driver):
                 numMsgs = int(title[posIni:posFin])
             else:
                 numMsgs = 0
+            print("There are ... %d spam messages" % numMsgs)
             tr = driver.find_elements_by_tag_name('td')
             listMsg = []
             #print(len(tr))
