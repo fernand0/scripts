@@ -44,6 +44,43 @@ optTxt = {
           'a': 'Deleting all'
         } 
 
+def makeConnection(SERVER, USER, PASSWORD):
+    url = 'https://'+SERVER+'/'
+
+    chrome_options = Options() 
+    chrome_options.add_argument("--headless") 
+    chrome_options.binary_location = '/usr/bin/chromium-browser' 
+    driver = webdriver.Chrome(executable_path=os.path.expanduser('~/usr/bin/chromedriver'),   chrome_options=chrome_options) 
+    driver.get(url)
+    time.sleep(1)
+    driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk1.png'))
+
+
+    elemU = driver.find_element_by_name("username")
+    #while elemU:
+    print("Identifying...")
+    elemP = driver.find_element_by_name("password")
+    elemU.clear()
+    elemU.send_keys(USER)
+    elemP.clear()
+    elemP.send_keys(PASSWORD)
+
+    driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk2.png'))
+
+    elemP.send_keys(Keys.RETURN) 
+    time.sleep(1)
+    #    try: 
+    #        elemU = driver.find_element_by_name("username").clear()
+    #    except: 
+    #        elemU = None
+
+    driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk3.png'))
+
+    return driver
+
+
+    
+
 def getPassword(server, user):
     # Deleting keyring.delete_password(server, user)
     password = keyring.get_password(server, user)
@@ -203,86 +240,54 @@ def main():
     
     rows, columns = os.popen('stty size', 'r').read().split()
 
-    while True:
-        i = 1
-        print("Configured accounts:")
-        for section in config.sections():
-            print('%s) %s' % (str(i), section))
-            i = i + 1
-        selection = input('Select one: ')
+    i = 1
+    print("Configured accounts:")
+    for section in config.sections():
+        print('%s) %s' % (str(i), section))
+        i = i + 1
+    selection = input('Select one: ')
 
-        logging.basicConfig(#filename='example.log',
-                            level=logging.INFO,format='%(asctime)s %(message)s')
-        SERVER = config.get(config.sections()[int(selection) - 1], 'server')
-        USER = config.get(config.sections()[int(selection) - 1], 'user')
-        PASSWORD = getPassword(SERVER, USER)
+    logging.basicConfig(#filename='example.log',
+                        level=logging.INFO,format='%(asctime)s %(message)s')
+    SERVER = config.get(config.sections()[int(selection) - 1], 'server')
+    USER = config.get(config.sections()[int(selection) - 1], 'user')
+    PASSWORD = getPassword(SERVER, USER)
 
-        url = 'https://'+SERVER+'/'
+    driver = makeConnection(SERVER, USER, PASSWORD)
+    PASSWORD = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX' 
 
+    listMsg = listMessages(logging, driver) 
+    #print(driver.page_source)
 
-        chrome_options = Options() 
-        chrome_options.add_argument("--headless") 
-        chrome_options.binary_location = '/usr/bin/chromium-browser' 
-        driver = webdriver.Chrome(executable_path=os.path.expanduser('~/usr/bin/chromedriver'),   chrome_options=chrome_options) 
-        driver.get(url)
-        time.sleep(1)
-        driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk1.png'))
+    while listMsg:
+        showMessages(logging, listMsg)
 
-
-        elemU = driver.find_element_by_name("username")
-        while elemU:
-            print("Identifying...")
-            elemP = driver.find_element_by_name("password")
-            elemU.clear()
-            elemU.send_keys(USER)
-            elemP.clear()
-            elemP.send_keys(PASSWORD)
-
-            driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk2.png'))
-
-            elemP.send_keys(Keys.RETURN) 
-            time.sleep(1)
-            try: 
-                elemU = driver.find_element_by_name("username").clear()
-            except: 
-                elemU = None
-
-        driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk3.png'))
-
-        time.sleep(30)
-        listMsg = listMessages(logging, driver) 
-        #print(driver.page_source)
-
-        while listMsg:
-            showMessages(logging, listMsg)
+        commands = getCommands(logging, driver)
+        rep = input("Borrar todos? (s/n) ")
+        if (rep == 's'):
+            print("Borraré")
+            commands['select'].click()
+            time.sleep(2)
+            driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kkSelAll.png'))
+            commands = getCommands(logging, driver)
+            commands['delete'].click() 
+        elif rep.isdigit():
+            print("Salvar %s" % rep)
+            print(listMsg[int(rep)])
+            listMsg[int(rep)][0].click()
+            time.sleep(2)
+            driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kkSelect.png'))
 
             commands = getCommands(logging, driver)
-            rep = input("Borrar todos? (s/n) ")
-            if (rep == 's'):
-                print("Borraré")
-                commands['select'].click()
-                time.sleep(2)
-                driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kkSelAll.png'))
-                commands = getCommands(logging, driver)
-                commands['delete'].click() 
-            elif rep.isdigit():
-                print("Salvar %s" % rep)
-                print(listMsg[int(rep)])
-                listMsg[int(rep)][0].click()
-                time.sleep(2)
-                driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kkSelect.png'))
-
-                commands = getCommands(logging, driver)
-                commands['release'].click() 
-                time.sleep(1)
-            elif rep == 'n':
-                sys.exit()
-
-            commands['refresh'].click()
+            commands['release'].click() 
             time.sleep(1)
-            listMsg = listMessages(logging, driver)
-            
+        elif rep == 'n':
+            sys.exit()
 
+        commands['refresh'].click()
+        time.sleep(1)
+        listMsg = listMessages(logging, driver)
+            
 if __name__ == '__main__':
     main()
     
