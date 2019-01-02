@@ -49,8 +49,8 @@ def makeConnection(SERVER, USER, PASSWORD):
 
     chrome_options = Options() 
     chrome_options.add_argument("--headless") 
-    chrome_options.binary_location = '/usr/bin/chromium-browser' 
-    driver = webdriver.Chrome(executable_path=os.path.expanduser('~/usr/bin/chromedriver'),   chrome_options=chrome_options) 
+    chrome_options.binary_location = os.path.expanduser('~/usr/local/bin/chromedriver') 
+    driver = webdriver.Chrome(chrome_options=chrome_options) 
     driver.get(url)
     time.sleep(1)
     driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk1.png'))
@@ -236,7 +236,7 @@ def getCommands(logging, driver):
 
 def main():
     config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.IMAP.cfg')])
+    config.read([os.path.expanduser('~/.mySocial/config/Web.cfg')])
     
     rows, columns = os.popen('stty size', 'r').read().split()
 
