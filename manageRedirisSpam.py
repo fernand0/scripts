@@ -10,6 +10,7 @@ import keyring
 import getpass
 
 import time
+import datetime
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -26,8 +27,8 @@ def makeConnection(SERVER, USER, PASSWORD):
 
     chrome_options = Options() 
     chrome_options.add_argument("--headless") 
-    chrome_options.binary_location = os.path.expanduser('~/usr/local/bin/chromedriver') 
-    driver = webdriver.Chrome(chrome_options=chrome_options) 
+    chrome_options.binary_location = '/usr/bin/chromium-browser' 
+    driver = webdriver.Chrome(executable_path= os.path.expanduser('~/usr/local/bin/chromedriver') , chrome_options=chrome_options) 
     driver.get(url)
     time.sleep(1)
     driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk1.png'))
@@ -124,23 +125,38 @@ def listMessages(logging, driver):
     tr = []
     i = 0
     while(not tr):
-        try:
+        if True:
+            time.sleep(30)
             driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk3'+str(i)+'.png'))
             title = driver.title
             posIni = title.find('(')+1
             posFin = title.find(')')
+            with open("/tmp/%s-%s.html" % 
+                    (datetime.date.today().isoformat(), time.time()), "w") as f:
+                f.write(driver.page_source)
             if posIni > 0:
                 numMsgs = int(title[posIni:posFin])
             else:
                 numMsgs = 0
             print("There are ... %d spam messages" % numMsgs)
+            elements = driver.find_elements_by_class_name("ng-binding")
+            numMax = 0
+            for element in elements:
+                if element.text.find(' of ')>0: 
+                    posIni = element.text.find('-')
+                    posFin = element.text.find(' ')
+                    numMax = int(element.text[posIni+1:posFin])
+
+
+
+
             tr = driver.find_elements_by_tag_name('td')
             listMsg = []
             #print(len(tr))
-            for i in range(min(25,numMsgs)):
+            for i in range(min(numMax,numMsgs)):
                 num = 5*i
                 listMsg.append((tr[num], tr[num+1].text,tr[num+2].text, tr[num+3].text, tr[num+4].text))
-        except: 
+        else: 
             print("Wait...")
             tr = []
             time.sleep(3)
