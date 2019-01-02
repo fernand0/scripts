@@ -160,12 +160,12 @@ def listMessages(logging, driver):
             tr = driver.find_elements_by_tag_name('td')
             listMsg = []
             #print(len(tr))
-            for i in range(numMsgs):
+            for i in range(min(25,numMsgs)):
                 num = 5*i
                 listMsg.append((tr[num], tr[num+1].text,tr[num+2].text, tr[num+3].text, tr[num+4].text))
         except: 
-            tr = []
             print("Wait...")
+            tr = []
             time.sleep(3)
         i = i + 1
 
