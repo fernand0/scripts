@@ -861,7 +861,7 @@ def moveMailsRemote(M, msgs, folder):
 
 
 def moveMails(M, msgs, folder):
-    print("Copying ", msgs, " in ", folder)
+    logging.info("Copying %s  in %s" % (msgs, folder))
     (status, resultMsg) = M.copy(msgs, folder)
     if status == 'OK':
         # If the list of messages is too long it won't work
