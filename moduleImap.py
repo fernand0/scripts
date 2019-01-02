@@ -92,7 +92,11 @@ def mailFolder(account, accountData, logging, res):
 
     srvMsg = SERVER.split('.')[0]
     usrMsg = USER.split('@')[0]
-    M = makeConnection(SERVER, USER, PASSWORD)
+    try: 
+        M = makeConnection(SERVER, USER, PASSWORD)
+    except:
+        logging.error("Error with %s - %s" % (USER,SERVER))
+        
 
 
     for actions in accountData['RULES']:
@@ -156,7 +160,7 @@ def mailFolder(account, accountData, logging, res):
                         #print("remote")
                         status = moveMailsRemote(M, msgs, FOLDER)
                     else:
-                        print("msgs", msgs)
+                        logging.info("msgs %s", msgs)
                         result = M.copy(msgs, FOLDER)
                         status = result[0]
                 i = msgs.count(',') + 1
@@ -250,7 +254,7 @@ def selectMessageAndFolder(M):
         numMsgs = 24
         if rows:
            numMsgs = int(rows) - 3
-        print("folder",folder)
+        #print("folder",folder)
         try:
            M.select(folder)
         except:
@@ -273,7 +277,7 @@ def selectMessageAndFolder(M):
                 else:
                     folder = selectFolder(M, msg_number[1:])
                     startMsg = 0
-                    print("folder",folder)
+                    #print("folder",folder)
                     #folder = nameFolder(folder) 
             elif (len(msg_number) > 0) and (msg_number[0] == '+'):
                 if msg_number[1:].isdigit():
@@ -302,7 +306,7 @@ def selectMessage(M):
         numMsgs = 24
         if rows:
            numMsgs = int(rows) - 3
-        print("folder",folder)
+        #print("folder",folder)
         try:
            M.select(folder)
         except:
@@ -395,7 +399,7 @@ def selectHash(M, folder, hashSelect):
 
 def selectAllMessages(folder, M):
     msgs = ""
-    print("folder",folder)
+    #print("folder",folder)
     M.select(folder)
     data = M.sort('ARRIVAL', 'UTF-8', 'ALL')
     if (data[0] == 'OK'):
