@@ -8,35 +8,12 @@ import re
 import logging
 import keyring
 import getpass
-from robobrowser import RoboBrowser
-from requests import Session
-from robobrowser import RoboBrowser
 
 import time
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-
-
-
-# https://github.com/jmcarp/robobrowser
-
-# This program tries to provide a command line interface for the puc.rediris.es
-# web application. It is intended for managing spam in academic accounts whose
-# organizations have subscribed the service. I'm quite happy with the service
-# but I'd prefer to have an IMAP interface or somethin like that. For this
-# reason I'm programming this program that can interact with the web site
-# without having to use a broswer. I think this approach is way more adequate,
-# at least for me. I'll try to improve usability, capabilities and son on,
-# because in the actual state the usage is pretty basic and primitive.
-
-# Next message.
-# Spam: https://puc.rediris.es/users/index.php?set_proxy_panel=PROXY_USER&pageID=2
-# Valid: https://puc.rediris.es/users/index.php?set_proxy_panel=PROXY_USER&action=showValidMail&pageID=2
 
 optTxt = {
           '' : 'No messages',
@@ -49,8 +26,8 @@ def makeConnection(SERVER, USER, PASSWORD):
 
     chrome_options = Options() 
     chrome_options.add_argument("--headless") 
-    chrome_options.binary_location = '/usr/bin/chromium-browser' 
-    driver = webdriver.Chrome(executable_path=os.path.expanduser('~/usr/bin/chromedriver'),   chrome_options=chrome_options) 
+    chrome_options.binary_location = os.path.expanduser('~/usr/local/bin/chromedriver') 
+    driver = webdriver.Chrome(chrome_options=chrome_options) 
     driver.get(url)
     time.sleep(1)
     driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk1.png'))
@@ -236,7 +213,7 @@ def getCommands(logging, driver):
 
 def main():
     config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.IMAP.cfg')])
+    config.read([os.path.expanduser('~/.mySocial/config/Web.cfg')])
     
     rows, columns = os.popen('stty size', 'r').read().split()
 
