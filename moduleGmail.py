@@ -22,6 +22,9 @@ from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
 
+import base64
+import email
+
 from configMod import *
 
 def API(Acc, pp):
@@ -39,7 +42,6 @@ def API(Acc, pp):
     
     fileStore = confName(api, 
             (config.get(Acc,'server'), config.get(Acc,'user'))) 
-    print("fileStore", fileStore)
 
     logging.debug("Filestore %s"% fileStore)
     store = file.Storage(fileStore)
@@ -49,6 +51,57 @@ def API(Acc, pp):
     service = build('gmail', 'v1', http=credentials.authorize(Http()))
 
     return(service)
+
+def lookForLabel(api, name):
+    results = api.users().labels().list(userId='me').execute() 
+    for label in results['labels']: 
+        if label['name'] == name: 
+            labelId = label['id'] 
+            break
+
+    return(labelId)
+
+def moveMessage(api,  message):
+    labelId = lookForLabel(api, 'imported')
+    mesGE = base64.urlsafe_b64encode(message).decode()
+    mesT = email.message_from_bytes(message)
+    subj = email.header.decode_header(mesT['subject'])[0][0]
+    logging.info("Subject %s",subj)
+
+    try:
+        messageR = api.users().messages().import_(userId='me',
+                  fields='id',
+                  neverMarkSpam=True,
+                  processForCalendar=False,
+                  internalDateSource='dateHeader',
+                  body={'raw': mesGE}).execute(num_retries=5)
+       #           media_body=media).execute(num_retries=1)
+    except: 
+        # When the message is too big
+        # https://github.com/google/import-mailbox-to-gmail/blob/master/import-mailbox-to-gmail.py
+
+        logging.info("Fail 2")
+        try:
+            mesGS = BytesParser().parsebytes(mesG).as_string()
+            media =  MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
+            messageR = api.users().messages().import_(userId='me',
+                      fields='id',
+                      neverMarkSpam=True,
+                      processForCalendar=False,
+                      internalDateSource='dateHeader',
+                      body={},
+                      media_body=media).execute(num_retries=3)
+        except: 
+            logging.info("Error with message %s" % mesGS) 
+            return("Fail!")
+    msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
+
+    messageR = api.users().messages().modify(userId='me', id=messageR['id'],
+                                                        body=msg_labels).execute()
+
+    return(messageR)
+
+
 
 def getPostsCache(api):        
     drafts = api.users().drafts().list(userId='me').execute()
