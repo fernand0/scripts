@@ -22,6 +22,9 @@ from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
 
+import base64
+import email
+
 from configMod import *
 
 def API(Acc, pp):
@@ -40,12 +43,65 @@ def API(Acc, pp):
     fileStore = confName(api, 
             (config.get(Acc,'server'), config.get(Acc,'user'))) 
 
+    logging.debug("Filestore %s"% fileStore)
     store = file.Storage(fileStore)
     credentials = store.get()
+    
 
     service = build('gmail', 'v1', http=credentials.authorize(Http()))
 
     return(service)
+
+def lookForLabel(api, name):
+    results = api.users().labels().list(userId='me').execute() 
+    for label in results['labels']: 
+        if label['name'] == name: 
+            labelId = label['id'] 
+            break
+
+    return(labelId)
+
+def moveMessage(api,  message):
+    labelId = lookForLabel(api, 'imported')
+    mesGE = base64.urlsafe_b64encode(message).decode()
+    mesT = email.message_from_bytes(message)
+    subj = email.header.decode_header(mesT['subject'])[0][0]
+    logging.info("Subject %s",subj)
+
+    try:
+        messageR = api.users().messages().import_(userId='me',
+                  fields='id',
+                  neverMarkSpam=True,
+                  processForCalendar=False,
+                  internalDateSource='dateHeader',
+                  body={'raw': mesGE}).execute(num_retries=5)
+       #           media_body=media).execute(num_retries=1)
+    except: 
+        # When the message is too big
+        # https://github.com/google/import-mailbox-to-gmail/blob/master/import-mailbox-to-gmail.py
+
+        logging.info("Fail 2")
+        try:
+            mesGS = BytesParser().parsebytes(mesG).as_string()
+            media =  MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
+            messageR = api.users().messages().import_(userId='me',
+                      fields='id',
+                      neverMarkSpam=True,
+                      processForCalendar=False,
+                      internalDateSource='dateHeader',
+                      body={},
+                      media_body=media).execute(num_retries=3)
+        except: 
+            logging.info("Error with message %s" % mesGS) 
+            return("Fail!")
+    msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
+
+    messageR = api.users().messages().modify(userId='me', id=messageR['id'],
+                                                        body=msg_labels).execute()
+
+    return(messageR)
+
+
 
 def getPostsCache(api):        
     drafts = api.users().drafts().list(userId='me').execute()
@@ -79,7 +135,7 @@ def listPosts(api, pp, service=""):
                 listP.append((header['value'], '', '', '', '', '', '', '', draft['id'], ''))
 
 
-    logging.info("-Posts %s"% listP)
+    logging.debug("-Posts %s"% listP)
 
     if len(listP) > 0: 
         for element in listP: 
@@ -98,7 +154,7 @@ def confName(api, acc):
 def updatePostsCache(blog, listPosts, socialNetwork=()):
     pass
 
-def publishPost(cache, pp, posts, toPublish):
+def showPost(cache, pp, posts, toPublish):
     logging.info("To publish %s" % pp.pformat(toPublish))
 
     profMov = toPublish[0]
@@ -106,9 +162,10 @@ def publishPost(cache, pp, posts, toPublish):
     logging.info("Profile %s position %d" % (profMov, j))
 
     update = ""
-    logging.info("Cache antes %s" % pp.pformat(cache))
+    logging.debug("Cache antes %s" % pp.pformat(cache))
     profiles = cache #['profiles']
-    logging.info("Cache profiles antes %s" % pp.pformat(profiles))
+    logging.debug("Cache profiles antes %s" % pp.pformat(profiles))
+    title = None
     accC = 0
     for profile in profiles: 
         logging.info("Social Network %s" % profile)
@@ -130,10 +187,55 @@ def publishPost(cache, pp, posts, toPublish):
                 else:
                     posts = posts[serviceName+str(accC)]
 
-                logging.info("In %s" % pp.pformat(serviceName))
-                logging.info("Profile %s" % pp.pformat(profile))
-                logging.info("Profile posts %s" % pp.pformat(posts))
-                logging.info("Service name %s" % serviceName)
+                logging.debug("In %s" % pp.pformat(serviceName))
+                logging.debug("Profile %s" % pp.pformat(profile))
+                logging.debug("Profile posts %s" % pp.pformat(posts))
+                logging.debug("Service name %s" % serviceName)
+                numPosts = len(posts['pending'])
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts['pending'][j])
+
+    if title: 
+        return(title+link)
+    else:
+        return(None)
+
+
+def publishPost(cache, pp, posts, toPublish):
+    logging.info("To publish %s" % pp.pformat(toPublish))
+
+    profMov = toPublish[0]
+    j = toPublish[1]
+    logging.info("Profile %s position %d" % (profMov, j))
+
+    update = ""
+    logging.debug("Cache antes %s" % pp.pformat(cache))
+    profiles = cache #['profiles']
+    logging.debug("Cache profiles antes %s" % pp.pformat(profiles))
+    accC = 0
+    for profile in profiles: 
+        logging.info("Social Network %s" % profile)
+        if 'gmail' in profile._baseUrl:
+            serviceName = 'Mail'
+            #nick = profile['socialNetwork'][1]
+            if (serviceName[0] in profMov) or toPublish[0]=='*': 
+                if (len(toPublish) == 3):
+                    logging.info("Which one?") 
+                    acc = toPublish[2]
+                    if int(acc) != accC: 
+                        logging.info("Not this one %s" % profile)
+                        accC = accC + 1
+                        continue
+                    else:
+                        # We are in the adequate account, we can drop de qualifier
+                        # for the publishing method
+                        posts = posts[serviceName+str(accC)]
+                else:
+                    posts = posts[serviceName+str(accC)]
+
+                logging.debug("In %s" % pp.pformat(serviceName))
+                logging.debug("Profile %s" % pp.pformat(profile))
+                logging.debug("Profile posts %s" % pp.pformat(posts))
+                logging.debug("Service name %s" % serviceName)
                 numPosts = len(posts['pending'])
                 (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts['pending'][j])
                 logging.info(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
@@ -157,16 +259,13 @@ def deletePost(cache, pp, posts, toPublish):
     j = toPublish[1]
 
     update = ""
-    logging.info("Cache antes %s" % pp.pformat(cache))
+    logging.debug("Cache antes %s" % pp.pformat(cache))
     profiles = cache
-    logging.info("Cache profiles antes %s" % pp.pformat(profiles))
+    logging.debug("Cache profiles antes %s" % pp.pformat(profiles))
     accC = 0
     for profile in profiles: 
         logging.info("Social Network %s" % profile)
         if 'gmail' in profile._baseUrl:
-            #print(profile)
-            #print(profile._baseUrl)
-            #print(profile.users().getProfile(userId='me').execute())
             serviceName = 'Mail'
             if (serviceName[0] in profMov) or toPublish[0]=='*':
                 if (len(toPublish) == 3):
