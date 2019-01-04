@@ -24,6 +24,7 @@ from oauth2client import file, client, tools
 
 import base64
 import email
+from email.parser import BytesParser
 
 from configMod import *
 
@@ -82,8 +83,8 @@ def moveMessage(api,  message):
 
         logging.info("Fail 2")
         try:
-            mesGS = BytesParser().parsebytes(mesG).as_string()
-            media =  MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
+            mesGS = BytesParser().parsebytes(message).as_string()
+            media =  MediaIoBaseUpload(io.StringIO(message), mimetype='message/rfc822')
             messageR = api.users().messages().import_(userId='me',
                       fields='id',
                       neverMarkSpam=True,
@@ -92,7 +93,7 @@ def moveMessage(api,  message):
                       body={},
                       media_body=media).execute(num_retries=3)
         except: 
-            logging.info("Error with message %s" % mesGS) 
+            logging.info("Error with message %s" % message) 
             return("Fail!")
     msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
 
