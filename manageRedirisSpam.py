@@ -8,31 +8,13 @@ import re
 import logging
 import keyring
 import getpass
-from robobrowser import RoboBrowser
-from requests import Session
-from robobrowser import RoboBrowser
 
 import time
+import datetime
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
-
-
-# https://github.com/jmcarp/robobrowser
-
-# This program tries to provide a command line interface for the puc.rediris.es
-# web application. It is intended for managing spam in academic accounts whose
-# organizations have subscribed the service. I'm quite happy with the service
-# but I'd prefer to have an IMAP interface or somethin like that. For this
-# reason I'm programming this program that can interact with the web site
-# without having to use a broswer. I think this approach is way more adequate,
-# at least for me. I'll try to improve usability, capabilities and son on,
-# because in the actual state the usage is pretty basic and primitive.
-
-# Next message.
-# Spam: https://puc.rediris.es/users/index.php?set_proxy_panel=PROXY_USER&pageID=2
-# Valid: https://puc.rediris.es/users/index.php?set_proxy_panel=PROXY_USER&action=showValidMail&pageID=2
 
 optTxt = {
           '' : 'No messages',
@@ -45,8 +27,8 @@ def makeConnection(SERVER, USER, PASSWORD):
 
     chrome_options = Options() 
     chrome_options.add_argument("--headless") 
-    chrome_options.binary_location = os.path.expanduser('~/usr/local/bin/chromedriver') 
-    driver = webdriver.Chrome(chrome_options=chrome_options) 
+    chrome_options.binary_location = '/usr/bin/chromium-browser' 
+    driver = webdriver.Chrome(executable_path= os.path.expanduser('~/usr/local/bin/chromedriver') , chrome_options=chrome_options) 
     driver.get(url)
     time.sleep(1)
     driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk1.png'))
@@ -143,25 +125,40 @@ def listMessages(logging, driver):
     tr = []
     i = 0
     while(not tr):
-        try:
+        if True:
+            time.sleep(30)
             driver.save_screenshot(os.path.join(os.path.dirname(os.path.realpath(__file__)), '/tmp', 'kk3'+str(i)+'.png'))
             title = driver.title
             posIni = title.find('(')+1
             posFin = title.find(')')
+            with open("/tmp/%s-%s.html" % 
+                    (datetime.date.today().isoformat(), time.time()), "w") as f:
+                f.write(driver.page_source)
             if posIni > 0:
                 numMsgs = int(title[posIni:posFin])
             else:
                 numMsgs = 0
             print("There are ... %d spam messages" % numMsgs)
+            elements = driver.find_elements_by_class_name("ng-binding")
+            numMax = 0
+            for element in elements:
+                if element.text.find(' of ')>0: 
+                    posIni = element.text.find('-')
+                    posFin = element.text.find(' ')
+                    numMax = int(element.text[posIni+1:posFin])
+
+
+
+
             tr = driver.find_elements_by_tag_name('td')
             listMsg = []
             #print(len(tr))
-            for i in range(numMsgs):
+            for i in range(min(numMax,numMsgs)):
                 num = 5*i
                 listMsg.append((tr[num], tr[num+1].text,tr[num+2].text, tr[num+3].text, tr[num+4].text))
-        except: 
-            tr = []
+        else: 
             print("Wait...")
+            tr = []
             time.sleep(3)
         i = i + 1
 

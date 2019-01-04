@@ -36,6 +36,7 @@ class moduleBlog():
          self.program = None
          self.xmlrpc = None
          self.lastLinkPublished = {}
+         self.keys = []
          #self.logger = logging.getLogger(__name__)
  
     def getUrl(self):
@@ -179,6 +180,12 @@ class moduleBlog():
                 return(blog['blogid'], blog['blogName'])
 
         return(-1)
+
+    def getKeys(self):
+        return(self.keys)
+
+    def setKeys(self, keys):
+        self.keys = keys
 
     def getLinkPosition(self, link):
         i = 0
