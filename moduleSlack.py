@@ -153,11 +153,10 @@ class moduleSlack():
                 i = i + 1
         return(i)
     
-    def deletePost(self, idPost): 
+    def deletePost(self, idPost, theChannel): 
         logging.info("Deleting id %s" % idPost)
         # Needs improvement
             
-    
         result = self.sc.api_call("chat.delete", channel=theChannel, ts=idPost)
     
         logging.info(result)
@@ -405,15 +404,18 @@ def main():
             socialNetwork = (profile,site.getSocialNetworks()[profile])
 
             listP = site.listPostsCache(socialNetwork)
-            listPosts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
-            listP = listP + listPosts
+            listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
+            listP = listP + listPsts
             print(site.getUrl())
             import moduleCache
             moduleCache.updatePostsCache(site, listP, socialNetwork)
 
-    site.deletePost(outputData['Slack']['pending'][elem][-2])
-    print(len(outputData['Slack']['pending'][0]))
     outputData, posts = site.listPosts()
+    print(outputData['Slack']['pending'][elem])
+    print(outputData['Slack']['pending'][elem][8])
+    theChannel = site.getChanId("links")  
+    site.deletePost(outputData['Slack']['pending'][elem][-2], theChannel)
+    # We should check for consistency 
 
     i = 0
     listLinks = ""
