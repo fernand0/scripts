@@ -411,12 +411,6 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
             fail = 'yes'
 
     logger.info("  %s service" % line)
-    if (fail == 'no' and link):
-        blog.updateLastLink(link, 
-            (profile['service'], profile['service_username']))
-        #fileName = DATADIR + '/' + urllib.parse.urlparse(link).netloc + ".last"
-        #with open(fileName, "w") as f: 
-        #    f.write(link)
 
 def searchTwitter(search, twitter): 
     t = connectTwitter(twitter)

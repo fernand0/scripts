@@ -49,10 +49,7 @@ class moduleBlog():
         return(self.name)
 
     def setName(self, name):
-        if not self.xmlrpc:
-            self.setXmlRpc()
-        else:
-            self.name = name
+        self.name = name
 
     def getRssFeed(self):
         return(self.rssFeed)
@@ -124,14 +121,6 @@ class moduleBlog():
         logging.debug(urlRss)
         self.postsRss = feedparser.parse(urlRss)
 
-    def searchChannelSlack(self, sc, name):
-        chanList = sc.api_call("channels.list")['channels'] 
-        for channel in chanList: 
-            if channel['name_normalized'] == name: 
-                return(channel['id']) 
-
-        return(-1)
-
     def setPostsSlack(self):
         if self.postsSlack is None:
             self.postsSlack = []
@@ -139,7 +128,7 @@ class moduleBlog():
             config.read(CONFIGDIR + '/.rssSlack')
             slack_token = config["Slack"].get('api-key')
             sc = SlackClient(slack_token)
-            theChannel = self.searchChannelSlack(sc, 'links')
+            theChannel = moduleSlack.getChanId(sc, 'links')
             history = sc.api_call( "channels.history", count=1000, channel=theChannel)
             logging.debug(history)
             for msg in history['messages']:
@@ -256,7 +245,7 @@ class moduleBlog():
 
             sc = SlackClient(slack_token)
 
-            theChannel = self.searchChannelSlack(sc, 'links')
+            theChannel = moduleSlack.getChanId(sc, 'links')
 
             result = sc.api_call("chat.delete", channel=theChannel, ts=idPost)
 
