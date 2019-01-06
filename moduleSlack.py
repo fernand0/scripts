@@ -155,18 +155,10 @@ class moduleSlack():
     
     def deletePost(self, idPost): 
         logging.info("Deleting id %s" % idPost)
-        if self.getPostsSlack():
-            # Needs improvement
-            config = configparser.ConfigParser() 
-            config.read(CONFIGDIR + '/.rssSlack')
+        # Needs improvement
             
-            slack_token = config["Slack"].get('api-key')
     
-            sc = SlackClient(slack_token)
-    
-            theChannel = moduleSlack.getChanId( 'links')
-    
-            result = sc.api_call("chat.delete", channel=theChannel, ts=idPost)
+        result = self.sc.api_call("chat.delete", channel=theChannel, ts=idPost)
     
         logging.info(result)
         return(result)
@@ -382,6 +374,8 @@ def main():
             socialNetwork = (option, nick)
             site.addSocialNetwork(socialNetwork)
 
+    elem = 2
+
     if site.getBufferapp():
         api = moduleSocial.connectBuffer()
 
@@ -390,7 +384,7 @@ def main():
         for profile in profileList:
             print("        getBuffer %s" % profile['service'])
 
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(0, False))
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
             print(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)
             print("first", firstLink)
             # In order to avoid saving the link as the last one
@@ -417,6 +411,8 @@ def main():
             import moduleCache
             moduleCache.updatePostsCache(site, listP, socialNetwork)
 
+    site.deletePost(outputData['Slack']['pending'][elem][-2])
+    print(len(outputData['Slack']['pending'][0]))
     outputData, posts = site.listPosts()
 
     i = 0
