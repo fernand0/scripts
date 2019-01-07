@@ -235,7 +235,7 @@ def main():
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i, False))
                             moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
                             if link:
-                                blog.updateLastLink(link, 
+                                moduleCache.updateLastLink(blog, link, 
                                     (profile['service'], profile['service_username']))
                             logging.debug("listPosts: %s"% listPosts)
             else:
@@ -263,7 +263,7 @@ def main():
                             result = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
                             logging.info("Updating Link\n") 
                             if result != "Fail!":
-                                blog.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
+                                moduleCache.updateLastLink(blog, link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
 
             if blog.getProgram():
                 t = {}

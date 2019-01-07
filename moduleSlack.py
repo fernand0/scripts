@@ -342,17 +342,17 @@ class moduleSlack():
         (linkLast, timeLast) = moduleCache.getLastLink(fileNameL)
         return(linkLast, timeLast)
 
-    def updateLastLink(self,link, socialNetwork=()):
-        rssFeed = self.getUrl()
-        if not socialNetwork: 
-            fileName = (DATADIR  + '/' 
-                   + urllib.parse.urlparse(rssFeed).netloc + ".last")
-        else: 
-            fileName = (DATADIR + '/'
-                    + urllib.parse.urlparse(rssFeed).netloc +
-                    '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
-        with open(fileName, "w") as f: 
-            f.write(link)
+    #def updateLastLink(self,link, socialNetwork=()):
+    #    rssFeed = self.getUrl()
+    #    if not socialNetwork: 
+    #        fileName = (DATADIR  + '/' 
+    #               + urllib.parse.urlparse(rssFeed).netloc + ".last")
+    #    else: 
+    #        fileName = (DATADIR + '/'
+    #                + urllib.parse.urlparse(rssFeed).netloc +
+    #                '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
+    #    with open(fileName, "w") as f: 
+    #        f.write(link)
 
 
 

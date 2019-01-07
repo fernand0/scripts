@@ -287,23 +287,23 @@ class moduleBlog():
 
     #    return(listP)
 
-    def checkLastLink(self,socialNetwork=()):
-        fileNameL = moduleCache.fileName(self, socialNetwork)+".last"
-        logging.info("Checking last link: %s" % fileNameL)
-        (linkLast, timeLast) = moduleCache.getLastLink(fileNameL)
-        return(linkLast, timeLast)
+    #def checkLastLink(self,socialNetwork=()):
+    #    fileNameL = moduleCache.fileName(self, socialNetwork)+".last"
+    #    logging.info("Checking last link: %s" % fileNameL)
+    #    (linkLast, timeLast) = moduleCache.getLastLink(fileNameL)
+    #    return(linkLast, timeLast)
 
-    def updateLastLink(self,link, socialNetwork=()):
-        rssFeed = self.getUrl()+self.getRssFeed()
-        if not socialNetwork: 
-            fileName = (DATADIR  + '/' 
-                   + urllib.parse.urlparse(rssFeed).netloc + ".last")
-        else: 
-            fileName = (DATADIR + '/'
-                    + urllib.parse.urlparse(rssFeed).netloc +
-                    '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
-        with open(fileName, "w") as f: 
-            f.write(link)
+    #def updateLastLink(self,link, socialNetwork=()):
+    #    rssFeed = self.getUrl()+self.getRssFeed()
+    #    if not socialNetwork: 
+    #        fileName = (DATADIR  + '/' 
+    #               + urllib.parse.urlparse(rssFeed).netloc + ".last")
+    #    else: 
+    #        fileName = (DATADIR + '/'
+    #                + urllib.parse.urlparse(rssFeed).netloc +
+    #                '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
+    #    with open(fileName, "w") as f: 
+    #        f.write(link)
 
     def extractImage(self, soup):
         pageImage = soup.findAll("img")

@@ -156,7 +156,28 @@ def listPostsCache(blog, socialNetwork=()):
        logging.debug("=> ", socialNetwork[0], listP[i][0])
 
    return(listP)
- 
+
+def checkLastLink(blog,socialNetwork=()):
+    fileNameL = moduleCache.fileName(blog, socialNetwork)+".last"
+    logging.info("Checking last link: %s" % fileNameL)
+    (linkLast, timeLast) = moduleCache.getLastLink(fileNameL)
+    return(linkLast, timeLast)
+
+def updateLastLink(blog, link, socialNetwork=()):
+    if blog.getUrl().find('slack')>=0: 
+        rssFeed = blog.getUrl()
+    else: 
+        rssFeed = blog.getUrl()+blog.getRssFeed()
+    if not socialNetwork: 
+        fileName = (DATADIR  + '/' 
+               + urllib.parse.urlparse(rssFeed).netloc + ".last")
+    else: 
+        fileName = (DATADIR + '/'
+                + urllib.parse.urlparse(rssFeed).netloc +
+                '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
+    with open(fileName, "w") as f: 
+        f.write(link)
+
 def showPost(cache, pp, posts, toPublish):
     logging.info("To publish %s" % pp.pformat(toPublish))
 
