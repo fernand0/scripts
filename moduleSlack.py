@@ -342,22 +342,6 @@ class moduleSlack():
         (linkLast, timeLast) = moduleCache.getLastLink(fileNameL)
         return(linkLast, timeLast)
 
-    #def updateLastLink(self,link, socialNetwork=()):
-    #    rssFeed = self.getUrl()
-    #    if not socialNetwork: 
-    #        fileName = (DATADIR  + '/' 
-    #               + urllib.parse.urlparse(rssFeed).netloc + ".last")
-    #    else: 
-    #        fileName = (DATADIR + '/'
-    #                + urllib.parse.urlparse(rssFeed).netloc +
-    #                '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
-    #    with open(fileName, "w") as f: 
-    #        f.write(link)
-
-
-
-
-
 def main():
     CHANNEL = 'tavern-of-the-bots' 
     TEXT = 'Hello! from'
@@ -395,48 +379,48 @@ def main():
             socialNetwork = (option, nick)
             site.addSocialNetwork(socialNetwork)
 
-    elem = 2
+    #elem = 0
 
-    if site.getBufferapp():
-        api = moduleSocial.connectBuffer()
+    #if site.getBufferapp():
+    #    api = moduleSocial.connectBuffer()
 
-        lenMax, profileList = moduleSocial.checkLimitPosts(api, site)
+    #    lenMax, profileList = moduleSocial.checkLimitPosts(api, site)
 
-        for profile in profileList:
-            print("        getBuffer %s" % profile['service'])
+    #    for profile in profileList:
+    #        print("        getBuffer %s" % profile['service'])
 
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
-            print(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)
-            print("first", firstLink)
-            # In order to avoid saving the link as the last one
+    #        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
+    #        print(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)
+    #        print("first", firstLink)
+    #        # In order to avoid saving the link as the last one
 
-            isDebug = False
-            moduleSocial.publishBuffer(site, profile, title, link, firstLink, isDebug, lenMax, site.getBufferapp())
-    if site.getProgram():
+    #        isDebug = False
+    #        moduleSocial.publishBuffer(site, profile, title, link, firstLink, isDebug, lenMax, site.getBufferapp())
+    #if site.getProgram():
 
-        lenMax, profileList = moduleSocial.checkLimitPosts('', site)
+    #    lenMax, profileList = moduleSocial.checkLimitPosts('', site)
 
-        for profile in profileList:
-            lenMax, profileList = moduleSocial.checkLimitPosts('', 
-                    site, profile)
-            if profile[0] in site.getProgram():
-                print("        getProgram %s" % profile)
+    #    for profile in profileList:
+    #        lenMax, profileList = moduleSocial.checkLimitPosts('', 
+    #                site, profile)
+    #        if profile[0] in site.getProgram():
+    #            print("        getProgram %s" % profile)
 
  
-            socialNetwork = (profile,site.getSocialNetworks()[profile])
+    #        socialNetwork = (profile,site.getSocialNetworks()[profile])
 
-            listP = moduleCache.listPostsCache(site, socialNetwork)
-            listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
-            listP = listP + listPsts
-            print(site.getUrl())
-            import moduleCache
-            moduleCache.updatePostsCache(site, listP, socialNetwork)
+    #        listP = moduleCache.listPostsCache(site, socialNetwork)
+    #        listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
+    #        listP = listP + listPsts
+    #        print(site.getUrl())
+    #        import moduleCache
+    #        moduleCache.updatePostsCache(site, listP, socialNetwork)
 
     outputData, posts = site.listPosts()
-    print(outputData['Slack']['pending'][elem])
-    print(outputData['Slack']['pending'][elem][8])
+    #print(outputData['Slack']['pending'][elem])
+    #print(outputData['Slack']['pending'][elem][8])
     theChannel = site.getChanId("links")  
-    site.deletePost(outputData['Slack']['pending'][elem][-2], theChannel)
+    #site.deletePost(outputData['Slack']['pending'][elem][-2], theChannel)
     # We should check for consistency 
 
     i = 0
@@ -446,7 +430,13 @@ def main():
         i = i + 1
 
     click.echo_via_pager(listLinks)
-    print(site.obtainPostData(0))
+    i = int(input("Which one? "))
+
+
+    print(outputData['Slack']['pending'][i])
+
+    #site.deletePost(outputData['Slack']['pending'][i][8], theChannel)
+
 
 
 if __name__ == '__main__':
