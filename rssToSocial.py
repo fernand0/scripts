@@ -87,6 +87,8 @@ def test():
                                   time.strftime('%Y-%m-%d %H:%M:%SZ',
                                   lastPost['published_parsed'])))
         lastLink = checkLastLink(config.get(section, "rssFeed"))
+        print(lastLink)
+        sys.exit()
         lenCmp = min(len(lastLink),len(lastPost['link']))
 
         recentPosts[section] = {}
@@ -197,7 +199,7 @@ def main():
                     logging.info("Service %s" 
                             % profile['service'] + blog.getBufferapp())
                     if (profile['service'][0] in blog.getBufferapp()): 
-                        lastLink, lastTime = blog.checkLastLink((profile['service'], profile['service_username']))
+                        lastLink, lastTime = moduleCache.checkLastLink(blog, (profile['service'], profile['service_username']))
                         blog.addLastLinkPublished(profile['service'], 
                                 lastLink, lastTime) 
                         i = blog.getLinkPosition(lastLink)
@@ -231,6 +233,7 @@ def main():
                             post = blog.obtainPostData(i, False)
                             listPosts.append(post)
                             print("          Scheduling post %s" % post[0])
+                            logging.info("          Scheduling post %s" % post[0])
 
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i, False))
                             moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
@@ -242,7 +245,7 @@ def main():
                 for socialNetwork in blog.getSocialNetworks().keys():
                     print("        Not buffer %s" % socialNetwork)
                     logging.info("Social Network %s" % socialNetwork)
-                    lastLink, lastTime = blog.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
+                    lastLink, lastTime = moduleCache.checkLastLink(blog, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                     blog.addLastLinkPublished(socialNetwork, 
                             lastLink, lastTime) 
                     i = blog.getLinkPosition(lastLink) 
@@ -276,7 +279,7 @@ def main():
                             blog, profile)
                     if profile[0] in blog.getProgram():
                         print("        getProgram %s" % profile)
-                        lastLink, lastTime = blog.checkLastLink((profile, blog.getSocialNetworks()[profile]))
+                        lastLink, lastTime = moduleCache.checkLastLink(blog, (profile, blog.getSocialNetworks()[profile]))
                         blog.addLastLinkPublished(profile, 
                             lastLink, lastTime)
                         i = blog.getLinkPosition(lastLink) 
@@ -312,6 +315,7 @@ def main():
                             post = blog.obtainPostData(i, False)
                             listPosts.append(post)
                             print("          Scheduling post %s" % post[0])
+                            logging.info("          Scheduling post %s" % post[0])
 
                         if listPosts:
                             link = listPosts[len(listPosts) - 1][1]

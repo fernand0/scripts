@@ -204,7 +204,7 @@ def connectFacebook(fbPage = 'me'):
             for i in range(len(pages['data'])):
                 logger.info("%s %s"% (pages['data'][i]['name'], fbPage))
                 if (pages['data'][i]['name'] == fbPage):
-                    logger.info("\tWriting in... %s"% pages['data'][i]['name'], "\n")
+                    logger.info("\tWriting in... %s\n"% pages['data'][i]['name'])
                     graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
                     # Publishing as the page
                     return(graph2, pages['data'][i]['id'])
@@ -450,7 +450,7 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
         nick = socialNetwork[1]
         publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
 
-        blog.updatePostsCache(listP, socialNetwork)
+        moduleCache.updatePostsCache(blog, listP, socialNetwork)
            
         if j < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))

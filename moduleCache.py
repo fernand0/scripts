@@ -131,7 +131,7 @@ def updatePostsCache(blog, listPosts, socialNetwork=()):
     fileNameQ = fileName(blog,socialNetwork) + ".queue" 
 
     logging.info("Updating Posts Cache: %s" % fileNameQ)
-    print("Updating Posts Cache: %s" % fileNameQ)
+    #print("Updating Posts Cache: %s" % fileNameQ)
 
     with open(fileNameQ, 'wb') as f:
          pickle.dump(listPosts,f)
@@ -158,9 +158,9 @@ def listPostsCache(blog, socialNetwork=()):
    return(listP)
 
 def checkLastLink(blog,socialNetwork=()):
-    fileNameL = moduleCache.fileName(blog, socialNetwork)+".last"
+    fileNameL = fileName(blog, socialNetwork)+".last"
     logging.info("Checking last link: %s" % fileNameL)
-    (linkLast, timeLast) = moduleCache.getLastLink(fileNameL)
+    (linkLast, timeLast) = getLastLink(fileNameL)
     return(linkLast, timeLast)
 
 def updateLastLink(blog, link, socialNetwork=()):
