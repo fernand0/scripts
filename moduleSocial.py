@@ -418,15 +418,18 @@ def searchTwitter(search, twitter):
 
 def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots): 
 
-    listP = blog.listPostsCache(socialNetwork)
+    listP = moduleCache.listPostsCache(blog, socialNetwork)
     listP = listP + listPosts
-    blog.updatePostsCache(listP, socialNetwork)
+
+    logging.info("Blog url %s" % blog.getUrl())
+    logging.info("Blog socialNetwork %s" % type(socialNetwork))
+    moduleCache.updatePostsCache(blog, listP, socialNetwork)
 
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
 
-        listP = blog.listPostsCache(socialNetwork)
+        listP = moduleCache.listPostsCache(blog, socialNetwork)
 
         if listP: 
             element = listP[0]
@@ -508,7 +511,8 @@ def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, im
         (graph, page) = connectFacebook(fbPage)
         logger.info("Publishing in Facebook page %s" % page)
         textToPublish = title + " \n" + summaryLinks
-        logger.info("Publishing in Facebook:\n%s" % textToPublish)
+        logger.info("Publishing in Facebook:\n%s" % textToPublish[:240])
+        logger.debug("Publishing in Facebook:\n%s" % textToPublish)
         if (len(textToPublish) > 9980):
             textToPublish = textToPublish[:9980]
             index = textToPublish.rfind(' ')

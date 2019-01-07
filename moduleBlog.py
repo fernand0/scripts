@@ -16,6 +16,8 @@ from bs4 import Tag
 from pdfrw import PdfReader
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
+import moduleSlack
+# https://github.com/fernand0/scripts/blob/master/moduleSlack.py
 
 from configMod import *
 
@@ -128,7 +130,7 @@ class moduleBlog():
             config.read(CONFIGDIR + '/.rssSlack')
             slack_token = config["Slack"].get('api-key')
             sc = SlackClient(slack_token)
-            theChannel = moduleSlack.getChanId(sc, 'links')
+            theChannel = self.getChanId(sc, 'links')
             history = sc.api_call( "channels.history", count=1000, channel=theChannel)
             logging.debug(history)
             for msg in history['messages']:
@@ -252,38 +254,38 @@ class moduleBlog():
         logging.info(result)
         return(result)
 
-    def updatePostsCache(self, listPosts, socialNetwork=()):
-        #Now it is duplicated in moduleCache
-        fileName = (DATADIR + '/' 
-                + urllib.parse.urlparse(self.getUrl()).netloc 
-                + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
-                + ".queue")
+    #def updatePostsCache(self, listPosts, socialNetwork=()):
+    #    #Now it is duplicated in moduleCache
+    #    fileName = (DATADIR + '/' 
+    #            + urllib.parse.urlparse(self.getUrl()).netloc 
+    #            + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
+    #            + ".queue")
 
-        logging.info("Updating Posts Cache: %s" % fileName)
+    #    logging.info("Updating Posts Cache: %s" % fileName)
 
-        with open(fileName, 'wb') as f:
-             pickle.dump(listPosts,f)
-        return(fileName)
+    #    with open(fileName, 'wb') as f:
+    #         pickle.dump(listPosts,f)
+    #    return(fileName)
 
-    def listPostsCache(self,socialNetwork=()):
-        fileName = (DATADIR  + '/' 
-                +  urllib.parse.urlparse(self.getUrl()).netloc 
-                + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
-                + ".queue")
+    #def listPostsCache(self,socialNetwork=()):
+    #    fileName = (DATADIR  + '/' 
+    #            +  urllib.parse.urlparse(self.getUrl()).netloc 
+    #            + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
+    #            + ".queue")
 
-        logging.info("Listing Posts Cache: %s" % fileName)
+    #    logging.info("Listing Posts Cache: %s" % fileName)
 
-        with open(fileName,'rb') as f:
-            try: 
-                listP = pickle.load(f)
-            except:
-                listP = []
+    #    with open(fileName,'rb') as f:
+    #        try: 
+    #            listP = pickle.load(f)
+    #        except:
+    #            listP = []
 
-        logging.debug("listPostsCache", socialNetwork[0])
-        for i in range(len(listP)):
-            logging.debug("=> ", socialNetwork[0], listP[i][0])
+    #    logging.debug("listPostsCache", socialNetwork[0])
+    #    for i in range(len(listP)):
+    #        logging.debug("=> ", socialNetwork[0], listP[i][0])
 
-        return(listP)
+    #    return(listP)
 
     def checkLastLink(self,socialNetwork=()):
         fileNameL = moduleCache.fileName(self, socialNetwork)+".last"

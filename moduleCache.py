@@ -137,6 +137,26 @@ def updatePostsCache(blog, listPosts, socialNetwork=()):
          pickle.dump(listPosts,f)
     return(fileNameQ)
 
+def listPostsCache(blog, socialNetwork=()):
+   fileName = (DATADIR  + '/' 
+           +  urllib.parse.urlparse(blog.getUrl()).netloc 
+           + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
+           + ".queue")
+
+   logging.info("Listing Posts Cache: %s" % fileName)
+
+   with open(fileName,'rb') as f:
+       try: 
+           listP = pickle.load(f)
+       except:
+           listP = []
+
+   logging.debug("listPostsCache", socialNetwork[0])
+   for i in range(len(listP)):
+       logging.debug("=> ", socialNetwork[0], listP[i][0])
+
+   return(listP)
+ 
 def showPost(cache, pp, posts, toPublish):
     logging.info("To publish %s" % pp.pformat(toPublish))
 

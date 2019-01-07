@@ -6,6 +6,7 @@ import os
 import moduleBlog
 import moduleSocial
 import moduleBuffer
+import moduleCache
 import urllib
 import logging
 from slackclient import SlackClient
@@ -115,25 +116,25 @@ class moduleSlack():
     def setKeys(self, keys):
         self.keys = keys
 
-    def listPostsCache(self,socialNetwork=()):
-       fileName = (DATADIR  + '/' 
-               +  urllib.parse.urlparse(self.getUrl()).netloc 
-               + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
-               + ".queue")
+    #def listPostsCache(self,socialNetwork=()):
+    #   fileName = (DATADIR  + '/' 
+    #           +  urllib.parse.urlparse(self.getUrl()).netloc 
+    #           + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
+    #           + ".queue")
 
-       logging.info("Listing Posts Cache: %s" % fileName)
+    #   logging.info("Listing Posts Cache: %s" % fileName)
 
-       with open(fileName,'rb') as f:
-           try: 
-               listP = pickle.load(f)
-           except:
-               listP = []
+    #   with open(fileName,'rb') as f:
+    #       try: 
+    #           listP = pickle.load(f)
+    #       except:
+    #           listP = []
 
-       logging.debug("listPostsCache", socialNetwork[0])
-       for i in range(len(listP)):
-           logging.debug("=> ", socialNetwork[0], listP[i][0])
+    #   logging.debug("listPostsCache", socialNetwork[0])
+    #   for i in range(len(listP)):
+    #       logging.debug("=> ", socialNetwork[0], listP[i][0])
 
-       return(listP)
+    #   return(listP)
    
     def getLinkPosition(self, link):
         i = 0
@@ -335,6 +336,27 @@ class moduleSlack():
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
+    def checkLastLink(self,socialNetwork=()):
+        fileNameL = moduleCache.fileName(self, socialNetwork)+".last"
+        logging.info("Checking last link: %s" % fileNameL)
+        (linkLast, timeLast) = moduleCache.getLastLink(fileNameL)
+        return(linkLast, timeLast)
+
+    def updateLastLink(self,link, socialNetwork=()):
+        rssFeed = self.getUrl()
+        if not socialNetwork: 
+            fileName = (DATADIR  + '/' 
+                   + urllib.parse.urlparse(rssFeed).netloc + ".last")
+        else: 
+            fileName = (DATADIR + '/'
+                    + urllib.parse.urlparse(rssFeed).netloc +
+                    '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
+        with open(fileName, "w") as f: 
+            f.write(link)
+
+
+
+
 
 def main():
     CHANNEL = 'tavern-of-the-bots' 
@@ -403,7 +425,7 @@ def main():
  
             socialNetwork = (profile,site.getSocialNetworks()[profile])
 
-            listP = site.listPostsCache(socialNetwork)
+            listP = moduleCache.listPostsCache(site, socialNetwork)
             listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
             listP = listP + listPsts
             print(site.getUrl())

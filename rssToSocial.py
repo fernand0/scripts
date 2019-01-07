@@ -21,6 +21,8 @@ import moduleSocial
 # https://github.com/fernand0/scripts/blob/master/moduleSocial.py
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
+import moduleSlack
+# https://github.com/fernand0/scripts/blob/master/moduleSlack.py
 
 import configparser
 import os
@@ -150,6 +152,10 @@ def main():
             blog.setPostsRss()
         elif blog.getUrl().find('slack')>0:
             logging.info("Blog Slack: %s"% blog.getUrl())
+            blogN = moduleSlack.moduleSlack()
+            blogN.setUrl(blog.getUrl())
+            blogN.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
+            blog = blogN
             blog.setPostsSlack()
 
         if section.find(checkBlog) >= 0:
@@ -320,7 +326,7 @@ def main():
 
                         if link:
                             logging.info("Updating link %s" % profile)
-                            blog.updateLastLink(link, (profile,blog.getSocialNetworks()[profile]))
+                            moduleCache.updateLastLink(blog, link, socialNetwork)
 
             time.sleep(2)
         else:
