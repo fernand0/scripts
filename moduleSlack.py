@@ -57,10 +57,8 @@ class moduleSlack():
         
         self.sc = SlackClient(slack_token)
  
-
     def getSlackClient(self):
         return self.sc
-
  
     def addSocialNetwork(self, socialNetwork):
         self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
@@ -116,26 +114,6 @@ class moduleSlack():
     def setKeys(self, keys):
         self.keys = keys
 
-    #def listPostsCache(self,socialNetwork=()):
-    #   fileName = (DATADIR  + '/' 
-    #           +  urllib.parse.urlparse(self.getUrl()).netloc 
-    #           + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
-    #           + ".queue")
-
-    #   logging.info("Listing Posts Cache: %s" % fileName)
-
-    #   with open(fileName,'rb') as f:
-    #       try: 
-    #           listP = pickle.load(f)
-    #       except:
-    #           listP = []
-
-    #   logging.debug("listPostsCache", socialNetwork[0])
-    #   for i in range(len(listP)):
-    #       logging.debug("=> ", socialNetwork[0], listP[i][0])
-
-    #   return(listP)
-   
     def getLinkPosition(self, link):
         i = 0
         if self.getPostsSlack():
