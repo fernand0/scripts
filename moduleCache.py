@@ -42,6 +42,7 @@ def API(Blog, pp):
     api = {}
     api['blog'] = blog
     api['profiles'] = getProfiles((blog, conf[Blog]), pp)
+    # conf[Blog] -> blog.getProgram() ...
     return(api)
 
 def fileName(blog, socialNetwork):
@@ -51,6 +52,7 @@ def fileName(blog, socialNetwork):
     return(theName)
 
 def getProfiles(api, pp, service=""):
+    # Needs improvement
     logging.info("Checking services...")
 
     profiles = []
@@ -387,6 +389,9 @@ def main():
 
 
     print("profiles")
+    print(api['profiles'])
+    print("---")
+    print(getProfiles(api, pp))
     print(api)
     postsP, profiles = listPosts(api, pp, '')
     print("-> Posts",postsP)
