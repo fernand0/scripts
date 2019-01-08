@@ -16,11 +16,11 @@ import configparser, os
 import pickle
 from bs4 import BeautifulSoup
 import logging
-import importlib
 import pprint
 import time
 import sys
 import urllib
+import importlib
 importlib.reload(sys)
 #sys.setdefaultencoding("UTF-8")
 import moduleBlog
@@ -29,9 +29,8 @@ import moduleSocial
 from configMod import *
 
 def API(Blog, pp):
-    api = {}
     conf = configparser.ConfigParser() 
-    logging.info("Config...%s" % CONFIGDIR)
+    logging.debug("Config...%s" % CONFIGDIR)
     conf.read(CONFIGDIR + '/.rssBlogs') 
     url = conf.get(Blog, "url")
 
@@ -40,13 +39,12 @@ def API(Blog, pp):
     blog = moduleBlog.moduleBlog() 
     blog.setUrl(url)
 
+    api = {}
     api['blog'] = blog
     api['profiles'] = getProfiles((blog, conf[Blog]), pp)
     return(api)
 
 def fileName(blog, socialNetwork):
-    #print('blog', blog)
-    #print(socialNetwork)
     theName = os.path.expanduser(DATADIR + '/' 
                     + urllib.parse.urlparse(blog.getUrl()).netloc + '_' 
                     + socialNetwork[0] + '_' + socialNetwork[1])
@@ -73,6 +71,7 @@ def getProfiles(api, pp, service=""):
     logging.debug("Profiles %s" % pp.pformat(profiles))
 
     return (profiles)
+
 
 def getLastLink(fileName):        
     try: 
@@ -103,11 +102,8 @@ def listPosts(api, pp, service=""):
 
     profiles = api['profiles']
     logging.info("** %s" % profiles)
-    print("** %s" % profiles)
-    for profile in profiles:
-        logging.info("profile %s" % pp.pformat(profile))
-        print("profile %s" % pp.pformat(profile))
 
+    for profile in profiles:
         fileN = profile['fileName']
         serviceName = profile['socialNetwork'][0].capitalize()
         logging.info("Service %s" % serviceName)
