@@ -899,6 +899,7 @@ def moveMailsRemote(M, msgs, folder):
             logging.info("Typ %s" % typ)
             if (typ == 'OK'): 
                 message = data[0][1]
+                logging.debug("Message %s", message)
                 rep = moduleGmail.moveMessage(service, message)
                 logging.info("Reply %s" %rep)
                 if rep != "Fail!":
