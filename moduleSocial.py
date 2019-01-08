@@ -111,6 +111,8 @@ from medium import Client
 from pocket import Pocket, PocketException
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
+import moduleBuffer
+# https://github.com/fernand0/scripts/blob/master/moduleBuffer.py
 
 from configMod import *
 
@@ -135,22 +137,13 @@ def connectTumblr():
 
 def connectBuffer():
     logger.info("Connecting Buffer")
-    config = configparser.ConfigParser()
-    config.read(CONFIGDIR + '/.rssBuffer')
-
-    clientId = config.get("appKeys", "client_id")
-    clientSecret = config.get("appKeys", "client_secret")
-    redirectUrl = config.get("appKeys", "redirect_uri")
-    accessToken = config.get("appKeys", "access_token")
 
     try:
         # instantiate the api object
-        api = API(client_id=clientId,
-                  client_secret=clientSecret,
-                  access_token=accessToken)
-
+        api = moduleBuffer.API()
         logger.debug(api.info)
     except:
+        api = None
         logger.warning("Buffer authentication failed!\n")
         logger.warning("Unexpected error:", sys.exc_info()[0])
 
