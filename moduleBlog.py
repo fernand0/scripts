@@ -254,57 +254,6 @@ class moduleBlog():
         logging.info(result)
         return(result)
 
-    #def updatePostsCache(self, listPosts, socialNetwork=()):
-    #    #Now it is duplicated in moduleCache
-    #    fileName = (DATADIR + '/' 
-    #            + urllib.parse.urlparse(self.getUrl()).netloc 
-    #            + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
-    #            + ".queue")
-
-    #    logging.info("Updating Posts Cache: %s" % fileName)
-
-    #    with open(fileName, 'wb') as f:
-    #         pickle.dump(listPosts,f)
-    #    return(fileName)
-
-    #def listPostsCache(self,socialNetwork=()):
-    #    fileName = (DATADIR  + '/' 
-    #            +  urllib.parse.urlparse(self.getUrl()).netloc 
-    #            + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
-    #            + ".queue")
-
-    #    logging.info("Listing Posts Cache: %s" % fileName)
-
-    #    with open(fileName,'rb') as f:
-    #        try: 
-    #            listP = pickle.load(f)
-    #        except:
-    #            listP = []
-
-    #    logging.debug("listPostsCache", socialNetwork[0])
-    #    for i in range(len(listP)):
-    #        logging.debug("=> ", socialNetwork[0], listP[i][0])
-
-    #    return(listP)
-
-    def checkLastLink(self,socialNetwork=()):
-        fileNameL = moduleCache.fileName(self, socialNetwork)+".last"
-        logging.info("Checking last link: %s" % fileNameL)
-        (linkLast, timeLast) = moduleCache.getLastLink(fileNameL)
-        return(linkLast, timeLast)
-
-    def updateLastLink(self,link, socialNetwork=()):
-        rssFeed = self.getUrl()+self.getRssFeed()
-        if not socialNetwork: 
-            fileName = (DATADIR  + '/' 
-                   + urllib.parse.urlparse(rssFeed).netloc + ".last")
-        else: 
-            fileName = (DATADIR + '/'
-                    + urllib.parse.urlparse(rssFeed).netloc +
-                    '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
-        with open(fileName, "w") as f: 
-            f.write(link)
-
     def extractImage(self, soup):
         pageImage = soup.findAll("img")
         #  Only the first one
