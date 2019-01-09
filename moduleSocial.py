@@ -322,6 +322,8 @@ def checkLimitPosts(api, blog, service=''):
         else:
             for profile in blog.getSocialNetworks():
                 if (profile[0] in blog.getProgram()): 
+                    print("Pprofile %s" %profile)
+                    print("Pprofile program %s" %blog.getProgram())
                     listP = moduleCache.getPostsCache(blog,
                             (profile, blog.getSocialNetworks()[profile])) 
                     lenProfile = len(listP) 
@@ -445,10 +447,14 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
 
         moduleCache.updatePostsCache(blog, listP, socialNetwork)
            
-        if j < numPosts:
+        if j+1 < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))
             time.sleep(tSleep2) 
     logger.info("Finished in: %s" % socialNetwork[0].capitalize())
+    print("====================================")
+    print("Finished in: %s at %s" % (socialNetwork[0].capitalize(), 
+        time.asctime()))
+    print("====================================")
 
    
 def publishTumblr(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
@@ -605,8 +611,8 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
             text = '<a href="'+link+'">'+title + "</a>\n" + content
             textToPublish = text[:4080] + ' ...'
             textToPublish2 = '... '+ text[4081:]
-        logger.info("text to ", textToPublish)
-        logger.info("text to 2", textToPublish2)
+        logger.info("text to "+ textToPublish)
+        logger.info("text to 2"+ textToPublish2)
 
         bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
         if textToPublish2:
