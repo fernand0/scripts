@@ -287,7 +287,7 @@ def selectMessageAndFolder(M):
                 # Just *this* message
                 if msg_number[1:].isdigit():
                     printMessage(M, msg_data[int(msg_number[1:])], 
-                            1,int(columns), ['Subject'])
+                            0,int(columns), ['Subject'])
                     return(".",msg_data[int(msg_number[1:])], msg_numbers[int(msg_number[1:])])
             elif (len(msg_number) > 0) and (msg_number[0] == '>'):
                 if msg_number[1:].isdigit():
