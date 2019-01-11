@@ -142,12 +142,15 @@ def listMessages(logging, driver):
             elements = driver.find_elements_by_class_name("ng-binding")
             numMax = 0
             for element in elements:
-                if element.text.find(' of ')>0: 
-                    posIni = element.text.find('-')
-                    posFin = element.text.find(' ')
-                    numMax = int(element.text[posIni+1:posFin])
-
-
+                if hasattr(element, 'text'):
+                    if element.text.find(' of ')>0: 
+                        #print(element.text)
+                        posIni = element.text.find('-')
+                        posFin = element.text.find(' ')
+                        #print(posIni, posFin)
+                        numMax = int(element.text[posIni+1:posFin])
+                        break
+            #print("seguimos numMax %d" % numMax)
 
 
             tr = driver.find_elements_by_tag_name('td')
