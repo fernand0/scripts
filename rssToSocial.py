@@ -140,30 +140,27 @@ def main():
     blogs = []
 
     for section in config.sections():
+        blog = None
         logging.info("\nSection: %s"% section)
-        blog = moduleBlog.moduleBlog()
         url = config.get(section, "url")
-        print("\nSection: %s %s"% (section, url))
-        blog.setUrl(url)
-
         if ("rssfeed" in config.options(section)):
+            blog = moduleBlog.moduleBlog()
+            print("\nSection: %s %s"% (section, url))
+            blog.setUrl(url)
             # It does not preserve case
             rssFeed = config.get(section, "rssFeed")
             logging.info("Blog RSS: %s"% rssFeed)
             blog.setRssFeed(rssFeed)
             blog.setPostsRss()
-        elif blog.getUrl().find('slack')>0:
-            logging.info("Blog Slack: %s"% blog.getUrl())
-            blogN = moduleSlack.moduleSlack()
-            blogN.setUrl(blog.getUrl())
-            blogN.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
-            blog = blogN
+        elif url.find('slack')>0:
+            logging.info("Blog Slack: %s"% url)
+            blog = moduleSlack.moduleSlack()
+            blog.setUrl(url)
+            blog.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
             blog.setPostsSlack()
 
         if section.find(checkBlog) >= 0:
             # If checkBlog is empty it will add all of them
-
-            blogs.append(blog)
 
             if ("linksToAvoid" in config.options(section)):
                 blog.setLinksToAvoid(config.get(section, "linksToAvoid"))
@@ -173,6 +170,7 @@ def main():
                 blog.setBufferapp(config.get(section, "bufferapp"))
             if ('program' in config.options(section)): 
                 blog.setProgram(config.get(section, "program"))
+
 
             socialNetworksOpt = ['twitter', 'facebook', 'telegram', 
                     'medium', 'linkedin','pocket'] 
@@ -221,12 +219,12 @@ def main():
                             theList = []
 
                         num = bufferMax - lenMax
-                        logging.info("bufferMax - lenMax = num %d %d %d"%
+                        logging.debug("bufferMax - lenMax = num %d %d %d"%
                                 (bufferMax, lenMax, num)) 
 
                         listPosts = []
                         for j in range(num, 0, -1):
-                            logging.info("j %d - %d"% (j,i))
+                            logging.debug("j, i %d - %d"% (j,i))
                             if (i <= 0):
                                 break
                             i = i - 1
