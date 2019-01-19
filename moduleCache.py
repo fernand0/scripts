@@ -16,11 +16,11 @@ import configparser, os
 import pickle
 from bs4 import BeautifulSoup
 import logging
-import importlib
 import pprint
 import time
 import sys
 import urllib
+import importlib
 importlib.reload(sys)
 #sys.setdefaultencoding("UTF-8")
 import moduleBlog
@@ -29,9 +29,8 @@ import moduleSocial
 from configMod import *
 
 def API(Blog, pp):
-    api = {}
     conf = configparser.ConfigParser() 
-    logging.info("Config...%s" % CONFIGDIR)
+    logging.debug("Config...%s" % CONFIGDIR)
     conf.read(CONFIGDIR + '/.rssBlogs') 
     url = conf.get(Blog, "url")
 
@@ -40,19 +39,20 @@ def API(Blog, pp):
     blog = moduleBlog.moduleBlog() 
     blog.setUrl(url)
 
+    api = {}
     api['blog'] = blog
     api['profiles'] = getProfiles((blog, conf[Blog]), pp)
+    # conf[Blog] -> blog.getProgram() ...
     return(api)
 
 def fileName(blog, socialNetwork):
-    #print('blog', blog)
-    #print(socialNetwork)
     theName = os.path.expanduser(DATADIR + '/' 
                     + urllib.parse.urlparse(blog.getUrl()).netloc + '_' 
                     + socialNetwork[0] + '_' + socialNetwork[1])
     return(theName)
 
 def getProfiles(api, pp, service=""):
+    # Needs improvement
     logging.info("Checking services...")
 
     profiles = []
@@ -73,6 +73,7 @@ def getProfiles(api, pp, service=""):
     logging.debug("Profiles %s" % pp.pformat(profiles))
 
     return (profiles)
+
 
 def getLastLink(fileName):        
     try: 
@@ -103,11 +104,8 @@ def listPosts(api, pp, service=""):
 
     profiles = api['profiles']
     logging.info("** %s" % profiles)
-    print("** %s" % profiles)
-    for profile in profiles:
-        logging.info("profile %s" % pp.pformat(profile))
-        print("profile %s" % pp.pformat(profile))
 
+    for profile in profiles:
         fileN = profile['fileName']
         serviceName = profile['socialNetwork'][0].capitalize()
         logging.info("Service %s" % serviceName)
@@ -130,12 +128,52 @@ def listPosts(api, pp, service=""):
 def updatePostsCache(blog, listPosts, socialNetwork=()):
     fileNameQ = fileName(blog,socialNetwork) + ".queue" 
 
-    logging.info("Updating Posts Cache: %s" % fileNameQ)
-    print("Updating Posts Cache: %s" % fileNameQ)
+    #print("Updating Posts Cache: %s" % fileNameQ)
 
     with open(fileNameQ, 'wb') as f:
          pickle.dump(listPosts,f)
     return(fileNameQ)
+
+def listPostsCache(blog, socialNetwork=()):
+   fileName = (DATADIR  + '/' 
+           +  urllib.parse.urlparse(blog.getUrl()).netloc 
+           + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
+           + ".queue")
+
+   logging.info("Listing Posts Cache: %s" % fileName)
+
+   with open(fileName,'rb') as f:
+       try: 
+           listP = pickle.load(f)
+       except:
+           listP = []
+
+   logging.debug("listPostsCache", socialNetwork[0])
+   for i in range(len(listP)):
+       logging.debug("=> ", socialNetwork[0], listP[i][0])
+
+   return(listP)
+
+def checkLastLink(blog,socialNetwork=()):
+    fileNameL = fileName(blog, socialNetwork)+".last"
+    logging.info("Checking last link: %s" % fileNameL)
+    (linkLast, timeLast) = getLastLink(fileNameL)
+    return(linkLast, timeLast)
+
+def updateLastLink(blog, link, socialNetwork=()):
+    if blog.getUrl().find('slack')>=0: 
+        rssFeed = blog.getUrl()
+    else: 
+        rssFeed = blog.getUrl()+blog.getRssFeed()
+    if not socialNetwork: 
+        fileName = (DATADIR  + '/' 
+               + urllib.parse.urlparse(rssFeed).netloc + ".last")
+    else: 
+        fileName = (DATADIR + '/'
+                + urllib.parse.urlparse(rssFeed).netloc +
+                '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
+    with open(fileName, "w") as f: 
+        f.write(link)
 
 def showPost(cache, pp, posts, toPublish):
     logging.info("To publish %s" % pp.pformat(toPublish))
@@ -158,9 +196,35 @@ def showPost(cache, pp, posts, toPublish):
                 
 
     if title:
-        return(title+link)
+        return(title+' '+link)
     else:
         return(None)
+
+def editPost(cache, pp, posts, toPublish, newTitle):
+    logging.info("To edit %s" % pp.pformat(toPublish))
+    logging.info("New title %s", newTitle)
+
+
+    logging.info("New title %s", toPublish)
+    profMov = toPublish[0]
+    j = toPublish[1]
+
+    update = ""
+    profiles = cache['profiles']
+    title = None
+    for profile in profiles: 
+        logging.info("Social Network %s" % profile)
+        if 'socialNetwork' in profile:
+            logging.info("socialNetwork %s", profile['socialNetwork'])
+
+            serviceName = profile['socialNetwork'][0].capitalize()
+            nick = profile['socialNetwork'][1]
+            if (serviceName[0] in profMov) or toPublish[0]=='*': 
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[serviceName]['pending'][j])
+                posts[serviceName]['pending'][j] = (newTitle, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
+
+                updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
+    return(newTitle+link)
 
 def publishPost(cache, pp, posts, toPublish):
     logging.info("To publish %s" % pp.pformat(toPublish))
@@ -183,6 +247,7 @@ def publishPost(cache, pp, posts, toPublish):
                 logging.debug("Profile posts %s" % pp.pformat(posts))
                 logging.debug("Service name %s" % serviceName)
                 (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[serviceName]['pending'][j])
+                return(title)
                 publishMethod = getattr(moduleSocial, 
                         'publish'+ serviceName)
                 logging.info("Publishing title: %s" % title)
@@ -198,13 +263,8 @@ def publishPost(cache, pp, posts, toPublish):
 
     return(update)
 
-
-#######################################################
-# These need work
-#######################################################
-
 def deletePost(cache, pp, posts, toPublish):
-    logging.info("To publish %s" % pp.pformat(toPublish))
+    logging.info("To delete %s" % pp.pformat(toPublish))
     logging.info(pp.pformat(toPublish))
 
     profMov = toPublish[0]
@@ -218,13 +278,51 @@ def deletePost(cache, pp, posts, toPublish):
         if 'socialNetwork' in profile:
             serviceName = profile['socialNetwork'][0].capitalize()
             if (serviceName[0] in profMov) or toPublish[0]=='*': 
-                logging.info("In %s" % pp.pformat(serviceName))
-                logging.info("Profile %s" % pp.pformat(profile))
-                logging.info("Profile posts %s" % pp.pformat(posts))
+                logging.info("Posts %s" % pp.pformat(posts[serviceName]['pending']))
                 posts[serviceName]['pending'] = posts[serviceName]['pending'][:j] +  posts[serviceName]['pending'][j+1:]
-                logging.info("Profile posts after %s" % pp.pformat(posts))
+                logging.info("-Posts %s" % pp.pformat(posts[serviceName]['pending']))
                 updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
     return(update)
+
+def movePost(cache, pp, posts, toMove, toWhere):
+    # Moving posts, we identify the profile by the first letter. We can use
+    # several letters and if we put a '*' we'll move the posts in all the
+    # social networks
+    logging.info("To move %s to %s" % (pp.pformat(toMove),pp.pformat(toWhere)))
+
+    i = 0
+    profMov = ""
+    while toMove[i].isalpha():
+        profMov = profMov + toMove[i]
+        i = i + 1
+
+    profiles = cache['profiles']
+    for profile in profiles: 
+        logging.info("Social Network %s" % profile)
+        logging.info("profMov %s", profMov)
+        if 'socialNetwork' in profile:
+            logging.info("socialNetwork %s", profile['socialNetwork'])
+
+            serviceName = profile['socialNetwork'][0].capitalize()
+            nick = profile['socialNetwork'][1]
+            if (serviceName[0] in profMov) or toMove[0]=='*': 
+                logging.info("to Move %s to %s" % (pp.pformat(toMove), toWhere))
+                j = int(toMove[-1])
+                k = int(toWhere[-1])
+                postI = (posts[serviceName]['pending'][i])
+                postJ = (posts[serviceName]['pending'][j])
+                posts[serviceName]['pending'][i] = postJ
+                posts[serviceName]['pending'][j] = postI
+                updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
+
+    return(posts[serviceName]['pending'][i][0]+' '+ 
+              posts[serviceName]['pending'][j][0])
+
+
+#######################################################
+# These need work
+#######################################################
+
 
 def copyPost(api, log, pp, profiles, toCopy, toWhere):
     logging.info(pp.pformat(toCopy+' '+toWhere))
@@ -261,36 +359,6 @@ def copyPost(api, log, pp, profiles, toCopy, toWhere):
                 if (serviceName[0] in profWhe):
                     profiles[j].updates.new(urllib.parse.quote(update.text + " " + link).encode('utf-8'))
 
-def movePost(api, log, pp, profiles, toMove, toWhere):
-    # Moving posts, we identify the profile by the first letter. We can use
-    # several letters and if we put a '*' we'll move the posts in all the
-    # social networks
-    i = 0
-    profMov = ""
-    while toMove[i].isalpha():
-        profMov = profMov + toMove[i]
-        i = i + 1
-
-    for i in range(len(profiles)):
-        serviceName = profiles[i].formatted_service
-        log.info("ii: %s" %i)
-        if (serviceName[0] in profMov) or toMove[0]=='*':
-            listIds = []
-            for j in range(len(profiles[i].updates.pending)):
-                # counts seems to be not ok
-                listIds.append(profiles[i].updates.pending[j]['id'])
-
-            logging.info("to Move %s to %s" % (pp.pformat(toMove), toWhere))
-            j = int(toMove[-1])
-            logging.info("i %d j %d"  % (i,j))
-            logging.info("Profiles[i]--> %s <--"  % pp.pformat(profiles))
-            logging.info("Profiles[i]--> %s <---"  % pp.pformat(profiles[i].updates.pending[j]))
-            k = int(toWhere[-1])
-            idUpdate = listIds.pop(j)
-            listIds.insert(k, idUpdate)
-
-            update = Update(api=api, id=profiles[i].updates.pending[j].id)
-            profiles[i].updates.reorder(listIds)
 
 def listSentPosts(api, pp, service=""):
     profiles = getProfiles(api, pp, service)
@@ -350,6 +418,9 @@ def main():
 
 
     print("profiles")
+    print(api['profiles'])
+    print("---")
+    print(getProfiles(api, pp))
     print(api)
     postsP, profiles = listPosts(api, pp, '')
     print("-> Posts",postsP)

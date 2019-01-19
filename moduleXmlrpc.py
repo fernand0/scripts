@@ -32,6 +32,7 @@ class moduleBlog():
          self.bufferapp = None
          self.program = None
          self.lastLinkPublished = {}
+         self.keys = []
          #self.logger = logging.getLogger(__name__)
  
     def getUrl(self):
@@ -130,6 +131,12 @@ class moduleBlog():
 
         return(-1)
 
+    def getKeys(self):
+        return(self.keys)
+
+    def setKeys(self, keys):
+        self.keys = keys
+
     def getLinkPosition(self, link):
         i = 0
         # To be done
@@ -166,6 +173,7 @@ class moduleBlog():
             server = self.xmlrpc
             result = server[0].blogger.deletePost('',idPost, server[1], server[2], True)
         logging.info(result)
+
         return(result)
 
     def extractImage(self, soup):
@@ -288,7 +296,7 @@ class moduleBlog():
         logging.debug("Post       ", theTitle + " " + theLink)
         logging.debug("==============================================")
         logging.debug("")
-
+   
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
@@ -304,7 +312,6 @@ if __name__ == "__main__":
 
     blogs = []
 
-    url = 'https://fernand0-errbot.slack.com/'
     blog = moduleBlog.moduleBlog()
     blog.setUrl(url)
     print(blog.obtainPostData(29))

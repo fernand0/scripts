@@ -18,12 +18,17 @@ importlib.reload(sys)
 import moduleBlog
 import moduleSocial
 
+import googleapiclient
 from googleapiclient.discovery import build
+from googleapiclient import http
 from httplib2 import Http
 from oauth2client import file, client, tools
 
+import io
+
 import base64
 import email
+from email.parser import BytesParser
 
 from configMod import *
 
@@ -80,10 +85,11 @@ def moveMessage(api,  message):
         # When the message is too big
         # https://github.com/google/import-mailbox-to-gmail/blob/master/import-mailbox-to-gmail.py
 
-        logging.info("Fail 2")
-        try:
-            mesGS = BytesParser().parsebytes(mesG).as_string()
-            media =  MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
+        logging.info("Fail 1! Trying another method.")
+        if True:
+            mesGS = BytesParser().parsebytes(message).as_string()
+            media =  googleapiclient.http.MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
+            logging.info("vamos method")
             messageR = api.users().messages().import_(userId='me',
                       fields='id',
                       neverMarkSpam=True,
@@ -91,9 +97,10 @@ def moveMessage(api,  message):
                       internalDateSource='dateHeader',
                       body={},
                       media_body=media).execute(num_retries=3)
-        except: 
-            logging.info("Error with message %s" % mesGS) 
-            return("Fail!")
+            logging.info("messageR method")
+        else: 
+            logging.info("Error with message %s" % message) 
+            return("Fail 2!")
     msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
 
     messageR = api.users().messages().modify(userId='me', id=messageR['id'],
@@ -418,14 +425,17 @@ def main():
     logging.basicConfig(#filename='example.log',
                             level=logging.DEBUG,format='%(asctime)s %(message)s')
 
-
     print("profiles")
     print(api[0].users().getProfile(userId='me').execute())
     postsP, profiles = listPosts(api[0], pp, '')
     print("-> Posts",postsP)
-    #publishPost(api, pp, postsP, ('G',1))
-    deletePost(api, pp, postsP, ('M0',0))
     sys.exit()
+    msg = 353
+    moveMessage(api[1], msg)
+
+    #publishPost(api, pp, postsP, ('G',1))
+    #deletePost(api, pp, postsP, ('M0',0))
+    #sys.exit()
 
     publishPost(api, pp, profiles, ('F',1))
 

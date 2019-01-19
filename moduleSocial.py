@@ -104,13 +104,15 @@ import telepot
 # git clone https://github.com/vtemian/buffpy.git
 # cd buffpy
 # sudo python setup.py install
-from buffpy.api import API
+import buffpy
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 from medium import Client
 from pocket import Pocket, PocketException
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
+import moduleBuffer
+# https://github.com/fernand0/scripts/blob/master/moduleBuffer.py
 
 from configMod import *
 
@@ -135,24 +137,15 @@ def connectTumblr():
 
 def connectBuffer():
     logger.info("Connecting Buffer")
-    config = configparser.ConfigParser()
-    config.read(CONFIGDIR + '/.rssBuffer')
-
-    clientId = config.get("appKeys", "client_id")
-    clientSecret = config.get("appKeys", "client_secret")
-    redirectUrl = config.get("appKeys", "redirect_uri")
-    accessToken = config.get("appKeys", "access_token")
 
     try:
         # instantiate the api object
-        api = API(client_id=clientId,
-                  client_secret=clientSecret,
-                  access_token=accessToken)
-
+        api = moduleBuffer.API()
         logger.debug(api.info)
     except:
+        api = None
         logger.warning("Buffer authentication failed!\n")
-        logger.warning("Unexpected error:", sys.exc_info()[0])
+        logger.warning("Unexpected error: %s"% sys.exc_info()[0])
 
     return(api)
 
@@ -204,7 +197,7 @@ def connectFacebook(fbPage = 'me'):
             for i in range(len(pages['data'])):
                 logger.info("%s %s"% (pages['data'][i]['name'], fbPage))
                 if (pages['data'][i]['name'] == fbPage):
-                    logger.info("\tWriting in... %s"% pages['data'][i]['name'], "\n")
+                    logger.info("\tWriting in... %s\n"% pages['data'][i]['name'])
                     graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
                     # Publishing as the page
                     return(graph2, pages['data'][i]['id'])
@@ -329,6 +322,8 @@ def checkLimitPosts(api, blog, service=''):
         else:
             for profile in blog.getSocialNetworks():
                 if (profile[0] in blog.getProgram()): 
+                    print("Pprofile %s" %profile)
+                    print("Pprofile program %s" %blog.getProgram())
                     listP = moduleCache.getPostsCache(blog,
                             (profile, blog.getSocialNetworks()[profile])) 
                     lenProfile = len(listP) 
@@ -411,12 +406,6 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
             fail = 'yes'
 
     logger.info("  %s service" % line)
-    if (fail == 'no' and link):
-        blog.updateLastLink(link, 
-            (profile['service'], profile['service_username']))
-        #fileName = DATADIR + '/' + urllib.parse.urlparse(link).netloc + ".last"
-        #with open(fileName, "w") as f: 
-        #    f.write(link)
 
 def searchTwitter(search, twitter): 
     t = connectTwitter(twitter)
@@ -424,15 +413,18 @@ def searchTwitter(search, twitter):
 
 def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots): 
 
-    listP = blog.listPostsCache(socialNetwork)
+    listP = moduleCache.listPostsCache(blog, socialNetwork)
     listP = listP + listPosts
-    blog.updatePostsCache(listP, socialNetwork)
+
+    logging.info("Blog url %s" % blog.getUrl())
+    logging.info("Blog socialNetwork %s" % type(socialNetwork))
+    moduleCache.updatePostsCache(blog, listP, socialNetwork)
 
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
 
-        listP = blog.listPostsCache(socialNetwork)
+        listP = moduleCache.listPostsCache(blog, socialNetwork)
 
         if listP: 
             element = listP[0]
@@ -453,12 +445,16 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
         nick = socialNetwork[1]
         publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
 
-        blog.updatePostsCache(listP, socialNetwork)
+        moduleCache.updatePostsCache(blog, listP, socialNetwork)
            
-        if j < numPosts:
+        if j+1 < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))
             time.sleep(tSleep2) 
     logger.info("Finished in: %s" % socialNetwork[0].capitalize())
+    print("====================================")
+    print("Finished in: %s at %s" % (socialNetwork[0].capitalize(), 
+        time.asctime()))
+    print("====================================")
 
    
 def publishTumblr(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
@@ -514,7 +510,8 @@ def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, im
         (graph, page) = connectFacebook(fbPage)
         logger.info("Publishing in Facebook page %s" % page)
         textToPublish = title + " \n" + summaryLinks
-        logger.info("Publishing in Facebook:\n%s" % textToPublish)
+        logger.info("Publishing in Facebook:\n%s" % textToPublish[:240])
+        logger.debug("Publishing in Facebook:\n%s" % textToPublish)
         if (len(textToPublish) > 9980):
             textToPublish = textToPublish[:9980]
             index = textToPublish.rfind(' ')
@@ -614,8 +611,8 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
             text = '<a href="'+link+'">'+title + "</a>\n" + content
             textToPublish = text[:4080] + ' ...'
             textToPublish2 = '... '+ text[4081:]
-        logger.info("text to ", textToPublish)
-        logger.info("text to 2", textToPublish2)
+        logger.info("text to "+ textToPublish)
+        logger.info("text to 2"+ textToPublish2)
 
         bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
         if textToPublish2:

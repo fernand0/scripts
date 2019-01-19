@@ -286,6 +286,8 @@ def selectMessageAndFolder(M):
             elif (len(msg_number) > 0) and (msg_number[0] == '.'):
                 # Just *this* message
                 if msg_number[1:].isdigit():
+                    printMessage(M, msg_data[int(msg_number[1:])], 
+                            0,int(columns), ['Subject'])
                     return(".",msg_data[int(msg_number[1:])], msg_numbers[int(msg_number[1:])])
             elif (len(msg_number) > 0) and (msg_number[0] == '>'):
                 if msg_number[1:].isdigit():
@@ -579,8 +581,8 @@ def getMessageBody(msg):
 
     return("")
 
-def printMessage(M, msg, rows = 24, columns = 80):
-    headers = ['From', 'To', 'Subject', 'Date']
+def printMessage(M, msg, rows = 24, columns = 80, headers = ['From', 'To', 'Subject', 'Date']):
+    
 
     for head in headers:
         print("%s: %s"% (head,headerToString(msg[head][:columns - len(head) - 2])))
@@ -899,6 +901,7 @@ def moveMailsRemote(M, msgs, folder):
             logging.info("Typ %s" % typ)
             if (typ == 'OK'): 
                 message = data[0][1]
+                logging.debug("Message %s", message)
                 rep = moduleGmail.moveMessage(service, message)
                 logging.info("Reply %s" %rep)
                 if rep != "Fail!":

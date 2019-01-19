@@ -115,9 +115,6 @@ def main():
 
         i = i + 1
 
-    #import pprint
-    #pprint.pprint(accounts)
-    #sys.exit()
     keys = keyring.get_keyring()
     #keys._unlock()
     # We need to unlock the keyring because if not each thread will ask for the
