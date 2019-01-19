@@ -47,76 +47,12 @@ class moduleRss():
     def setName(self, name):
         self.name = name
 
-    def getRssFeed(self):
-        return(self.rssFeed)
-
-    def setRssFeed(self, feed):
-        self.rssFeed = feed
-
-    def getSocialNetworks(self):
-        return(self.socialNetworks)
- 
-    def addSocialNetwork(self, socialNetwork):
-        self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
-
-    def addLastLinkPublished(self, socialNetwork, lastLink, lastTime):
-        self.lastLinkPublished[socialNetwork] = (lastLink, lastTime)
-
-    def getLastLinkPublished(self):
-        return(self.lastLinkPublished)
- 
     def getLinksToAvoid(self):
         return(self.linksToAvoid)
  
     def setLinksToAvoid(self,linksToAvoid):
         self.linksToAvoid = linksToAvoid
  
-    def getTime(self):
-        return(self.time)
- 
-    def setTime(self, time):
-        self.time = time
-
-    def getBufferapp(self):
-        return(self.bufferapp)
- 
-    def setBufferapp(self, bufferapp):
-        self.bufferapp = bufferapp
-
-    def getProgram(self):
-        return(self.program)
- 
-    def setProgram(self, program):
-        self.program = program
-
-    def getPostsRss(self):
-        return(self.postsRss)
- 
-    def setPostsRss(self):
-        if self.rssFeed.find('http')>=0: 
-            urlRss = self.rssFeed
-        else: 
-            urlRss = self.url+self.rssFeed
-        logging.debug(urlRss)
-        self.postsRss = feedparser.parse(urlRss)
-
-    def getLinkPosition(self, link):
-        i = 0
-        if self.getPostsRss():
-            if not link:
-                logging.debug(self.getPostsRss().entries)
-                return(len(self.getPostsRss().entries))
-            for entry in self.getPostsRss().entries:
-                logging.debug(entry['link'], link)
-                lenCmp = min(len(entry['link']), len(link))
-                if entry['link'][:lenCmp] == link[:lenCmp]:
-                    return i
-                i = i + 1
-        return(i)
-
-    def datePost(self, pos):
-        return(self.getPostsRss().entries[pos]['published_parsed'])
-
     def extractImage(self, soup):
         pageImage = soup.findAll("img")
         #  Only the first one
