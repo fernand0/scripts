@@ -3,7 +3,7 @@
 import configparser
 import pickle
 import os
-import moduleBlog
+import moduleRss
 import moduleSocial
 import moduleBuffer
 import moduleCache

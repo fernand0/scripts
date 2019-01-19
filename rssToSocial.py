@@ -65,7 +65,7 @@ def test():
     config.read([os.path.expanduser('~/.rssBlogs')])
 
     # We can publish the last entry of a blog in Medium as a draft
-    blog = moduleBlog.moduleBlog()
+    blog = moduleRss.moduleRss()
     blog.setRssFeed('http://fernand0.blogalia.com/rss20.xml')
     blog.getBlogPostsRss()
     (title, link, firstLink, image, summary, summaryHtml, summaryLinks, comment) = (blog.obtainPostData(0))
@@ -146,7 +146,7 @@ def main():
         logging.info("\nSection: %s"% section)
         url = config.get(section, "url")
         if ("rssfeed" in config.options(section)):
-            blog = moduleBlog.moduleBlog()
+            blog = moduleRss.moduleRss()
             print("\nSection: %s %s"% (section, url))
             blog.setUrl(url)
             # It does not preserve case

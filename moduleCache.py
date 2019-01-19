@@ -23,7 +23,7 @@ import urllib
 import importlib
 importlib.reload(sys)
 #sys.setdefaultencoding("UTF-8")
-import moduleBlog
+import moduleRss
 import moduleSocial
 
 from configMod import *
