@@ -104,17 +104,15 @@ class moduleRss():
     
         return (soup.get_text().strip('\n'), theSummaryLinks)
 
-    def obtainPostData(self, i, debug=False):
-        if self.getPostsRss():
-            posts = self.getPostsRss().entries
-            theSummary = posts[i]['summary']
-            content = posts[i]['description']
+    def obtainPostData(self, post debug=False):
+            theSummary = post['summary']
+            content = post['description']
             if content.startswith('Anuncios'): content = ''
-            theDescription = posts[i]['description']
-            theTitle = posts[i]['title'].replace('\n', ' ')
-            theLink = posts[i]['link']
-            if ('comment' in posts[i]):
-                comment = posts[i]['comment']
+            theDescription = post['description']
+            theTitle = post['title'].replace('\n', ' ')
+            theLink = post['link']
+            if ('comment' in post):
+                comment = post['comment']
             else:
                 comment = ""
 
@@ -151,8 +149,8 @@ class moduleRss():
                     theContent = ''
                 logging.debug("theC", theContent)
 
-            if 'media_content' in posts[i]: 
-                theImage = posts[i]['media_content'][0]['url']
+            if 'media_content' in post: 
+                theImage = post['media_content'][0]['url']
             else:
                 theImage = self.extractImage(soup)
             logging.debug("theImage", theImage)
