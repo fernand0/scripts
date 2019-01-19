@@ -26,11 +26,11 @@ class moduleBlog():
          self.Id = 0
          self.socialNetworks = {}
          self.linksToAvoid = ""
+         self.xmlrpc = None
          self.postsXmlrpc = None
          self.time = []
          self.bufferapp = None
          self.program = None
-         self.xmlrpc = None
          self.lastLinkPublished = {}
          #self.logger = logging.getLogger(__name__)
  
@@ -44,10 +44,7 @@ class moduleBlog():
         return(self.name)
 
     def setName(self, name):
-        if not self.xmlrpc:
-            self.setXmlRpc()
-        else:
-            self.name = name
+        self.name = name
 
     def getSocialNetworks(self):
         return(self.socialNetworks)
@@ -135,20 +132,8 @@ class moduleBlog():
 
     def getLinkPosition(self, link):
         i = 0
-        if self.getPostsRss():
-            if not link:
-                logging.debug(self.getPostsRss().entries)
-                return(len(self.getPostsRss().entries))
-            for entry in self.getPostsRss().entries:
-                logging.debug(entry['link'], link)
-                lenCmp = min(len(entry['link']), len(link))
-                if entry['link'][:lenCmp] == link[:lenCmp]:
-                    return i
-                i = i + 1
+        # To be done
         return(i)
-
-    def datePost(self, pos):
-        return(self.getPostsRss().entries[pos]['published_parsed'])
 
     def newPost(self, title, content): 
         server = self.xmlrpc
@@ -182,57 +167,6 @@ class moduleBlog():
             result = server[0].blogger.deletePost('',idPost, server[1], server[2], True)
         logging.info(result)
         return(result)
-
-    def updatePostsCache(self, listPosts, socialNetwork=()):
-        #Now it is duplicated in moduleCache
-        fileName = (DATADIR + '/' 
-                + urllib.parse.urlparse(self.getUrl()).netloc 
-                + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
-                + ".queue")
-
-        logging.info("Updating Posts Cache: %s" % fileName)
-
-        with open(fileName, 'wb') as f:
-             pickle.dump(listPosts,f)
-        return(fileName)
-
-    def listPostsCache(self,socialNetwork=()):
-        fileName = (DATADIR  + '/' 
-                +  urllib.parse.urlparse(self.getUrl()).netloc 
-                + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
-                + ".queue")
-
-        logging.info("Listing Posts Cache: %s" % fileName)
-
-        with open(fileName,'rb') as f:
-            try: 
-                listP = pickle.load(f)
-            except:
-                listP = []
-
-        logging.debug("listPostsCache", socialNetwork[0])
-        for i in range(len(listP)):
-            logging.debug("=> ", socialNetwork[0], listP[i][0])
-
-        return(listP)
-
-    def checkLastLink(self,socialNetwork=()):
-        fileNameL = moduleCache.fileName(self, socialNetwork)+".last"
-        logging.info("Checking last link: %s" % fileNameL)
-        (linkLast, timeLast) = moduleCache.getLastLink(fileNameL)
-        return(linkLast, timeLast)
-
-    def updateLastLink(self,link, socialNetwork=()):
-        rssFeed = self.getUrl()+self.getRssFeed()
-        if not socialNetwork: 
-            fileName = (DATADIR  + '/' 
-                   + urllib.parse.urlparse(rssFeed).netloc + ".last")
-        else: 
-            fileName = (DATADIR + '/'
-                    + urllib.parse.urlparse(rssFeed).netloc +
-                    '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
-        with open(fileName, "w") as f: 
-            f.write(link)
 
     def extractImage(self, soup):
         pageImage = soup.findAll("img")
