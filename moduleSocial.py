@@ -104,7 +104,7 @@ import telepot
 # git clone https://github.com/vtemian/buffpy.git
 # cd buffpy
 # sudo python setup.py install
-from buffpy.api import API
+import buffpy
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 from medium import Client
@@ -145,7 +145,7 @@ def connectBuffer():
     except:
         api = None
         logger.warning("Buffer authentication failed!\n")
-        logger.warning("Unexpected error:", sys.exc_info()[0])
+        logger.warning("Unexpected error: %s"% sys.exc_info()[0])
 
     return(api)
 

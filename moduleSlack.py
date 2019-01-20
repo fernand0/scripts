@@ -356,43 +356,6 @@ def main():
             socialNetwork = (option, nick)
             site.addSocialNetwork(socialNetwork)
 
-    #elem = 0
-
-    #if site.getBufferapp():
-    #    api = moduleSocial.connectBuffer()
-
-    #    lenMax, profileList = moduleSocial.checkLimitPosts(api, site)
-
-    #    for profile in profileList:
-    #        print("        getBuffer %s" % profile['service'])
-
-    #        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
-    #        print(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)
-    #        print("first", firstLink)
-    #        # In order to avoid saving the link as the last one
-
-    #        isDebug = False
-    #        moduleSocial.publishBuffer(site, profile, title, link, firstLink, isDebug, lenMax, site.getBufferapp())
-    #if site.getProgram():
-
-    #    lenMax, profileList = moduleSocial.checkLimitPosts('', site)
-
-    #    for profile in profileList:
-    #        lenMax, profileList = moduleSocial.checkLimitPosts('', 
-    #                site, profile)
-    #        if profile[0] in site.getProgram():
-    #            print("        getProgram %s" % profile)
-
- 
-    #        socialNetwork = (profile,site.getSocialNetworks()[profile])
-
-    #        listP = moduleCache.listPostsCache(site, socialNetwork)
-    #        listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
-    #        listP = listP + listPsts
-    #        print(site.getUrl())
-    #        import moduleCache
-    #        moduleCache.updatePostsCache(site, listP, socialNetwork)
-
     outputData, posts = site.listPosts()
     #print(outputData['Slack']['pending'][elem])
     #print(outputData['Slack']['pending'][elem][8])
@@ -406,14 +369,54 @@ def main():
         listLinks = listLinks + "%d) %s\n" % (i, line[0])
         i = i + 1
 
+    numEntries = i
     click.echo_via_pager(listLinks)
     i = int(input("Which one? "))
 
 
-    print(outputData['Slack']['pending'][i])
+    elem = i
+    print(outputData['Slack']['pending'][elem])
 
-    #site.deletePost(outputData['Slack']['pending'][i][8], theChannel)
+    action = input("Delete [d], publish [p] ")
 
+    if action == 'p':
+        if site.getBufferapp():
+            api = moduleSocial.connectBuffer()
+
+            lenMax, profileList = moduleSocial.checkLimitPosts(api, site)
+
+            for profile in profileList:
+                print("        getBuffer %s" % profile['service'])
+
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
+                print(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)
+                print("first", firstLink)
+                # In order to avoid saving the link as the last one
+
+                isDebug = False
+                moduleSocial.publishBuffer(site, profile, title, link, firstLink, isDebug, lenMax, site.getBufferapp())
+
+        if site.getProgram():
+
+            lenMax, profileList = moduleSocial.checkLimitPosts('', site)
+
+            for profile in profileList:
+                lenMax, profileList = moduleSocial.checkLimitPosts('', 
+                        site, profile)
+                if profile[0] in site.getProgram():
+                    print("        getProgram %s" % profile)
+
+ 
+                socialNetwork = (profile,site.getSocialNetworks()[profile])
+
+                import moduleCache
+                listP = moduleCache.listPostsCache(site, socialNetwork)
+                listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
+                listP = listP + listPsts
+                moduleCache.updatePostsCache(site, listP, socialNetwork)
+
+
+    site.deletePost(outputData['Slack']['pending'][elem][8], theChannel)
 
 
 if __name__ == '__main__':
