@@ -36,7 +36,7 @@ class moduleGmail():
     def __init__(self):
         self.service = None
 
-    def API(Acc, pp):
+    def API(self, Acc, pp):
         # based on get_credentials from 
         # Code from
         # https://developers.google.com/gmail/api/v1/reference/users/messages/list
@@ -59,7 +59,7 @@ class moduleGmail():
     
         service = build('gmail', 'v1', http=credentials.authorize(Http()))
     
-        return(service)
+        self.service = service
     
     def getLabelId(self, name):
         api = self.service
@@ -429,14 +429,16 @@ def main():
     pp = pprint.PrettyPrinter(indent=4)
 
     # instantiate the api object 
-    api = [API('ACC4',pp)]
+
+    api = moduleGmail.moduleGmail()
+    api.API('ACC4',pp)
 
     logging.basicConfig(#filename='example.log',
                             level=logging.DEBUG,format='%(asctime)s %(message)s')
 
     print("profiles")
-    print(api[0].users().getProfile(userId='me').execute())
-    postsP, profiles = listPosts(api[0], pp, '')
+    print(api.service.users().getProfile(userId='me').execute())
+    postsP, profiles = api.listPosts(pp, '')
     print("-> Posts",postsP)
     sys.exit()
     msg = 353
