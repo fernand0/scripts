@@ -49,8 +49,8 @@ class moduleGmail():
         config = configparser.ConfigParser() 
         config.read(CONFIGDIR + '/.oauthG.cfg')
         
-        fileStore = confName(api, 
-                (config.get(Acc,'server'), config.get(Acc,'user'))) 
+        fileStore = self.confName((config.get(Acc,'server'), 
+            config.get(Acc,'user'))) 
     
         logging.debug("Filestore %s"% fileStore)
         store = file.Storage(fileStore)
@@ -141,7 +141,7 @@ class moduleGmail():
         serviceName = 'Mail'+service
     
         outputData[serviceName] = {'sent': [], 'pending': []}
-        listDrafts = getPostsCache(api)
+        listDrafts = self.getPostsCache()
     
         listP = []
         for draft in listDrafts: 
@@ -426,6 +426,8 @@ class moduleGmail():
             return someSent
 
 def main():
+    import moduleGmail
+
     pp = pprint.PrettyPrinter(indent=4)
 
     # instantiate the api object 
