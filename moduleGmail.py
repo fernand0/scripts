@@ -56,7 +56,7 @@ def API(Acc, pp):
 
     return(service)
 
-def lookForLabel(api, name):
+def getLabelId(api, name):
     results = api.users().labels().list(userId='me').execute() 
     for label in results['labels']: 
         if label['name'] == name: 
@@ -66,7 +66,7 @@ def lookForLabel(api, name):
     return(labelId)
 
 def moveMessage(api,  message):
-    labelId = lookForLabel(api, 'imported')
+    labelId = getLabelId(api, 'imported')
     mesGE = base64.urlsafe_b64encode(message).decode()
     mesT = email.message_from_bytes(message)
     subj = email.header.decode_header(mesT['subject'])[0][0]
