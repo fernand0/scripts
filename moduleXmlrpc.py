@@ -101,11 +101,11 @@ class moduleXmlrpc():
                 self.setName(blogName)
 
     def getPostsXmlrpc(self):
-        return(self.postsRss)
+        return(self.xmlrpc)
  
     def setPostsXmlrpc(self):
         if self.xmlrpc and self.Id:
-            self.postsRss = self.xmlrpc[0].blogger.getRecentPosts('', self.Id, 
+            self.postsXmlrpc = self.xmlrpc[0].blogger.getRecentPosts('', self.Id, 
                     self.xmlrpc[1], self.xmlrpc[2], 10)
 
     def getId(self):
@@ -228,57 +228,132 @@ class moduleXmlrpc():
         return (soup.get_text().strip('\n'), theSummaryLinks)
 
     def obtainPostData(self, i, debug=False):
-        if self.getPostsRss():
-            posts = self.getPostsRss().entries
-            theSummary = posts[i]['summary']
-            content = posts[i]['description']
-            if content.startswith('Anuncios'): content = ''
-            theDescription = posts[i]['description']
-            theTitle = posts[i]['title'].replace('\n', ' ')
-            theLink = posts[i]['link']
-            if ('comment' in posts[i]):
-                comment = posts[i]['comment']
+        if self.getPostsSlack():
+            posts = self.getPostsSlack()
+            theContent = ''
+            url = ''
+            firstLink = ''
+            logging.debug("i %d", i)
+            logging.debug("post %s", posts[i])
+            #print("i", i)
+            #print("post", posts[i])
+            if 'attachments' in posts[i]:
+                post = posts[i]['attachments'][0]
+            else:
+                post = posts[i]
+
+            if 'title' in post:
+                theTitle = post['title']
+                theLink = post['title_link']
+                if theLink.find('tumblr')>0:
+                    theTitle = post['text']
+                firstLink = theLink
+                if 'text' in post: 
+                    content = post['text']
+                else:
+                    content = theLink
+                theSummary = content
+                theSummaryLinks = content
+                if 'image_url' in post:
+                    theImage = post['image_url']
+                elif 'thumb_url' in post:
+                    theImage = post['thumb_url']
+                else:
+                    logging.info("Fail image")
+                    logging.info("Fail image %s", post)
+                    theImage = ''
+            elif 'text' in post:
+                if post['text'].startswith('<h'):
+                    # It's an url
+                    url = post['text'][1:-1]
+                    req = requests.get(url)
+                        
+                    if req.text.find('403 Forbidden')>=0:
+                        theTitle = url
+                        theSummary = url
+                        content = url
+                        theDescription = url
+                    else:
+                        if url.lower().endswith('pdf'):
+                            nameFile = '/tmp/kkkkk.pdf'
+                            with open(nameFile,'wb') as f:
+                                f.write(req.content)
+                            theTitle = PdfReader(nameFile).Info.Title
+                            if theTitle:
+                                theTitle = theTitle[1:-1]
+                            else:
+                                theTitle = url
+                            theUrl = url
+                            theSummary = ''
+                            content = theSummary
+                            theDescription = theSummary
+                        else:
+                            soup = BeautifulSoup(req.text, 'lxml')
+                            #print("soup", soup)
+                            theTitle = soup.title
+                            if theTitle:
+                                theTitle = str(theTitle.string)
+                            else:
+                                # The last part of the path, without the dot part, and
+                                # capitized
+                                urlP = urllib.parse.urlparse(url)
+                                theTitle = os.path.basename(urlP.path).split('.')[0].capitalize()
+                            theSummary = str(soup.body)
+                            content = theSummary
+                            theDescription = theSummary
+                else:
+                    theSummary = post['text']
+                    content = post['text']
+                    theDescription = post['text']
+                    theTitle = post['text']
+            else:
+                theSummary = post['title']
+                content = post['title']
+                theDescription = post['title']
+
+            if 'original_url' in post: 
+                theLink = post['original_url']
+            elif url: 
+                theLink = url
+            else:
+                theLink = post['text']
+
+            if ('comment' in post):
+                comment = post['comment']
             else:
                 comment = ""
 
+            #print("content", content)
             theSummaryLinks = ""
 
-            soup = BeautifulSoup(theDescription, 'lxml')
+            soup = BeautifulSoup(content, 'lxml')
+            if not content.startswith('http'):
+                link = soup.a
+                if link: 
+                    firstLink = link.get('href')
+                    if firstLink:
+                        if firstLink[0] != 'h': 
+                            firstLink = theLink
 
-            link = soup.a
-            if link is None:
-               firstLink = theLink 
+            if not firstLink: 
+                firstLink = theLink
+
+            if 'image_url' in post:
+                theImage = post['image_url']
             else:
-               firstLink = link['href']
-               pos = firstLink.find('.')
-               if firstLink.find('https')>=0:
-                   lenProt = len('https://')
-               else:
-                   lenProt = len('http://')
-               if (firstLink[lenProt:pos] == theTitle[:pos - lenProt]):
-                   # A way to identify retumblings. They have the name of the
-                   # tumblr at the beggining of the anchor text
-                   theTitle = theTitle[pos - lenProt + 1:]
-
-            theSummary = soup.get_text()
+                theImage = None
+            theLinks = theSummaryLinks
+            theSummaryLinks = theContent + theLinks
+            
             if self.getLinksToAvoid():
                 (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())
-                logging.debug("theC", theContent)
-                if theContent.startswith('Anuncios'): 
-                    theContent = ''
-                logging.debug("theC", theContent)
             else:
                 (theContent, theSummaryLinks) = self.extractLinks(soup, "") 
-                logging.debug("theC", theContent)
-                if theContent.startswith('Anuncios'): 
-                    theContent = ''
-                logging.debug("theC", theContent)
-
-            if 'media_content' in posts[i]: 
-                theImage = posts[i]['media_content'][0]['url']
+                
+            if 'image_url' in post:
+                theImage = post['image_url']
             else:
-                theImage = self.extractImage(soup)
-            logging.debug("theImage", theImage)
+                theImage = None
             theLinks = theSummaryLinks
             theSummaryLinks = theContent + theLinks
 
@@ -341,9 +416,9 @@ if __name__ == "__main__":
         blogs.append(blog)
 
     
-    blogs[7].setPostsRss()
-    #print(blogs[7].getPostsRss().entries)
-    numPosts = len(blogs[7].getPostsRss().entries)
+    blogs[7].setPostsXmlrpc()
+    #print(blogs[7].getPostsXmlrpc().entries)
+    numPosts = len(blogs[7].getPostsXmlrpc().entries)
     for i in range(numPosts):
         print(blog.obtainPostData(numPosts - 1 - i))
 
@@ -351,15 +426,9 @@ if __name__ == "__main__":
 
     for blog in blogs:
         print(blog.getUrl())
-        print(blog.getRssFeed())
         print(blog.getSocialNetworks())
         if 'twitterac' in blog.getSocialNetworks():
             print(blog.getSocialNetworks()['twitterac'])
-        blog.setPostsRss()
-        print(blog.getPostsRss().entries[0]['link'])
-        print(blog.getLinkPosition(blog.getPostsRss().entries[0]['link']))
-        print(time.asctime(blog.datePost(0)))
-        print(blog.getLinkPosition(blog.getPostsRss().entries[5]['link']))
         print(time.asctime(blog.datePost(5)))
         blog.obtainPostData(0)
         if blog.getUrl().find('ando')>0:
@@ -368,12 +437,7 @@ if __name__ == "__main__":
 
     for blog in blogs:
         import urllib
-        urlFile = open(DATADIR + '/' 
-              + urllib.parse.urlparse(blog.getUrl()+blog.getRssFeed()).netloc
-              + ".last", "r")
-        linkLast = urlFile.read().rstrip()  # Last published
-        print(blog.getUrl()+blog.getRssFeed(),blog.getLinkPosition(linkLast))
-        print("description ->", blog.getPostsRss().entries[5]['description'])
+                linkLast = urlFile.read().rstrip()  # Last published
         blog.setPostsXmlrpc()
         posts = blog.getPostsXmlrpc()
         for post in posts:
