@@ -169,60 +169,74 @@ class moduleRss():
         return (soup.get_text().strip('\n'), theSummaryLinks)
 
     def obtainPostData(self, i, debug=False):
-        if self.getPostsRss():
-            posts = self.getPostsRss().entries
-            theSummary = posts[i]['summary']
-            content = posts[i]['description']
+        if not self.postsRss:
+            self.setPostsRss()
+
+        posts = self.getPostsRss().entries
+        if not posts:
+            return (None, None, None, None, None, None, None, None, None, None)
+
+        post = posts[i]
+        print(post)
+
+        if 'summary' in post:
+            theSummary = post['summary']
+            content = theSummary
+        if 'content' in post:
+            content = post['description']
             if content.startswith('Anuncios'): content = ''
-            theDescription = posts[i]['description']
-            theTitle = posts[i]['title'].replace('\n', ' ')
-            theLink = posts[i]['link']
-            if ('comment' in posts[i]):
-                comment = posts[i]['comment']
-            else:
-                comment = ""
+        if 'description' in post:
+            theDescription = post['description']
+        if 'title' in post:
+            theTitle = post['title'].replace('\n', ' ')
+        if 'link' in post:
+            theLink = post['link']
+        if ('comment' in post):
+            comment = post['comment']
+        else:
+            comment = ""
 
-            theSummaryLinks = ""
+        theSummaryLinks = ""
 
-            soup = BeautifulSoup(theDescription, 'lxml')
+        soup = BeautifulSoup(theDescription, 'lxml')
 
-            link = soup.a
-            if link is None:
-               firstLink = theLink 
-            else:
-               firstLink = link['href']
-               pos = firstLink.find('.')
-               if firstLink.find('https')>=0:
-                   lenProt = len('https://')
-               else:
-                   lenProt = len('http://')
-               if (firstLink[lenProt:pos] == theTitle[:pos - lenProt]):
-                   # A way to identify retumblings. They have the name of the
-                   # tumblr at the beggining of the anchor text
-                   theTitle = theTitle[pos - lenProt + 1:]
+        link = soup.a
+        if link is None:
+           firstLink = theLink 
+        else:
+           firstLink = link['href']
+           pos = firstLink.find('.')
+           if firstLink.find('https')>=0:
+               lenProt = len('https://')
+           else:
+               lenProt = len('http://')
+           if (firstLink[lenProt:pos] == theTitle[:pos - lenProt]):
+               # A way to identify retumblings. They have the name of the
+               # tumblr at the beggining of the anchor text
+               theTitle = theTitle[pos - lenProt + 1:]
 
-            theSummary = soup.get_text()
-            if self.getLinksToAvoid():
-                (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())
-                logging.debug("theC", theContent)
-                if theContent.startswith('Anuncios'): 
-                    theContent = ''
-                logging.debug("theC", theContent)
-            else:
-                (theContent, theSummaryLinks) = self.extractLinks(soup, "") 
-                logging.debug("theC", theContent)
-                if theContent.startswith('Anuncios'): 
-                    theContent = ''
-                logging.debug("theC", theContent)
+        theSummary = soup.get_text()
+        if self.getLinksToAvoid():
+            (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())
+            logging.debug("theC", theContent)
+            if theContent.startswith('Anuncios'): 
+                theContent = ''
+            logging.debug("theC", theContent)
+        else:
+            (theContent, theSummaryLinks) = self.extractLinks(soup, "") 
+            logging.debug("theC", theContent)
+            if theContent.startswith('Anuncios'): 
+                theContent = ''
+            logging.debug("theC", theContent)
 
-            if 'media_content' in posts[i]: 
-                theImage = posts[i]['media_content'][0]['url']
-            else:
-                theImage = self.extractImage(soup)
-            logging.debug("theImage", theImage)
-            theLinks = theSummaryLinks
-            theSummaryLinks = theContent + theLinks
-                
+        if 'media_content' in posts[i]: 
+            theImage = posts[i]['media_content'][0]['url']
+        else:
+            theImage = self.extractImage(soup)
+        logging.debug("theImage", theImage)
+        theLinks = theSummaryLinks
+        theSummaryLinks = theContent + theLinks
+            
         logging.debug("=========")
         logging.debug("Results: ")
         logging.debug("=========")
@@ -242,7 +256,7 @@ class moduleRss():
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
 
-if __name__ == "__main__":
+def main():
 
     import moduleRss
     
@@ -253,23 +267,15 @@ if __name__ == "__main__":
 
     blogs = []
 
-    url = 'https://fernand0-errbot.slack.com/'
-    blog = moduleRss.moduleRss()
-    blog.setPostsSlack()
-    blog.setUrl(url)
-    print(blog.obtainPostData(29))
-    #print(blog.getPostsSlack())
-    sys.exit()
-
     for section in config.sections():
-        #print(section)
-        #print(config.options(section))
+        print(section)
         blog = moduleRss.moduleRss()
         url = config.get(section, "url")
+        print("Url: %s"% url)
         blog.setUrl(url)
         if 'rssfeed' in config.options(section): 
             rssFeed = config.get(section, "rssFeed")
-            #print(rssFeed) 
+            print(rssFeed) 
             blog.setRssFeed(rssFeed)
         optFields = ["linksToAvoid", "time", "bufferapp"]
         if ("linksToAvoid" in config.options(section)):
@@ -285,6 +291,9 @@ if __name__ == "__main__":
             if ('ac' in option) or ('fb' in option):
                 blog.addSocialNetwork((option, config.get(section, option)))
         blogs.append(blog)
+        blog.obtainPostData(0)
+
+    sys.exit()
 
     
     blogs[7].setPostsRss()
@@ -323,3 +332,9 @@ if __name__ == "__main__":
         for post in posts:
             if "content" in post:
                 print(post['content'][:100])
+
+if __name__ == "__main__":
+
+    main()
+
+

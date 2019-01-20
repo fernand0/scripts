@@ -27,7 +27,7 @@ class moduleXmlrpc():
          self.socialNetworks = {}
          self.linksToAvoid = ""
          self.xmlrpc = None
-         self.postsXmlrpc = None
+         self.postsXmlRpc = None
          self.time = []
          self.bufferapp = None
          self.program = None
@@ -100,12 +100,12 @@ class moduleXmlrpc():
                 self.setId(blogId)
                 self.setName(blogName)
 
-    def getPostsXmlrpc(self):
-        return(self.xmlrpc)
+    def getPostsXmlRpc(self):
+        return(self.postsXmlRpc)
  
-    def setPostsXmlrpc(self):
+    def setPostsXmlRpc(self):
         if self.xmlrpc and self.Id:
-            self.postsXmlrpc = self.xmlrpc[0].blogger.getRecentPosts('', self.Id, 
+            self.postsXmlRpc = self.xmlrpc[0].blogger.getRecentPosts('', self.Id, 
                     self.xmlrpc[1], self.xmlrpc[2], 10)
 
     def getId(self):
@@ -228,8 +228,10 @@ class moduleXmlrpc():
         return (soup.get_text().strip('\n'), theSummaryLinks)
 
     def obtainPostData(self, i, debug=False):
-        if self.getPostsSlack():
-            posts = self.getPostsSlack()
+        if self.postsXmlRpc:
+            posts = self.getPostsXmlRpc()
+            print(posts[i])
+            print(posts[i].keys())
             theContent = ''
             url = ''
             firstLink = ''
@@ -375,9 +377,7 @@ class moduleXmlrpc():
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
-
-if __name__ == "__main__":
-
+def main():
     import moduleXmlrpc
     
     config = configparser.ConfigParser()
@@ -387,9 +387,15 @@ if __name__ == "__main__":
 
     blogs = []
 
-    blog = moduleXmlrpc.moduleXmlrpc()
-    blog.setUrl(url)
-    print(blog.obtainPostData(29))
+    for b in ['Blog8', 'Blog2']:
+        blog = moduleXmlrpc.moduleXmlrpc()
+        url = config.get(b, "url")
+        blog.setUrl(url)
+        xmlrpc = config.get(b, "xmlrpc")
+        blog.setXmlRpc()
+        blog.setPostsXmlRpc()
+        print(blog.getPostsXmlRpc()[9])
+        print(blog.obtainPostData(9))
     sys.exit()
 
     for section in config.sections():
@@ -437,9 +443,15 @@ if __name__ == "__main__":
 
     for blog in blogs:
         import urllib
-                linkLast = urlFile.read().rstrip()  # Last published
+
+        linkLast = urlFile.read().rstrip()  # Last published
         blog.setPostsXmlrpc()
         posts = blog.getPostsXmlrpc()
         for post in posts:
             if "content" in post:
                 print(post['content'][:100])
+
+if __name__ == "__main__":
+    main()
+
+
