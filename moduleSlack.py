@@ -164,18 +164,22 @@ class moduleSlack():
         return(None)
 
     def obtainPostData(self, i, debug=False):
+        if not self.posts:
+            self.setPostsSlack()
+
         posts = self.getPostsSlack()
+        if not posts:
+            return (None, None, None, None, None, None, None, None, None, None)
+
+        post = posts[i]
+        if 'attachments' in post:
+            post = post['attachments'][0]
+
         theContent = ''
         url = ''
         firstLink = ''
         logging.debug("i %d", i)
-        logging.debug("post %s", posts[i])
-        #print("i", i)
-        #print("post", posts[i])
-        if 'attachments' in posts[i]:
-            post = posts[i]['attachments'][0]
-        else:
-            post = posts[i]
+        logging.debug("post %s", post)
 
         if 'title' in post:
             theTitle = post['title']
