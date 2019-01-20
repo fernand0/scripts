@@ -7,7 +7,6 @@ import os
 import time
 import urllib
 import requests
-import feedparser
 import pickle
 import logging
 from bs4 import BeautifulSoup
@@ -18,7 +17,7 @@ import moduleCache
 
 from configMod import *
 
-class moduleBlog():
+class moduleXmlrpc():
 
     def __init__(self):
          self.url = ""
@@ -27,12 +26,11 @@ class moduleBlog():
          self.Id = 0
          self.socialNetworks = {}
          self.linksToAvoid = ""
-         self.postsRss = None
+         self.xmlrpc = None
          self.postsXmlrpc = None
          self.time = []
          self.bufferapp = None
          self.program = None
-         self.xmlrpc = None
          self.lastLinkPublished = {}
          self.keys = []
          #self.logger = logging.getLogger(__name__)
@@ -48,12 +46,6 @@ class moduleBlog():
 
     def setName(self, name):
         self.name = name
-
-    def getRssFeed(self):
-        return(self.rssFeed)
-
-    def setRssFeed(self, feed):
-        self.rssFeed = feed
 
     def getSocialNetworks(self):
         return(self.socialNetworks)
@@ -108,17 +100,6 @@ class moduleBlog():
                 self.setId(blogId)
                 self.setName(blogName)
 
-    def getPostsRss(self):
-        return(self.postsRss)
- 
-    def setPostsRss(self):
-        if self.rssFeed.find('http')>=0: 
-            urlRss = self.rssFeed
-        else: 
-            urlRss = self.url+self.rssFeed
-        logging.debug(urlRss)
-        self.postsRss = feedparser.parse(urlRss)
-
     def getPostsXmlrpc(self):
         return(self.postsRss)
  
@@ -158,20 +139,8 @@ class moduleBlog():
 
     def getLinkPosition(self, link):
         i = 0
-        if self.getPostsRss():
-            if not link:
-                logging.debug(self.getPostsRss().entries)
-                return(len(self.getPostsRss().entries))
-            for entry in self.getPostsRss().entries:
-                logging.debug(entry['link'], link)
-                lenCmp = min(len(entry['link']), len(link))
-                if entry['link'][:lenCmp] == link[:lenCmp]:
-                    return i
-                i = i + 1
+        # To be done
         return(i)
-
-    def datePost(self, pos):
-        return(self.getPostsRss().entries[pos]['published_parsed'])
 
     def newPost(self, title, content): 
         server = self.xmlrpc
@@ -187,6 +156,7 @@ class moduleBlog():
         logging.info("Selecting post")
         server = self.xmlrpc
         logging.debug(server)
+        print(server)
         posts = server[0].metaWeblog.getRecentPosts(self.Id, server[1], server[2], 10)
         i = 1
         print("Posts:")
@@ -203,8 +173,7 @@ class moduleBlog():
         if self.xmlrpc:
             server = self.xmlrpc
             result = server[0].blogger.deletePost('',idPost, server[1], server[2], True)
-            logging.info(result)
-
+        logging.info(result)
         return(result)
 
     def extractImage(self, soup):
@@ -313,28 +282,28 @@ class moduleBlog():
             theLinks = theSummaryLinks
             theSummaryLinks = theContent + theLinks
 
-            logging.debug("=========")
-            logging.debug("Results: ")
-            logging.debug("=========")
-            logging.debug("Title:     ", theTitle)
-            logging.debug("Link:      ", theLink)
-            logging.debug("First Link:", firstLink)
-            logging.debug("Summary:   ", content[:200])
-            logging.debug("Sum links: ", theSummaryLinks)
-            logging.debug("the Links"  , theLinks)
-            logging.debug("Comment:   ", comment)
-            logging.debug("Image;     ", theImage)
-            logging.debug("Post       ", theTitle + " " + theLink)
-            logging.debug("==============================================")
-            logging.debug("")
-    
+        logging.debug("=========")
+        logging.debug("Results: ")
+        logging.debug("=========")
+        logging.debug("Title:     ", theTitle)
+        logging.debug("Link:      ", theLink)
+        logging.debug("First Link:", firstLink)
+        logging.debug("Summary:   ", content[:200])
+        logging.debug("Sum links: ", theSummaryLinks)
+        logging.debug("the Links"  , theLinks)
+        logging.debug("Comment:   ", comment)
+        logging.debug("Image;     ", theImage)
+        logging.debug("Post       ", theTitle + " " + theLink)
+        logging.debug("==============================================")
+        logging.debug("")
+   
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
 
 if __name__ == "__main__":
 
-    import moduleBlog
+    import moduleXmlrpc
     
     config = configparser.ConfigParser()
     config.read(CONFIGDIR + '/.rssBlogs')
@@ -343,7 +312,7 @@ if __name__ == "__main__":
 
     blogs = []
 
-    blog = moduleBlog.moduleBlog()
+    blog = moduleXmlrpc.moduleXmlrpc()
     blog.setUrl(url)
     print(blog.obtainPostData(29))
     sys.exit()
@@ -351,13 +320,9 @@ if __name__ == "__main__":
     for section in config.sections():
         #print(section)
         #print(config.options(section))
-        blog = moduleBlog.moduleBlog()
+        blog = moduleXmlrpc.moduleXmlrpc()
         url = config.get(section, "url")
         blog.setUrl(url)
-        if 'rssfeed' in config.options(section): 
-            rssFeed = config.get(section, "rssFeed")
-            #print(rssFeed) 
-            blog.setRssFeed(rssFeed)
         optFields = ["linksToAvoid", "time", "bufferapp"]
         if ("linksToAvoid" in config.options(section)):
             blog.setLinksToAvoid(config.get(section, "linksToAvoid"))

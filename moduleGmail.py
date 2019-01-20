@@ -15,7 +15,6 @@ import sys
 import urllib
 importlib.reload(sys)
 #sys.setdefaultencoding("UTF-8")
-import moduleBlog
 import moduleSocial
 
 import googleapiclient

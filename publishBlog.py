@@ -2,8 +2,10 @@
 
 import os, time
 import configparser
-import moduleBlog
-# https://github.com/fernand0/scripts/blob/master/moduleBlog.py
+import moduleXmlrpc
+# https://github.com/fernand0/scripts/blob/master/moduleXmlrpc.py
+
+from configMod import *
 
 def archive(blogId, blogName, blogUrl, text, postId): 
     theTime = time.localtime(time.time())
@@ -46,9 +48,9 @@ def main():
     print("You have chosen ", selOp)
 
     config = configparser.ConfigParser()
-    config.read([os.path.expanduser('~/.rssBlogs')])
+    config.read(CONFIGDIR + '/.rssBlogs')
 
-    blog = moduleBlog.moduleBlog()
+    blog = moduleXmlrpc.moduleXmlrpc()
 
     section = config.sections()[1]
     url = config.get(section, "url")

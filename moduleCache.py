@@ -8,8 +8,8 @@
 # For example:
 #    .my.blog.com_twitter_myUser.queue
 # This file stores a list of pending posts stored as an array of posts as
-# returned by moduleBlog
-# (https://github.com/fernand0/scripts/blob/master/moduleBlog.py)
+# returned by moduleRss
+# (https://github.com/fernand0/scripts/blob/master/moduleRss
 #  obtainPostData method.
 
 import configparser, os
@@ -23,7 +23,7 @@ import urllib
 import importlib
 importlib.reload(sys)
 #sys.setdefaultencoding("UTF-8")
-import moduleBlog
+import moduleRss
 import moduleSocial
 
 from configMod import *
@@ -36,7 +36,7 @@ def API(Blog, pp):
 
     logging.info("Config...%s" % conf.sections())
 
-    blog = moduleBlog.moduleBlog() 
+    blog = moduleRss.moduleRss() 
     blog.setUrl(url)
 
     api = {}

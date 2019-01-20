@@ -659,9 +659,9 @@ def publishPocket(channel, title, link, summary, summaryHtml, summaryLinks, imag
 if __name__ == "__main__":
 
     import moduleSocial
-    import moduleBlog
+    import moduleRss
 
-    blog = moduleBlog.moduleBlog()
+    blog = moduleRss.moduleRss()
     url = 'http://fernand0.tumblr.com/'
     rssFeed= 'rss'
     blog.setUrl(url)
