@@ -73,7 +73,7 @@ class moduleGmail():
     
     def moveMessage(self,  message):
         api = self.service
-        labelId = getLabelId(api, 'imported')
+        labelId = self.getLabelId('imported')
         mesGE = base64.urlsafe_b64encode(message).decode()
         mesT = email.message_from_bytes(message)
         subj = email.header.decode_header(mesT['subject'])[0][0]

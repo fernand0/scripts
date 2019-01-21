@@ -889,7 +889,8 @@ def moveMailsRemote(M, msgs, folder):
         MD.logout()
     else:
         pp = pprint.PrettyPrinter(indent=4)
-        service = moduleGmail.API(acc,pp)    
+        service = moduleGmail.moduleGmail()
+        service.API(acc,pp)    
 
         i = 0
         for msgId in msgs.split(','): #[:25]:
@@ -902,7 +903,7 @@ def moveMailsRemote(M, msgs, folder):
             if (typ == 'OK'): 
                 message = data[0][1]
                 logging.debug("Message %s", message)
-                rep = moduleGmail.moveMessage(service, message)
+                rep = service.moveMessage(message)
                 logging.info("Reply %s" %rep)
                 if rep != "Fail!":
                     M.store(msgId, "+FLAGS", "\\Seen")
