@@ -72,6 +72,13 @@ class moduleGmail():
             self.setPosts()
         return(self.posts)
 
+    def getMessage(self, id): 
+        api = self.service
+        message = api.users().drafts().get(userId="me", 
+                id=id).execute()['message']
+        return message
+
+
     def getHeader(self, message, header = 'Subject'):
         for head in message['payload']['headers']: 
             if head['name'] == header: 
@@ -102,35 +109,25 @@ class moduleGmail():
             return (None, None, None, None, None, None, None, None, None, None)
 
         post = posts[i]
-        print(post)
-        # {'id': 'r-8669819014840130074', 'message': {'id': '1686a36aa2869548', 'threadId': '1686a369ca81abf8'}}
-        message = api.users().drafts().get(userId="me", 
-                id=post['id']).execute()['message']
-        
-        #{'labelIds': ['DRAFT', 'IMPORTANT'], 'threadId': '16874f73017e4ae6', 'historyId': '18470135', 'internalDate': '1548150582000', 'snippet': 'http://www.unizar.es/ -- Fernando Tricas http://elmundoesimperfecto.com/', 'sizeEstimate': 1078, 'id': '16874f73017e4ae6', 'payload': {'body': {'size': 0}, 'mimeType': 'multipart/alternative', 'parts': [{'mimeType': 'text/plain', 'filename': '', 'body': {'size': 80, 'data': 'aHR0cDovL3d3dy51bml6YXIuZXMvDQoNCi0tIA0KRmVybmFuZG8gVHJpY2FzDQpodHRwOi8vZWxtdW5kb2VzaW1wZXJmZWN0by5jb20vDQo='}, 'partId': '0', 'headers': [{'value': 'text/plain; charset="UTF-8"', 'name': 'Content-Type'}]}, {'mimeType': 'text/html', 'filename': '', 'body': {'size': 340, 'data': 'PGRpdiBkaXI9Imx0ciI-PGEgaHJlZj0iaHR0cDovL3d3dy51bml6YXIuZXMvIj5odHRwOi8vd3d3LnVuaXphci5lcy88L2E-PGJyIGNsZWFyPSJhbGwiPjxkaXY-PGJyPi0tIDxicj48ZGl2IGRpcj0ibHRyIiBjbGFzcz0iZ21haWxfc2lnbmF0dXJlIiBkYXRhLXNtYXJ0bWFpbD0iZ21haWxfc2lnbmF0dXJlIj48ZGl2IGRpcj0ibHRyIj48ZGl2PkZlcm5hbmRvIFRyaWNhczxicj48YSBocmVmPSJodHRwOi8vZWxtdW5kb2VzaW1wZXJmZWN0by5jb20vIiB0YXJnZXQ9Il9ibGFuayI-aHR0cDovL2VsbXVuZG9lc2ltcGVyZmVjdG8uY29tLzwvYT48L2Rpdj48L2Rpdj48L2Rpdj48L2Rpdj48L2Rpdj4NCg=='}, 'partId': '1', 'headers': [{'value': 'text/html; charset="UTF-8"', 'name': 'Content-Type'}, {'value': 'quoted-printable', 'name': 'Content-Transfer-Encoding'}]}], 'filename': '', 'partId': '', 'headers': [{'value': '1.0', 'name': 'MIME-Version'}, {'value': 'Tue, 22 Jan 2019 10:49:42 +0100', 'name': 'Date'}, {'value': '<CAFEW4w9iVgqghL-vk_YWyeEZhuUTq6v3fH5Rnbgj72RGAaj4Jw@mail.gmail.com>', 'name': 'Message-ID'}, {'value': 'prueba enlace', 'name': 'Subject'}, {'value': '"Fernando Tricas García" <ftricas@elmundoesimperfecto.com>', 'name': 'From'}, {'value': 'fernand0 ElMundoEsImperfecto <fernand0@elmundoesimperfecto.com>', 'name': 'To'}, {'value': 'multipart/alternative; boundary="00000000000094f448058008e528"', 'name': 'Content-Type'}]}}
+        message = self.getMessage(post['id'])
 
-        header = self.getHeader(message, 'Subject')
+        theTitle = self.getHeader(message, 'Subject')
         snippet = self.getHeader(message, 'snippet')
         parts = self.getBody(message)
         theLink = None
-        print("snip", message['snippet'])
         posIni = message['snippet'].find('http')
         posFin = message['snippet'].find(' ', posIni)
         posSignature = message['snippet'].find('-- ')
-        print(posIni, posFin, posSignature)
         if posIni < posSignature: 
             theLink = message['snippet'][posIni:posFin]
         for part in parts:
-            partD = base64.b64decode(part['body']['data']) 
-            html = moduleHtml.moduleHtml()
-            
-            print("--->", html.listLinks(partD))
-            sys.exit()
-            posIni = partD.find(b'http')
-            if posIni >= 0:
-                url = partD[posIni:].split()[0]
-                break
-        print("url: %s"%theLink)
+            if 'data' in part['body']:
+                partD = base64.b64decode(part['body']['data']) 
+                html = moduleHtml.moduleHtml()
+                
+                theLinks = html.listLinks(partD)
+            else:
+                theLinks = None
         firstLink = theLink
         theImage = None
         theSummary = snippet
@@ -139,8 +136,9 @@ class moduleGmail():
 
         theSummaryLinks = None
         theContent = content
-        theLinks = None
-        comment = None
+        comment = message['id']
+
+        return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
   
     def moveMessage(self,  message):
@@ -196,8 +194,9 @@ class moduleGmail():
                 drafts = []
     
         listP = []
-        for draft in reversed(drafts): 
-            message = api.users().drafts().get(userId="me", id=draft['id']).execute()
+        numDrafts = len(drafts)
+        for draft in range(numDrafts): 
+            message = self.obtainPostData(numDrafts-(draft +1))
             listP.append(message)
     
         return(listP)
@@ -212,17 +211,10 @@ class moduleGmail():
         outputData[serviceName] = {'sent': [], 'pending': []}
         listDrafts = self.getPostsCache()
     
-        listP = []
-        for draft in listDrafts: 
-            for header in draft['message']['payload']['headers']: 
-                if header['name'] == 'Subject': 
-                    listP.append((header['value'], '', '', '', '', '', '', '', draft['id'], ''))
+        logging.debug("-Posts %s"% listDrafts)
     
-    
-        logging.debug("-Posts %s"% listP)
-    
-        if len(listP) > 0: 
-            for element in listP: 
+        if len(listDrafts) > 0: 
+            for element in listDrafts: 
                 outputData[serviceName]['pending'].append(element) 
     
         #logging.info("Service posts profiles %s" % profiles)
@@ -507,11 +499,11 @@ def main():
     logging.basicConfig(#filename='example.log',
                             level=logging.DEBUG,format='%(asctime)s %(message)s')
 
-    print("profiles")
-    print(api.service.users().getProfile(userId='me').execute())
+    #print("profiles")
+    #print(api.service.users().getProfile(userId='me').execute())
     postsP, profiles = api.listPosts(pp, '')
     print("-> Posts",postsP)
-    api.obtainPostData(0)
+    print(api.obtainPostData(0))
     sys.exit()
     msg = 353
     moveMessage(api[1], msg)

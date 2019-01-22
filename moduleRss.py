@@ -291,7 +291,7 @@ def main():
             if ('ac' in option) or ('fb' in option):
                 blog.addSocialNetwork((option, config.get(section, option)))
         blogs.append(blog)
-        blog.obtainPostData(0)
+        print(blog.obtainPostData(0))
 
     sys.exit()
 

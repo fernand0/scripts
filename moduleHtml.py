@@ -73,11 +73,15 @@ class moduleHtml():
         while posIni >= 0:
             textWS = textW[posIni:].split(maxsplit=1)
             url = textWS[0]
+            theList.append(url)
             textW = textWS[1:]
-            print("1",textW)
-            textW = textW[0]
-            print("2",textW)
-            posIni = textW.find(b'http')
+            if textW:
+                textW = textW[-1]
+                posIni = textW.find(b'http')
+            else:
+                posIni = -1
+
+        return(theList)
 
     def extractLinks(self, soup, linksToAvoid=""):
         if isinstance(soup, BeautifulSoup):
