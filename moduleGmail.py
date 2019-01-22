@@ -289,32 +289,6 @@ class moduleGmail():
         idPost = comment
 
         update = profile.users().drafts().delete(userId='me', id=idPost).execute()
-        #for profile in profiles: 
-        #    logging.info("Social Network %s" % profile)
-        #    if 'gmail' in profile._baseUrl:
-        #        serviceName = 'Mail'
-        #        if (serviceName[0] in profMov) or toPublish[0]=='*':
-        #            if (len(toPublish) == 3):
-        #                logging.info("Which one?") 
-        #                acc = toPublish[2]
-        #                if int(acc) != accC: 
-        #                    logging.info("Not this one %s" % profile)
-        #                    accC = accC + 1
-        #                    continue
-        #                else:
-        #                    # We are in the adequate account, we can drop de qualifier
-        #                    # for the publishing method
-        #                    #method = profile[:-1]
-        #                    posts = posts[serviceName+str(accC)]
-        #            else:
-        #                posts = posts[serviceName]
-    
-        #            print(posts)
-        #            idPost = posts['pending'][j]
-        #            print(idPost)
-        #            idPost = idPost[8]
-        #            update = profile.users().drafts().delete(userId='me', id=idPost).execute()
-        #            accC = accC + 1
         return(update)
     
     #######################################################
