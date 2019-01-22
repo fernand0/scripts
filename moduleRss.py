@@ -177,7 +177,7 @@ class moduleRss():
             return (None, None, None, None, None, None, None, None, None, None)
 
         post = posts[i]
-        print(post)
+        #print(post)
 
         if 'summary' in post:
             theSummary = post['summary']
