@@ -78,7 +78,6 @@ class moduleGmail():
                 id=id).execute()['message']
         return message
 
-
     def getHeader(self, message, header = 'Subject'):
         for head in message['payload']['headers']: 
             if head['name'] == header: 
@@ -87,7 +86,6 @@ class moduleGmail():
     def getBody(self, message):
         return(message['payload']['parts'])
  
-
     def getLabelId(self, name):
         api = self.service
         results = api.users().labels().list(userId='me').execute() 
@@ -137,7 +135,6 @@ class moduleGmail():
         theSummary = snippet
         content = parts[0]
 
-
         theSummaryLinks = None
         theContent = content
         comment = message['id']
@@ -145,49 +142,6 @@ class moduleGmail():
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
   
-    def moveMessage(self,  message):
-        api = self.service
-        labelId = self.getLabelId('imported')
-        mesGE = base64.urlsafe_b64encode(message).decode()
-        mesT = email.message_from_bytes(message)
-        subj = email.header.decode_header(mesT['subject'])[0][0]
-        logging.info("Subject %s",subj)
-    
-        try:
-            messageR = api.users().messages().import_(userId='me',
-                      fields='id',
-                      neverMarkSpam=True,
-                      processForCalendar=False,
-                      internalDateSource='dateHeader',
-                      body={'raw': mesGE}).execute(num_retries=5)
-           #           media_body=media).execute(num_retries=1)
-        except: 
-            # When the message is too big
-            # https://github.com/google/import-mailbox-to-gmail/blob/master/import-mailbox-to-gmail.py
-    
-            logging.info("Fail 1! Trying another method.")
-            if True:
-                mesGS = BytesParser().parsebytes(message).as_string()
-                media =  googleapiclient.http.MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
-                logging.info("vamos method")
-                messageR = api.users().messages().import_(userId='me',
-                          fields='id',
-                          neverMarkSpam=True,
-                          processForCalendar=False,
-                          internalDateSource='dateHeader',
-                          body={},
-                          media_body=media).execute(num_retries=3)
-                logging.info("messageR method")
-            else: 
-                logging.info("Error with message %s" % message) 
-                return("Fail 2!")
-        msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
-    
-        messageR = api.users().messages().modify(userId='me', id=messageR['id'],
-                                                            body=msg_labels).execute()
-    
-        return(messageR)
-    
     def getPostsCache(self):        
         api = self.service
         drafts = self.getPosts()
@@ -252,7 +206,6 @@ class moduleGmail():
         else:
             return(None)
     
-    
     def publishPost(self, pp, posts, toPublish):
         logging.info("To publish %s" % pp.pformat(toPublish))
     
@@ -290,7 +243,56 @@ class moduleGmail():
 
         update = profile.users().drafts().delete(userId='me', id=idPost).execute()
         return(update)
+
+     def listSentPosts(self, pp, service=""):
+        api = self.service
+        profiles = getProfiles(api, pp, service)
     
+        someSent = False
+        outputStr = ([],[])
+        for i in range(len(profiles)):
+            serviceName = profiles[i].formatted_service
+            logging.debug("Service %d %s" % (i,serviceName))
+            if (profiles[i].counts['sent'] > 0):
+                someSent = True
+                logging.info("Service %s" % serviceName)
+                logging.debug("There are: %d" % profiles[i].counts['sent'])
+                logging.debug(pp.pformat(profiles[i].updates.sent))
+                due_time=""
+                for j in range(min(8,profiles[i].counts['sent'])):
+                    updatesSent = profiles[i].updates.sent[j]
+                    update = Update(api=api, id= updatesSent.id)
+                    if (due_time == ""):
+                        due_time=update.due_time # Not used here
+                        outputStr[0].append("*%s*" % serviceName)
+                        outputStr[1].append("")
+                    logging.debug("Service %s" % pp.pformat(updatesSent))
+                    selectionStr = "" #"%d%d) " % (i,j)
+                    if ('media' in updatesSent): 
+                        try:
+                            lineTxt = "%s %s %s" % (selectionStr, 
+                                    updatesSent.text, updatesSent.media.expanded_link)
+                        except:
+                            lineTxt = "%s %s %s" % (selectionStr,
+                                    updatesSent.text, updatesSent.media.link)
+                    else:
+                        lineTxt = "%s %s" % (selectionStr,updatesSent.text)
+                    logging.info(lineTxt)
+                    outputStr[0].append("%s" % lineTxt)
+                    outputStr[1].append(" (%d clicks)" % updatesSent['statistics']['clicks'])
+                    #logging.debug("-- %s" % (pp.pformat(update)))
+                    #logging.debug("-- %s" % (pp.pformat(dir(update))))
+            else:
+                #logging.debug("Service %d %s" % (i, serviceName))
+                logging.debug("No")
+        
+        if someSent:
+            return (outputStr, profiles)
+        else:
+            logging.info("No sent posts")
+            return someSent
+
+   
     #######################################################
     # These need work
     #######################################################
@@ -364,53 +366,48 @@ class moduleGmail():
                 update = Update(api=api, id=profiles[i].updates.pending[j].id)
                 profiles[i].updates.reorder(listIds)
     
-    def listSentPosts(self, pp, service=""):
+    def moveMessage(self,  message):
         api = self.service
-        profiles = getProfiles(api, pp, service)
+        labelId = self.getLabelId('imported')
+        mesGE = base64.urlsafe_b64encode(message).decode()
+        mesT = email.message_from_bytes(message)
+        subj = email.header.decode_header(mesT['subject'])[0][0]
+        logging.info("Subject %s",subj)
     
-        someSent = False
-        outputStr = ([],[])
-        for i in range(len(profiles)):
-            serviceName = profiles[i].formatted_service
-            logging.debug("Service %d %s" % (i,serviceName))
-            if (profiles[i].counts['sent'] > 0):
-                someSent = True
-                logging.info("Service %s" % serviceName)
-                logging.debug("There are: %d" % profiles[i].counts['sent'])
-                logging.debug(pp.pformat(profiles[i].updates.sent))
-                due_time=""
-                for j in range(min(8,profiles[i].counts['sent'])):
-                    updatesSent = profiles[i].updates.sent[j]
-                    update = Update(api=api, id= updatesSent.id)
-                    if (due_time == ""):
-                        due_time=update.due_time # Not used here
-                        outputStr[0].append("*%s*" % serviceName)
-                        outputStr[1].append("")
-                    logging.debug("Service %s" % pp.pformat(updatesSent))
-                    selectionStr = "" #"%d%d) " % (i,j)
-                    if ('media' in updatesSent): 
-                        try:
-                            lineTxt = "%s %s %s" % (selectionStr, 
-                                    updatesSent.text, updatesSent.media.expanded_link)
-                        except:
-                            lineTxt = "%s %s %s" % (selectionStr,
-                                    updatesSent.text, updatesSent.media.link)
-                    else:
-                        lineTxt = "%s %s" % (selectionStr,updatesSent.text)
-                    logging.info(lineTxt)
-                    outputStr[0].append("%s" % lineTxt)
-                    outputStr[1].append(" (%d clicks)" % updatesSent['statistics']['clicks'])
-                    #logging.debug("-- %s" % (pp.pformat(update)))
-                    #logging.debug("-- %s" % (pp.pformat(dir(update))))
-            else:
-                #logging.debug("Service %d %s" % (i, serviceName))
-                logging.debug("No")
-        
-        if someSent:
-            return (outputStr, profiles)
-        else:
-            logging.info("No sent posts")
-            return someSent
+        try:
+            messageR = api.users().messages().import_(userId='me',
+                      fields='id',
+                      neverMarkSpam=True,
+                      processForCalendar=False,
+                      internalDateSource='dateHeader',
+                      body={'raw': mesGE}).execute(num_retries=5)
+           #           media_body=media).execute(num_retries=1)
+        except: 
+            # When the message is too big
+            # https://github.com/google/import-mailbox-to-gmail/blob/master/import-mailbox-to-gmail.py
+    
+            logging.info("Fail 1! Trying another method.")
+            if True:
+                mesGS = BytesParser().parsebytes(message).as_string()
+                media =  googleapiclient.http.MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
+                logging.info("vamos method")
+                messageR = api.users().messages().import_(userId='me',
+                          fields='id',
+                          neverMarkSpam=True,
+                          processForCalendar=False,
+                          internalDateSource='dateHeader',
+                          body={},
+                          media_body=media).execute(num_retries=3)
+                logging.info("messageR method")
+            else: 
+                logging.info("Error with message %s" % message) 
+                return("Fail 2!")
+        msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
+    
+        messageR = api.users().messages().modify(userId='me', id=messageR['id'],
+                                                            body=msg_labels).execute()
+    
+        return(messageR)
 
 def main():
     import moduleGmail
