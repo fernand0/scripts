@@ -18,7 +18,7 @@ import moduleCache
 
 from configMod import *
 
-class moduleRss():
+class moduleHtml():
 
     def __init__(self):
          self.url = ""
@@ -66,97 +66,112 @@ class moduleRss():
         else:
             return imageLink
 
+    def listLinks(self, text):
+        theList = []
+        posIni = text.find(b'http')
+        textW = text
+        while posIni >= 0:
+            textWS = textW[posIni:].split(maxsplit=1)
+            url = textWS[0]
+            textW = textWS[1:]
+            print("1",textW)
+            textW = textW[0]
+            print("2",textW)
+            posIni = textW.find(b'http')
+
     def extractLinks(self, soup, linksToAvoid=""):
-        j = 0
-        linksTxt = ""
-        links = soup.find_all(["a","iframe"])
-        for link in soup.find_all(["a","iframe"]):
-            theLink = ""
-            if len(link.contents) > 0: 
-                if not isinstance(link.contents[0], Tag):
-                    # We want to avoid embdeded tags (mainly <img ... )
-                    if link.has_attr('href'):
-                        theLink = link['href']
-                    else:
-                        if 'src' in link: 
-                            theLink = link['src']
+        if isinstance(soup, BeautifulSoup):
+            j = 0
+            linksTxt = ""
+            links = soup.find_all(["a","iframe"])
+            for link in soup.find_all(["a","iframe"]):
+                theLink = ""
+                if len(link.contents) > 0: 
+                    if not isinstance(link.contents[0], Tag):
+                        # We want to avoid embdeded tags (mainly <img ... )
+                        if link.has_attr('href'):
+                            theLink = link['href']
                         else:
-                            continue
-            else:
-                if 'src' in link: 
-                    theLink = link['src']
+                            if 'src' in link: 
+                                theLink = link['src']
+                            else:
+                                continue
                 else:
-                    continue
+                    if 'src' in link: 
+                        theLink = link['src']
+                    else:
+                        continue
     
-            if ((linksToAvoid == "") or
-               (not re.search(linksToAvoid, theLink))):
-                    if theLink:
-                        link.append(" ["+str(j)+"]")
-                        linksTxt = linksTxt + "["+str(j)+"] " + \
-                            link.contents[0] + "\n"
-                        linksTxt = linksTxt + "    " + theLink + "\n"
-                        j = j + 1
+                if ((linksToAvoid == "") or
+                   (not re.search(linksToAvoid, theLink))):
+                        if theLink:
+                            link.append(" ["+str(j)+"]")
+                            linksTxt = linksTxt + "["+str(j)+"] " + \
+                                link.contents[0] + "\n"
+                            linksTxt = linksTxt + "    " + theLink + "\n"
+                            j = j + 1
     
-        if linksTxt != "":
-            theSummaryLinks = linksTxt
-        else:
-            theSummaryLinks = ""
+            if linksTxt != "":
+                theSummaryLinks = linksTxt
+            else:
+                theSummaryLinks = ""
     
-        return (soup.get_text().strip('\n'), theSummaryLinks)
-
-    def obtainPostData(self, post debug=False):
-            theSummary = post['summary']
-            content = post['description']
-            if content.startswith('Anuncios'): content = ''
-            theDescription = post['description']
-            theTitle = post['title'].replace('\n', ' ')
-            theLink = post['link']
-            if ('comment' in post):
-                comment = post['comment']
-            else:
-                comment = ""
-
-            theSummaryLinks = ""
-
-            soup = BeautifulSoup(theDescription, 'lxml')
-
-            link = soup.a
-            if link is None:
-               firstLink = theLink 
-            else:
-               firstLink = link['href']
-               pos = firstLink.find('.')
-               if firstLink.find('https')>=0:
-                   lenProt = len('https://')
-               else:
-                   lenProt = len('http://')
-               if (firstLink[lenProt:pos] == theTitle[:pos - lenProt]):
-                   # A way to identify retumblings. They have the name of the
-                   # tumblr at the beggining of the anchor text
-                   theTitle = theTitle[pos - lenProt + 1:]
-
-            theSummary = soup.get_text()
-            if self.getLinksToAvoid():
-                (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())
-                logging.debug("theC", theContent)
-                if theContent.startswith('Anuncios'): 
-                    theContent = ''
-                logging.debug("theC", theContent)
-            else:
-                (theContent, theSummaryLinks) = self.extractLinks(soup, "") 
-                logging.debug("theC", theContent)
-                if theContent.startswith('Anuncios'): 
-                    theContent = ''
-                logging.debug("theC", theContent)
-
-            if 'media_content' in post: 
-                theImage = post['media_content'][0]['url']
-            else:
-                theImage = self.extractImage(soup)
-            logging.debug("theImage", theImage)
-            theLinks = theSummaryLinks
-            theSummaryLinks = theContent + theLinks
+            return (soup.get_text().strip('\n'), theSummaryLinks)
                 
+
+    def obtainPostData(self, post, debug=False):
+        theSummary = post['summary']
+        content = post['description']
+        if content.startswith('Anuncios'): content = ''
+        theDescription = post['description']
+        theTitle = post['title'].replace('\n', ' ')
+        theLink = post['link']
+        if ('comment' in post):
+            comment = post['comment']
+        else:
+            comment = ""
+
+        theSummaryLinks = ""
+
+        soup = BeautifulSoup(theDescription, 'lxml')
+
+        link = soup.a
+        if link is None:
+           firstLink = theLink 
+        else:
+           firstLink = link['href']
+           pos = firstLink.find('.')
+           if firstLink.find('https')>=0:
+               lenProt = len('https://')
+           else:
+               lenProt = len('http://')
+           if (firstLink[lenProt:pos] == theTitle[:pos - lenProt]):
+               # A way to identify retumblings. They have the name of the
+               # tumblr at the beggining of the anchor text
+               theTitle = theTitle[pos - lenProt + 1:]
+
+        theSummary = soup.get_text()
+        if self.getLinksToAvoid():
+            (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())
+            logging.debug("theC", theContent)
+            if theContent.startswith('Anuncios'): 
+                theContent = ''
+            logging.debug("theC", theContent)
+        else:
+            (theContent, theSummaryLinks) = self.extractLinks(soup, "") 
+            logging.debug("theC", theContent)
+            if theContent.startswith('Anuncios'): 
+                theContent = ''
+            logging.debug("theC", theContent)
+
+        if 'media_content' in post: 
+            theImage = post['media_content'][0]['url']
+        else:
+            theImage = self.extractImage(soup)
+        logging.debug("theImage", theImage)
+        theLinks = theSummaryLinks
+        theSummaryLinks = theContent + theLinks
+            
         logging.debug("=========")
         logging.debug("Results: ")
         logging.debug("=========")
@@ -257,3 +272,11 @@ if __name__ == "__main__":
         for post in posts:
             if "content" in post:
                 print(post['content'][:100])
+
+def main():
+    import moduleHtml
+
+    html = moduleHtml.moduleHtml()
+
+if __name__ == "__main__":
+    main()
