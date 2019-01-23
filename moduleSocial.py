@@ -340,12 +340,13 @@ def publishMail(channel, title, link, summary, summaryHtml, summaryLinks, image,
     logger.info("Publishing in Gmail...\n") 
     logger.info("--%s, %s, %s, %s, %s, %s, %s, %s, %s" % (channel, title, link, summary, summaryHtml, summaryLinks, image, content , links))
     if True:
-        application = channel #connectLinkedin()
+        application = channel.service #connectLinkedin()
         #presentation = 'Publicado! ' + title 
         logger.info("Publishing in Gmail:\n%s" % title)
         logger.info("Publishing in Gmail:\n%s" % content)
-        
+        logger.info("Publishing in Gmail:\n%s" % links)
         message = application.users().drafts().send(userId='me', body={ 'id': links}).execute()
+
     else:
         logger.warning("Gmail posting failed!\n")
         logger.warning("Unexpected error:", sys.exc_info()[0])

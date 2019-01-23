@@ -137,7 +137,7 @@ class moduleGmail():
 
         theSummaryLinks = None
         theContent = content
-        comment = message['id']
+        comment = post['id']
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
@@ -221,7 +221,8 @@ class moduleGmail():
         logging.info("Publishing title: %s" % title)
  
         logging.info(title, link, summary, summaryHtml, summaryLinks, image, content , links )
-        update = publishMethod(profile, title, link, summary, summaryHtml, summaryLinks, image, content, links)
+        logging.info(publishMethod)
+        update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
         if update:
             if 'text' in update: 
                 update = update['text'] 
@@ -244,7 +245,7 @@ class moduleGmail():
         update = profile.users().drafts().delete(userId='me', id=idPost).execute()
         return(update)
 
-     def listSentPosts(self, pp, service=""):
+    def listSentPosts(self, pp, service=""):
         api = self.service
         profiles = getProfiles(api, pp, service)
     
