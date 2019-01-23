@@ -37,6 +37,7 @@ class moduleGmail():
     def __init__(self):
         self.service = None
         self.posts = None
+        self.name = "Mail"
 
     def API(self, Acc, pp):
         # based on get_credentials from 
@@ -102,11 +103,14 @@ class moduleGmail():
             self.setPosts()
 
         posts = []
-        logging.info(self.getPosts()['drafts'])
-        for post in self.getPosts()['drafts']:
-            posts.insert(0, post)
+        if 'drafts' in self.getPosts():
+            logging.info(self.getPosts()['drafts'])
+            for post in self.getPosts()['drafts']:
+                posts.insert(0, post)
+        else:
+            logging.info("No drafts")
 
-        if not posts:
+        if not posts or (i>=(len(posts))):
             return (None, None, None, None, None, None, None, None, None, None)
 
         post = posts[i]
@@ -185,64 +189,63 @@ class moduleGmail():
                         + acc[1]+ '.json')
         return(theName)
     
-    def showPost(self, pp, posts, toPublish):
-        logging.info("To publish %s" % pp.pformat(toPublish))
+    def showPost(self, pp, posts, profIni, j):
+        logging.info("To publish %s %d" % (profIni,j))
     
-        profMov = toPublish[0]
-        j = toPublish[1]
-        logging.info("Profile %s position %d" % (profMov, j))
+        update = ""
+        serviceName = self.name
+
+        title = None
+        if (serviceName[0] in profIni) or profIni == '*': 
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(j)
+    
+            if title: 
+                if link: 
+                    return(title+link)
+                else:
+                    return(title)
+        return(None)
+    
+    def publishPost(self, pp, posts, profIni, j):
+        logging.info("To publish %s %d" % (profIni, j))
+    
+        update = ""
+        serviceName = self.name
+        title = None
+
+        if (serviceName[0] in profIni) or profIni == '*': 
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(j)
+            if title:
+                publishMethod = getattr(moduleSocial, 
+                        'publishMail')
+                logging.info("Publishing title: %s" % title)
+ 
+                logging.info(title, link, summary, summaryHtml, summaryLinks, image, content , links )
+                logging.info(publishMethod)
+                update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
+                if update:
+                    if 'text' in update: 
+                        update = update['text'] 
+   
+                return(update)
+
+        return(None)
+    
+    def deletePost(self, cache, pp, posts, profIni, j):
+        logging.info("To Delete %s %d" % (profIni, j))
     
         update = ""
         title = None
-        accC = 0
-        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(j)
-    
-        if title: 
-            if link: 
-                return(title+link)
-            else:
-                return(title)
-        else:
-            return(None)
-    
-    def publishPost(self, pp, posts, toPublish):
-        logging.info("To publish %s" % pp.pformat(toPublish))
-    
-        profMov = toPublish[0]
-        j = toPublish[1]
-        logging.info("Profile %s position %d" % (profMov, j))
-    
-        update = ""
-        accC = 0
-        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(j)
-        publishMethod = getattr(moduleSocial, 
-                'publishMail')
-        logging.info("Publishing title: %s" % title)
- 
-        logging.info(title, link, summary, summaryHtml, summaryLinks, image, content , links )
-        logging.info(publishMethod)
-        update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
-        if update:
-            if 'text' in update: 
-                update = update['text'] 
-   
-        return(update)
-    
-    def deletePost(self, cache, pp, posts, toPublish):
-        logging.info("To publish %s" % pp.pformat(toPublish))
-        logging.info(pp.pformat(toPublish))
-    
-        profMov = toPublish[0]
-        j = toPublish[1]
-    
-        update = ""
-        accC = 0
-        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(j)
+        if (serviceName[0] in profIni) or profIni == '*': 
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(j)
 
-        idPost = comment
+            if title:
+                idPost = comment
 
-        update = profile.users().drafts().delete(userId='me', id=idPost).execute()
-        return(update)
+                update = profile.users().drafts().delete(userId='me', id=idPost).execute()
+                return(update)
+
+        return(None)
 
     def listSentPosts(self, pp, service=""):
         api = self.service
