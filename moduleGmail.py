@@ -68,8 +68,7 @@ class moduleGmail():
         self.posts = api.users().drafts().list(userId='me').execute()
 
     def getPosts(self):
-        if not self.posts:
-            self.setPosts()
+        self.setPosts()
         return(self.posts)
 
     def getMessage(self, id): 
