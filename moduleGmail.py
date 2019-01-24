@@ -38,6 +38,7 @@ class moduleGmail():
         self.service = None
         self.posts = None
         self.name = "Mail"
+        self.profile = None
 
     def API(self, Acc, pp):
         # based on get_credentials from 
@@ -59,10 +60,12 @@ class moduleGmail():
         store = file.Storage(fileStore)
         credentials = store.get()
         
-    
         service = build('gmail', 'v1', http=credentials.authorize(Http()))
     
         self.service = service
+
+        self.name = self.name + Acc[3:]
+        #self.profile = self.service.users().getProfile(userId='me').execute()
     
     def setPosts(self):
         api = self.service
@@ -125,14 +128,16 @@ class moduleGmail():
         posSignature = message['snippet'].find('-- ')
         if posIni < posSignature: 
             theLink = message['snippet'][posIni:posFin]
+        theLinks = None
         for part in parts:
             if 'data' in part['body']:
-                partD = base64.b64decode(part['body']['data']) 
+                try:
+                    partD = base64.b64decode(part['body']['data']) 
+                except:
+                    partD = part['body']['data'].encode()
                 html = moduleHtml.moduleHtml()
                 
                 theLinks = html.listLinks(partD)
-            else:
-                theLinks = None
         firstLink = theLink
         theImage = None
         theSummary = snippet
@@ -162,12 +167,12 @@ class moduleGmail():
     
         return(listP)
     
-    def listPosts(self, pp, service=""):    
+    def listPosts(self, pp):    
         api = self.service
         outputData = {}
         files = []
     
-        serviceName = 'Mail'+service
+        serviceName = self.name
     
         outputData[serviceName] = {'sent': [], 'pending': []}
         listDrafts = self.getPostsCache()
@@ -207,27 +212,28 @@ class moduleGmail():
         return(None)
     
     def publishPost(self, pp, posts, profIni, j):
-        logging.info("To publish %s %d" % (profIni, j))
+        logging.info("To publish %s %s" % (profIni, j))
     
         update = ""
         serviceName = self.name
         title = None
 
-        if (serviceName[0] in profIni) or profIni == '*': 
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(j)
-            if title:
-                publishMethod = getattr(moduleSocial, 
-                        'publishMail')
-                logging.info("Publishing title: %s" % title)
+        if (serviceName[0] in profIni) or profIni[0] == '*': 
+            if ((len(profIni)>1) and (profIni[1] == self.name[-1])) or (profIni[0] == '*'): 
+                   (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(j)
+                   if title:
+                       publishMethod = getattr(moduleSocial, 
+                               'publishMail')
+                       logging.info("Publishing title: %s" % title)
  
-                logging.info(title, link, summary, summaryHtml, summaryLinks, image, content , links )
-                logging.info(publishMethod)
-                update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
-                if update:
-                    if 'text' in update: 
-                        update = update['text'] 
+                       logging.info(title, link, summary, summaryHtml, summaryLinks, image, content , links )
+                       logging.info(publishMethod)
+                       update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
+                       if update:
+                           if 'text' in update: 
+                               update = update['text'] 
    
-                return(update)
+                       return(update)
 
         return(None)
     
@@ -420,13 +426,13 @@ def main():
     # instantiate the api object 
 
     api = moduleGmail.moduleGmail()
-    api.API('ACC2',pp)
+    api.API('ACC1',pp)
 
     logging.basicConfig(#filename='example.log',
                             level=logging.DEBUG,format='%(asctime)s %(message)s')
 
-    #print("profiles")
-    #print(api.service.users().getProfile(userId='me').execute())
+    print("profiles")
+    print(api.profile)
     postsP, profiles = api.listPosts(pp, '')
     print("-> Posts",postsP)
     print(api.obtainPostData(0))

@@ -221,7 +221,7 @@ def editPost(cache, pp, posts, profIni, j, newTitle):
     return(newTitle+' '+link)
 
 def publishPost(cache, pp, posts, profIni, j):
-    logging.info("To publish %s %d" % (profIni, j))
+    logging.info("To publish %s %s" % (profIni, j))
 
 
     update = ""

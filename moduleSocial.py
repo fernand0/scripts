@@ -412,6 +412,22 @@ def searchTwitter(search, twitter):
     t = connectTwitter(twitter)
     return(t.search.tweets(q=search)['statuses'])
 
+def nextPost(blog, socialNetwork):
+    listP = moduleCache.listPostsCache(blog, socialNetwork)
+
+    if listP: 
+        element = listP[0]
+        listP = listP[1:] 
+    elif type(listP) == type(()):
+        element = listP
+        listP = [] 
+    else:
+        logger.warning("This shouldn't happen")
+        sys.exit()
+
+    return(element,listP)
+
+
 def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots): 
 
     listP = moduleCache.listPostsCache(blog, socialNetwork)
@@ -425,23 +441,17 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
 
-        listP = moduleCache.listPostsCache(blog, socialNetwork)
-
-        if listP: 
-            element = listP[0]
-            listP = listP[1:] 
-        elif type(listP) == type(()):
-            element = listP
-            listP = [] 
-        else:
-            logger.warning("This shouldn't happen")
-            sys.exit()
+        element, listP = moduleSocial.nextPost(blog, socialNetwork)
 
         logger.info("Time: %s Waiting ... %.2f minutes in %s to publish:\n%s" % (time.asctime(), tSleep/60, socialNetwork[0], element[0]))
 
         time.sleep(tSleep) 
 
+        # Things can have changed during the waiting
+        element, listP = moduleSocial.nextPost(blog, socialNetwork)
+
         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = element
+
         publishMethod = globals()['publish'+ socialNetwork[0].capitalize()]#()(self, ))
         nick = socialNetwork[1]
         publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
