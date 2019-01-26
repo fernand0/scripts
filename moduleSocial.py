@@ -322,8 +322,8 @@ def checkLimitPosts(api, blog, service=''):
         else:
             for profile in blog.getSocialNetworks():
                 if (profile[0] in blog.getProgram()): 
-                    print("Pprofile %s" %profile)
-                    print("Pprofile program %s" %blog.getProgram())
+                    print("Profile %s" %profile)
+                    print("Profile program %s" %blog.getProgram())
                     listP = moduleCache.getPostsCache(blog,
                             (profile, blog.getSocialNetworks()[profile])) 
                     lenProfile = len(listP) 
@@ -441,14 +441,14 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
 
-        element, listP = moduleSocial.nextPost(blog, socialNetwork)
+        element, listP = nextPost(blog, socialNetwork)
 
         logger.info("Time: %s Waiting ... %.2f minutes in %s to publish:\n%s" % (time.asctime(), tSleep/60, socialNetwork[0], element[0]))
 
         time.sleep(tSleep) 
 
         # Things can have changed during the waiting
-        element, listP = moduleSocial.nextPost(blog, socialNetwork)
+        element, listP = nextPost(blog, socialNetwork)
 
         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = element
 

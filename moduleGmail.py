@@ -149,7 +149,6 @@ class moduleGmail():
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
-  
     def getPostsCache(self):        
         api = self.service
         drafts = self.getPosts()
@@ -194,33 +193,39 @@ class moduleGmail():
                         + acc[1]+ '.json')
         return(theName)
     
-    def showPost(self, pp, posts, profIni, j):
-        logging.info("To publish %s %d" % (profIni,j))
+    def isForMe(self, args):
+        serviceName = self.name
+        if (serviceName[0] in args) or ('*' in args): 
+            if serviceName[0] + self.name[-1] in args[:-1]:
+                return True
+        return False
+
+    def showPost(self, pp, posts, args):
+        logging.info("To publish %s" % args)
     
         update = ""
         serviceName = self.name
 
         title = None
-        if (serviceName[0] in profIni) or profIni == '*': 
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(j)
+        if self.isForMe(args):
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
     
-            if title: 
-                if link: 
-                    return(title+link)
-                else:
-                    return(title)
+                if title: 
+                    if link: 
+                        return(title+link)
+                    else:
+                        return(title)
         return(None)
     
-    def publishPost(self, pp, posts, profIni, j):
-        logging.info("To publish %s %s" % (profIni, j))
+    def publishPost(self, pp, posts, args):
+        logging.info("To publish %s" % args)
     
         update = ""
         serviceName = self.name
         title = None
 
-        if (serviceName[0] in profIni) or profIni[0] == '*': 
-            if ((len(profIni)>1) and (profIni[1] == self.name[-1])) or (profIni[0] == '*'): 
-                   (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(j)
+        if self.isForMe(args):
+                   (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
                    if title:
                        publishMethod = getattr(moduleSocial, 
                                'publishMail')
@@ -237,19 +242,20 @@ class moduleGmail():
 
         return(None)
     
-    def deletePost(self, cache, pp, posts, profIni, j):
-        logging.info("To Delete %s %d" % (profIni, j))
+    def deletePost(self, cache, pp, posts, args):
+        logging.info("To publish %s" % args)
     
         update = ""
+        serviceName = self.name
         title = None
-        if (serviceName[0] in profIni) or profIni == '*': 
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(j)
+        if self.isForMe(args):
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
 
-            if title:
-                idPost = comment
+                if title:
+                    idPost = comment
 
-                update = profile.users().drafts().delete(userId='me', id=idPost).execute()
-                return(update)
+                    update = self.service.users().drafts().delete(userId='me', id=idPost).execute()
+                    return(update)
 
         return(None)
 
