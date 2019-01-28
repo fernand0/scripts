@@ -646,9 +646,9 @@ def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, imag
 
         h = HTMLParser()
         title = h.unescape(title)
-        textOrig = '\n\nPublicado originalmente en <a href="%s">%s</a>' % (link, title)
+        textOrig = 'Publicado originalmente en <a href="%s">%s</a>\n\n' % (link, title)
         post = client.create_post(user_id=user["id"], title=title,
-                content="<h4>"+title+"</h4><br />"+summaryHtml+textOrig, canonical_url = link,
+                content="<h4>"+title+"</h4><br />"+textOrig+summaryHtml, canonical_url = link,
                 content_format="html", publish_status="public") #draft")
         logger.info("My new post!", post["url"])
     except:
