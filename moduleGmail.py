@@ -66,6 +66,13 @@ class moduleGmail():
 
         self.name = self.name + Acc[3:]
         #self.profile = self.service.users().getProfile(userId='me').execute()
+
+    def confName(self, acc):
+        api = self.service
+        theName = os.path.expanduser(CONFIGDIR + '/' 
+                        + '.' + acc[0]+ '_' 
+                        + acc[1]+ '.json')
+        return(theName)
     
     def setPosts(self):
         api = self.service
@@ -80,6 +87,17 @@ class moduleGmail():
         message = api.users().drafts().get(userId="me", 
                 id=id).execute()['message']
         return message
+
+    def getMessageRaw(self, id): 
+        api = self.service
+        message = api.users().drafts().get(userId="me", 
+                id=id, format='raw').execute()['message']
+        return message
+
+    def setHeader(self, message, value):
+        for head in message['payload']['headers']: 
+            if head['name'] == header: 
+                head['value'] = value
 
     def getHeader(self, message, header = 'Subject'):
         for head in message['payload']['headers']: 
@@ -107,7 +125,7 @@ class moduleGmail():
 
         posts = []
         if 'drafts' in self.getPosts():
-            logging.info(self.getPosts()['drafts'])
+            logging.info("drafts %s"% self.getPosts()['drafts'])
             for post in self.getPosts()['drafts']:
                 posts.insert(0, post)
         else:
@@ -117,7 +135,12 @@ class moduleGmail():
             return (None, None, None, None, None, None, None, None, None, None)
 
         post = posts[i]
+        #message = self.getMessageRaw(post['id'])
+        #print(base64.urlsafe_b64decode(message['raw']).decode())
+        #sys.exit()
+        #print("----------------------")
         message = self.getMessage(post['id'])
+        #print(message)
 
         theTitle = self.getHeader(message, 'Subject')
         snippet = self.getHeader(message, 'snippet')
@@ -141,7 +164,7 @@ class moduleGmail():
         firstLink = theLink
         theImage = None
         theSummary = snippet
-        content = parts[0]
+        content = message
 
         theSummaryLinks = None
         theContent = content
@@ -185,13 +208,6 @@ class moduleGmail():
         #logging.info("Service posts profiles %s" % profiles)
         profiles = None
         return(outputData, profiles)
-    
-    def confName(self, acc):
-        api = self.service
-        theName = os.path.expanduser(CONFIGDIR + '/' 
-                        + '.' + acc[0]+ '_' 
-                        + acc[1]+ '.json')
-        return(theName)
     
     def isForMe(self, args):
         serviceName = self.name
@@ -249,15 +265,39 @@ class moduleGmail():
         serviceName = self.name
         title = None
         if self.isForMe(args):
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
 
-                if title:
-                    idPost = comment
+            if title:
+                idPost = comment
 
-                    update = self.service.users().drafts().delete(userId='me', id=idPost).execute()
-                    return(update)
+                update = self.service.users().drafts().delete(userId='me', id=idPost).execute()
+                return(update)
 
         return(None)
+
+    def editPost(self, pp, posts, args, newTitle):
+        logging.info("To edit %s" % args)
+        logging.info("New title %s", newTitle)
+
+        update = ""
+        serviceName = self.name
+        if self.isForMe(args):
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
+            message = self.service.users().drafts().get(userId="me", 
+                format="raw", id=comment).execute()['message']
+            theMsg = email.message_from_bytes(base64.urlsafe_b64decode(message['raw']))
+            del theMsg['subject']
+            theMsg['Subject']= newTitle
+            message['raw'] = theMsg.as_bytes()
+            message['raw'] = base64.urlsafe_b64encode(message['raw']).decode()
+
+
+            update = self.service.users().drafts().update(userId='me', 
+                    body={'message':message},id=comment).execute()
+
+            return(newTitle)
+
+        return None
 
     def listSentPosts(self, pp, service=""):
         api = self.service
@@ -439,9 +479,10 @@ def main():
 
     print("profiles")
     print(api.profile)
-    postsP, profiles = api.listPosts(pp, '')
+    postsP, profiles = api.listPosts(pp)
     print("-> Posts",postsP)
     print(api.obtainPostData(0))
+    api.editPost(pp, api.getPosts(), "M11", 'No avanza.')
     sys.exit()
     msg = 353
     moveMessage(api[1], msg)
