@@ -17,7 +17,7 @@ importlib.reload(sys)
 #sys.setdefaultencoding("UTF-8")
 import moduleSocial
 import moduleHtml
-#import moduleImap
+import moduleImap
 
 import googleapiclient
 from googleapiclient.discovery import build
@@ -128,7 +128,16 @@ class moduleGmail():
 
     def getHeaderEmail(self, message, header = 'Subject'):
         if header in message:
+            return(moduleImap.headerToString(message[header]))
+
+    def getHeaderRaw(self, message, header = 'Subject'):
+        if header in message:
             return(message[header])
+
+    def getEmail(self, messageRaw):
+        messageEmail = email.message_from_bytes(base64.urlsafe_b64decode(messageRaw['raw']))
+        return(messageEmail)
+
 
     def getBody(self, message):
         return(message['payload']['parts'])
@@ -157,12 +166,12 @@ class moduleGmail():
         if not self.rawPosts or (i>=(len(self.rawPosts))):
             return (None, None, None, None, None, None, None, None, None, None)
 
+        messageRaw = self.rawPosts[i]
+        messageEmail = self.getEmail(messageRaw)
 
-        idMsg = self.posts[i]
-        message = self.rawPosts[i]
-        messageL = email.message_from_bytes(base64.urlsafe_b64decode(message['raw']))
-        theTitle = self.getHeaderEmail(messageL, 'Subject')
-        snippet = self.getHeader(message,'snippet')
+        theTitle = self.getHeaderEmail(messageEmail, 'Subject')
+        snippet = self.getHeaderRaw(messageRaw, 'snippet')
+
         theLink = None
         posIni = snippet.find('http')
         posFin = snippet.find(' ', posIni)
@@ -170,7 +179,7 @@ class moduleGmail():
         if posIni < posSignature: 
             theLink = snippet[posIni:posFin]
         theLinks = None
-        for part in messageL.walk():
+        for part in messageEmail.walk():
             if part.get_content_type() == 'text/html':
                 content = part.get_payload()
                 html = moduleHtml.moduleHtml()
@@ -181,7 +190,7 @@ class moduleGmail():
         theImage = None
         theSummary = snippet
 
-        theSummaryLinks = message
+        theSummaryLinks = messageRaw
         comment = self.posts[i]['id']
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
@@ -209,10 +218,9 @@ class moduleGmail():
     
         outputData[serviceName] = {'sent': [], 'pending': []}
         listDrafts = self.getPostsCache()
-        print(listDrafts)
     
         if listDrafts:
-            logging.info("--Posts %s"% listDrafts)
+            logging.debug("--Posts %s"% listDrafts)
     
             for element in listDrafts: 
                     outputData[serviceName]['pending'].append(element) 
@@ -236,13 +244,13 @@ class moduleGmail():
 
         title = None
         if self.isForMe(args):
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
     
-                if title: 
-                    if link: 
-                        return(title+link)
-                    else:
-                        return(title)
+            if title: 
+                if link: 
+                    return(title+link)
+                else:
+                    return(title)
         return(None)
     
     def publishPost(self, pp, posts, args):
@@ -253,25 +261,25 @@ class moduleGmail():
         title = None
 
         if self.isForMe(args):
-                   (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
-                   if title:
-                       publishMethod = getattr(moduleSocial, 
-                               'publishMail')
-                       logging.info("Publishing title: %s" % title)
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
+            if title:
+                publishMethod = getattr(moduleSocial, 
+                        'publishMail')
+                logging.info("Publishing title: %s" % title)
  
-                       logging.info(title, link, summary, summaryHtml, summaryLinks, image, content , links )
-                       logging.info(publishMethod)
-                       update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
-                       if update:
-                           if 'text' in update: 
-                               update = update['text'] 
+                logging.info(title, link, summary, summaryHtml, summaryLinks, image, content , links )
+                logging.info(publishMethod)
+                update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
+                if update:
+                    if 'text' in update: 
+                        update = update['text'] 
    
-                       return(update)
+                return(update)
 
         return(None)
     
     def deletePost(self, cache, pp, posts, args):
-        logging.info("To publish %s" % args)
+        logging.info("To delete %s" % args)
     
         update = ""
         serviceName = self.name
@@ -311,128 +319,6 @@ class moduleGmail():
 
         return None
 
-    def listSentPosts(self, pp, service=""):
-        api = self.service
-        profiles = getProfiles(api, pp, service)
-    
-        someSent = False
-        outputStr = ([],[])
-        for i in range(len(profiles)):
-            serviceName = profiles[i].formatted_service
-            logging.debug("Service %d %s" % (i,serviceName))
-            if (profiles[i].counts['sent'] > 0):
-                someSent = True
-                logging.info("Service %s" % serviceName)
-                logging.debug("There are: %d" % profiles[i].counts['sent'])
-                logging.debug(pp.pformat(profiles[i].updates.sent))
-                due_time=""
-                for j in range(min(8,profiles[i].counts['sent'])):
-                    updatesSent = profiles[i].updates.sent[j]
-                    update = Update(api=api, id= updatesSent.id)
-                    if (due_time == ""):
-                        due_time=update.due_time # Not used here
-                        outputStr[0].append("*%s*" % serviceName)
-                        outputStr[1].append("")
-                    logging.debug("Service %s" % pp.pformat(updatesSent))
-                    selectionStr = "" #"%d%d) " % (i,j)
-                    if ('media' in updatesSent): 
-                        try:
-                            lineTxt = "%s %s %s" % (selectionStr, 
-                                    updatesSent.text, updatesSent.media.expanded_link)
-                        except:
-                            lineTxt = "%s %s %s" % (selectionStr,
-                                    updatesSent.text, updatesSent.media.link)
-                    else:
-                        lineTxt = "%s %s" % (selectionStr,updatesSent.text)
-                    logging.info(lineTxt)
-                    outputStr[0].append("%s" % lineTxt)
-                    outputStr[1].append(" (%d clicks)" % updatesSent['statistics']['clicks'])
-                    #logging.debug("-- %s" % (pp.pformat(update)))
-                    #logging.debug("-- %s" % (pp.pformat(dir(update))))
-            else:
-                #logging.debug("Service %d %s" % (i, serviceName))
-                logging.debug("No")
-        
-        if someSent:
-            return (outputStr, profiles)
-        else:
-            logging.info("No sent posts")
-            return someSent
-
-   
-    #######################################################
-    # These need work
-    #######################################################
-    
-    
-    def copyPost(self, log, pp, profiles, toCopy, toWhere):
-        api = self.service
-        logging.info(pp.pformat(toCopy+' '+toWhere))
-    
-        profCop = toCopy[0]
-        ii = int(toCopy[1])
-    
-        j = 0
-        profWhe = ""
-        i = 0
-        while i < len(toWhere):
-            profWhe = profWhe + toWhere[i]
-            i = i + 1
-        
-        log.info(toCopy,"|",profCop, ii, profWhe)
-        for i in range(len(profiles)):
-            serviceName = profiles[i].formatted_service
-            print(serviceName)
-            log.info("ii: %s" %i)
-            updates = getattr(profiles[j].updates, 'pending')
-            update = updates[ii]
-            if ('media' in update): 
-                if ('expanded_link' in update.media):
-                    link = update.media.expanded_link
-                else:
-                    link = update.media.link
-            else:
-                link = ""
-            print(update.text, link)
-           
-            if (serviceName[0] in profCop):
-                for j in range(len(profiles)): 
-                    serviceName = profiles[j].formatted_service 
-                    if (serviceName[0] in profWhe):
-                        profiles[j].updates.new(urllib.parse.quote(update.text + " " + link).encode('utf-8'))
-    
-    def movePost(self, log, pp, profiles, toMove, toWhere):
-        # Moving posts, we identify the profile by the first letter. We can use
-        # several letters and if we put a '*' we'll move the posts in all the
-        # social networks
-        api = self.service
-        i = 0
-        profMov = ""
-        while toMove[i].isalpha():
-            profMov = profMov + toMove[i]
-            i = i + 1
-    
-        for i in range(len(profiles)):
-            serviceName = profiles[i].formatted_service
-            log.info("ii: %s" %i)
-            if (serviceName[0] in profMov) or toMove[0]=='*':
-                listIds = []
-                for j in range(len(profiles[i].updates.pending)):
-                    # counts seems to be not ok
-                    listIds.append(profiles[i].updates.pending[j]['id'])
-    
-                logging.info("to Move %s to %s" % (pp.pformat(toMove), toWhere))
-                j = int(toMove[-1])
-                logging.info("i %d j %d"  % (i,j))
-                logging.info("Profiles[i]--> %s <--"  % pp.pformat(profiles))
-                logging.info("Profiles[i]--> %s <---"  % pp.pformat(profiles[i].updates.pending[j]))
-                k = int(toWhere[-1])
-                idUpdate = listIds.pop(j)
-                listIds.insert(k, idUpdate)
-    
-                update = Update(api=api, id=profiles[i].updates.pending[j].id)
-                profiles[i].updates.reorder(listIds)
-    
     def moveMessage(self,  message):
         api = self.service
         labelId = self.getLabelId('imported')
@@ -475,6 +361,25 @@ class moduleGmail():
                                                             body=msg_labels).execute()
     
         return(messageR)
+
+   
+    #######################################################
+    # These need work
+    #######################################################
+    
+
+    def listSentPosts(self, pp, service=""):
+        # Undefined
+        pass
+    
+    def copyPost(self, log, pp, profiles, toCopy, toWhere):
+        # Undefined
+        pass
+    
+    def movePost(self, log, pp, profiles, toMove, toWhere):
+        # Undefined
+        pass
+    
 
 def main():
     import moduleGmail
