@@ -128,7 +128,7 @@ class moduleGmail():
 
     def getHeaderEmail(self, message, header = 'Subject'):
         if header in message:
-            return(message(header))
+            return(message[header])
 
     def getBody(self, message):
         return(message['payload']['parts'])
