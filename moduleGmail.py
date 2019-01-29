@@ -17,7 +17,7 @@ importlib.reload(sys)
 #sys.setdefaultencoding("UTF-8")
 import moduleSocial
 import moduleHtml
-import moduleImap
+#import moduleImap
 
 import googleapiclient
 from googleapiclient.discovery import build
@@ -104,23 +104,44 @@ class moduleGmail():
                 id=id, format='raw').execute()['message']
         return message
 
-    def setHeader(self, message, value):
+    def getMessageMeta(self, id): 
+        api = self.service
+        message = api.users().drafts().get(userId="me", 
+                id=id, format='metadata').execute()['message']
+        return message
+
+    def setHeader(self, message, header, value):
         for head in message['payload']['headers']: 
             if head['name'] == header: 
                 head['value'] = value
+
+    def setHeaderEmail(self, message, header, value):
+        # Email methods are related to the email.message objetcs
+        if header in message:
+            del message[header]
+            message[header]= value
 
     def getHeader(self, message, header = 'Subject'):
         for head in message['payload']['headers']: 
             if head['name'] == header: 
                 return(head['value'])
 
+    def getHeaderEmail(self, message, header = 'Subject'):
+        if header in message:
+            return(message(header))
+
     def getBody(self, message):
         return(message['payload']['parts'])
  
-    def getLabelId(self, name):
+    def getLabelList(self):
         api = self.service
         results = api.users().labels().list(userId='me').execute() 
-        for label in results['labels']: 
+        return(results['labels'])
+
+    def getLabelId(self, name):
+        api = self.service
+        results = self.getLabelList() 
+        for label in results: 
             if label['name'] == name: 
                 labelId = label['id'] 
                 break
@@ -140,8 +161,8 @@ class moduleGmail():
         idMsg = self.posts[i]
         message = self.rawPosts[i]
         messageL = email.message_from_bytes(base64.urlsafe_b64decode(message['raw']))
-        theTitle = moduleImap.headerToString(messageL['subject'])
-        snippet = message['snippet']
+        theTitle = self.getHeaderEmail(messageL, 'Subject')
+        snippet = self.getHeader(message,'snippet')
         theLink = None
         posIni = snippet.find('http')
         posFin = snippet.find(' ', posIni)
@@ -279,8 +300,7 @@ class moduleGmail():
             #self.service.users().drafts().get(userId="me", 
             #    format="raw", id=comment).execute()['message']
             theMsg = email.message_from_bytes(base64.urlsafe_b64decode(message['raw']))
-            del theMsg['subject']
-            theMsg['Subject']= newTitle
+            self.setHeaderEmail(theMsg, 'subject', newTitle)
             message['raw'] = theMsg.as_bytes()
             message['raw'] = base64.urlsafe_b64encode(message['raw']).decode()
 
