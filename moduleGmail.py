@@ -79,14 +79,15 @@ class moduleGmail():
     def setPosts(self):
         api = self.service
         posts = api.users().drafts().list(userId='me').execute()
-        logging.info("--setPosts %s" % posts)
+        logging.debug("--setPosts %s" % posts)
         if 'drafts' in posts:
             self.posts = []
             self.rawPosts = []
             for post in posts['drafts']:
                 self.posts.insert(0, post)
-                message = self.getMessageRaw(post['id'])
+                message = self.getMessageMeta(post['id'])
                 self.rawPosts.insert(0, message)
+                #print(message)
 
     def getPosts(self):
         self.setPosts()
@@ -166,25 +167,28 @@ class moduleGmail():
             return (None, None, None, None, None, None, None, None, None, None)
 
         messageRaw = self.rawPosts[i]
-        messageEmail = self.getEmail(messageRaw)
+        #messageEmail = self.getEmail(messageRaw)
 
-        theTitle = self.getHeaderEmail(messageEmail, 'Subject')
-        snippet = self.getHeaderRaw(messageRaw, 'snippet')
+        theTitle = self.getHeader(messageRaw, 'Subject')
+        snippet = self.getHeader(messageRaw, 'snippet')
 
         theLink = None
-        posIni = snippet.find('http')
-        posFin = snippet.find(' ', posIni)
-        posSignature = snippet.find('-- ')
-        if posIni < posSignature: 
-            theLink = snippet[posIni:posFin]
+        if snippet:
+            posIni = snippet.find('http')
+            posFin = snippet.find(' ', posIni)
+            posSignature = snippet.find('-- ')
+            if posIni < posSignature: 
+                theLink = snippet[posIni:posFin]
         theLinks = None
-        for part in messageEmail.walk():
-            if part.get_content_type() == 'text/html':
-                content = part.get_payload()
-                html = moduleHtml.moduleHtml()
-                theLinks = html.listLinks(content)
-            elif part.get_content_type() == 'text/plain':
-                theContent = part
+        #for part in messageEmail.walk():
+        #    if part.get_content_type() == 'text/html':
+        #        content = part.get_payload()
+        #        html = moduleHtml.moduleHtml()
+        #        theLinks = html.listLinks(content)
+        #    elif part.get_content_type() == 'text/plain':
+        #        theContent = part
+        content = None
+        theContent = None
         firstLink = theLink
         theImage = None
         theSummary = snippet
@@ -266,7 +270,8 @@ class moduleGmail():
                         'publishMail')
                 logging.info("Publishing title: %s" % title)
  
-                logging.info(title, link, summary, summaryHtml, summaryLinks, image, content , links )
+                logging.debug(title, link, summary, summaryHtml, summaryLinks, image, content , links )
+                logging.info(title, link, content , links )
                 logging.info(publishMethod)
                 update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
                 if update:
@@ -282,11 +287,13 @@ class moduleGmail():
     
         update = ""
         serviceName = self.name
+        logging.info("In %s" % serviceName)
         title = None
         if self.isForMe(args):
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
 
-            if title:
+            if title or comment:
+                #What happens if the title is empty?
                 idPost = comment
 
                 update = self.service.users().drafts().delete(userId='me', id=idPost).execute()
@@ -303,9 +310,9 @@ class moduleGmail():
         if self.isForMe(args):
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
             # Should we avoid two readings?
-            message = summaryLinks 
-            #self.service.users().drafts().get(userId="me", 
-            #    format="raw", id=comment).execute()['message']
+            #message = summaryLinks 
+            message = self.service.users().drafts().get(userId="me", 
+                   format="raw", id=comment).execute()['message']
             theMsg = email.message_from_bytes(base64.urlsafe_b64decode(message['raw']))
             self.setHeaderEmail(theMsg, 'subject', newTitle)
             message['raw'] = theMsg.as_bytes()
