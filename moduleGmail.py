@@ -138,7 +138,6 @@ class moduleGmail():
         messageEmail = email.message_from_bytes(base64.urlsafe_b64decode(messageRaw['raw']))
         return(messageEmail)
 
-
     def getBody(self, message):
         return(message['payload']['parts'])
  

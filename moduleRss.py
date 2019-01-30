@@ -118,6 +118,7 @@ class moduleRss():
         return(self.getPostsRss().entries[pos]['published_parsed'])
 
     def extractImage(self, soup):
+        #This should go to the moduleHtml
         pageImage = soup.findAll("img")
         #  Only the first one
         if len(pageImage) > 0:
@@ -131,6 +132,7 @@ class moduleRss():
             return imageLink
 
     def extractLinks(self, soup, linksToAvoid=""):
+        #This should go to the moduleHtml
         j = 0
         linksTxt = ""
         links = soup.find_all(["a","iframe"])
