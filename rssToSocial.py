@@ -260,6 +260,7 @@ def main():
                             logging.info("Not publishing because time restriction\n") 
                         else:
                             logging.info("Publishing directly\n") 
+                            print("         Scheduling post %s" % post[0])
                             serviceName = socialNetwork.capitalize()
                             publishMethod = getattr(moduleSocial, 
                                     'publish'+ serviceName)

@@ -392,8 +392,8 @@ def main():
     api.API('ACC1',pp)
     api.setPosts()
     api.getPostsCache()
-    api.editPost(pp, api.getPosts(), "M17", 'Prueba.')
     sys.exit()
+    api.editPost(pp, api.getPosts(), "M17", 'Prueba.')
 
     logging.basicConfig(#filename='example.log',
                             level=logging.DEBUG,format='%(asctime)s %(message)s')
