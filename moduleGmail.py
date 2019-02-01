@@ -170,6 +170,8 @@ class moduleGmail():
         #messageEmail = self.getEmail(messageRaw)
 
         theTitle = self.getHeader(messageRaw, 'Subject')
+        if theTitle == None:
+            theTitle = self.getHeader(messageRaw, 'subject')
         snippet = self.getHeader(messageRaw, 'snippet')
 
         theLink = None

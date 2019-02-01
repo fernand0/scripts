@@ -362,15 +362,16 @@ def main():
 
     outputData, posts = site.listPosts()
     #print(outputData['Slack']['pending'][elem])
-    #print(outputData['Slack']['pending'][elem][8])
+    #print(outputData['Slack']['pending'])
     theChannel = site.getChanId("links")  
     #site.deletePost(outputData['Slack']['pending'][elem][-2], theChannel)
     # We should check for consistency 
 
+    # 
     i = 0
     listLinks = ""
     for line in moduleBuffer.prepareReply(outputData, ['pending'])[0][2]:
-        listLinks = listLinks + "%d) %s\n" % (i, line[0])
+        listLinks = listLinks + "%d) [%s]-%s\n" % (i, line[2], line[0])
         i = i + 1
 
     numEntries = i

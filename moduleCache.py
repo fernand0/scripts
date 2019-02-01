@@ -156,7 +156,7 @@ def listPostsCache(blog, socialNetwork=()):
 
 def checkLastLink(blog,socialNetwork=()):
     fileNameL = fileName(blog, socialNetwork)+".last"
-    logging.info("Checking last link: %s" % fileNameL)
+    logging.debug("Checking last link: %s" % fileNameL)
     (linkLast, timeLast) = getLastLink(fileNameL)
     return(linkLast, timeLast)
 

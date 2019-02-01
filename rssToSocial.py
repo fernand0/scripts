@@ -182,8 +182,7 @@ def main():
                     socialNetwork = (option, nick)
                     blog.addSocialNetwork(socialNetwork)
 
-            logging.info("Looking for pending posts in ...%s"
-                    % blog.getSocialNetworks())
+            logging.info("Looking for pending posts")
             print("   Looking for pending posts ... " )
 
             bufferMax = 10
@@ -244,7 +243,8 @@ def main():
             else:
                 for socialNetwork in blog.getSocialNetworks().keys():
                     print("      Not buffer %s" % socialNetwork)
-                    logging.info("Social Network %s" % socialNetwork)
+                    logging.info("Social Network %s - %s" % (socialNetwork,
+                        blog.getSocialNetworks()[socialNetwork]))
                     lastLink, lastTime = moduleCache.checkLastLink(blog, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                     blog.addLastLinkPublished(socialNetwork, 
                             lastLink, lastTime) 

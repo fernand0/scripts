@@ -434,7 +434,6 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
     listP = listP + listPosts
 
     logging.info("Blog url %s" % blog.getUrl())
-    logging.info("Blog socialNetwork %s" % type(socialNetwork))
     moduleCache.updatePostsCache(blog, listP, socialNetwork)
 
     for j in  range(numPosts): 
