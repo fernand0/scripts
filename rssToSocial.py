@@ -143,7 +143,7 @@ def main():
 
     for section in config.sections():
         blog = None
-        logging.info("\nSection: %s"% section)
+        logging.info("Section: %s"% section)
         url = config.get(section, "url")
         if ("rssfeed" in config.options(section)):
             blog = moduleRss.moduleRss()
@@ -257,15 +257,15 @@ def main():
                         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
                         hours = blog.getTime() 
                         if (hours and (((time.time() - lastTime) - int(hours)*60*60) < 0)): 
-                            logging.info("Not publishing because time restriction\n") 
+                            logging.info("Not publishing because time restriction") 
                         else:
-                            logging.info("Publishing directly\n") 
+                            logging.info("Publishing directly") 
                             print("         Publishing post %s" % title)
                             serviceName = socialNetwork.capitalize()
                             publishMethod = getattr(moduleSocial, 
                                     'publish'+ serviceName)
                             result = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
-                            logging.info("Updating Link\n") 
+                            logging.info("Updating Link") 
                             if result != "Fail!":
                                 moduleCache.updateLastLink(blog, link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
 
