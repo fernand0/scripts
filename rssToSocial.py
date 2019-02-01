@@ -204,7 +204,7 @@ def main():
                         i = blog.getLinkPosition(lastLink)
 
                         logging.debug("profile %s"% profile)
-                        logging.info("lastLink %s %d"% (lastLink, i))
+                        logging.debug("lastLink %s %d"% (lastLink, i))
                         if ((profile['service'] == 'twitter') 
                                 or (profile['service'] == 'facebook')):
                             # We should add a configuration option in order
@@ -285,7 +285,7 @@ def main():
                             lastLink, lastTime)
                         i = blog.getLinkPosition(lastLink) 
 
-                        logging.info("lastLink %s %s %d"% (profile, lastLink, i))
+                        logging.debug("lastLink %s %s %d"% (profile, lastLink, i))
                         if ((profile == 'twitter') 
                                 or (profile == 'facebook')):
                             # We should add a configuration option in order
