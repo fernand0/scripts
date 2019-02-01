@@ -144,7 +144,7 @@ def connectBuffer():
         logger.debug(api.info)
     except:
         api = None
-        logger.warning("Buffer authentication failed!\n")
+        logger.warning("Buffer authentication failed!")
         logger.warning("Unexpected error: %s"% sys.exc_info()[0])
 
     return(api)
@@ -171,7 +171,7 @@ def connectTwitter(twitterAC):
                         CONSUMER_SECRET)
             t = Twitter(auth=authentication)
         except:
-            logger.warning("Twitter authentication failed!\n")
+            logger.warning("Twitter authentication failed!")
             logger.warning("Unexpected error:", sys.exc_info()[0])
     except:
         logger.warning("Account not configured")
@@ -205,7 +205,7 @@ def connectFacebook(fbPage = 'me'):
             # Publishing as me
             return(graph, fbPage)
     except:
-        logger.warning("Facebook authentication failed!\n")
+        logger.warning("Facebook authentication failed!")
         logger.warning("Unexpected error:", sys.exc_info()[0])
         print("Fail!")
 
@@ -234,7 +234,7 @@ def connectLinkedin():
         application = linkedin.LinkedInApplication(authentication)
 
     except:
-        logger.warning("Linkedin authentication failed!\n")
+        logger.warning("Linkedin authentication failed!")
         logger.warning("Unexpected error:", sys.exc_info()[0])
 
     return(application)
@@ -250,7 +250,7 @@ def connectTelegram(channel):
         bot = telepot.Bot(TOKEN)
         meMySelf = bot.getMe()
     except:
-        logger.warning("Telegram authentication failed!\n")
+        logger.warning("Telegram authentication failed!")
         logger.warning("Unexpected error:", sys.exc_info()[0])
 
     return(bot)
@@ -265,7 +265,7 @@ def connectMedium():
         # Get profile details of the user identified by the access token.
         user = client.get_current_user()
     except:
-        logger.warning("Medium authentication failed!\n")
+        logger.warning("Medium authentication failed!")
         logger.warning("Unexpected error:", sys.exc_info()[0])
 
     return(client, user)
@@ -279,7 +279,7 @@ def connectPocket():
     try: 
         p = Pocket(consumer_key=consumer_key, access_token=access_token)
     except:
-        logger.warning("Pocket authentication failed!\n")
+        logger.warning("Pocket authentication failed!")
         logger.warning("Unexpected error:", sys.exc_info()[0])
 
     return(p)
@@ -337,23 +337,23 @@ def checkLimitPosts(api, blog, service=''):
 
 def publishMail(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
-    logger.info("Publishing in Gmail...\n") 
-    logger.info("--%s, %s, %s, %s, %s, %s, %s, %s, %s" % (channel, title, link, summary, summaryHtml, summaryLinks, image, content , links))
+    logger.info("Publishing in Gmail... ") 
+    logger.debug("--%s, %s, %s, %s, %s, %s, %s, %s, %s" % (channel, title, link, summary, summaryHtml, summaryLinks, image, content , links))
     if True:
         application = channel.service #connectLinkedin()
         #presentation = 'Publicado! ' + title 
-        logger.info("Publishing in Gmail:\n%s" % title)
-        logger.info("Publishing in Gmail:\n%s" % content)
-        logger.info("Publishing in Gmail:\n%s" % links)
+        logger.info("Publishing in Gmail: %s" % title)
+        logger.debug("Publishing in Gmail: %s" % content)
+        logger.debug("Publishing in Gmail: %s" % links)
         message = application.users().drafts().send(userId='me', body={ 'id': links}).execute()
 
     else:
-        logger.warning("Gmail posting failed!\n")
+        logger.warning("Gmail posting failed!")
         logger.warning("Unexpected error:", sys.exc_info()[0])
         return("Fail!")
 
 def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, services='fglt'):
-    logger.info("Publishing in Buffer:\n")
+    logger.info("Publishing in Buffer:")
     if isDebug:
         profileList = []
         firstLink = None
@@ -498,13 +498,13 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
             statusTxt = comment + " " + title + " " + link
             h = HTMLParser()
             statusTxt = h.unescape(statusTxt)
-            logger.info("Publishing in Twitter:\n%s" % statusTxt)
+            logger.info("Publishing in Twitter: %s" % statusTxt)
             return(t.statuses.update(status=statusTxt))
         else:
             logger.warning("You must configure API access for %s" % twitter)
             return("Fail! You must configure API access for %s" % twitter)
     except:
-        logger.warning("Twitter posting failed!\n")
+        logger.warning("Twitter posting failed!")
         logger.warning("Unexpected error:", sys.exc_info()[0])
         return("Fail! %s" % sys.exc_info()[0])
 
@@ -521,8 +521,8 @@ def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, im
         (graph, page) = connectFacebook(fbPage)
         logger.info("Publishing in Facebook page %s" % page)
         textToPublish = title + " \n" + summaryLinks
-        logger.info("Publishing in Facebook:\n%s" % textToPublish[:240])
-        logger.debug("Publishing in Facebook:\n%s" % textToPublish)
+        logger.info("Publishing in Facebook: %s" % title)
+        logger.debug("Publishing in Facebook: %s" % textToPublish)
         if (len(textToPublish) > 9980):
             textToPublish = textToPublish[:9980]
             index = textToPublish.rfind(' ')
@@ -549,24 +549,24 @@ def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, im
                           #name=title, caption='',
                           #description=summaryLinks.encode('utf-8')))
     except:
-        logger.warning("Facebook posting failed!\n")
+        logger.warning("Facebook posting failed!")
         logger.warning("Unexpected error:", sys.exc_info()[0])
         return("Fail!")
 
 
 def publishLinkedin(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
-    logger.info("Publishing in Linkedin...\n")
+    logger.info("Publishing in Linkedin...")
     if True:
         application = connectLinkedin()
         presentation = 'Publicado! ' + title 
-        logger.info("Publishing in Linkedin:\n%s" % title)
+        logger.info("Publishing in Linkedin: %s" % title)
         if link:
             return(application.submit_share(presentation, summary, link, image))
         else:
             return(application.submit_share(comment = title))
     else:
-        logger.warning("Linkedin posting failed!\n")
+        logger.warning("Linkedin posting failed!")
         logger.warning("Unexpected error:", sys.exc_info()[0])
         return("Fail!")
 
@@ -602,7 +602,7 @@ def cleanTags(soup):
 def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     #publishTelegram("reflexioneseirreflexiones","Canal de Reflexiones e Irreflexiones", "http://fernand0.blogalia.com/", "", "", "", "")
 
-    logger.info("Telegram...%s\n"%channel)
+    logger.info("Telegram...%s "%channel)
 
     if True:
         bot = connectTelegram(channel)
@@ -635,12 +635,12 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
             bot.sendMessage('@'+channel, links, parse_mode='HTML') 
 
     else:
-        logger.warning("Telegram posting failed!\n")
+        logger.warning("Telegram posting failed!")
         logger.warning("Unexpected error:", sys.exc_info()[0])
         return("Fail!")
 
 def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
-    logger.info("Medium...%s\n"%channel)
+    logger.info("Medium... %s"%channel)
     try:
         (client, user) = connectMedium()
 
@@ -652,17 +652,17 @@ def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, imag
                 content_format="html", publish_status="public") #draft")
         logger.info("My new post!", post["url"])
     except:
-        logger.warning("Medium posting failed!\n")
+        logger.warning("Medium posting failed!")
         logger.warning("Unexpected error:", sys.exc_info()[0])
         return("Fail!")
 
 def publishPocket(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
-    logger.info("Pocket...%s\n"%channel)
+    logger.info("Pocket...%s"%channel)
     try:
         pc = connectPocket()
         pc.add(link)
     except:
-        logger.warning("Pocket posting failed!\n")
+        logger.warning("Pocket posting failed!")
         logger.warning("Unexpected error:", sys.exc_info()[0])
         return("Fail!")
 
