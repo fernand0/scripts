@@ -140,7 +140,7 @@ def listPostsCache(blog, socialNetwork=()):
            + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
            + ".queue")
 
-   logging.info("Listing Posts Cache: %s" % fileName)
+   logging.debug("Listing Posts Cache: %s" % fileName)
 
    with open(fileName,'rb') as f:
        try: 
