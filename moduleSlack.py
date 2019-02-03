@@ -57,14 +57,6 @@ class moduleSlack():
     def getSocialNetworks(self):
         return(self.socialNetworks)
 
-    def setSlackClient(self, slackCredentials):
-        config = configparser.ConfigParser()
-        config.read(slackCredentials)
-    
-        slack_token = config["Slack"].get('api-key')
-        
-        self.sc = SlackClient(slack_token)
- 
     def getSlackClient(self):
         return self.sc
  
