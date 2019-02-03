@@ -158,7 +158,7 @@ def main():
             logging.info("Blog Slack: %s"% url)
             blog = moduleSlack.moduleSlack()
             blog.setUrl(url)
-            blog.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
+            blog.API(os.path.expanduser('~/.mySocial/config/.rssSlack'))
             blog.setPostsSlack()
 
         if section.find(checkBlog) >= 0:
@@ -304,12 +304,12 @@ def main():
                             theList = []
 
                         num = bufferMax - lenMax
-                        logging.info("bufferMax - lenMax = num %d %d %d"%
+                        logging.debug("bufferMax - lenMax = num %d %d %d"%
                                 (bufferMax, lenMax, num)) 
                         
                         listPosts = []
                         for j in range(num, 0, -1):
-                            logging.info("j %d - %d"% (j,i))
+                            logging.debug("j %d - %d"% (j,i))
                             if (i <= 0):
                                 break
                             i = i - 1

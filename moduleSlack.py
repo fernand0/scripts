@@ -3,6 +3,7 @@
 import configparser
 import pickle
 import os
+import time
 import moduleSocial
 import moduleBuffer
 import moduleCache
@@ -32,6 +33,14 @@ class moduleSlack():
          self.lastLinkPublished = {}
          self.keys = []
          #self.logger = logging.getLogger(__name__)
+
+    def API(self, slackCredentials):
+        config = configparser.ConfigParser()
+        config.read(slackCredentials)
+    
+        slack_token = config["Slack"].get('api-key')
+        
+        self.sc = SlackClient(slack_token)
 
     def getUrl(self):
         return(self.url)
@@ -149,11 +158,13 @@ class moduleSlack():
         for post in posts:
             if 'attachments' in post:
                 outputData[serviceName]['pending'].append(
-                    (post['text'][1:-1], post['attachments'][0]['title'], '', '', '', '', '', '', post['ts'], ''))
+                    (post['text'][1:-1], post['attachments'][0]['title'], 
+                        time.strftime("%m-%d-%H", 
+                                time.localtime(int(float(post['ts']))))))
             else:
-                #print(post)
                 outputData[serviceName]['pending'].append(
-                    (post['text'][1:-1], '', '', '', '', '', '', '', post['ts'], ''))
+                    (post['text'][1:-1], '', time.strftime("%m-%d-%H", 
+                                time.localtime(int(float(post['ts']))))))
         return(outputData, posts)
 
     def getChanId(self, name):
@@ -339,7 +350,7 @@ def main():
     url = config.get(section, "url")
     site.setUrl(url)
 
-    site.setSlackClient(SLACKCREDENTIALS)
+    site.API(SLACKCREDENTIALS)
 
     theChannel = site.getChanId(CHANNEL)  
     print("Channel %s - %s" % (CHANNEL, theChannel))
@@ -421,7 +432,7 @@ def main():
                 moduleCache.updatePostsCache(site, listP, socialNetwork)
 
 
-    site.deletePost(outputData['Slack']['pending'][elem][8], theChannel)
+    site.deletePost(outputData['Slack']['pending'][elem][2], theChannel)
 
 
 if __name__ == '__main__':
