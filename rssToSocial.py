@@ -159,7 +159,7 @@ def main():
             blog = moduleSlack.moduleSlack()
             blog.setUrl(url)
             blog.API(os.path.expanduser('~/.mySocial/config/.rssSlack'))
-            blog.setPostsSlack()
+            blog.setPosts()
 
         if section.find(checkBlog) >= 0:
             # If checkBlog is empty it will add all of them
