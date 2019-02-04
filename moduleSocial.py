@@ -322,8 +322,8 @@ def checkLimitPosts(api, blog, service=''):
         else:
             for profile in blog.getSocialNetworks():
                 if (profile[0] in blog.getProgram()): 
-                    print("Pprofile %s" %profile)
-                    print("Pprofile program %s" %blog.getProgram())
+                    print("Profile %s" %profile)
+                    print("Profile program %s" %blog.getProgram())
                     listP = moduleCache.getPostsCache(blog,
                             (profile, blog.getSocialNetworks()[profile])) 
                     lenProfile = len(listP) 
@@ -340,12 +340,13 @@ def publishMail(channel, title, link, summary, summaryHtml, summaryLinks, image,
     logger.info("Publishing in Gmail...\n") 
     logger.info("--%s, %s, %s, %s, %s, %s, %s, %s, %s" % (channel, title, link, summary, summaryHtml, summaryLinks, image, content , links))
     if True:
-        application = channel #connectLinkedin()
+        application = channel.service #connectLinkedin()
         #presentation = 'Publicado! ' + title 
         logger.info("Publishing in Gmail:\n%s" % title)
         logger.info("Publishing in Gmail:\n%s" % content)
-        
+        logger.info("Publishing in Gmail:\n%s" % links)
         message = application.users().drafts().send(userId='me', body={ 'id': links}).execute()
+
     else:
         logger.warning("Gmail posting failed!\n")
         logger.warning("Unexpected error:", sys.exc_info()[0])
@@ -411,6 +412,22 @@ def searchTwitter(search, twitter):
     t = connectTwitter(twitter)
     return(t.search.tweets(q=search)['statuses'])
 
+def nextPost(blog, socialNetwork):
+    listP = moduleCache.listPostsCache(blog, socialNetwork)
+
+    if listP: 
+        element = listP[0]
+        listP = listP[1:] 
+    elif type(listP) == type(()):
+        element = listP
+        listP = [] 
+    else:
+        logger.warning("This shouldn't happen")
+        sys.exit()
+
+    return(element,listP)
+
+
 def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots): 
 
     listP = moduleCache.listPostsCache(blog, socialNetwork)
@@ -424,23 +441,17 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
 
-        listP = moduleCache.listPostsCache(blog, socialNetwork)
-
-        if listP: 
-            element = listP[0]
-            listP = listP[1:] 
-        elif type(listP) == type(()):
-            element = listP
-            listP = [] 
-        else:
-            logger.warning("This shouldn't happen")
-            sys.exit()
+        element, listP = nextPost(blog, socialNetwork)
 
         logger.info("Time: %s Waiting ... %.2f minutes in %s to publish:\n%s" % (time.asctime(), tSleep/60, socialNetwork[0], element[0]))
 
         time.sleep(tSleep) 
 
+        # Things can have changed during the waiting
+        element, listP = nextPost(blog, socialNetwork)
+
         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = element
+
         publishMethod = globals()['publish'+ socialNetwork[0].capitalize()]#()(self, ))
         nick = socialNetwork[1]
         publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
@@ -635,9 +646,9 @@ def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, imag
 
         h = HTMLParser()
         title = h.unescape(title)
-        textOrig = '\n\nPublicado originalmente en <a href="%s">%s</a>' % (link, title)
+        textOrig = 'Publicado originalmente en <a href="%s">%s</a>\n\n' % (link, title)
         post = client.create_post(user_id=user["id"], title=title,
-                content="<h4>"+title+"</h4><br />"+summaryHtml+textOrig, canonical_url = link,
+                content="<h4>"+title+"</h4><br />"+textOrig+summaryHtml, canonical_url = link,
                 content_format="html", publish_status="public") #draft")
         logger.info("My new post!", post["url"])
     except:

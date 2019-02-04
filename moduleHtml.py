@@ -68,7 +68,7 @@ class moduleHtml():
 
     def listLinks(self, text):
         theList = []
-        posIni = text.find(b'http')
+        posIni = text.find('http')
         textW = text
         while posIni >= 0:
             textWS = textW[posIni:].split(maxsplit=1)
@@ -77,7 +77,7 @@ class moduleHtml():
             textW = textWS[1:]
             if textW:
                 textW = textW[-1]
-                posIni = textW.find(b'http')
+                posIni = textW.find('http')
             else:
                 posIni = -1
 

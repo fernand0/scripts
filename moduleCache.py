@@ -45,12 +45,6 @@ def API(Blog, pp):
     # conf[Blog] -> blog.getProgram() ...
     return(api)
 
-def fileName(blog, socialNetwork):
-    theName = os.path.expanduser(DATADIR + '/' 
-                    + urllib.parse.urlparse(blog.getUrl()).netloc + '_' 
-                    + socialNetwork[0] + '_' + socialNetwork[1])
-    return(theName)
-
 def getProfiles(api, pp, service=""):
     # Needs improvement
     logging.info("Checking services...")
@@ -73,6 +67,12 @@ def getProfiles(api, pp, service=""):
     logging.debug("Profiles %s" % pp.pformat(profiles))
 
     return (profiles)
+
+def fileName(blog, socialNetwork):
+    theName = os.path.expanduser(DATADIR + '/' 
+                    + urllib.parse.urlparse(blog.getUrl()).netloc + '_' 
+                    + socialNetwork[0] + '_' + socialNetwork[1])
+    return(theName)
 
 
 def getLastLink(fileName):        
@@ -175,11 +175,17 @@ def updateLastLink(blog, link, socialNetwork=()):
     with open(fileName, "w") as f: 
         f.write(link)
 
-def showPost(cache, pp, posts, toPublish):
-    logging.info("To publish %s" % pp.pformat(toPublish))
+def isForMe(profile, args):
+    if 'socialNetwork' in profile:
+        serviceName = profile['socialNetwork'][0].capitalize()
+        nick = profile['socialNetwork'][1]
+        if (serviceName[0] in args) or ('*' in args): 
+            return True
+    return False
 
-    profMov = toPublish[0]
-    j = toPublish[1]
+def showPost(cache, pp, posts, args):
+    logging.info("To publish %s" % args)
+
 
     update = ""
     logging.info("Cache antes %s" % pp.pformat(cache))
@@ -188,101 +194,77 @@ def showPost(cache, pp, posts, toPublish):
     title = None
     for profile in profiles: 
         logging.info("Social Network %s" % profile)
-        if 'socialNetwork' in profile:
+        if isForMe(profile, args): 
             serviceName = profile['socialNetwork'][0].capitalize()
-            nick = profile['socialNetwork'][1]
-            if (serviceName[0] in profMov) or toPublish[0]=='*': 
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[serviceName]['pending'][j])
+            j = int(args[-1])
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[serviceName]['pending'][j])
                 
-
     if title:
         return(title+' '+link)
     else:
         return(None)
 
-def editPost(cache, pp, posts, toPublish, newTitle):
-    logging.info("To edit %s" % pp.pformat(toPublish))
+def publishPost(cache, pp, posts, args):
+    logging.info("To publish %s" % args)
+
+    update = ""
+    profiles = cache['profiles']
+    for profile in profiles: 
+        logging.info("Social Network %s" % profile)
+        if isForMe(profile, args):
+            serviceName = profile['socialNetwork'][0].capitalize()
+            j = int(args[-1])
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[serviceName]['pending'][j])
+            publishMethod = getattr(moduleSocial, 
+                    'publish'+ serviceName)
+            logging.info("Publishing title: %s" % title)
+            logging.info("Social network: %s Nick: %s" % (serviceName, nick))
+            update = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
+            if not isinstance(update, str) or (isinstance(update, str) and update[:4] != "Fail"):
+                posts[serviceName]['pending'] = posts[serviceName]['pending'][:j] + posts[serviceName]['pending'][j+1:]
+                logging.info("Updating %s" % pp.pformat(posts))
+                logging.info("Blog %s" % pp.pformat(cache['blog']))
+                updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
+                if 'text' in update:
+                    update = update['text']
+
+    return(update)
+
+def deletePost(cache, pp, posts, args):
+    logging.info("To Delete %s" % args)
+
+    update = ""
+    profiles = cache['profiles']
+    for profile in profiles: 
+        if isForMe(profile, args):
+            serviceName = profile['socialNetwork'][0].capitalize()
+            j = int(args[-1])
+            logging.info("Posts %s" % pp.pformat(posts[serviceName]['pending']))
+            posts[serviceName]['pending'] = posts[serviceName]['pending'][:j] +  posts[serviceName]['pending'][j+1:]
+            logging.info("-Posts %s" % pp.pformat(posts[serviceName]['pending']))
+            updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
+
+    return(update)
+
+def editPost(cache, pp, posts, args, newTitle):
+    logging.info("To edit %s" % args)
     logging.info("New title %s", newTitle)
-
-
-    logging.info("New title %s", toPublish)
-    profMov = toPublish[0]
-    j = toPublish[1]
 
     update = ""
     profiles = cache['profiles']
     title = None
     for profile in profiles: 
         logging.info("Social Network %s" % profile)
-        if 'socialNetwork' in profile:
-            logging.info("socialNetwork %s", profile['socialNetwork'])
-
+        if isForMe(profile, args):
             serviceName = profile['socialNetwork'][0].capitalize()
-            nick = profile['socialNetwork'][1]
-            if (serviceName[0] in profMov) or toPublish[0]=='*': 
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[serviceName]['pending'][j])
-                posts[serviceName]['pending'][j] = (newTitle, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
+            j = int(args[-1])
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[serviceName]['pending'][j])
+            posts[serviceName]['pending'][j] = (newTitle, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
 
-                updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
-    return(newTitle+link)
+            updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
 
-def publishPost(cache, pp, posts, toPublish):
-    logging.info("To publish %s" % pp.pformat(toPublish))
-
-    profMov = toPublish[0]
-    j = toPublish[1]
-
-    update = ""
-    logging.info("Cache antes %s" % pp.pformat(cache))
-    profiles = cache['profiles']
-    logging.info("Cache profiles antes %s" % pp.pformat(profiles))
-    for profile in profiles: 
-        logging.info("Social Network %s" % profile)
-        if 'socialNetwork' in profile:
-            serviceName = profile['socialNetwork'][0].capitalize()
-            nick = profile['socialNetwork'][1]
-            if (serviceName[0] in profMov) or toPublish[0]=='*': 
-                logging.debug("In %s" % pp.pformat(serviceName))
-                logging.debug("Profile %s" % pp.pformat(profile))
-                logging.debug("Profile posts %s" % pp.pformat(posts))
-                logging.debug("Service name %s" % serviceName)
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts[serviceName]['pending'][j])
-                return(title)
-                publishMethod = getattr(moduleSocial, 
-                        'publish'+ serviceName)
-                logging.info("Publishing title: %s" % title)
-                logging.info("Social network: %s Nick: %s" % (serviceName, nick))
-                update = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
-                if not isinstance(update, str) or (isinstance(update, str) and update[:4] != "Fail"):
-                    posts[serviceName]['pending'] = posts[serviceName]['pending'][:j] + posts[serviceName]['pending'][j+1:]
-                    logging.info("Updating %s" % pp.pformat(posts))
-                    logging.info("Blog %s" % pp.pformat(cache['blog']))
-                    updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
-                    if 'text' in update:
-                        update = update['text']
-
-    return(update)
-
-def deletePost(cache, pp, posts, toPublish):
-    logging.info("To delete %s" % pp.pformat(toPublish))
-    logging.info(pp.pformat(toPublish))
-
-    profMov = toPublish[0]
-    j = toPublish[1]
-
-    update = ""
-    logging.info("Cache antes %s" % pp.pformat(cache))
-    profiles = cache['profiles']
-    logging.info("Cache profiles antes %s" % pp.pformat(profiles))
-    for profile in profiles: 
-        if 'socialNetwork' in profile:
-            serviceName = profile['socialNetwork'][0].capitalize()
-            if (serviceName[0] in profMov) or toPublish[0]=='*': 
-                logging.info("Posts %s" % pp.pformat(posts[serviceName]['pending']))
-                posts[serviceName]['pending'] = posts[serviceName]['pending'][:j] +  posts[serviceName]['pending'][j+1:]
-                logging.info("-Posts %s" % pp.pformat(posts[serviceName]['pending']))
-                updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
-    return(update)
+            return(newTitle+' '+link)
+    return(None)
 
 def movePost(cache, pp, posts, toMove, toWhere):
     # Moving posts, we identify the profile by the first letter. We can use
@@ -358,7 +340,6 @@ def copyPost(api, log, pp, profiles, toCopy, toWhere):
                 serviceName = profiles[j].formatted_service 
                 if (serviceName[0] in profWhe):
                     profiles[j].updates.new(urllib.parse.quote(update.text + " " + link).encode('utf-8'))
-
 
 def listSentPosts(api, pp, service=""):
     profiles = getProfiles(api, pp, service)

@@ -12,6 +12,7 @@ from sievelib.managesieve import Client
 from sievelib.parser import Parser
 from sievelib.factory import FiltersSet
 from git import Repo
+# GitPython
 import ssl
 from moduleImap import *
 

@@ -17,6 +17,7 @@ importlib.reload(sys)
 #sys.setdefaultencoding("UTF-8")
 import moduleSocial
 import moduleHtml
+import moduleImap
 
 import googleapiclient
 from googleapiclient.discovery import build
@@ -37,6 +38,9 @@ class moduleGmail():
     def __init__(self):
         self.service = None
         self.posts = None
+        self.rawPosts = None
+        self.name = "Mail"
+        self.profile = None
 
     def API(self, Acc, pp):
         # based on get_credentials from 
@@ -58,19 +62,35 @@ class moduleGmail():
         store = file.Storage(fileStore)
         credentials = store.get()
         
-    
         service = build('gmail', 'v1', http=credentials.authorize(Http()))
     
         self.service = service
+
+        self.name = self.name + Acc[3:]
+        #self.profile = self.service.users().getProfile(userId='me').execute()
+
+    def confName(self, acc):
+        api = self.service
+        theName = os.path.expanduser(CONFIGDIR + '/' 
+                        + '.' + acc[0]+ '_' 
+                        + acc[1]+ '.json')
+        return(theName)
     
     def setPosts(self):
         api = self.service
-        self.posts = api.users().drafts().list(userId='me').execute()
+        posts = api.users().drafts().list(userId='me').execute()
+        logging.info("--setPosts %s" % posts)
+        if 'drafts' in posts:
+            self.posts = []
+            self.rawPosts = []
+            for post in posts['drafts']:
+                self.posts.insert(0, post)
+                message = self.getMessageRaw(post['id'])
+                self.rawPosts.insert(0, message)
 
     def getPosts(self):
-        if not self.posts:
-            self.setPosts()
-        return(self.posts)
+        self.setPosts()
+        return(self.rawPosts)
 
     def getMessage(self, id): 
         api = self.service
@@ -78,20 +98,59 @@ class moduleGmail():
                 id=id).execute()['message']
         return message
 
+    def getMessageRaw(self, id): 
+        api = self.service
+        message = api.users().drafts().get(userId="me", 
+                id=id, format='raw').execute()['message']
+        return message
+
+    def getMessageMeta(self, id): 
+        api = self.service
+        message = api.users().drafts().get(userId="me", 
+                id=id, format='metadata').execute()['message']
+        return message
+
+    def setHeader(self, message, header, value):
+        for head in message['payload']['headers']: 
+            if head['name'] == header: 
+                head['value'] = value
+
+    def setHeaderEmail(self, message, header, value):
+        # Email methods are related to the email.message objetcs
+        if header in message:
+            del message[header]
+            message[header]= value
 
     def getHeader(self, message, header = 'Subject'):
         for head in message['payload']['headers']: 
             if head['name'] == header: 
                 return(head['value'])
 
+    def getHeaderEmail(self, message, header = 'Subject'):
+        if header in message:
+            return(moduleImap.headerToString(message[header]))
+
+    def getHeaderRaw(self, message, header = 'Subject'):
+        if header in message:
+            return(message[header])
+
+    def getEmail(self, messageRaw):
+        messageEmail = email.message_from_bytes(base64.urlsafe_b64decode(messageRaw['raw']))
+        return(messageEmail)
+
+
     def getBody(self, message):
         return(message['payload']['parts'])
  
+    def getLabelList(self):
+        api = self.service
+        results = api.users().labels().list(userId='me').execute() 
+        return(results['labels'])
 
     def getLabelId(self, name):
         api = self.service
-        results = api.users().labels().list(userId='me').execute() 
-        for label in results['labels']: 
+        results = self.getLabelList() 
+        for label in results: 
             if label['name'] == name: 
                 labelId = label['id'] 
                 break
@@ -104,43 +163,162 @@ class moduleGmail():
         if not self.posts:
             self.setPosts()
 
-        posts = self.getPosts()['drafts']
-        if not posts:
+        if not self.rawPosts or (i>=(len(self.rawPosts))):
             return (None, None, None, None, None, None, None, None, None, None)
 
-        post = posts[i]
-        message = self.getMessage(post['id'])
+        messageRaw = self.rawPosts[i]
+        messageEmail = self.getEmail(messageRaw)
 
-        theTitle = self.getHeader(message, 'Subject')
-        snippet = self.getHeader(message, 'snippet')
-        parts = self.getBody(message)
+        theTitle = self.getHeaderEmail(messageEmail, 'Subject')
+        snippet = self.getHeaderRaw(messageRaw, 'snippet')
+
         theLink = None
-        posIni = message['snippet'].find('http')
-        posFin = message['snippet'].find(' ', posIni)
-        posSignature = message['snippet'].find('-- ')
+        posIni = snippet.find('http')
+        posFin = snippet.find(' ', posIni)
+        posSignature = snippet.find('-- ')
         if posIni < posSignature: 
-            theLink = message['snippet'][posIni:posFin]
-        for part in parts:
-            if 'data' in part['body']:
-                partD = base64.b64decode(part['body']['data']) 
+            theLink = snippet[posIni:posFin]
+        theLinks = None
+        for part in messageEmail.walk():
+            if part.get_content_type() == 'text/html':
+                content = part.get_payload()
                 html = moduleHtml.moduleHtml()
-                
-                theLinks = html.listLinks(partD)
-            else:
-                theLinks = None
+                theLinks = html.listLinks(content)
+            elif part.get_content_type() == 'text/plain':
+                theContent = part
         firstLink = theLink
         theImage = None
         theSummary = snippet
-        content = parts[0]
 
-
-        theSummaryLinks = None
-        theContent = content
-        comment = message['id']
+        theSummaryLinks = messageRaw
+        comment = self.posts[i]['id']
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
-  
+    def getPostsCache(self):        
+        api = self.service
+        drafts = self.getPosts()
+    
+        listP = []
+        if drafts:
+            numDrafts = len(drafts)
+            for draft in range(numDrafts): 
+                message = self.obtainPostData(draft)
+                print(message)
+                listP.append(message)
+    
+        return(listP)
+    
+    def listPosts(self, pp):    
+        api = self.service
+        outputData = {}
+        files = []
+    
+        serviceName = self.name
+    
+        outputData[serviceName] = {'sent': [], 'pending': []}
+        listDrafts = self.getPostsCache()
+    
+        if listDrafts:
+            logging.debug("--Posts %s"% listDrafts)
+    
+            for element in listDrafts: 
+                    outputData[serviceName]['pending'].append(element) 
+    
+        #logging.info("Service posts profiles %s" % profiles)
+        profiles = None
+        return(outputData, profiles)
+    
+    def isForMe(self, args):
+        serviceName = self.name
+        if (serviceName[0] in args) or ('*' in args): 
+            if serviceName[0] + self.name[-1] in args[:-1]:
+                return True
+        return False
+
+    def showPost(self, pp, posts, args):
+        logging.info("To publish %s" % args)
+    
+        update = ""
+        serviceName = self.name
+
+        title = None
+        if self.isForMe(args):
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
+    
+            if title: 
+                if link: 
+                    return(title+link)
+                else:
+                    return(title)
+        return(None)
+    
+    def publishPost(self, pp, posts, args):
+        logging.info("To publish %s" % args)
+    
+        update = ""
+        serviceName = self.name
+        title = None
+
+        if self.isForMe(args):
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
+            if title:
+                publishMethod = getattr(moduleSocial, 
+                        'publishMail')
+                logging.info("Publishing title: %s" % title)
+ 
+                logging.info(title, link, summary, summaryHtml, summaryLinks, image, content , links )
+                logging.info(publishMethod)
+                update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
+                if update:
+                    if 'text' in update: 
+                        update = update['text'] 
+   
+                return(update)
+
+        return(None)
+    
+    def deletePost(self, cache, pp, posts, args):
+        logging.info("To delete %s" % args)
+    
+        update = ""
+        serviceName = self.name
+        title = None
+        if self.isForMe(args):
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
+
+            if title:
+                idPost = comment
+
+                update = self.service.users().drafts().delete(userId='me', id=idPost).execute()
+                return(update)
+
+        return(None)
+
+    def editPost(self, pp, posts, args, newTitle):
+        logging.info("To edit %s" % args)
+        logging.info("New title %s", newTitle)
+
+        update = ""
+        serviceName = self.name
+        if self.isForMe(args):
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
+            # Should we avoid two readings?
+            message = summaryLinks 
+            #self.service.users().drafts().get(userId="me", 
+            #    format="raw", id=comment).execute()['message']
+            theMsg = email.message_from_bytes(base64.urlsafe_b64decode(message['raw']))
+            self.setHeaderEmail(theMsg, 'subject', newTitle)
+            message['raw'] = theMsg.as_bytes()
+            message['raw'] = base64.urlsafe_b64encode(message['raw']).decode()
+
+            update = self.service.users().drafts().update(userId='me', 
+                    body={'message':message},id=comment).execute()
+
+            return(newTitle)
+
+        return None
+
     def moveMessage(self,  message):
         api = self.service
         labelId = self.getLabelId('imported')
@@ -186,308 +364,25 @@ class moduleGmail():
                                                             body=msg_labels).execute()
     
         return(messageR)
-    
-    def getPostsCache(self):        
-        api = self.service
-        drafts = self.getPosts()
-        if drafts:
-            if 'drafts' in drafts:
-                drafts = drafts['drafts']
-            else:
-                drafts = []
-    
-        listP = []
-        numDrafts = len(drafts)
-        for draft in range(numDrafts): 
-            message = self.obtainPostData(numDrafts-(draft +1))
-            listP.append(message)
-    
-        return(listP)
-    
-    def listPosts(self, pp, service=""):    
-        api = self.service
-        outputData = {}
-        files = []
-    
-        serviceName = 'Mail'+service
-    
-        outputData[serviceName] = {'sent': [], 'pending': []}
-        listDrafts = self.getPostsCache()
-    
-        logging.debug("-Posts %s"% listDrafts)
-    
-        if len(listDrafts) > 0: 
-            for element in listDrafts: 
-                outputData[serviceName]['pending'].append(element) 
-    
-        #logging.info("Service posts profiles %s" % profiles)
-        profiles = None
-        return(outputData, profiles)
-    
-    def confName(self, acc):
-        api = self.service
-        theName = os.path.expanduser(CONFIGDIR + '/' 
-                        + '.' + acc[0]+ '_' 
-                        + acc[1]+ '.json')
-        return(theName)
-    
-    def showPost(self, cache, pp, posts, toPublish):
-        logging.info("To publish %s" % pp.pformat(toPublish))
-    
-        profMov = toPublish[0]
-        j = toPublish[1]
-        logging.info("Profile %s position %d" % (profMov, j))
-    
-        update = ""
-        logging.debug("Cache antes %s" % pp.pformat(cache))
-        profiles = cache #['profiles']
-        logging.debug("Cache profiles antes %s" % pp.pformat(profiles))
-        title = None
-        accC = 0
-        for profile in profiles: 
-            logging.info("Social Network %s" % profile)
-            if 'gmail' in profile._baseUrl:
-                serviceName = 'Mail'
-                #nick = profile['socialNetwork'][1]
-                if (serviceName[0] in profMov) or toPublish[0]=='*': 
-                    if (len(toPublish) == 3):
-                        logging.info("Which one?") 
-                        acc = toPublish[2]
-                        if int(acc) != accC: 
-                            logging.info("Not this one %s" % profile)
-                            accC = accC + 1
-                            continue
-                        else:
-                            # We are in the adequate account, we can drop de qualifier
-                            # for the publishing method
-                            posts = posts[serviceName+str(accC)]
-                    else:
-                        posts = posts[serviceName+str(accC)]
-    
-                    logging.debug("In %s" % pp.pformat(serviceName))
-                    logging.debug("Profile %s" % pp.pformat(profile))
-                    logging.debug("Profile posts %s" % pp.pformat(posts))
-                    logging.debug("Service name %s" % serviceName)
-                    numPosts = len(posts['pending'])
-                    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts['pending'][j])
-    
-        if title: 
-            return(title+link)
-        else:
-            return(None)
-    
-    
-    def publishPost(self, cache, pp, posts, toPublish):
-        logging.info("To publish %s" % pp.pformat(toPublish))
-    
-        profMov = toPublish[0]
-        j = toPublish[1]
-        logging.info("Profile %s position %d" % (profMov, j))
-    
-        update = ""
-        logging.debug("Cache antes %s" % pp.pformat(cache))
-        profiles = cache #['profiles']
-        logging.debug("Cache profiles antes %s" % pp.pformat(profiles))
-        accC = 0
-        for profile in profiles: 
-            logging.info("Social Network %s" % profile)
-            if 'gmail' in profile._baseUrl:
-                serviceName = 'Mail'
-                #nick = profile['socialNetwork'][1]
-                if (serviceName[0] in profMov) or toPublish[0]=='*': 
-                    if (len(toPublish) == 3):
-                        logging.info("Which one?") 
-                        acc = toPublish[2]
-                        if int(acc) != accC: 
-                            logging.info("Not this one %s" % profile)
-                            accC = accC + 1
-                            continue
-                        else:
-                            # We are in the adequate account, we can drop de qualifier
-                            # for the publishing method
-                            posts = posts[serviceName+str(accC)]
-                    else:
-                        posts = posts[serviceName+str(accC)]
-    
-                    logging.debug("In %s" % pp.pformat(serviceName))
-                    logging.debug("Profile %s" % pp.pformat(profile))
-                    logging.debug("Profile posts %s" % pp.pformat(posts))
-                    logging.debug("Service name %s" % serviceName)
-                    numPosts = len(posts['pending'])
-                    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (posts['pending'][j])
-                    logging.info(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
-                    publishMethod = getattr(moduleSocial, 
-                            'publish'+ serviceName)
-                    logging.info("Publishing title: %s" % title)
-                    logging.info("Social network: %s Nick: (pending)"  % profile)
-                    logging.info(cache, title, link, summary, summaryHtml, summaryLinks, image, content , links )
-                    update = publishMethod(profile, title, link, summary, summaryHtml, summaryLinks, image, content, links)
-                    if update:
-                            if 'text' in update: 
-                                update = update['text']
-    
-        return(update)
-    
-    def deletePost(self, cache, pp, posts, toPublish):
-        logging.info("To publish %s" % pp.pformat(toPublish))
-        logging.info(pp.pformat(toPublish))
-    
-        profMov = toPublish[0]
-        j = toPublish[1]
-    
-        update = ""
-        logging.debug("Cache antes %s" % pp.pformat(cache))
-        profiles = cache
-        logging.debug("Cache profiles antes %s" % pp.pformat(profiles))
-        accC = 0
-        for profile in profiles: 
-            logging.info("Social Network %s" % profile)
-            if 'gmail' in profile._baseUrl:
-                serviceName = 'Mail'
-                if (serviceName[0] in profMov) or toPublish[0]=='*':
-                    if (len(toPublish) == 3):
-                        logging.info("Which one?") 
-                        acc = toPublish[2]
-                        if int(acc) != accC: 
-                            logging.info("Not this one %s" % profile)
-                            accC = accC + 1
-                            continue
-                        else:
-                            # We are in the adequate account, we can drop de qualifier
-                            # for the publishing method
-                            #method = profile[:-1]
-                            posts = posts[serviceName+str(accC)]
-                    else:
-                        posts = posts[serviceName]
-    
-                    print(posts)
-                    idPost = posts['pending'][j]
-                    print(idPost)
-                    idPost = idPost[8]
-                    update = profile.users().drafts().delete(userId='me', id=idPost).execute()
-                    accC = accC + 1
-        return(update)
-    
+
+   
     #######################################################
     # These need work
     #######################################################
     
+
+    def listSentPosts(self, pp, service=""):
+        # Undefined
+        pass
     
     def copyPost(self, log, pp, profiles, toCopy, toWhere):
-        api = self.service
-        logging.info(pp.pformat(toCopy+' '+toWhere))
-    
-        profCop = toCopy[0]
-        ii = int(toCopy[1])
-    
-        j = 0
-        profWhe = ""
-        i = 0
-        while i < len(toWhere):
-            profWhe = profWhe + toWhere[i]
-            i = i + 1
-        
-        log.info(toCopy,"|",profCop, ii, profWhe)
-        for i in range(len(profiles)):
-            serviceName = profiles[i].formatted_service
-            print(serviceName)
-            log.info("ii: %s" %i)
-            updates = getattr(profiles[j].updates, 'pending')
-            update = updates[ii]
-            if ('media' in update): 
-                if ('expanded_link' in update.media):
-                    link = update.media.expanded_link
-                else:
-                    link = update.media.link
-            else:
-                link = ""
-            print(update.text, link)
-           
-            if (serviceName[0] in profCop):
-                for j in range(len(profiles)): 
-                    serviceName = profiles[j].formatted_service 
-                    if (serviceName[0] in profWhe):
-                        profiles[j].updates.new(urllib.parse.quote(update.text + " " + link).encode('utf-8'))
+        # Undefined
+        pass
     
     def movePost(self, log, pp, profiles, toMove, toWhere):
-        # Moving posts, we identify the profile by the first letter. We can use
-        # several letters and if we put a '*' we'll move the posts in all the
-        # social networks
-        api = self.service
-        i = 0
-        profMov = ""
-        while toMove[i].isalpha():
-            profMov = profMov + toMove[i]
-            i = i + 1
+        # Undefined
+        pass
     
-        for i in range(len(profiles)):
-            serviceName = profiles[i].formatted_service
-            log.info("ii: %s" %i)
-            if (serviceName[0] in profMov) or toMove[0]=='*':
-                listIds = []
-                for j in range(len(profiles[i].updates.pending)):
-                    # counts seems to be not ok
-                    listIds.append(profiles[i].updates.pending[j]['id'])
-    
-                logging.info("to Move %s to %s" % (pp.pformat(toMove), toWhere))
-                j = int(toMove[-1])
-                logging.info("i %d j %d"  % (i,j))
-                logging.info("Profiles[i]--> %s <--"  % pp.pformat(profiles))
-                logging.info("Profiles[i]--> %s <---"  % pp.pformat(profiles[i].updates.pending[j]))
-                k = int(toWhere[-1])
-                idUpdate = listIds.pop(j)
-                listIds.insert(k, idUpdate)
-    
-                update = Update(api=api, id=profiles[i].updates.pending[j].id)
-                profiles[i].updates.reorder(listIds)
-    
-    def listSentPosts(self, pp, service=""):
-        api = self.service
-        profiles = getProfiles(api, pp, service)
-    
-        someSent = False
-        outputStr = ([],[])
-        for i in range(len(profiles)):
-            serviceName = profiles[i].formatted_service
-            logging.debug("Service %d %s" % (i,serviceName))
-            if (profiles[i].counts['sent'] > 0):
-                someSent = True
-                logging.info("Service %s" % serviceName)
-                logging.debug("There are: %d" % profiles[i].counts['sent'])
-                logging.debug(pp.pformat(profiles[i].updates.sent))
-                due_time=""
-                for j in range(min(8,profiles[i].counts['sent'])):
-                    updatesSent = profiles[i].updates.sent[j]
-                    update = Update(api=api, id= updatesSent.id)
-                    if (due_time == ""):
-                        due_time=update.due_time # Not used here
-                        outputStr[0].append("*%s*" % serviceName)
-                        outputStr[1].append("")
-                    logging.debug("Service %s" % pp.pformat(updatesSent))
-                    selectionStr = "" #"%d%d) " % (i,j)
-                    if ('media' in updatesSent): 
-                        try:
-                            lineTxt = "%s %s %s" % (selectionStr, 
-                                    updatesSent.text, updatesSent.media.expanded_link)
-                        except:
-                            lineTxt = "%s %s %s" % (selectionStr,
-                                    updatesSent.text, updatesSent.media.link)
-                    else:
-                        lineTxt = "%s %s" % (selectionStr,updatesSent.text)
-                    logging.info(lineTxt)
-                    outputStr[0].append("%s" % lineTxt)
-                    outputStr[1].append(" (%d clicks)" % updatesSent['statistics']['clicks'])
-                    #logging.debug("-- %s" % (pp.pformat(update)))
-                    #logging.debug("-- %s" % (pp.pformat(dir(update))))
-            else:
-                #logging.debug("Service %d %s" % (i, serviceName))
-                logging.debug("No")
-        
-        if someSent:
-            return (outputStr, profiles)
-        else:
-            logging.info("No sent posts")
-            return someSent
 
 def main():
     import moduleGmail
@@ -497,16 +392,21 @@ def main():
     # instantiate the api object 
 
     api = moduleGmail.moduleGmail()
-    api.API('ACC2',pp)
+    api.API('ACC1',pp)
+    api.setPosts()
+    api.getPostsCache()
+    api.editPost(pp, api.getPosts(), "M17", 'Prueba.')
+    sys.exit()
 
     logging.basicConfig(#filename='example.log',
                             level=logging.DEBUG,format='%(asctime)s %(message)s')
 
-    #print("profiles")
-    #print(api.service.users().getProfile(userId='me').execute())
-    postsP, profiles = api.listPosts(pp, '')
+    print("profiles")
+    print(api.profile)
+    postsP, profiles = api.listPosts(pp)
     print("-> Posts",postsP)
-    print(api.obtainPostData(0))
+    sys.exit()
+    api.editPost(pp, api.getPosts(), "M11", 'No avanza.')
     sys.exit()
     msg = 353
     moveMessage(api[1], msg)
