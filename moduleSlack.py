@@ -377,7 +377,7 @@ def main():
     # 
     i = 0
     listLinks = ""
-    for line in moduleBuffer.prepareReply(outputData, ['pending'])[0][2]:
+    for line in outputData['Slack']['pending']:
         listLinks = listLinks + "%d) [%s]-%s\n" % (i, line[2], line[0])
         i = i + 1
 
