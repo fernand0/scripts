@@ -146,7 +146,10 @@ class moduleGmail():
         labelId = self.getLabelId('imported')
         mesGE = base64.urlsafe_b64encode(message).decode()
         mesT = email.message_from_bytes(message)
-        subj = email.header.decode_header(mesT['subject'])[0][0]
+        if mesT['subject']: 
+            subj = email.header.decode_header(mesT['subject'])[0][0]
+        else:
+            subj = ""
         logging.info("Subject %s",subj)
     
         try:
