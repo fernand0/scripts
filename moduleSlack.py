@@ -428,7 +428,7 @@ def main():
                 moduleCache.updatePostsCache(site, listP, socialNetwork)
 
 
-    site.deletePost(outputData['Slack']['pending'][elem][2], theChannel)
+    site.deletePost(posts[i]['ts'], theChannel)
 
 
 if __name__ == '__main__':
