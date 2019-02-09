@@ -55,6 +55,15 @@ class moduleRss():
 
     def getSocialNetworks(self):
         return(self.socialNetworks)
+
+    def setSocialNetworks(self, config, section):
+        socialNetworksOpt = ['twitter', 'facebook', 'telegram', 
+                'medium', 'linkedin','pocket'] 
+        for option in config.options(section):
+            if (option in socialNetworksOpt):
+                nick = config.get(section, option)
+                socialNetwork = (option, nick)
+                self.addSocialNetwork(socialNetwork)
  
     def addSocialNetwork(self, socialNetwork):
         self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
@@ -285,11 +294,12 @@ def main():
         if ("bufferapp" in config.options(section)):
             blog.setBufferapp(config.get(section, "bufferapp"))
         if ("program" in config.options(section)):
-            blog.setBufferapp(config.get(section, "program"))
+            blog.setProgram(config.get(section, "program"))
 
-        for option in config.options(section):
-            if ('ac' in option) or ('fb' in option):
-                blog.addSocialNetwork((option, config.get(section, option)))
+        blog.setSocialNetworks(config, section)
+
+        print(blog.getSocialNetworks())
+
         blogs.append(blog)
         print(blog.obtainPostData(0))
 

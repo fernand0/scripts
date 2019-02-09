@@ -174,13 +174,14 @@ def main():
                 blog.setProgram(config.get(section, "program"))
 
 
-            socialNetworksOpt = ['twitter', 'facebook', 'telegram', 
-                    'medium', 'linkedin','pocket'] 
-            for option in config.options(section):
-                if (option in socialNetworksOpt):
-                    nick = config.get(section, option)
-                    socialNetwork = (option, nick)
-                    blog.addSocialNetwork(socialNetwork)
+            blog.setSocialNetworks(config, section)
+            #socialNetworksOpt = ['twitter', 'facebook', 'telegram', 
+            #        'medium', 'linkedin','pocket'] 
+            #for option in config.options(section):
+            #    if (option in socialNetworksOpt):
+            #        nick = config.get(section, option)
+            #        socialNetwork = (option, nick)
+            #        blog.addSocialNetwork(socialNetwork)
 
             logging.info("Looking for pending posts in ...%s"
                     % blog.getSocialNetworks())
