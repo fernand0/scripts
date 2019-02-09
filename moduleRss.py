@@ -13,6 +13,7 @@ from slackclient import SlackClient
 from bs4 import BeautifulSoup
 from bs4 import Tag
 from pdfrw import PdfReader
+import pprint
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
 
@@ -28,6 +29,8 @@ class moduleRss():
          self.socialNetworks = {}
          self.linksToAvoid = ""
          self.postsRss = None
+         self.postsCache = None
+         self.postsBuffer = None
          self.time = []
          self.bufferapp = None
          self.program = None
@@ -108,6 +111,19 @@ class moduleRss():
             urlRss = self.url+self.rssFeed
         logging.debug(urlRss)
         self.postsRss = feedparser.parse(urlRss)
+
+    def getPostsCache():
+        return(self.postsCache)
+
+    def setPostsCache(self):
+        self.PostsCache = []    
+        pp = pprint.PrettyPrinter(indent=4) 
+
+        cache = moduleCache.moduleCache() 
+        cache.getProfiles(pp)
+        postsP, profiles = cache.listPosts(pp, '')
+
+
 
     def getLinkPosition(self, link):
         i = 0
@@ -303,11 +319,11 @@ def main():
         blogs.append(blog)
         print(blog.obtainPostData(0))
 
-    sys.exit()
-
     
-    blogs[7].setPostsRss()
+    #blogs[7].setPostsRss()
     #print(blogs[7].getPostsRss().entries)
+    blogs[7].setPostsCache()
+    sys.exit()
     numPosts = len(blogs[7].getPostsRss().entries)
     for i in range(numPosts):
         print(blog.obtainPostData(numPosts - 1 - i))
@@ -344,7 +360,6 @@ def main():
                 print(post['content'][:100])
 
 if __name__ == "__main__":
-
     main()
 
 
