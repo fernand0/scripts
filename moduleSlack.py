@@ -349,9 +349,9 @@ class moduleSlack():
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
     def checkLastLink(self,socialNetwork=()):
-        fileNameL = moduleCache.fileName(self, socialNetwork)+".last"
+        fileNameL = self.cache.fileName(socialNetwork)+".last"
         logging.info("Checking last link: %s" % fileNameL)
-        (linkLast, timeLast) = moduleCache.getLastLink(fileNameL)
+        (linkLast, timeLast) = self.cache.getLastLink(fileNameL)
         return(linkLast, timeLast)
 
 def main():
