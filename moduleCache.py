@@ -30,14 +30,15 @@ from configMod import *
 
 class moduleCache():
     
-    def __init__(self):
+    def __init__(self, url, socialNetworks):
         self.service = None
         self.profiles = None
         self.posts = None
         self.rawPosts = None
         self.name = "Cache"
+        self.url = url
+        self.socialNetworks = socialNetworks
         self.profile = None
-        self.blog = None
 
     def getProfiles(self, pp, service=""):
         # Needs improvement
@@ -45,9 +46,8 @@ class moduleCache():
     
         profiles = []
     
-        socialNetworks = getSocialNetworks()
-        for soc in socialNetworks.keys():
-            socialNetwork = (soc, socialNetworks[soc])
+        for soc in self.socialNetworks.keys():
+            socialNetwork = (soc, self.socialNetworks[soc])
             profile = {}
             profile['socialNetwork'] = socialNetwork
             fileNameQ = self.fileName(socialNetwork) + ".queue" 
@@ -64,7 +64,7 @@ class moduleCache():
     
     def fileName(self, socialNetwork):
         theName = os.path.expanduser(DATADIR + '/' 
-                        + urllib.parse.urlparse(self.blog.getUrl()).netloc 
+                        + urllib.parse.urlparse(self.url).netloc 
                         + '_' 
                         + socialNetwork[0] + '_' + socialNetwork[1])
         return(theName)
@@ -127,9 +127,9 @@ class moduleCache():
              pickle.dump(listPosts,f)
         return(fileNameQ)
     
-    def listPostsCache(self, blog, socialNetwork=()):
+    def listPostsCache(self, socialNetwork=()):
        fileName = (DATADIR  + '/' 
-               +  urllib.parse.urlparse(blog.getUrl()).netloc 
+               +  urllib.parse.urlparse(self.url).netloc 
                + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
                + ".queue")
     
@@ -154,16 +154,12 @@ class moduleCache():
         return(linkLast, timeLast)
     
     def updateLastLink(self, link, socialNetwork=()):
-        if self.blog.getUrl().find('slack')>=0: 
-            rssFeed = self.blog.getUrl()
-        else: 
-            rssFeed = self.blog.getUrl()+self.blog.getRssFeed()
         if not socialNetwork: 
             fileName = (DATADIR  + '/' 
-                   + urllib.parse.urlparse(rssFeed).netloc + ".last")
+                   + urllib.parse.urlparse(self.url).netloc + ".last")
         else: 
             fileName = (DATADIR + '/'
-                    + urllib.parse.urlparse(rssFeed).netloc +
+                    + urllib.parse.urlparse(self.url).netloc +
                     '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
         with open(fileName, "w") as f: 
             f.write(link)
@@ -383,18 +379,34 @@ class moduleCache():
 
 def main():
     import moduleCache
+    import moduleRss
 
+
+    config = configparser.ConfigParser()
+    config.read(CONFIGDIR + '/.rssBlogs')
+
+    section = "Blog7"
+    blog = moduleRss.moduleSlack()
+    blog.setUrl(config.get(section, "url"))
+    blog.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
+
+    if ('bufferapp' in config.options(section)): 
+        blog.setBufferapp(config.get(section, "bufferapp"))
+    if ('program' in config.options(section)): 
+        blog.setProgram(config.get(section, "program"))
+
+    blog.setSocialNetworks(config, section)
     pp = pprint.PrettyPrinter(indent=4)
 
-    cache = moduleCache.moduleCache()
+    cache = moduleCache.moduleCache(blog.getUrl(), blog.getSocialNetworks())
 
     logging.basicConfig(#filename='example.log',
                             level=logging.DEBUG,format='%(asctime)s %(message)s')
 
-
     print("profiles")
     cache.getProfiles(pp)
     print(cache.profiles)
+    sys.exit()
     postsP, profiles = cache.listPosts(pp, '')
     print("-> Posts",postsP)
     for soc in cache.profiles:
