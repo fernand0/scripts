@@ -110,12 +110,17 @@ class moduleRss():
         logging.debug(urlRss)
         self.postsRss = feedparser.parse(urlRss)
 
+    def getCache(self):
+        return(self.cache)
+
+    def setCache(self):
+        self.cache = moduleCache.moduleCache(self.url, self.socialNetworks) 
+
     def getPostsCache(self):
         return(self.cache.posts)
 
     def setPostsCache(self):
-
-        self.cache = moduleCache.moduleCache(self.url, self.socialNetworks) 
+        self.setCache() 
         self.cache.getProfiles()
         postsP, profiles = self.cache.listPosts('')
         self.cache.posts = postsP
@@ -127,9 +132,10 @@ class moduleRss():
                 logging.debug(self.getPostsRss().entries)
                 return(len(self.getPostsRss().entries))
             for entry in self.getPostsRss().entries:
-                logging.debug(entry['link'], link)
-                lenCmp = min(len(entry['link']), len(link))
-                if entry['link'][:lenCmp] == link[:lenCmp]:
+                linkS = link.decode()
+                logging.debug(entry['link'], linkS)
+                lenCmp = min(len(entry['link']), len(linkS))
+                if entry['link'][:lenCmp] == linkS[:lenCmp]:
                     return i
                 i = i + 1
         return(i)

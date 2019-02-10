@@ -121,12 +121,18 @@ class moduleSlack():
         logging.debug(self.posts)
         return(self.posts)
 
+    def getCache(self):
+        return(self.cache)
+
+    def setCache(self):
+        self.cache = moduleCache.moduleCache(self.url, self.socialNetworks) 
+
     def getPostsCache(self):
         return(self.cache.posts)
 
     def setPostsCache(self):
 
-        self.cache = moduleCache.moduleCache(self.url, self.socialNetworks) 
+        self.setCache() 
         self.cache.getProfiles()
         postsP, profiles = self.cache.listPosts('')
         self.cache.posts = postsP
@@ -144,13 +150,15 @@ class moduleSlack():
                 logging.debug(self.getPostsSlack())
                 return(len(self.getPostsSlack()))
             for entry in self.getPostsSlack():
+                linkS = link.decode()
+                logging.debug(entry['link'], linkS)
                 if 'original_url' in entry: 
                     url = entry['original_url']
                 else:
                     url = entry['text'][1:-1]
                 #print(url, link)
-                lenCmp = min(len(url), len(link))
-                if url[:lenCmp] == link[:lenCmp]:
+                lenCmp = min(len(url), len(links))
+                if url[:lenCmp] == linkS[:lenCmp]:
                     return i
                 i = i + 1
         return(i)

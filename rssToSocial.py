@@ -160,6 +160,7 @@ def main():
             blog.setUrl(url)
             blog.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
             blog.setPostsSlack()
+        blog.setCache()
 
         if section.find(checkBlog) >= 0:
             # If checkBlog is empty it will add all of them
@@ -246,13 +247,12 @@ def main():
                 for socialNetwork in blog.getSocialNetworks().keys():
                     print("      Not buffer %s" % socialNetwork)
                     logging.info("Social Network %s" % socialNetwork)
-                    lastLink, lastTime = moduleCache.checkLastLink(blog, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
+                    lastLink, lastTime = blog.cache.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                     blog.addLastLinkPublished(socialNetwork, 
                             lastLink, lastTime) 
                     i = blog.getLinkPosition(lastLink) 
 
                     logging.debug("i, lastLink %d %s"% (i,lastLink))
-                    #print("i, lastLink %d %s"% (i,lastLink))
                     if (i > 0):
                         nick = blog.getSocialNetworks()[socialNetwork]
                         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
@@ -267,7 +267,7 @@ def main():
                             result = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
                             logging.info("Updating Link\n") 
                             if result != "Fail!":
-                                moduleCache.updateLastLink(blog, link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
+                                blog.cache.updateLastLink(link, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
 
             if blog.getProgram():
                 t = {}
