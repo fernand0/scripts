@@ -26,6 +26,7 @@ class moduleSlack():
          self.socialNetworks = {}
          self.linksToAvoid = ""
          self.posts = None
+         self.postsCache = None
          self.time = []
          self.bufferapp = None
          self.program = None
@@ -47,6 +48,19 @@ class moduleSlack():
 
     def getSocialNetworks(self):
         return(self.socialNetworks)
+
+    def setSocialNetworks(self, config, section):
+        socialNetworksOpt = ['twitter', 'facebook', 'telegram', 
+                'medium', 'linkedin','pocket'] 
+        for option in config.options(section):
+            if (option in socialNetworksOpt):
+                nick = config.get(section, option)
+                socialNetwork = (option, nick)
+                self.addSocialNetwork(socialNetwork)
+ 
+    def addSocialNetwork(self, socialNetwork):
+        self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
+
 
     def setSlackClient(self, slackCredentials):
         config = configparser.ConfigParser()
@@ -106,6 +120,17 @@ class moduleSlack():
         logging.debug("# posts", len(self.posts))
         logging.debug(self.posts)
         return(self.posts)
+
+    def getPostsCache():
+        return(self.postsCache)
+
+    def setPostsCache(self):
+        self.PostsCache = []    
+        pp = pprint.PrettyPrinter(indent=4) 
+
+        cache = moduleCache.moduleCache(self.url, self.socialNetworks) 
+        cache.getProfiles(pp)
+        postsP, profiles = cache.listPosts(pp, '')
 
     def getKeys(self):
         return(self.keys)

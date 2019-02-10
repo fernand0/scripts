@@ -112,18 +112,17 @@ class moduleRss():
         logging.debug(urlRss)
         self.postsRss = feedparser.parse(urlRss)
 
-    def getPostsCache():
+    def getPostsCache(self):
         return(self.postsCache)
 
     def setPostsCache(self):
-        self.PostsCache = []    
+        self.postsCache = []    
         pp = pprint.PrettyPrinter(indent=4) 
 
-        cache = moduleCache.moduleCache() 
+        cache = moduleCache.moduleCache(self.url, self.socialNetworks) 
         cache.getProfiles(pp)
         postsP, profiles = cache.listPosts(pp, '')
-
-
+        self.postsCache = postsP
 
     def getLinkPosition(self, link):
         i = 0
@@ -322,7 +321,11 @@ def main():
     
     #blogs[7].setPostsRss()
     #print(blogs[7].getPostsRss().entries)
-    blogs[7].setPostsCache()
+    blogs[6].setPostsCache()
+
+    print(blogs[6].getPostsCache())
+    print(blogs[6].postsCache.listPosts(pp))
+
     sys.exit()
     numPosts = len(blogs[7].getPostsRss().entries)
     for i in range(numPosts):
