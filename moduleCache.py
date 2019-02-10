@@ -379,14 +379,14 @@ class moduleCache():
 
 def main():
     import moduleCache
-    import moduleRss
+    import moduleSlack
 
 
     config = configparser.ConfigParser()
     config.read(CONFIGDIR + '/.rssBlogs')
 
     section = "Blog7"
-    blog = moduleRss.moduleSlack()
+    blog = moduleSlack.moduleSlack()
     blog.setUrl(config.get(section, "url"))
     blog.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
 
@@ -406,7 +406,6 @@ def main():
     print("profiles")
     cache.getProfiles(pp)
     print(cache.profiles)
-    sys.exit()
     postsP, profiles = cache.listPosts(pp, '')
     print("-> Posts",postsP)
     for soc in cache.profiles:

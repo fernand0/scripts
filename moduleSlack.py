@@ -48,6 +48,19 @@ class moduleSlack():
     def getSocialNetworks(self):
         return(self.socialNetworks)
 
+    def setSocialNetworks(self, config, section):
+        socialNetworksOpt = ['twitter', 'facebook', 'telegram', 
+                'medium', 'linkedin','pocket'] 
+        for option in config.options(section):
+            if (option in socialNetworksOpt):
+                nick = config.get(section, option)
+                socialNetwork = (option, nick)
+                self.addSocialNetwork(socialNetwork)
+ 
+    def addSocialNetwork(self, socialNetwork):
+        self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
+
+
     def setSlackClient(self, slackCredentials):
         config = configparser.ConfigParser()
         config.read(slackCredentials)
