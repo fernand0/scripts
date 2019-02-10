@@ -400,6 +400,7 @@ def main():
 
     print("profiles")
     print(api['profiles'])
+    sys.exit()
     print("---")
     print(getProfiles(api, pp))
     print(api)

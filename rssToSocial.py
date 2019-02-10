@@ -185,7 +185,7 @@ def main():
             logging.info("Looking for pending posts")
             print("   Looking for pending posts ... " )
 
-            bufferMax = 10
+            bufferMax = 9
             if blog.getBufferapp():
                 api = moduleSocial.connectBuffer()
                 lenMax, profileList = moduleSocial.checkLimitPosts(api, blog)
