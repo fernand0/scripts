@@ -45,6 +45,7 @@ class moduleCache():
     
         profiles = []
     
+        #print(super.__dir__())
         socialNetworks = getSocialNetworks()
         for soc in socialNetworks.keys():
             socialNetwork = (soc, socialNetworks[soc])
