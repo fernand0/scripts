@@ -30,6 +30,7 @@ class moduleSlack():
          self.time = []
          self.bufferapp = None
          self.program = None
+         self.cache = None
          self.lastLinkPublished = {}
          self.keys = []
          #self.logger = logging.getLogger(__name__)
@@ -60,7 +61,6 @@ class moduleSlack():
  
     def addSocialNetwork(self, socialNetwork):
         self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
-
 
     def setSlackClient(self, slackCredentials):
         config = configparser.ConfigParser()
@@ -121,16 +121,15 @@ class moduleSlack():
         logging.debug(self.posts)
         return(self.posts)
 
-    def getPostsCache():
-        return(self.postsCache)
+    def getPostsCache(self):
+        return(self.cache.posts)
 
     def setPostsCache(self):
-        self.PostsCache = []    
-        pp = pprint.PrettyPrinter(indent=4) 
 
-        cache = moduleCache.moduleCache(self.url, self.socialNetworks) 
-        cache.getProfiles(pp)
-        postsP, profiles = cache.listPosts(pp, '')
+        self.cache = moduleCache.moduleCache(self.url, self.socialNetworks) 
+        self.cache.getProfiles()
+        postsP, profiles = self.cache.listPosts('')
+        self.cache.posts = postsP
 
     def getKeys(self):
         return(self.keys)
@@ -165,7 +164,7 @@ class moduleSlack():
         logging.info(result)
         return(result)
     
-    def listPosts(api, pp = None, service=""):
+    def listPosts(api, service=""):
         outputData = {}
     
         serviceName = 'Slack'
@@ -376,16 +375,13 @@ def main():
     if ('program' in config.options(section)): 
         site.setProgram(config.get(section, "program"))
 
-    socialNetworksOpt = ['twitter', 'facebook', 'telegram', 
-            'medium', 'linkedin','pocket'] 
 
-    for option in config.options(section):
-        if (option in socialNetworksOpt):
-            nick = config.get(section, option)
-            socialNetwork = (option, nick)
-            site.addSocialNetwork(socialNetwork)
-
+    site.setSocialNetworks(config, 'Blog7')
     outputData, posts = site.listPosts()
+    site.setPostsCache()
+    site.getPostsCache()
+    print(site.cache.showPost('F1'))
+    sys.exit()
     #print(outputData['Slack']['pending'][elem])
     #print(outputData['Slack']['pending'][elem][8])
     theChannel = site.getChanId("links")  

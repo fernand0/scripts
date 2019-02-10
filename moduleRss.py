@@ -13,7 +13,6 @@ from slackclient import SlackClient
 from bs4 import BeautifulSoup
 from bs4 import Tag
 from pdfrw import PdfReader
-import pprint
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
 
@@ -29,11 +28,10 @@ class moduleRss():
          self.socialNetworks = {}
          self.linksToAvoid = ""
          self.postsRss = None
-         self.postsCache = None
-         self.postsBuffer = None
          self.time = []
          self.bufferapp = None
          self.program = None
+         self.cache = None
          self.xmlrpc = None
          self.lastLinkPublished = {}
          #self.logger = logging.getLogger(__name__)
@@ -113,16 +111,14 @@ class moduleRss():
         self.postsRss = feedparser.parse(urlRss)
 
     def getPostsCache(self):
-        return(self.postsCache)
+        return(self.cache.posts)
 
     def setPostsCache(self):
-        self.postsCache = []    
-        pp = pprint.PrettyPrinter(indent=4) 
 
-        cache = moduleCache.moduleCache(self.url, self.socialNetworks) 
-        cache.getProfiles(pp)
-        postsP, profiles = cache.listPosts(pp, '')
-        self.postsCache = postsP
+        self.cache = moduleCache.moduleCache(self.url, self.socialNetworks) 
+        self.cache.getProfiles()
+        postsP, profiles = self.cache.listPosts('')
+        self.cache.posts = postsP
 
     def getLinkPosition(self, link):
         i = 0
@@ -324,14 +320,17 @@ def main():
     blogs[6].setPostsCache()
 
     print(blogs[6].getPostsCache())
-    print(blogs[6].postsCache.listPosts(pp))
-
+    print(blogs[6].cache.listPosts())
+    print(blogs[6].cache.showPost('F1'))
     sys.exit()
+    print(blogs[6].cache.editPost('F1', '10 Tricks to Appear Smart During Meetings – The Cooper Review – Medium. ---'))
+    print(blogs[6].cache.showPost('F1'))
+    sys.exit()
+
     numPosts = len(blogs[7].getPostsRss().entries)
     for i in range(numPosts):
         print(blog.obtainPostData(numPosts - 1 - i))
 
-    sys.exit()
 
     for blog in blogs:
         print(blog.getUrl())
