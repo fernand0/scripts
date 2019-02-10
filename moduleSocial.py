@@ -313,8 +313,8 @@ def checkLimitPosts(api, blog, service=''):
         profileList = blog.getSocialNetworks().keys()
         if service: 
             #print(service)
-            listP = moduleCache.getPostsCache(blog,
-                    (service, blog.getSocialNetworks()[service])) 
+            listP = blog.cache.getPostsCache((service, 
+                blog.getSocialNetworks()[service])) 
             lenProfile = len(listP) 
             #print(lenProfile)
             lenMax = lenProfile
@@ -324,8 +324,8 @@ def checkLimitPosts(api, blog, service=''):
                 if (profile[0] in blog.getProgram()): 
                     print("Profile %s" %profile)
                     print("Profile program %s" %blog.getProgram())
-                    listP = moduleCache.getPostsCache(blog,
-                            (profile, blog.getSocialNetworks()[profile])) 
+                    listP = blog.cache.getPostsCache((profile, 
+                        blog.getSocialNetworks()[profile])) 
                     lenProfile = len(listP) 
                     if (lenProfile > lenMax): 
                         lenMax = lenProfile 
@@ -413,7 +413,7 @@ def searchTwitter(search, twitter):
     return(t.search.tweets(q=search)['statuses'])
 
 def nextPost(blog, socialNetwork):
-    listP = moduleCache.listPostsCache(blog, socialNetwork)
+    listP = blog.cache.listPostsCache(socialNetwork)
 
     if listP: 
         element = listP[0]
@@ -430,12 +430,12 @@ def nextPost(blog, socialNetwork):
 
 def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots): 
 
-    listP = moduleCache.listPostsCache(blog, socialNetwork)
+    listP = blog.cache.listPostsCache(socialNetwork)
     listP = listP + listPosts
 
     logging.info("Blog url %s" % blog.getUrl())
     logging.info("Blog socialNetwork %s" % type(socialNetwork))
-    moduleCache.updatePostsCache(blog, listP, socialNetwork)
+    blog.cache.updatePostsCache(socialNetwork)
 
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
@@ -456,7 +456,7 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
         nick = socialNetwork[1]
         publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
 
-        moduleCache.updatePostsCache(blog, listP, socialNetwork)
+        blog.cache.updatePostsCache(socialNetwork)
            
         if j+1 < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))

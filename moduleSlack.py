@@ -151,13 +151,12 @@ class moduleSlack():
                 return(len(self.getPostsSlack()))
             for entry in self.getPostsSlack():
                 linkS = link.decode()
-                logging.debug(entry['link'], linkS)
                 if 'original_url' in entry: 
                     url = entry['original_url']
                 else:
                     url = entry['text'][1:-1]
                 #print(url, link)
-                lenCmp = min(len(url), len(links))
+                lenCmp = min(len(url), len(linkS))
                 if url[:lenCmp] == linkS[:lenCmp]:
                     return i
                 i = i + 1
