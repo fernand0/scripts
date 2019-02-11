@@ -444,6 +444,7 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
 
         logger.info("%s: waiting ... %.2f minutes" % (socialNetwork[0], tSleep/60))
         logger.info(" I'll publish %s" % element[0])
+        print("         %s: waiting ... %.2f minutes" % (socialNetwork[0], tSleep/60))
 
         time.sleep(tSleep) 
 

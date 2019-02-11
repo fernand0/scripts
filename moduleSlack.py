@@ -383,15 +383,22 @@ def main():
 
     numEntries = i
     click.echo_via_pager(listLinks)
-    i = int(input("Which one? "))
+    i = input("Which one? [x] to exit ")
+    if i == 'x':
+        sys.exit()
+
+    i = int(i)
+
 
 
     elem = i
     print(outputData['Slack']['pending'][elem])
 
-    action = input("Delete [d], publish [p] ")
+    action = input("Delete [d], publish [p], exit [x] ")
 
-    if action == 'p':
+    if action == 'x':
+        sys.exit()
+    elif action == 'p':
         if site.getBufferapp():
             api = moduleSocial.connectBuffer()
 
