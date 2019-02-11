@@ -330,7 +330,7 @@ class moduleGmail():
         try:
             messageR = api.users().messages().import_(userId='me',
                       fields='id',
-                      neverMarkSpam=True,
+                      neverMarkSpam=False,
                       processForCalendar=False,
                       internalDateSource='dateHeader',
                       body={'raw': mesGE}).execute(num_retries=5)
@@ -346,7 +346,7 @@ class moduleGmail():
                 logging.info("vamos method")
                 messageR = api.users().messages().import_(userId='me',
                           fields='id',
-                          neverMarkSpam=True,
+                          neverMarkSpam=False,
                           processForCalendar=False,
                           internalDateSource='dateHeader',
                           body={},

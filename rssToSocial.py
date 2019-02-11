@@ -160,6 +160,7 @@ def main():
             blog.setUrl(url)
             blog.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
             blog.setPostsSlack()
+
         blog.setCache()
 
         if section.find(checkBlog) >= 0:
@@ -176,25 +177,19 @@ def main():
 
 
             blog.setSocialNetworks(config, section)
-            #socialNetworksOpt = ['twitter', 'facebook', 'telegram', 
-            #        'medium', 'linkedin','pocket'] 
-            #for option in config.options(section):
-            #    if (option in socialNetworksOpt):
-            #        nick = config.get(section, option)
-            #        socialNetwork = (option, nick)
-            #        blog.addSocialNetwork(socialNetwork)
 
             logging.info("Looking for pending posts in ...%s"
                     % blog.getSocialNetworks())
             print("   Looking for pending posts ... " )
 
-            bufferMax = 10
+            bufferMax = 9
             if blog.getBufferapp():
                 api = moduleSocial.connectBuffer()
                 lenMax, profileList = moduleSocial.checkLimitPosts(api, blog)
                 logging.debug("Lenmax %d"% lenMax)
 
                 for profile in profileList:
+                    print("      getBuffer %s" % profile)
                     print("      getBuffer %s" % profile['service'])
                     lenMax, profileList = moduleSocial.checkLimitPosts(api, 
                             blog, profile['service'])

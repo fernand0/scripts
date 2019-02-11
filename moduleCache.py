@@ -62,6 +62,8 @@ class moduleCache():
         self.profiles =  profiles
     
     def fileName(self, socialNetwork):
+        print(self.url)
+        print(self)
         theName = os.path.expanduser(DATADIR + '/' 
                         + urllib.parse.urlparse(self.url).netloc 
                         + '_' 
