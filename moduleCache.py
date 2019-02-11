@@ -129,24 +129,25 @@ class moduleCache():
         return(fileNameQ)
     
     def listPostsCache(self, socialNetwork=()):
-       fileName = (DATADIR  + '/' 
-               +  urllib.parse.urlparse(self.url).netloc 
-               + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
-               + ".queue")
+        #Maybe getPOstsCache ?
+        fileName = (DATADIR  + '/' 
+                +  urllib.parse.urlparse(self.url).netloc 
+                + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
+                + ".queue")
     
-       logging.info("Listing Posts Cache: %s" % fileName)
+        logging.info("Listing Posts Cache: %s" % fileName)
     
-       with open(fileName,'rb') as f:
-           try: 
-               listP = pickle.load(f)
-           except:
-               listP = []
+        with open(fileName,'rb') as f:
+            try: 
+                listP = pickle.load(f)
+            except:
+                listP = []
     
-       logging.debug("listPostsCache", socialNetwork[0])
-       for i in range(len(listP)):
-           logging.debug("=> ", socialNetwork[0], listP[i][0])
+        logging.debug("listPostsCache", socialNetwork[0])
+        for i in range(len(listP)):
+            logging.debug("=> ", socialNetwork[0], listP[i][0])
     
-       return(listP)
+        return(listP)
     
     def checkLastLink(self, socialNetwork=()):
         fileNameL = self.fileName(socialNetwork)+".last"

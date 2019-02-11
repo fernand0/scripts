@@ -427,15 +427,17 @@ def nextPost(blog, socialNetwork):
 
     return(element,listP)
 
-
 def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots): 
 
     listP = blog.cache.listPostsCache(socialNetwork)
+    print(listP)
     listP = listP + listPosts
+    print(listP)
+    sys.exit()
 
     logging.info("Blog url %s" % blog.getUrl())
     logging.info("Blog socialNetwork %s" % type(socialNetwork))
-    blog.cache.updatePostsCache(socialNetwork)
+    blog.cache.updatePostsCache(listP, socialNetwork)
 
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
