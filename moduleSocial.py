@@ -430,14 +430,11 @@ def nextPost(blog, socialNetwork):
 def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots): 
 
     listP = blog.cache.listPostsCache(socialNetwork)
-    print(listP)
-    listP = listP + listPosts
-    print(listP)
-    sys.exit()
+    newListP = listP + listPosts
 
     logging.info("Blog url %s" % blog.getUrl())
     logging.info("Blog socialNetwork %s" % type(socialNetwork))
-    blog.cache.updatePostsCache(listP, socialNetwork)
+    blog.cache.updatePostsCache(newListP, socialNetwork)
 
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
@@ -458,7 +455,7 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
         nick = socialNetwork[1]
         publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
 
-        blog.cache.updatePostsCache(socialNetwork)
+        blog.cache.updatePostsCache(listP, socialNetwork)
            
         if j+1 < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))

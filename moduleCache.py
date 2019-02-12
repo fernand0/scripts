@@ -62,8 +62,6 @@ class moduleCache():
         self.profiles =  profiles
     
     def fileName(self, socialNetwork):
-        print(self.url)
-        print(self)
         theName = os.path.expanduser(DATADIR + '/' 
                         + urllib.parse.urlparse(self.url).netloc 
                         + '_' 
@@ -119,21 +117,19 @@ class moduleCache():
         logging.info("Service posts profiles %s" % profiles)
         return(outputData, profiles)
     
-    def updatePostsCache(self, socialNetwork=()):
+    def updatePostsCache(self, listP, socialNetwork=()):
         fileNameQ = self.fileName(socialNetwork) + ".queue" 
     
         #print("Updating Posts Cache: %s" % fileNameQ)
     
         with open(fileNameQ, 'wb') as f:
-             pickle.dump(self.posts[socialNetwork[0].capitalize()]['pending'],f)
+            #pickle.dump(self.posts[socialNetwork[0].capitalize()]['pending'],f)
+            pickle.dump(listP, f)
         return(fileNameQ)
     
     def listPostsCache(self, socialNetwork=()):
-        #Maybe getPOstsCache ?
-        fileName = (DATADIR  + '/' 
-                +  urllib.parse.urlparse(self.url).netloc 
-                + '_'+ socialNetwork[0] + '_' + socialNetwork[1] 
-                + ".queue")
+        #Maybe getPostsCache ?
+        fileName = self.fileName(socialNetwork)+ ".queue"
     
         logging.info("Listing Posts Cache: %s" % fileName)
     
@@ -160,9 +156,8 @@ class moduleCache():
             fileName = (DATADIR  + '/' 
                    + urllib.parse.urlparse(self.url).netloc + ".last")
         else: 
-            fileName = (DATADIR + '/'
-                    + urllib.parse.urlparse(self.url).netloc +
-                    '_'+socialNetwork[0]+'_'+socialNetwork[1] + ".last")
+            fileName = self.fileName(socialNetwork) + ".last"
+
         with open(fileName, "w") as f: 
             f.write(link)
     
@@ -254,8 +249,8 @@ class moduleCache():
                 print("--->",len(self.posts[serviceName]['pending'][j]))
     
                 self.updatePostsCache(profile['socialNetwork'])
-    
                 return(newTitle+' '+link)
+
         return(None)
     
     def movePost(self, cache, posts, toMove, toWhere):
