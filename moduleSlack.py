@@ -387,8 +387,8 @@ def main():
     outputData, posts = site.listPosts()
     site.setPostsCache()
     site.getPostsCache()
-    print(site.cache.showPost('F1'))
-    sys.exit()
+    #print(site.cache.showPost('F1'))
+    #sys.exit()
     #print(outputData['Slack']['pending'][elem])
     #print(outputData['Slack']['pending'][elem][8])
     theChannel = site.getChanId("links")  
@@ -397,7 +397,9 @@ def main():
 
     i = 0
     listLinks = ""
-    for line in moduleBuffer.prepareReply(outputData, ['pending'])[0][2]:
+    print(outputData)
+
+    for line in outputData['Slack']['pending']:
         listLinks = listLinks + "%d) %s\n" % (i, line[0])
         i = i + 1
 
