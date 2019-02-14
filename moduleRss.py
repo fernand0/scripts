@@ -31,6 +31,7 @@ class moduleRss():
          self.time = []
          self.bufferapp = None
          self.program = None
+         self.cache = None
          self.xmlrpc = None
          self.lastLinkPublished = {}
          #self.logger = logging.getLogger(__name__)
@@ -55,6 +56,15 @@ class moduleRss():
 
     def getSocialNetworks(self):
         return(self.socialNetworks)
+
+    def setSocialNetworks(self, config, section):
+        socialNetworksOpt = ['twitter', 'facebook', 'telegram', 
+                'medium', 'linkedin','pocket'] 
+        for option in config.options(section):
+            if (option in socialNetworksOpt):
+                nick = config.get(section, option)
+                socialNetwork = (option, nick)
+                self.addSocialNetwork(socialNetwork)
  
     def addSocialNetwork(self, socialNetwork):
         self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
@@ -100,6 +110,21 @@ class moduleRss():
         logging.debug(urlRss)
         self.postsRss = feedparser.parse(urlRss)
 
+    def getCache(self):
+        return(self.cache)
+
+    def setCache(self):
+        self.cache = moduleCache.moduleCache(self.url, self.socialNetworks) 
+
+    def getPostsCache(self):
+        return(self.cache.posts)
+
+    def setPostsCache(self):
+        self.setCache() 
+        self.cache.getProfiles()
+        postsP, profiles = self.cache.listPosts('')
+        self.cache.posts = postsP
+
     def getLinkPosition(self, link):
         i = 0
         if self.getPostsRss():
@@ -107,9 +132,10 @@ class moduleRss():
                 logging.debug(self.getPostsRss().entries)
                 return(len(self.getPostsRss().entries))
             for entry in self.getPostsRss().entries:
-                logging.debug(entry['link'], link)
-                lenCmp = min(len(entry['link']), len(link))
-                if entry['link'][:lenCmp] == link[:lenCmp]:
+                linkS = link.decode()
+                logging.debug(entry['link'], linkS)
+                lenCmp = min(len(entry['link']), len(linkS))
+                if entry['link'][:lenCmp] == linkS[:lenCmp]:
                     return i
                 i = i + 1
         return(i)
@@ -287,24 +313,32 @@ def main():
         if ("bufferapp" in config.options(section)):
             blog.setBufferapp(config.get(section, "bufferapp"))
         if ("program" in config.options(section)):
-            blog.setBufferapp(config.get(section, "program"))
+            blog.setProgram(config.get(section, "program"))
 
-        for option in config.options(section):
-            if ('ac' in option) or ('fb' in option):
-                blog.addSocialNetwork((option, config.get(section, option)))
+        blog.setSocialNetworks(config, section)
+
+        print(blog.getSocialNetworks())
+
         blogs.append(blog)
         print(blog.obtainPostData(0))
 
+    
+    #blogs[7].setPostsRss()
+    #print(blogs[7].getPostsRss().entries)
+    blogs[6].setPostsCache()
+
+    print(blogs[6].getPostsCache())
+    print(blogs[6].cache.listPosts())
+    print(blogs[6].cache.showPost('F1'))
+    sys.exit()
+    print(blogs[6].cache.editPost('F1', '10 Tricks to Appear Smart During Meetings – The Cooper Review – Medium. ---'))
+    print(blogs[6].cache.showPost('F1'))
     sys.exit()
 
-    
-    blogs[7].setPostsRss()
-    #print(blogs[7].getPostsRss().entries)
     numPosts = len(blogs[7].getPostsRss().entries)
     for i in range(numPosts):
         print(blog.obtainPostData(numPosts - 1 - i))
 
-    sys.exit()
 
     for blog in blogs:
         print(blog.getUrl())
@@ -336,7 +370,6 @@ def main():
                 print(post['content'][:100])
 
 if __name__ == "__main__":
-
     main()
 
 

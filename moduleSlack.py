@@ -27,20 +27,14 @@ class moduleSlack():
          self.socialNetworks = {}
          self.linksToAvoid = ""
          self.posts = None
+         self.postsCache = None
          self.time = []
          self.bufferapp = None
          self.program = None
+         self.cache = None
          self.lastLinkPublished = {}
          self.keys = []
          #self.logger = logging.getLogger(__name__)
-
-    def API(self, slackCredentials):
-        config = configparser.ConfigParser()
-        config.read(slackCredentials)
-    
-        slack_token = config["Slack"].get('api-key')
-        
-        self.sc = SlackClient(slack_token)
 
     def getUrl(self):
         return(self.url)
@@ -57,12 +51,29 @@ class moduleSlack():
     def getSocialNetworks(self):
         return(self.socialNetworks)
 
-    def getClient(self):
-        return self.sc
+    def setSocialNetworks(self, config, section):
+        socialNetworksOpt = ['twitter', 'facebook', 'telegram', 
+                'medium', 'linkedin','pocket'] 
+        for option in config.options(section):
+            if (option in socialNetworksOpt):
+                nick = config.get(section, option)
+                socialNetwork = (option, nick)
+                self.addSocialNetwork(socialNetwork)
  
     def addSocialNetwork(self, socialNetwork):
         self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
 
+    def setSlackClient(self, slackCredentials):
+        config = configparser.ConfigParser()
+        config.read(slackCredentials)
+    
+        slack_token = config["Slack"].get('api-key')
+        
+        self.sc = SlackClient(slack_token)
+ 
+    def getSlackClient(self):
+        return self.sc
+ 
     def addLastLinkPublished(self, socialNetwork, lastLink, lastTime):
         self.lastLinkPublished[socialNetwork] = (lastLink, lastTime)
 
@@ -93,21 +104,37 @@ class moduleSlack():
     def setProgram(self, program):
         self.program = program
 
-    def setPosts(self, channel='links'):
-        api = self.getClient()
+    def setPostsSlack(self, channel='links'):
+        if self.posts is None:
+            self.posts = []
 
-        self.posts = []
+            theChannel = self.getChanId(channel)
+            history = self.sc.api_call( "channels.history", count=1000, channel=theChannel)
+            logging.debug(history)
+            for msg in history['messages']:
+                self.posts.append(msg)
 
-        theChannel = self.getChanId(channel)
-        history = api.api_call( "channels.history", count=1000, channel=theChannel)
-        logging.debug(history)
-        for msg in history['messages']:
-            self.posts.append(msg)
 
-    def getPosts(self):
+    def getPostsSlack(self):
         logging.debug("# posts", len(self.posts))
         logging.debug(self.posts)
         return(self.posts)
+
+    def getCache(self):
+        return(self.cache)
+
+    def setCache(self):
+        self.cache = moduleCache.moduleCache(self.url, self.socialNetworks) 
+
+    def getPostsCache(self):
+        return(self.cache.posts)
+
+    def setPostsCache(self):
+
+        self.setCache() 
+        self.cache.getProfiles()
+        postsP, profiles = self.cache.listPosts('')
+        self.cache.posts = postsP
 
     def getKeys(self):
         return(self.keys)
@@ -119,25 +146,45 @@ class moduleSlack():
         i = 0
         if self.getPosts():
             if not link:
-                logging.debug(self.getPosts())
-                return(len(self.getPosts()))
-            for entry in self.getPosts():
+                logging.debug(self.getPostsSlack())
+                return(len(self.getPostsSlack()))
+            for entry in self.getPostsSlack():
+                linkS = link.decode()
                 if 'original_url' in entry: 
                     url = entry['original_url']
                 else:
                     url = entry['text'][1:-1]
                 #print(url, link)
-                lenCmp = min(len(url), len(link))
-                if url[:lenCmp] == link[:lenCmp]:
+                lenCmp = min(len(url), len(linkS))
+                if url[:lenCmp] == linkS[:lenCmp]:
                     return i
                 i = i + 1
         return(i)
-
-    def checkLastLink(self,socialNetwork=()):
-        fileNameL = moduleCache.fileName(self, socialNetwork)+".last"
-        logging.info("Checking last link: %s" % fileNameL)
-        (linkLast, timeLast) = moduleCache.getLastLink(fileNameL)
-        return(linkLast, timeLast)
+    
+    def deletePost(self, idPost, theChannel): 
+        logging.info("Deleting id %s" % idPost)
+        # Needs improvement
+            
+        result = self.sc.api_call("chat.delete", channel=theChannel, ts=idPost)
+    
+        logging.info(result)
+        return(result)
+    
+    def listPosts(api, service=""):
+        outputData = {}
+    
+        serviceName = 'Slack'
+        outputData[serviceName] = {'sent': [], 'pending': []}
+        posts = api.getPostsSlack()
+        for post in posts:
+            if 'attachments' in post:
+                outputData[serviceName]['pending'].append(
+                    (post['text'][1:-1], post['attachments'][0]['title'], '', '', '', '', '', '', post['ts'], ''))
+            else:
+                #print(post)
+                outputData[serviceName]['pending'].append(
+                    (post['text'][1:-1], '', '', '', '', '', '', '', post['ts'], ''))
+        return(outputData, posts)
 
     def getChanId(self, name):
         api = self.getClient()
@@ -301,34 +348,11 @@ class moduleSlack():
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
-    def listPosts(api, pp = None, service=""):
-        outputData = {}
-    
-        serviceName = 'Slack'
-        outputData[serviceName] = {'sent': [], 'pending': []}
-        posts = api.getPosts()
-        for post in posts:
-            if 'attachments' in post:
-                outputData[serviceName]['pending'].append(
-                    (post['text'][1:-1], post['attachments'][0]['title'], 
-                        time.strftime("%m-%d-%H", 
-                                time.localtime(int(float(post['ts']))))))
-            else:
-                outputData[serviceName]['pending'].append(
-                    (post['text'][1:-1], '', time.strftime("%m-%d-%H", 
-                                time.localtime(int(float(post['ts']))))))
-        return(outputData, posts)
-
-    def deletePost(self, idPost, theChannel): 
-        api = self.getClient()
-        logging.info("Deleting id %s" % idPost)
-        # Needs improvement
-            
-        result = api.api_call("chat.delete", channel=theChannel, ts=idPost)
-    
-        logging.info(result)
-        return(result)
-    
+    def checkLastLink(self,socialNetwork=()):
+        fileNameL = self.cache.fileName(socialNetwork)+".last"
+        logging.info("Checking last link: %s" % fileNameL)
+        (linkLast, timeLast) = self.cache.getLastLink(fileNameL)
+        return(linkLast, timeLast)
 
 def main():
     CHANNEL = 'tavern-of-the-bots' 
@@ -358,16 +382,13 @@ def main():
     if ('program' in config.options(section)): 
         site.setProgram(config.get(section, "program"))
 
-    socialNetworksOpt = ['twitter', 'facebook', 'telegram', 
-            'medium', 'linkedin','pocket'] 
 
-    for option in config.options(section):
-        if (option in socialNetworksOpt):
-            nick = config.get(section, option)
-            socialNetwork = (option, nick)
-            site.addSocialNetwork(socialNetwork)
-
+    site.setSocialNetworks(config, 'Blog7')
     outputData, posts = site.listPosts()
+    site.setPostsCache()
+    site.getPostsCache()
+    #print(site.cache.showPost('F1'))
+    #sys.exit()
     #print(outputData['Slack']['pending'][elem])
     #print(outputData['Slack']['pending'])
     theChannel = site.getChanId("links")  
@@ -377,8 +398,9 @@ def main():
     # 
     i = 0
     listLinks = ""
+
     for line in outputData['Slack']['pending']:
-        listLinks = listLinks + "%d) [%s]-%s\n" % (i, line[2], line[0])
+        listLinks = listLinks + "%d) %s\n" % (i, line[0])
         i = i + 1
 
     numEntries = i
@@ -429,10 +451,10 @@ def main():
                 socialNetwork = (profile,site.getSocialNetworks()[profile])
 
                 import moduleCache
-                listP = moduleCache.listPostsCache(site, socialNetwork)
+                listP = site.cache.listPostsCache(socialNetwork)
                 listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
                 listP = listP + listPsts
-                moduleCache.updatePostsCache(site, listP, socialNetwork)
+                site.cache.updatePostsCache(listP, socialNetwork)
 
 
     site.deletePost(posts[i]['ts'], theChannel)
