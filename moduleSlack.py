@@ -444,10 +444,10 @@ def main():
                 socialNetwork = (profile,site.getSocialNetworks()[profile])
 
                 import moduleCache
-                listP = moduleCache.listPostsCache(site, socialNetwork)
+                listP = site.cache.listPostsCache(socialNetwork)
                 listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
                 listP = listP + listPsts
-                moduleCache.updatePostsCache(site, listP, socialNetwork)
+                site.cache.updatePostsCache(listP, socialNetwork)
 
 
     site.deletePost(outputData['Slack']['pending'][elem][8], theChannel)
