@@ -3,7 +3,6 @@
 import configparser
 import pickle
 import os
-import time
 import moduleSocial
 import moduleBuffer
 import moduleCache
@@ -74,6 +73,9 @@ class moduleSlack():
     def getSlackClient(self):
         return self.sc
  
+    def addSocialNetwork(self, socialNetwork):
+        self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
+
     def addLastLinkPublished(self, socialNetwork, lastLink, lastTime):
         self.lastLinkPublished[socialNetwork] = (lastLink, lastTime)
 
@@ -107,13 +109,11 @@ class moduleSlack():
     def setPostsSlack(self, channel='links'):
         if self.posts is None:
             self.posts = []
-
             theChannel = self.getChanId(channel)
             history = self.sc.api_call( "channels.history", count=1000, channel=theChannel)
             logging.debug(history)
             for msg in history['messages']:
                 self.posts.append(msg)
-
 
     def getPostsSlack(self):
         logging.debug("# posts", len(self.posts))
@@ -144,7 +144,7 @@ class moduleSlack():
 
     def getLinkPosition(self, link):
         i = 0
-        if self.getPosts():
+        if self.getPostsSlack():
             if not link:
                 logging.debug(self.getPostsSlack())
                 return(len(self.getPostsSlack()))
@@ -187,8 +187,7 @@ class moduleSlack():
         return(outputData, posts)
 
     def getChanId(self, name):
-        api = self.getClient()
-        chanList = api.api_call("channels.list")['channels']
+        chanList = self.sc.api_call("channels.list")['channels']
         for channel in chanList:
             if channel['name_normalized'] == name:
                 return(channel['id'])
@@ -196,9 +195,9 @@ class moduleSlack():
 
     def obtainPostData(self, i, debug=False):
         if not self.posts:
-            self.setPosts()
+            self.setPostsSlack()
 
-        posts = self.getPosts()
+        posts = self.getPostsSlack()
         if not posts:
             return (None, None, None, None, None, None, None, None, None, None)
 
@@ -370,12 +369,12 @@ def main():
     url = config.get(section, "url")
     site.setUrl(url)
 
-    site.API(SLACKCREDENTIALS)
+    site.setSlackClient(SLACKCREDENTIALS)
 
     theChannel = site.getChanId(CHANNEL)  
     print("Channel %s - %s" % (CHANNEL, theChannel))
-    site.setPosts('links')
-    site.getPosts()
+    site.setPostsSlack('links')
+    site.getPostsSlack()
     
     if ('bufferapp' in config.options(section)): 
         site.setBufferapp(config.get(section, "bufferapp"))
@@ -390,14 +389,14 @@ def main():
     #print(site.cache.showPost('F1'))
     #sys.exit()
     #print(outputData['Slack']['pending'][elem])
-    #print(outputData['Slack']['pending'])
+    #print(outputData['Slack']['pending'][elem][8])
     theChannel = site.getChanId("links")  
     #site.deletePost(outputData['Slack']['pending'][elem][-2], theChannel)
     # We should check for consistency 
 
-    # 
     i = 0
     listLinks = ""
+    print(outputData)
 
     for line in outputData['Slack']['pending']:
         listLinks = listLinks + "%d) %s\n" % (i, line[0])
@@ -405,22 +404,15 @@ def main():
 
     numEntries = i
     click.echo_via_pager(listLinks)
-    i = input("Which one? [x] to exit ")
-    if i == 'x':
-        sys.exit()
-
-    i = int(i)
-
+    i = int(input("Which one? "))
 
 
     elem = i
     print(outputData['Slack']['pending'][elem])
 
-    action = input("Delete [d], publish [p], exit [x] ")
+    action = input("Delete [d], publish [p] ")
 
-    if action == 'x':
-        sys.exit()
-    elif action == 'p':
+    if action == 'p':
         if site.getBufferapp():
             api = moduleSocial.connectBuffer()
 
@@ -457,7 +449,7 @@ def main():
                 site.cache.updatePostsCache(listP, socialNetwork)
 
 
-    site.deletePost(posts[i]['ts'], theChannel)
+    site.deletePost(outputData['Slack']['pending'][elem][8], theChannel)
 
 
 if __name__ == '__main__':

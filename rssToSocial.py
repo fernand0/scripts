@@ -143,7 +143,7 @@ def main():
 
     for section in config.sections():
         blog = None
-        logging.info("Section: %s"% section)
+        logging.info("\nSection: %s"% section)
         url = config.get(section, "url")
         if ("rssfeed" in config.options(section)):
             blog = moduleRss.moduleRss()
@@ -158,8 +158,8 @@ def main():
             logging.info("Blog Slack: %s"% url)
             blog = moduleSlack.moduleSlack()
             blog.setUrl(url)
-            blog.API(os.path.expanduser('~/.mySocial/config/.rssSlack'))
-            blog.setPosts()
+            blog.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
+            blog.setPostsSlack()
 
         blog.setCache()
 
@@ -178,7 +178,8 @@ def main():
 
             blog.setSocialNetworks(config, section)
 
-            logging.info("Looking for pending posts")
+            logging.info("Looking for pending posts in ...%s"
+                    % blog.getSocialNetworks())
             print("   Looking for pending posts ... " )
 
             bufferMax = 9
@@ -200,7 +201,7 @@ def main():
                         i = blog.getLinkPosition(lastLink)
 
                         logging.debug("profile %s"% profile)
-                        logging.debug("lastLink %s %d"% (lastLink, i))
+                        logging.info("lastLink %s %d"% (lastLink, i))
                         if ((profile['service'] == 'twitter') 
                                 or (profile['service'] == 'facebook')):
                             # We should add a configuration option in order
@@ -252,15 +253,14 @@ def main():
                         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
                         hours = blog.getTime() 
                         if (hours and (((time.time() - lastTime) - int(hours)*60*60) < 0)): 
-                            logging.info("Not publishing because time restriction") 
+                            logging.info("Not publishing because time restriction\n") 
                         else:
-                            logging.info("Publishing directly") 
-                            print("         Publishing post %s" % title)
+                            logging.info("Publishing directly\n") 
                             serviceName = socialNetwork.capitalize()
                             publishMethod = getattr(moduleSocial, 
                                     'publish'+ serviceName)
                             result = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
-                            logging.info("Updating Link") 
+                            logging.info("Updating Link\n") 
                             if result != "Fail!":
                                 blog.cache.updateLastLink(link, 
                                         (socialNetwork, 
@@ -282,7 +282,7 @@ def main():
                             lastLink, lastTime)
                         i = blog.getLinkPosition(lastLink) 
 
-                        logging.debug("lastLink %s %s %d"% (profile, lastLink, i))
+                        logging.info("lastLink %s %s %d"% (profile, lastLink, i))
                         if ((profile == 'twitter') 
                                 or (profile == 'facebook')):
                             # We should add a configuration option in order
@@ -301,12 +301,12 @@ def main():
                             theList = []
 
                         num = bufferMax - lenMax
-                        logging.debug("bufferMax - lenMax = num %d %d %d"%
+                        logging.info("bufferMax - lenMax = num %d %d %d"%
                                 (bufferMax, lenMax, num)) 
                         
                         listPosts = []
                         for j in range(num, 0, -1):
-                            logging.debug("j %d - %d"% (j,i))
+                            logging.info("j %d - %d"% (j,i))
                             if (i <= 0):
                                 break
                             i = i - 1
