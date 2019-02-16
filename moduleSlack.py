@@ -169,7 +169,45 @@ class moduleSlack():
                     return i
                 i = i + 1
         return(i)
-    
+
+    def fileName(self, socialNetwork):
+        # Redundant with moduleCache
+        theName = os.path.expanduser(DATADIR + '/' 
+                        + urllib.parse.urlparse(self.url).netloc 
+                        + '_' 
+                        + socialNetwork[0] + '_' + socialNetwork[1])
+        return(theName)
+
+    def getLastLink(self, fileName):        
+        try: 
+            with open(fileName, "rb") as f: 
+                linkLast = f.read().rstrip()  # Last published
+        except:
+            # File does not exist, we need to create it.
+            with open(fileName, "w") as f:
+                logging.warning("File %s does not exist. Creating it."
+                        % fileName) 
+                linkLast = ''  
+                # None published, or non-existent file
+        return(linkLast, os.path.getmtime(fileName))
+ 
+    def checkLastLink(self, socialNetwork=()):
+        # Redundant with moduleCache
+        fileNameL = self.fileName(socialNetwork)+".last"
+        logging.info("Checking last link: %s" % fileNameL)
+        (linkLast, timeLast) = self.getLastLink(fileNameL)
+        return(linkLast, timeLast)
+
+    def updateLastLink(self, link, socialNetwork=()):
+        if not socialNetwork: 
+            fileName = (DATADIR  + '/' 
+                   + urllib.parse.urlparse(self.url).netloc + ".last")
+        else: 
+            fileName = self.fileName(socialNetwork) + ".last"
+
+        with open(fileName, "w") as f: 
+            f.write(link)
+
     def deletePost(self, idPost, theChannel): 
         logging.info("Deleting id %s" % idPost)
         # Needs improvement
@@ -357,9 +395,9 @@ class moduleSlack():
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
     def checkLastLink(self,socialNetwork=()):
-        fileNameL = self.cache.fileName(socialNetwork)+".last"
+        fileNameL = self.fileName(socialNetwork)+".last"
         logging.info("Checking last link: %s" % fileNameL)
-        (linkLast, timeLast) = self.cache.getLastLink(fileNameL)
+        (linkLast, timeLast) = self.getLastLink(fileNameL)
         return(linkLast, timeLast)
 
 def main():
@@ -425,7 +463,7 @@ def main():
         if site.getBufferapp():
             api = moduleSocial.connectBuffer()
 
-            lenMax, profileList = moduleSocial.checkLimitPosts(api, site)
+            lenMax, profileList = site.checkLimitPosts(api, site)
 
             for profile in profileList:
                 print("        getBuffer %s" % profile['service'])
@@ -440,10 +478,10 @@ def main():
 
         if site.getProgram():
 
-            lenMax, profileList = moduleSocial.checkLimitPosts('', site)
+            lenMax, profileList = site.checkLimitPosts('', site)
 
             for profile in profileList:
-                lenMax, profileList = moduleSocial.checkLimitPosts('', 
+                lenMax, profileList = site.checkLimitPosts('', 
                         site, profile)
                 if profile[0] in site.getProgram():
                     print("        getProgram %s" % profile)

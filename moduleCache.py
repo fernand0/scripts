@@ -39,6 +39,32 @@ class moduleCache():
         self.socialNetworks = socialNetworks
         self.profile = None
 
+    def checkLimitPosts(self, myServices, service=''):
+        profileList = self.getSocialNetworks().keys()
+        if service: 
+            #print(service)
+            listP = self.getPostsCache((service, 
+                self.getSocialNetworks()[service])) 
+            lenProfile = len(listP) 
+            #print(lenProfile)
+            lenMax = lenProfile
+            listProfiles = []
+        else:
+            for profile in self.getSocialNetworks():
+                if (profile[0] in myServices): 
+                    print("Profile %s" %profile)
+                    print("Profile program %s" % myServices)
+                    listP = self.getPostsCache((profile, 
+                        self.getSocialNetworks()[profile])) 
+                    lenProfile = len(listP) 
+                    if (lenProfile > lenMax): 
+                        lenMax = lenProfile 
+                        logger.info("%s ok" % profile)
+
+        logging.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
+
+        return(lenMax, profileList)
+
     def getProfiles(self, service=""):
         # Needs improvement
         logging.info("Checking services...")
@@ -60,26 +86,6 @@ class moduleCache():
         logging.debug("Profiles %s" % profiles)
     
         self.profiles =  profiles
-    
-    def fileName(self, socialNetwork):
-        theName = os.path.expanduser(DATADIR + '/' 
-                        + urllib.parse.urlparse(self.url).netloc 
-                        + '_' 
-                        + socialNetwork[0] + '_' + socialNetwork[1])
-        return(theName)
-    
-    def getLastLink(self, fileName):        
-        try: 
-            with open(fileName, "rb") as f: 
-                linkLast = f.read().rstrip()  # Last published
-        except:
-            # File does not exist, we need to create it.
-            with open(fileName, "w") as f:
-                logging.warning("File %s does not exist. Creating it."
-                        % fileName) 
-                linkLast = ''  
-                # None published, or non-existent file
-        return(linkLast, os.path.getmtime(fileName))
     
     def getPostsCache(self, socialNetwork):        
         fileNameQ = self.fileName(socialNetwork) + ".queue" 
@@ -144,22 +150,6 @@ class moduleCache():
             logging.debug("=> ", socialNetwork[0], listP[i][0])
     
         return(listP)
-    
-    def checkLastLink(self, socialNetwork=()):
-        fileNameL = self.fileName(socialNetwork)+".last"
-        logging.info("Checking last link: %s" % fileNameL)
-        (linkLast, timeLast) = self.getLastLink(fileNameL)
-        return(linkLast, timeLast)
-    
-    def updateLastLink(self, link, socialNetwork=()):
-        if not socialNetwork: 
-            fileName = (DATADIR  + '/' 
-                   + urllib.parse.urlparse(self.url).netloc + ".last")
-        else: 
-            fileName = self.fileName(socialNetwork) + ".last"
-
-        with open(fileName, "w") as f: 
-            f.write(link)
     
     def isForMe(self, profile, args):
         if 'socialNetwork' in profile:
