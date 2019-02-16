@@ -40,26 +40,27 @@ class moduleCache():
         self.profile = None
 
     def checkLimitPosts(self, myServices, service=''):
-        profileList = self.getSocialNetworks().keys()
+        profileList = self.socialNetworks.keys()
+        lenMax = 0
         if service: 
             #print(service)
             listP = self.getPostsCache((service, 
-                self.getSocialNetworks()[service])) 
+                self.socialNetworks[service])) 
             lenProfile = len(listP) 
             #print(lenProfile)
             lenMax = lenProfile
             listProfiles = []
         else:
-            for profile in self.getSocialNetworks():
+            for profile in self.socialNetworks:
                 if (profile[0] in myServices): 
                     print("Profile %s" %profile)
                     print("Profile program %s" % myServices)
                     listP = self.getPostsCache((profile, 
-                        self.getSocialNetworks()[profile])) 
+                        self.socialNetworks[profile])) 
                     lenProfile = len(listP) 
                     if (lenProfile > lenMax): 
                         lenMax = lenProfile 
-                        logger.info("%s ok" % profile)
+                        logging.info("%s ok" % profile)
 
         logging.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
 
@@ -86,7 +87,15 @@ class moduleCache():
         logging.debug("Profiles %s" % profiles)
     
         self.profiles =  profiles
-    
+
+    def fileName(self, socialNetwork):
+        # Redundant with moduleCache
+        theName = os.path.expanduser(DATADIR + '/' 
+                        + urllib.parse.urlparse(self.url).netloc 
+                        + '_' 
+                        + socialNetwork[0] + '_' + socialNetwork[1])
+        return(theName)
+
     def getPostsCache(self, socialNetwork):        
         fileNameQ = self.fileName(socialNetwork) + ".queue" 
         with open(fileNameQ,'rb') as f: 
