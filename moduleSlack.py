@@ -30,6 +30,7 @@ class moduleSlack():
          self.time = []
          self.bufferapp = None
          self.program = None
+         self.buffer = None
          self.cache = None
          self.lastLinkPublished = {}
          self.keys = []
@@ -99,12 +100,14 @@ class moduleSlack():
  
     def setBufferapp(self, bufferapp):
         self.bufferapp = bufferapp
+        self.setBuffer()
 
     def getProgram(self):
         return(self.program)
  
     def setProgram(self, program):
         self.program = program
+        self.setCache()
 
     def setPostsSlack(self, channel='links'):
         if self.posts is None:
@@ -119,6 +122,12 @@ class moduleSlack():
         logging.debug("# posts", len(self.posts))
         logging.debug(self.posts)
         return(self.posts)
+
+    def getBuffer(self):
+        return(self.buffer)
+
+    def setBuffer(self):
+        self.buffer = moduleBuffer.moduleBuffer() 
 
     def getCache(self):
         return(self.cache)

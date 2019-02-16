@@ -90,6 +90,30 @@ class moduleBuffer():
                   access_token=accessToken)
     
         self.service = api
+
+
+    def checkLimitPosts(self, service=''):
+        api = self.service
+
+        lenMax = 0
+        logger.info("Checking services...")
+        if service: 
+            profile = Profiles(api=api).filter(service=service)
+            logging.debug("Profile %s" % profile)
+            lenMax = profile[0].counts.pending
+            profileList = []
+        else:
+            profileList = Profiles(api=api).all()
+            for profile in profileList: 
+               if (profile['service'][0] in blog.getBufferapp()): 
+                   lenProfile = len(profile.updates.pending) 
+                   if (lenProfile > lenMax): 
+                       lenMax = lenProfile 
+                       logger.info("%s ok" % profile['service'])
+
+        logger.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
+
+        return(lenMax, profileList)
     
     def setProfiles(self, service=""):
         api = self.service

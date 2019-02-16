@@ -31,6 +31,7 @@ class moduleRss():
          self.time = []
          self.bufferapp = None
          self.program = None
+         self.buffer = None
          self.cache = None
          self.xmlrpc = None
          self.lastLinkPublished = {}
@@ -92,12 +93,14 @@ class moduleRss():
  
     def setBufferapp(self, bufferapp):
         self.bufferapp = bufferapp
+        self.setBuffer()
 
     def getProgram(self):
         return(self.program)
  
     def setProgram(self, program):
         self.program = program
+        self.setCache()
 
     def getPostsRss(self):
         return(self.postsRss)
@@ -109,6 +112,13 @@ class moduleRss():
             urlRss = self.url+self.rssFeed
         logging.debug(urlRss)
         self.postsRss = feedparser.parse(urlRss)
+
+    def getBuffer(self):
+        return(self.buffer)
+
+    def setBuffer(self):
+        self.buffer = moduleBuffer.moduleBuffer() 
+
 
     def getCache(self):
         return(self.cache)

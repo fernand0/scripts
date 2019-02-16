@@ -23,6 +23,8 @@ import moduleSocial
 # https://github.com/fernand0/scripts/blob/master/moduleSocial.py
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
+import moduleBuffer
+# https://github.com/fernand0/scripts/blob/master/moduleBuffer.py
 import moduleSlack
 # https://github.com/fernand0/scripts/blob/master/moduleSlack.py
 
@@ -161,7 +163,6 @@ def main():
             blog.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
             blog.setPostsSlack()
 
-        blog.setCache()
 
         if section.find(checkBlog) >= 0:
             # If checkBlog is empty it will add all of them
@@ -171,10 +172,9 @@ def main():
             if ("time" in config.options(section)):
                 blog.setTime(config.get(section, "time"))
             if ('bufferapp' in config.options(section)): 
-                blog.setBufferapp(config.get(section, "bufferapp"))
+                blog.setBufferapp(config.get(section, "bufferapp")) 
             if ('program' in config.options(section)): 
                 blog.setProgram(config.get(section, "program"))
-
 
             blog.setSocialNetworks(config, section)
 
@@ -184,8 +184,11 @@ def main():
 
             bufferMax = 9
             if blog.getBufferapp():
-                api = moduleSocial.connectBuffer()
-                lenMax, profileList = moduleSocial.checkLimitPosts(api, blog)
+                blog.bufferapp.API()
+                #api = moduleSocial.connectBuffer()
+                lenMax, profileList = blog.checkLimitPosts()
+                print(lenMax, profileList)
+                sys.exit()
                 logging.debug("Lenmax %d"% lenMax)
 
                 for profile in profileList:
