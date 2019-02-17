@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import logging
 import os
 import urllib
 
@@ -33,7 +34,7 @@ def checkLastLink(url, socialNetwork=()):
     # Redundant with moduleCache
     fileNameL = fileName(url, socialNetwork)+".last"
     logging.info("Checking last link: %s" % fileNameL)
-    (linkLast, timeLast) = self.getLastLink(fileNameL)
+    (linkLast, timeLast) = getLastLink(fileNameL)
     return(linkLast, timeLast)
 
 def updateLastLink(url, link, socialNetwork=()):
@@ -41,7 +42,7 @@ def updateLastLink(url, link, socialNetwork=()):
         fileName = (DATADIR  + '/' 
                + urllib.parse.urlparse(url).netloc + ".last")
     else: 
-        fileName = fileName(self.url, socialNetwork) + ".last"
+        fileName = fileName(url, socialNetwork) + ".last"
 
     with open(fileName, "w") as f: 
         f.write(link)
