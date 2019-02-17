@@ -30,6 +30,7 @@ class moduleSlack():
          self.time = []
          self.bufferapp = None
          self.program = None
+         self.buffer = None
          self.cache = None
          self.lastLinkPublished = {}
          self.keys = []
@@ -99,12 +100,14 @@ class moduleSlack():
  
     def setBufferapp(self, bufferapp):
         self.bufferapp = bufferapp
+        self.setBuffer()
 
     def getProgram(self):
         return(self.program)
  
     def setProgram(self, program):
         self.program = program
+        self.setCache()
 
     def setPostsSlack(self, channel='links'):
         if self.posts is None:
@@ -120,6 +123,12 @@ class moduleSlack():
         logging.debug(self.posts)
         return(self.posts)
 
+    def getBuffer(self):
+        return(self.buffer)
+
+    def setBuffer(self):
+        self.buffer = moduleBuffer.moduleBuffer() 
+
     def getCache(self):
         return(self.cache)
 
@@ -130,7 +139,6 @@ class moduleSlack():
         return(self.cache.posts)
 
     def setPostsCache(self):
-
         self.setCache() 
         self.cache.getProfiles()
         postsP, profiles = self.cache.listPosts('')
@@ -141,6 +149,35 @@ class moduleSlack():
     
     def setKeys(self, keys):
         self.keys = keys
+
+    def checkLimitPosts(self, myServices, service=''):
+        profileList = self.getSocialNetworks().keys()
+        if service: 
+            #print(service)
+            self.setPostsCache() 
+            listP = self.getPostsCache() 
+            lenProfile = len(listP) 
+            #print(lenProfile)
+            lenMax = lenProfile
+            listProfiles = []
+        else:
+            for profile in self.getSocialNetworks():
+                print("-->",profile, myServices)
+                if (profile[0] in myServices): 
+                    print("Profile %s" %profile)
+                    print("Profile program %s" % myServices)
+                    listP = self.getPostsCache((profile, 
+                        self.getSocialNetworks()[profile])) 
+                    print(listP)
+                    lenProfile = len(listP) 
+                    if (lenProfile > lenMax): 
+                        lenMax = lenProfile 
+                        logger.info("%s ok" % profile)
+
+        logging.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
+
+        return(lenMax, profileList)
+
 
     def getLinkPosition(self, link):
         i = 0
@@ -160,7 +197,7 @@ class moduleSlack():
                     return i
                 i = i + 1
         return(i)
-    
+
     def deletePost(self, idPost, theChannel): 
         logging.info("Deleting id %s" % idPost)
         # Needs improvement
@@ -347,12 +384,6 @@ class moduleSlack():
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
-    def checkLastLink(self,socialNetwork=()):
-        fileNameL = self.cache.fileName(socialNetwork)+".last"
-        logging.info("Checking last link: %s" % fileNameL)
-        (linkLast, timeLast) = self.cache.getLastLink(fileNameL)
-        return(linkLast, timeLast)
-
 def main():
     CHANNEL = 'tavern-of-the-bots' 
     TEXT = 'Hello! from'
@@ -427,7 +458,7 @@ def main():
         if site.getBufferapp():
             api = moduleSocial.connectBuffer()
 
-            lenMax, profileList = moduleSocial.checkLimitPosts(api, site)
+            lenMax, profileList = site.checkLimitPosts(api, site)
 
             for profile in profileList:
                 print("        getBuffer %s" % profile['service'])
@@ -442,10 +473,10 @@ def main():
 
         if site.getProgram():
 
-            lenMax, profileList = moduleSocial.checkLimitPosts('', site)
+            lenMax, profileList = site.checkLimitPosts('', site)
 
             for profile in profileList:
-                lenMax, profileList = moduleSocial.checkLimitPosts('', 
+                lenMax, profileList = site.checkLimitPosts('', 
                         site, profile)
                 if profile[0] in site.getProgram():
                     print("        getProgram %s" % profile)

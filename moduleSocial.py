@@ -683,7 +683,7 @@ if __name__ == "__main__":
     blog.addSocialNetwork(('twitter', 'fernand0Test'))        
     blog.setPostsRss()
     blog.getPostsRss()
-    lastLink, lastTime = blog.checkLastLink(('twitter', 'fernand0Test'))
+    lastLink, lastTime = checkLastLink(blog.url,('twitter', 'fernand0Test'))
     i = blog.getLinkPosition(lastLink) 
     (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i - 1))
     fbPage = blog.getSocialNetworks()['facebook']

@@ -23,6 +23,8 @@ import moduleSocial
 # https://github.com/fernand0/scripts/blob/master/moduleSocial.py
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
+import moduleBuffer
+# https://github.com/fernand0/scripts/blob/master/moduleBuffer.py
 import moduleSlack
 # https://github.com/fernand0/scripts/blob/master/moduleSlack.py
 
@@ -88,7 +90,7 @@ def test():
                                   config.get(section, "rssFeed"),
                                   time.strftime('%Y-%m-%d %H:%M:%SZ',
                                   lastPost['published_parsed'])))
-        lastLink = checkLastLink(config.get(section, "rssFeed"))
+        lastLink = checkLastLink(self.url, config.get(section, "rssFeed"))
         print(lastLink)
         sys.exit()
         lenCmp = min(len(lastLink),len(lastPost['link']))
@@ -143,11 +145,11 @@ def main():
 
     for section in config.sections():
         blog = None
-        logging.info("\nSection: %s"% section)
+        logging.info("Section: %s"% section)
         url = config.get(section, "url")
         if ("rssfeed" in config.options(section)):
             blog = moduleRss.moduleRss()
-            print("\nSection: %s %s"% (section, url))
+            print("Section: %s %s"% (section, url))
             blog.setUrl(url)
             # It does not preserve case
             rssFeed = config.get(section, "rssFeed")
@@ -161,7 +163,6 @@ def main():
             blog.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
             blog.setPostsSlack()
 
-        blog.setCache()
 
         if section.find(checkBlog) >= 0:
             # If checkBlog is empty it will add all of them
@@ -171,10 +172,9 @@ def main():
             if ("time" in config.options(section)):
                 blog.setTime(config.get(section, "time"))
             if ('bufferapp' in config.options(section)): 
-                blog.setBufferapp(config.get(section, "bufferapp"))
+                blog.setBufferapp(config.get(section, "bufferapp")) 
             if ('program' in config.options(section)): 
                 blog.setProgram(config.get(section, "program"))
-
 
             blog.setSocialNetworks(config, section)
 
@@ -184,20 +184,21 @@ def main():
 
             bufferMax = 9
             if blog.getBufferapp():
-                api = moduleSocial.connectBuffer()
-                lenMax, profileList = moduleSocial.checkLimitPosts(api, blog)
+                blog.buffer.API()
+                #api = moduleSocial.connectBuffer()
+                lenMax, profileList = blog.buffer.checkLimitPosts(blog.getBufferapp())
                 logging.debug("Lenmax %d"% lenMax)
 
                 for profile in profileList:
-                    print("      getBuffer %s" % profile['service'])
-                    lenMax, profileList = moduleSocial.checkLimitPosts(api, 
-                            blog, profile['service'])
+                    lenMax = blog.buffer.lenMax[profile['service']]
                     logging.info("Service %s" 
                             % profile['service'] + blog.getBufferapp())
                     if (profile['service'][0] in blog.getBufferapp()): 
-                        lastLink, lastTime = blog.cache.checkLastLink((profile['service'], profile['service_username']))
-                        blog.addLastLinkPublished(profile['service'], 
-                                lastLink, lastTime) 
+                        lastLink, lastTime = checkLastLink(url,
+                                (profile['service'], profile['service_username']))
+                        print(lastLink, lastTime)
+                        #blog.addLastLinkPublished(profile['service'], 
+                        #        lastLink, lastTime) 
                         i = blog.getLinkPosition(lastLink)
 
                         logging.debug("profile %s"% profile)
@@ -234,17 +235,16 @@ def main():
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i, False))
                             moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
                             if link:
-                                blog.cache.updateLastLink(link, 
-                                    (profile['service'], 
+                                updateLastLink(url, link, (profile['service'], 
                                         profile['service_username']))
                             logging.debug("listPosts: %s"% listPosts)
             else:
                 for socialNetwork in blog.getSocialNetworks().keys():
                     print("      Not buffer %s" % socialNetwork)
                     logging.info("Social Network %s" % socialNetwork)
-                    lastLink, lastTime = blog.cache.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
-                    blog.addLastLinkPublished(socialNetwork, 
-                            lastLink, lastTime) 
+                    lastLink, lastTime = checkLastLink(url, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
+                    #blog.addLastLinkPublished(socialNetwork, 
+                            #lastLink, lastTime) 
                     i = blog.getLinkPosition(lastLink) 
 
                     logging.debug("i, lastLink %d %s"% (i,lastLink))
@@ -253,7 +253,7 @@ def main():
                         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
                         hours = blog.getTime() 
                         if (hours and (((time.time() - lastTime) - int(hours)*60*60) < 0)): 
-                            logging.info("Not publishing because time restriction\n") 
+                            logging.info("Not publishing because time restriction") 
                         else:
                             logging.info("Publishing directly\n") 
                             serviceName = socialNetwork.capitalize()
@@ -262,24 +262,24 @@ def main():
                             result = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
                             logging.info("Updating Link\n") 
                             if result != "Fail!":
-                                blog.cache.updateLastLink(link, 
-                                        (socialNetwork, 
+                                updateLastLink(url, link, (socialNetwork, 
                                             blog.getSocialNetworks()[socialNetwork]))
 
             if blog.getProgram():
                 t = {}
                 lenMax = 6
-                lenMax, profileList = moduleSocial.checkLimitPosts('', blog)
+                lenMax, profileList = blog.cache.checkLimitPosts(blog.getProgram())
                 logging.debug("Lenmax %d"% lenMax)
 
                 for profile in profileList:
-                    lenMax, profileList = moduleSocial.checkLimitPosts('', 
-                            blog, profile)
+                    #lenMax, profileList = blog.checkLimitPosts(blog.getProgram(), profile)
+                    #print(lenMax)
+                    #sys.exit()
                     if profile[0] in blog.getProgram():
                         print("      getProgram %s" % profile)
-                        lastLink, lastTime = blog.cache.checkLastLink((profile, blog.getSocialNetworks()[profile]))
-                        blog.addLastLinkPublished(profile, 
-                            lastLink, lastTime)
+                        lastLink, lastTime = checkLastLink(url, 
+                                (profile, blog.getSocialNetworks()[profile]))
+                        blog.addLastLinkPublished(profile, lastLink, lastTime)
                         i = blog.getLinkPosition(lastLink) 
 
                         logging.info("lastLink %s %s %d"% (profile, lastLink, i))
@@ -329,7 +329,7 @@ def main():
 
                         if link:
                             logging.info("Updating link %s" % profile)
-                            blog.cache.updateLastLink(link, socialNetwork)
+                            updateLastLink(self.url, link, socialNetwork)
 
             time.sleep(2)
         else:
