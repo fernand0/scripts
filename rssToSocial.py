@@ -90,7 +90,7 @@ def test():
                                   config.get(section, "rssFeed"),
                                   time.strftime('%Y-%m-%d %H:%M:%SZ',
                                   lastPost['published_parsed'])))
-        lastLink = checkLastLink(config.get(section, "rssFeed"))
+        lastLink = checkLastLink(self.url, config.get(section, "rssFeed"))
         print(lastLink)
         sys.exit()
         lenCmp = min(len(lastLink),len(lastPost['link']))
@@ -194,7 +194,8 @@ def main():
                     logging.info("Service %s" 
                             % profile['service'] + blog.getBufferapp())
                     if (profile['service'][0] in blog.getBufferapp()): 
-                        lastLink, lastTime = blog.checkLastLink((profile['service'], profile['service_username']))
+                        lastLink, lastTime = checkLastLink(url,
+                                (profile['service'], profile['service_username']))
                         print(lastLink, lastTime)
                         #blog.addLastLinkPublished(profile['service'], 
                         #        lastLink, lastTime) 
@@ -234,14 +235,14 @@ def main():
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (blog.obtainPostData(i, False))
                             moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
                             if link:
-                                blog.updateLastLink(link, (profile['service'], 
+                                updateLastLink(url, link, (profile['service'], 
                                         profile['service_username']))
                             logging.debug("listPosts: %s"% listPosts)
             else:
                 for socialNetwork in blog.getSocialNetworks().keys():
                     print("      Not buffer %s" % socialNetwork)
                     logging.info("Social Network %s" % socialNetwork)
-                    lastLink, lastTime = blog.checkLastLink((socialNetwork, blog.getSocialNetworks()[socialNetwork]))
+                    lastLink, lastTime = checkLastLink(url, (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                     #blog.addLastLinkPublished(socialNetwork, 
                             #lastLink, lastTime) 
                     i = blog.getLinkPosition(lastLink) 
@@ -261,7 +262,7 @@ def main():
                             result = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
                             logging.info("Updating Link\n") 
                             if result != "Fail!":
-                                blog.updateLastLink(link, (socialNetwork, 
+                                updateLastLink(url, link, (socialNetwork, 
                                             blog.getSocialNetworks()[socialNetwork]))
 
             if blog.getProgram():
@@ -276,9 +277,9 @@ def main():
                     #sys.exit()
                     if profile[0] in blog.getProgram():
                         print("      getProgram %s" % profile)
-                        lastLink, lastTime = blog.checkLastLink((profile, blog.getSocialNetworks()[profile]))
-                        blog.addLastLinkPublished(profile, 
-                            lastLink, lastTime)
+                        lastLink, lastTime = checkLastLink(url, 
+                                (profile, blog.getSocialNetworks()[profile]))
+                        blog.addLastLinkPublished(profile, lastLink, lastTime)
                         i = blog.getLinkPosition(lastLink) 
 
                         logging.info("lastLink %s %s %d"% (profile, lastLink, i))
@@ -328,7 +329,7 @@ def main():
 
                         if link:
                             logging.info("Updating link %s" % profile)
-                            blog.updateLastLink(link, socialNetwork)
+                            updateLastLink(self.url, link, socialNetwork)
 
             time.sleep(2)
         else:

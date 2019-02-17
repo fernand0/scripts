@@ -135,23 +135,6 @@ class moduleRss():
         postsP, profiles = self.cache.listPosts('')
         self.cache.posts = postsP
 
-    def checkLastLink(self, socialNetwork=()):
-        # Redundant with moduleBuffer
-        fileNameL = self.fileName(socialNetwork)+".last"
-        logging.info("Checking last link: %s" % fileNameL)
-        (linkLast, timeLast) = self.getLastLink(fileNameL)
-        return(linkLast, timeLast)
-    
-    def updateLastLink(self, link, socialNetwork=()):
-        if not socialNetwork: 
-            fileName = (DATADIR  + '/' 
-                   + urllib.parse.urlparse(self.url).netloc + ".last")
-        else: 
-            fileName = self.fileName(socialNetwork) + ".last"
-
-        with open(fileName, "w") as f: 
-            f.write(link)
- 
     def getLinkPosition(self, link):
         i = 0
         if self.getPostsRss():
@@ -166,27 +149,6 @@ class moduleRss():
                     return i
                 i = i + 1
         return(i)
-
-    def getLastLink(self, fileName):        
-        try: 
-            with open(fileName, "rb") as f: 
-                linkLast = f.read().rstrip()  # Last published
-        except:
-            # File does not exist, we need to create it.
-            with open(fileName, "w") as f:
-                logging.warning("File %s does not exist. Creating it."
-                        % fileName) 
-                linkLast = ''  
-                # None published, or non-existent file
-        return(linkLast, os.path.getmtime(fileName))
- 
-    def fileName(self, socialNetwork):
-        theName = os.path.expanduser(DATADIR + '/' 
-                        + urllib.parse.urlparse(self.url).netloc 
-                        + '_' 
-                        + socialNetwork[0] + '_' + socialNetwork[1])
-        return(theName)
-    
 
     def datePost(self, pos):
         return(self.getPostsRss().entries[pos]['published_parsed'])
