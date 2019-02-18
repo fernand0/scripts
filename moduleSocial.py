@@ -394,7 +394,7 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
             time.sleep(2)
         except:
             logger.warning("Buffer posting failed!")
-            logger.warning("Entry: ", entry)
+            logger.warning("Entry: %s"% entry)
             logger.warning("Unexpected error: %s"% sys.exc_info()[0])
             logger.warning("Unexpected error: %s"% sys.exc_info()[1])
 

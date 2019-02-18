@@ -9,7 +9,7 @@ APPDIR = HOME + "/.mySocial"
 CONFIGDIR = APPDIR + "/config"
 DATADIR = APPDIR + "/data"
 
-def fileName(url, socialNetwork):
+def fileNamePath(url, socialNetwork):
     # Redundant with moduleCache
     theName = os.path.expanduser(DATADIR + '/' 
                     + urllib.parse.urlparse(url).netloc 
@@ -32,7 +32,7 @@ def getLastLink(fileName):
 
 def checkLastLink(url, socialNetwork=()):
     # Redundant with moduleCache
-    fileNameL = fileName(url, socialNetwork)+".last"
+    fileNameL = fileNamePath(url, socialNetwork)+".last"
     logging.info("Checking last link: %s" % fileNameL)
     (linkLast, timeLast) = getLastLink(fileNameL)
     return(linkLast, timeLast)
@@ -42,7 +42,7 @@ def updateLastLink(url, link, socialNetwork=()):
         fileName = (DATADIR  + '/' 
                + urllib.parse.urlparse(url).netloc + ".last")
     else: 
-        fileName = fileName(url, socialNetwork) + ".last"
+        fileName = fileNamePath(url, socialNetwork) + ".last"
 
     with open(fileName, "w") as f: 
         f.write(link)
