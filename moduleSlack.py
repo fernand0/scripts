@@ -149,6 +149,7 @@ class moduleSlack():
 
     def checkLimitPosts(self, myServices, service=''):
         profileList = self.getSocialNetworks().keys()
+        print(profileList)
         if service: 
             #print(service)
             self.setPostsCache() 
@@ -424,7 +425,7 @@ def main():
 
     i = 0
     listLinks = ""
-    print(outputData)
+    #print(outputData)
 
     lastUrl = ''
     for line in outputData['Slack']['pending']:
@@ -453,11 +454,14 @@ def main():
         sys.exit()
     elif action == 'p':
         if site.getBufferapp():
-            api = moduleSocial.connectBuffer()
+            #api = moduleSocial.connectBuffer()
 
-            lenMax, profileList = site.checkLimitPosts(api, site)
+            site.buffer.API()
+            lenMax, profileList = site.buffer.checkLimitPosts(site.getBufferapp())
 
+            print(lenMax)
             for profile in profileList:
+                print("        getBuffer %s" % profile)
                 print("        getBuffer %s" % profile['service'])
 
                 (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
@@ -470,11 +474,10 @@ def main():
 
         if site.getProgram():
 
-            lenMax, profileList = site.checkLimitPosts('', site)
+            lenMax, profileList = site.cache.checkLimitPosts(site.getProgram())
 
             for profile in profileList:
-                lenMax, profileList = site.checkLimitPosts('', 
-                        site, profile)
+                lenMax = site.cache.lenMax[profile]
                 if profile[0] in site.getProgram():
                     print("        getProgram %s" % profile)
 

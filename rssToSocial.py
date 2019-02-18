@@ -326,7 +326,7 @@ def main():
 
                         if link:
                             logging.info("Updating link %s" % profile)
-                            updateLastLink(self.url, link, socialNetwork)
+                            updateLastLink(blog.url, link, socialNetwork)
 
             time.sleep(2)
         else:
