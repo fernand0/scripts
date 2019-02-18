@@ -78,7 +78,7 @@ class moduleCache():
             socialNetwork = (soc, self.socialNetworks[soc])
             profile = {}
             profile['socialNetwork'] = socialNetwork
-            fileNameQ = self.fileName(socialNetwork) + ".queue" 
+            fileNameQ = fileNamePath(self.url, socialNetwork) + ".queue" 
             profile['fileName'] = fileNameQ
             profiles.append(profile)
             profile['posts'] = []
@@ -90,16 +90,8 @@ class moduleCache():
     
         self.profiles =  profiles
 
-    def fileName(self, socialNetwork):
-        # Redundant with moduleCache
-        theName = os.path.expanduser(DATADIR + '/' 
-                        + urllib.parse.urlparse(self.url).netloc 
-                        + '_' 
-                        + socialNetwork[0] + '_' + socialNetwork[1])
-        return(theName)
-
     def getPostsCache(self, socialNetwork):        
-        fileNameQ = self.fileName(socialNetwork) + ".queue" 
+        fileNameQ = fileNamePath(self.url, socialNetwork) + ".queue" 
         with open(fileNameQ,'rb') as f: 
             try: 
                 listP = pickle.load(f) 
@@ -135,7 +127,7 @@ class moduleCache():
         return(outputData, profiles)
     
     def updatePostsCache(self, listP, socialNetwork=()):
-        fileNameQ = self.fileName(socialNetwork) + ".queue" 
+        fileNameQ = fileNamePath(self.url, socialNetwork) + ".queue" 
     
         #print("Updating Posts Cache: %s" % fileNameQ)
     
@@ -146,7 +138,7 @@ class moduleCache():
     
     def listPostsCache(self, socialNetwork=()):
         #Maybe getPostsCache ?
-        fileName = self.fileName(socialNetwork)+ ".queue"
+        fileName = fileNamePath(self.url, socialNetwork)+ ".queue"
     
         logging.info("Listing Posts Cache: %s" % fileName)
     
