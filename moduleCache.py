@@ -38,6 +38,7 @@ class moduleCache():
         self.url = url
         self.socialNetworks = socialNetworks
         self.profile = None
+        self.lenMax = {}
 
     def checkLimitPosts(self, myServices, service=''):
         profileList = self.socialNetworks.keys()
@@ -58,6 +59,7 @@ class moduleCache():
                     listP = self.getPostsCache((profile, 
                         self.socialNetworks[profile])) 
                     lenProfile = len(listP) 
+                    self.lenMax[profile] = lenProfile
                     if (lenProfile > lenMax): 
                         lenMax = lenProfile 
                         logging.info("%s ok" % profile)

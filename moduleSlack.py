@@ -74,9 +74,6 @@ class moduleSlack():
     def getSlackClient(self):
         return self.sc
  
-    def addSocialNetwork(self, socialNetwork):
-        self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
-
     def addLastLinkPublished(self, socialNetwork, lastLink, lastTime):
         self.lastLinkPublished[socialNetwork] = (lastLink, lastTime)
 

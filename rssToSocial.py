@@ -268,12 +268,9 @@ def main():
                 t = {}
                 lenMax = 6
                 lenMax, profileList = blog.cache.checkLimitPosts(blog.getProgram())
-                logging.debug("Lenmax %d"% lenMax)
+                logging.info("Lenmax %d"% lenMax)
 
                 for profile in profileList:
-                    #lenMax, profileList = blog.checkLimitPosts(blog.getProgram(), profile)
-                    #print(lenMax)
-                    #sys.exit()
                     if profile[0] in blog.getProgram():
                         print("      getProgram %s" % profile)
                         lastLink, lastTime = checkLastLink(url, 
@@ -299,6 +296,7 @@ def main():
                         else:
                             theList = []
 
+                        lenMax = blog.cache.lenMax[profile]
                         num = bufferMax - lenMax
                         logging.info("bufferMax - lenMax = num %d %d %d"%
                                 (bufferMax, lenMax, num)) 
