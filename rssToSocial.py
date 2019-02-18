@@ -196,7 +196,6 @@ def main():
                     if (profile['service'][0] in blog.getBufferapp()): 
                         lastLink, lastTime = checkLastLink(url,
                                 (profile['service'], profile['service_username']))
-                        print(lastLink, lastTime)
                         #blog.addLastLinkPublished(profile['service'], 
                         #        lastLink, lastTime) 
                         i = blog.getLinkPosition(lastLink)
