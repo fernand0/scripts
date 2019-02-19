@@ -475,6 +475,9 @@ def main():
 
             lenMax, profileList = site.cache.checkLimitPosts(site.getProgram())
 
+            site.cache.getProfiles()
+            site.cache.listPosts()
+
             for profile in profileList:
                 lenMax = site.cache.lenMax[profile]
                 if profile[0] in site.getProgram():
@@ -487,7 +490,9 @@ def main():
                 listP = site.cache.listPostsCache(socialNetwork)
                 listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
                 listP = listP + listPsts
-                site.cache.updatePostsCache(listP, socialNetwork)
+                serviceName = socialNetwork[0].capitalize()
+                site.cache.posts[serviceName]['pending'] = listP
+                site.cache.updatePostsCache(socialNetwork)
 
 
     site.deletePost(outputData['Slack']['pending'][elem][8], theChannel)
