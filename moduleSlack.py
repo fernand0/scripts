@@ -460,8 +460,8 @@ def main():
 
             print(lenMax)
             for profile in profileList:
-                print("        getBuffer %s" % profile)
-                print("        getBuffer %s" % profile['service'])
+                #print("        getBuffer %s" % profile)
+                #print("        getBuffer %s" % profile['service'])
 
                 (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
                 print(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)
