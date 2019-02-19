@@ -220,7 +220,7 @@ class moduleCache():
             if self.isForMe(profile, args):
                 serviceName = profile['socialNetwork'][0].capitalize()
                 j = int(args[-1])
-                logging.info("Posts %s" % posts[serviceName]['pending'])
+                logging.info("Posts %s" % self.posts[serviceName]['pending'])
                 self.posts[serviceName]['pending'] = self.posts[serviceName]['pending'][:j] +  self.posts[serviceName]['pending'][j+1:]
                 logging.info("-Posts %s" % posts[serviceName]['pending'])
                 self.updatePostsCache(profile['socialNetwork'])
