@@ -220,6 +220,7 @@ class moduleCache():
                 logging.info("Posts %s" % self.posts[serviceName]['pending'])
                 self.posts[serviceName]['pending'] = self.posts[serviceName]['pending'][:j] +  self.posts[serviceName]['pending'][j+1:]
                 logging.info("-Posts %s" % self.posts[serviceName]['pending'])
+                logging.info("social network %s" % profile['socialNetwork'])
                 self.updatePostsCache(profile['socialNetwork'])
     
         return(update)
