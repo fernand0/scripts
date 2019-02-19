@@ -149,7 +149,6 @@ class moduleSlack():
 
     def checkLimitPosts(self, myServices, service=''):
         profileList = self.getSocialNetworks().keys()
-        print(profileList)
         if service: 
             #print(service)
             self.setPostsCache() 
@@ -401,7 +400,7 @@ def main():
     site.setSlackClient(SLACKCREDENTIALS)
 
     theChannel = site.getChanId(CHANNEL)  
-    print("Channel %s - %s" % (CHANNEL, theChannel))
+    #print("Channel %s - %s" % (CHANNEL, theChannel))
     site.setPostsSlack('links')
     site.getPostsSlack()
     

@@ -124,6 +124,7 @@ class moduleCache():
             logging.info("Iter Service posts profiles %s" % profiles)
     
         logging.info("Service posts profiles %s" % profiles)
+        self.posts = outputData
         return(outputData, profiles)
     
     def updatePostsCache(self, listP, socialNetwork=()):
@@ -191,6 +192,7 @@ class moduleCache():
             logging.info("Social Network %s" % profile)
             if self.isForMe(profile, args):
                 serviceName = profile['socialNetwork'][0].capitalize()
+                nick = profile['socialNetwork'][1]
                 j = int(args[-1])
                 (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.posts[serviceName]['pending'][j])
                 publishMethod = getattr(moduleSocial, 
@@ -199,10 +201,11 @@ class moduleCache():
                 logging.info("Social network: %s Nick: %s" % (serviceName, nick))
                 update = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
                 if not isinstance(update, str) or (isinstance(update, str) and update[:4] != "Fail"):
-                    self.posts[serviceName]['pending'] = self.posts[serviceName]['pending'][:j] + posts[serviceName]['pending'][j+1:]
-                    logging.info("Updating %s" % posts)
-                    logging.info("Blog %s" % cache['blog'])
-                    self.updatePostsCache(profile['socialNetwork'])
+                    self.posts[serviceName]['pending'] = self.posts[serviceName]['pending'][:j] + self.posts[serviceName]['pending'][j+1:]
+                    logging.debug("Updating %s" % self.posts)
+                    #logging.info("Blog %s" % cache['blog'])
+                    self.updatePostsCache(self.posts[serviceName]['pending'],
+                            profile['socialNetwork'])
                     if 'text' in update:
                         update = update['text']
     
