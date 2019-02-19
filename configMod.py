@@ -10,7 +10,6 @@ CONFIGDIR = APPDIR + "/config"
 DATADIR = APPDIR + "/data"
 
 def fileNamePath(url, socialNetwork):
-    # Redundant with moduleCache
     theName = os.path.expanduser(DATADIR + '/' 
                     + urllib.parse.urlparse(url).netloc 
                     + '_' 

@@ -127,14 +127,15 @@ class moduleCache():
         self.posts = outputData
         return(outputData, profiles)
     
-    def updatePostsCache(self, listP, socialNetwork=()):
+    def updatePostsCache(self, socialNetwork=()):
         fileNameQ = fileNamePath(self.url, socialNetwork) + ".queue" 
     
         #print("Updating Posts Cache: %s" % fileNameQ)
     
+        serviceName = socialNetwork[0].capitalize()
         with open(fileNameQ, 'wb') as f:
             #pickle.dump(self.posts[socialNetwork[0].capitalize()]['pending'],f)
-            pickle.dump(listP, f)
+            pickle.dump(self.posts[serviceName]['pending'], f)
         return(fileNameQ)
     
     def listPostsCache(self, socialNetwork=()):
@@ -204,8 +205,7 @@ class moduleCache():
                     self.posts[serviceName]['pending'] = self.posts[serviceName]['pending'][:j] + self.posts[serviceName]['pending'][j+1:]
                     logging.debug("Updating %s" % self.posts)
                     #logging.info("Blog %s" % cache['blog'])
-                    self.updatePostsCache(self.posts[serviceName]['pending'],
-                            profile['socialNetwork'])
+                    self.updatePostsCache(profile['socialNetwork'])
                     if 'text' in update:
                         update = update['text']
     
@@ -279,7 +279,7 @@ class moduleCache():
                     postJ = (posts[serviceName]['pending'][j])
                     posts[serviceName]['pending'][i] = postJ
                     posts[serviceName]['pending'][j] = postI
-                    updatePostsCache(cache['blog'], posts[serviceName]['pending'], profile['socialNetwork'])
+                    updatePostsCache(profile['socialNetwork'])
     
         return(posts[serviceName]['pending'][i][0]+' '+ 
                   posts[serviceName]['pending'][j][0])
