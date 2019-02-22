@@ -150,7 +150,6 @@ class moduleSlack():
     def checkLimitPosts(self, myServices, service=''):
         profileList = self.getSocialNetworks().keys()
         if service: 
-            #print(service)
             self.setPostsCache() 
             listP = self.getPostsCache() 
             lenProfile = len(listP) 
@@ -400,7 +399,6 @@ def main():
     site.setSlackClient(SLACKCREDENTIALS)
 
     theChannel = site.getChanId(CHANNEL)  
-    #print("Channel %s - %s" % (CHANNEL, theChannel))
     site.setPostsSlack('links')
     site.getPostsSlack()
     
@@ -409,22 +407,15 @@ def main():
     if ('program' in config.options(section)): 
         site.setProgram(config.get(section, "program"))
 
-
     site.setSocialNetworks(config, 'Blog7')
     outputData, posts = site.listPosts()
     site.setPostsCache()
     site.getPostsCache()
-    #print(site.cache.showPost('F1'))
-    #sys.exit()
-    #print(outputData['Slack']['pending'][elem])
-    #print(outputData['Slack']['pending'][elem][8])
     theChannel = site.getChanId("links")  
-    #site.deletePost(outputData['Slack']['pending'][elem][-2], theChannel)
     # We should check for consistency 
 
     i = 0
     listLinks = ""
-    #print(outputData)
 
     lastUrl = ''
     for line in outputData['Slack']['pending']:
@@ -458,18 +449,15 @@ def main():
             site.buffer.API()
             lenMax, profileList = site.buffer.checkLimitPosts(site.getBufferapp())
 
-            print(lenMax)
             for profile in profileList:
-                #print("        getBuffer %s" % profile)
-                #print("        getBuffer %s" % profile['service'])
 
-                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
-                print(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)
-                print("first", firstLink)
-                # In order to avoid saving the link as the last one
+                if profile['service'][0] in site.getBufferapp():
+                    print("      getBuffer %s" % profile['service'])
+                    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
+                    # In order to avoid saving the link as the last one
 
-                isDebug = False
-                moduleSocial.publishBuffer(site, profile, title, link, firstLink, isDebug, lenMax, site.getBufferapp())
+                    isDebug = False
+                    moduleSocial.publishBuffer(site, profile, title, link, firstLink, isDebug, lenMax, site.getBufferapp())
 
         if site.getProgram():
 

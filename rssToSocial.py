@@ -235,8 +235,8 @@ def main():
                             moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
                             if link:
                                 updateLastLink(url, link, (profile['service'], 
-                                        profile['service_username']))
-                            logging.debug("listPosts: %s"% listPosts)
+                                    profile['service_username']))
+                                logging.debug("listPosts: %s"% listPosts)
             else:
                 for socialNetwork in blog.getSocialNetworks().keys():
                     print("      Not buffer %s" % socialNetwork)
@@ -262,7 +262,7 @@ def main():
                             logging.info("Updating Link\n") 
                             if result != "Fail!":
                                 updateLastLink(url, link, (socialNetwork, 
-                                            blog.getSocialNetworks()[socialNetwork]))
+                                    blog.getSocialNetworks()[socialNetwork]))
 
             if blog.getProgram():
                 t = {}
