@@ -161,13 +161,50 @@ class moduleCache():
                 return True
         return False
     
-    def showPost(self, args):
-        logging.info("To publish %s" % args)
+    def interpretAndExecute(self, args, command, addArgs=''):
+        logging.info("To show %s" % args)
     
         update = ""
-        logging.info("Cache antes %s" % self)
         profiles = self.profiles
-        logging.info("Cache profiles antes %s" % profiles)
+        update = ""
+        for profile in profiles: 
+            logging.info("Social Network %s" % profile)
+            if self.isForMe(profile, args): 
+                serviceName = profile['socialNetwork'][0].capitalize()
+                j = int(args[-1])
+                (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.posts[serviceName]['pending'][j])
+                if command=='show':
+                    update = "Post: "+title+' - '+link
+                elif command=='publish':
+                    publishMethod = getattr(moduleSocial, 
+                        'publish'+ serviceName)
+                    update = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
+                    if not isinstance(update, str) or (isinstance(update, str) and update[:4] != "Fail"):
+                        self.posts[serviceName]['pending'] = self.posts[serviceName]['pending'][:j] + self.posts[serviceName]['pending'][j+1:]
+                        logging.debug("Updating %s" % self.posts)
+                        #logging.info("Blog %s" % cache['blog'])
+                        self.updatePostsCache(profile['socialNetwork'])
+                        if 'text' in update:
+                            update = "Published: " + update['text']
+                elif command=='delete': 
+                    self.posts[serviceName]['pending'] = self.posts[serviceName]['pending'][:j] +  self.posts[serviceName]['pending'][j+1:]
+                    self.updatePostsCache(profile['socialNetwork'])
+                    update = "Deleted: "+ title
+                elif command=='edit':
+                    newTitle = addArgs
+                    self.posts[serviceName]['pending'][j] = (newTitle, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
+                    self.updatePostsCache(profile['socialNetwork'])
+                    update = "Changed "+title+" with "+newTitle
+
+        return(update)
+ 
+    def showPost(self, args):
+        return(self.interpretAndExecute(args,'show'))
+        
+        logging.info("To show %s" % args)
+    
+        update = ""
+        profiles = self.profiles
         title = None
         for profile in profiles: 
             logging.info("Social Network %s" % profile)
@@ -182,6 +219,8 @@ class moduleCache():
             return(None)
     
     def publishPost(self, args):
+        return(self.interpretAndExecute(args,'publish'))
+
         logging.info("To publish %s" % args)
     
         update = ""
@@ -209,6 +248,7 @@ class moduleCache():
         return(update)
     
     def deletePost(self, args):
+        return(self.interpretAndExecute(args,'delete'))
         logging.info("To Delete %s" % args)
     
         update = ""
@@ -227,6 +267,7 @@ class moduleCache():
         return(update)
     
     def editPost(self, args, newTitle):
+        return(self.interpretAndExecute(args,'edit', newTitle))
         logging.info("To edit %s" % args)
         logging.info("New title %s", newTitle)
     
@@ -401,9 +442,9 @@ def main():
     print(cache.profiles)
     postsP, profiles = cache.listPosts('')
     print("-> Posts",postsP)
-    for soc in cache.profiles:
-        print(cache.checkLastLink(soc['socialNetwork']))
-    print(cache.showPost(postsP, 'F1'))
+    print(cache.showPost('F1'))
+    print(cache.editPost('F1', 'Alternative Names for the Tampon Tax - The Belladonna Comedy'))
+    sys.exit()
     print(cache.editPost(postsP, 'F1', '10 Tricks to Appear Smart During Meetings – The Cooper Review – Medium...'))
     sys.exit()
 
