@@ -130,11 +130,8 @@ class moduleCache():
     def updatePostsCache(self, socialNetwork=()):
         fileNameQ = fileNamePath(self.url, socialNetwork) + ".queue" 
     
-        #print("Updating Posts Cache: %s" % fileNameQ)
-    
         serviceName = socialNetwork[0].capitalize()
         with open(fileNameQ, 'wb') as f:
-            #pickle.dump(self.posts[socialNetwork[0].capitalize()]['pending'],f)
             pickle.dump(self.posts[serviceName]['pending'], f)
         return(fileNameQ)
     
@@ -223,7 +220,8 @@ class moduleCache():
                 logging.info("Posts %s" % self.posts[serviceName]['pending'])
                 self.posts[serviceName]['pending'] = self.posts[serviceName]['pending'][:j] +  self.posts[serviceName]['pending'][j+1:]
                 logging.info("-Posts %s" % self.posts[serviceName]['pending'])
-                logging.info("social network %s" % profile['socialNetwork'])
+                logging.info("social network %s - %s" 
+                        % (profile['socialNetwork'][0], profile['socialNetwork'][1]))
                 self.updatePostsCache(profile['socialNetwork'])
     
         return(update)

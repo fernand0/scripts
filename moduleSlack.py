@@ -382,8 +382,6 @@ class moduleSlack():
 
 def main():
     CHANNEL = 'tavern-of-the-bots' 
-    TEXT = 'Hello! from'
-    SLACKCREDENTIALS = os.path.expanduser('~/.mySocial/config/.rssSlack')
 
     import moduleSlack
 
@@ -396,6 +394,7 @@ def main():
     url = config.get(section, "url")
     site.setUrl(url)
 
+    SLACKCREDENTIALS = os.path.expanduser(CONFIGDIR + '/.rssSlack')
     site.setSlackClient(SLACKCREDENTIALS)
 
     theChannel = site.getChanId(CHANNEL)  
@@ -407,7 +406,8 @@ def main():
     if ('program' in config.options(section)): 
         site.setProgram(config.get(section, "program"))
 
-    site.setSocialNetworks(config, 'Blog7')
+    site.setSocialNetworks(config, section)
+
     outputData, posts = site.listPosts()
     site.setPostsCache()
     site.getPostsCache()
@@ -432,14 +432,12 @@ def main():
     if i == 'x':
         sys.exit()
 
-    i = int(i)
-
-
-    elem = i
+    elem = int(i)
     print(outputData['Slack']['pending'][elem])
 
     action = input("Delete [d], publish [p], exit [x] ")
 
+    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
     if action == 'x':
         sys.exit()
     elif action == 'p':
@@ -484,6 +482,12 @@ def main():
 
 
     site.deletePost(outputData['Slack']['pending'][elem][8], theChannel)
+
+    client = moduleSocial.connectTumblr()
+    # We need to publish it in the Tumblr blog since we won't publish it by
+    # usuarl means (it is deleted from queue).
+    moduleSocial.publishTumblr('fernand0', title, link, summary, summaryHtml,
+            summaryLinks, image, content, links)
 
 
 if __name__ == '__main__':
