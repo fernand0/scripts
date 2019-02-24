@@ -130,7 +130,7 @@ class moduleSlack():
         return(self.cache)
 
     def setCache(self):
-        self.cache = moduleCache.moduleCache(self.url, self.socialNetworks) 
+        self.cache = "pending" #moduleCache.moduleCache(self.url, self.socialNetworks) 
 
     def getPostsCache(self):
         return(self.cache.posts)
