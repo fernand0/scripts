@@ -37,7 +37,7 @@ class moduleCache():
         self.name = "Cache_"+socialNetwork+"_"+nick
         self.url = url
         self.socialNetwork = (socialNetwork, nick)
-        self.lenMax = {}
+        self.lenMax = -1
 
     def setPosts(self):        
         fileNameQ = fileNamePath(self.url, self.socialNetwork) + ".queue" 
@@ -47,6 +47,7 @@ class moduleCache():
             except: 
                 listP = [] 
         self.posts = listP
+        self.lenMax= len(self.posts)
 
     def getPosts(self):        
         return(self.posts)
@@ -421,8 +422,8 @@ def main():
         print(ca.showPost('T1'))
         print(ca.showPost('TF2'))
         print(ca.showPost('*3'))
-        ca.editPost('T4', "My Stepdad's Huge Dataset.")
-        ca.editPost('F5', "¡Sumate al datatón y a WiDS 2019! - lanacion.com")
+        #ca.editPost('T4', "My Stepdad's Huge Dataset.") 
+        #ca.editPost('F5', "¡Sumate al datatón y a WiDS 2019! - lanacion.com")
     sys.exit()
     print(ca.editPost('F1', 'Alternative Names for the Tampon Tax - The Belladonna Comedy'))
     sys.exit()

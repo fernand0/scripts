@@ -130,7 +130,10 @@ class moduleSlack():
         return(self.cache)
 
     def setCache(self):
-        self.cache = "pending" #moduleCache.moduleCache(self.url, self.socialNetworks) 
+        for sN in self.getSocialNetworks():
+            cacheAcc = moduleCache.moduleCache(blog.getUrl(), 
+                    sN, blog.getSocialNetworks()[sN]) 
+            self.cache.append(cacheAcc)
 
     def getPostsCache(self):
         return(self.cache.posts)
@@ -147,32 +150,32 @@ class moduleSlack():
     def setKeys(self, keys):
         self.keys = keys
 
-    def checkLimitPosts(self, myServices, service=''):
-        profileList = self.getSocialNetworks().keys()
-        if service: 
-            self.setPostsCache() 
-            listP = self.getPostsCache() 
-            lenProfile = len(listP) 
-            #print(lenProfile)
-            lenMax = lenProfile
-            listProfiles = []
-        else:
-            for profile in self.getSocialNetworks():
-                print("-->",profile, myServices)
-                if (profile[0] in myServices): 
-                    print("Profile %s" %profile)
-                    print("Profile program %s" % myServices)
-                    listP = self.getPostsCache((profile, 
-                        self.getSocialNetworks()[profile])) 
-                    print(listP)
-                    lenProfile = len(listP) 
-                    if (lenProfile > lenMax): 
-                        lenMax = lenProfile 
-                        logger.info("%s ok" % profile)
+    #def checkLimitPosts(self, myServices, service=''):
+    #    profileList = self.getSocialNetworks().keys()
+    #    if service: 
+    #        self.setPostsCache() 
+    #        listP = self.getPostsCache() 
+    #        lenProfile = len(listP) 
+    #        #print(lenProfile)
+    #        lenMax = lenProfile
+    #        listProfiles = []
+    #    else:
+    #        for profile in self.getSocialNetworks():
+    #            print("-->",profile, myServices)
+    #            if (profile[0] in myServices): 
+    #                print("Profile %s" %profile)
+    #                print("Profile program %s" % myServices)
+    #                listP = self.getPostsCache((profile, 
+    #                    self.getSocialNetworks()[profile])) 
+    #                print(listP)
+    #                lenProfile = len(listP) 
+    #                if (lenProfile > lenMax): 
+    #                    lenMax = lenProfile 
+    #                    logger.info("%s ok" % profile)
 
-        logging.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
+    #    logging.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
 
-        return(lenMax, profileList)
+    #    return(lenMax, profileList)
 
 
     def getLinkPosition(self, link):
