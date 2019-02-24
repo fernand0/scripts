@@ -130,9 +130,10 @@ class moduleSlack():
         return(self.cache)
 
     def setCache(self):
+        self.cache = []
         for sN in self.getSocialNetworks():
-            cacheAcc = moduleCache.moduleCache(blog.getUrl(), 
-                    sN, blog.getSocialNetworks()[sN]) 
+            cacheAcc = moduleCache.moduleCache(self.getUrl(), 
+                    sN, self.getSocialNetworks()[sN]) 
             self.cache.append(cacheAcc)
 
     def getPostsCache(self):
@@ -140,9 +141,11 @@ class moduleSlack():
 
     def setPostsCache(self):
         self.setCache() 
-        self.cache.getProfiles()
-        postsP, profiles = self.cache.listPosts('')
-        self.cache.posts = postsP
+        for ca in self.getCache():
+            postsP, profiles = ca.listPosts()
+            print(postsP)
+            sys.exit()
+            self.cache.posts = postsP
 
     def getKeys(self):
         return(self.keys)
@@ -410,6 +413,7 @@ def main():
         site.setProgram(config.get(section, "program"))
 
     site.setSocialNetworks(config, section)
+    site.setCache()
 
     outputData, posts = site.listPosts()
     site.setPostsCache()

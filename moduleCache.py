@@ -116,7 +116,7 @@ class moduleCache():
 
         logging.debug("-Posts %s"% listP)
     
-        if len(listP) > 0: 
+        if listP and len(listP) > 0: 
             for element in listP: 
                 outputData[serviceName]['pending'].append(element) 
     
