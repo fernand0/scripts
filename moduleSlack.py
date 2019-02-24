@@ -131,21 +131,19 @@ class moduleSlack():
 
     def setCache(self):
         self.cache = []
+        self.postsCache = {}
         for sN in self.getSocialNetworks():
             cacheAcc = moduleCache.moduleCache(self.getUrl(), 
                     sN, self.getSocialNetworks()[sN]) 
-            self.cache.append(cacheAcc)
+            cacheAcc.setPosts()
+            cacheAcc.listPosts()
+            self.postsCache = {**self.postsCache, **cacheAcc.postsFormatted}
 
     def getPostsCache(self):
-        return(self.cache.posts)
+        return(self.postsCache)
 
     def setPostsCache(self):
         self.setCache() 
-        for ca in self.getCache():
-            postsP, profiles = ca.listPosts()
-            print(postsP)
-            sys.exit()
-            self.cache.posts = postsP
 
     def getKeys(self):
         return(self.keys)
@@ -414,10 +412,11 @@ def main():
 
     site.setSocialNetworks(config, section)
     site.setCache()
-
     outputData, posts = site.listPosts()
+
+    site.listPosts()
     site.setPostsCache()
-    site.getPostsCache()
+    outputData = {**outputData, **site.getPostsCache()}
     theChannel = site.getChanId("links")  
     # We should check for consistency 
 
@@ -466,12 +465,10 @@ def main():
 
         if site.getProgram():
 
-            lenMax, profileList = site.cache.checkLimitPosts(site.getProgram())
+            #lenMax, profileList = site.cache.checkLimitPosts(site.getProgram())
 
             site.cache.getProfiles()
-            site.cache.listPosts()
-
-            for profile in profileList:
+            for ca in site.cache:
                 lenMax = site.cache.lenMax[profile]
                 if profile[0] in site.getProgram():
                     print("        getProgram %s" % profile)
