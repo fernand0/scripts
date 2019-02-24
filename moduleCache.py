@@ -162,7 +162,7 @@ class moduleCache():
         return False
     
     def interpretAndExecute(self, args, command, addArgs=''):
-        logging.info("To show %s" % args)
+        logging.info("To %s %s" % (command, args))
     
         update = ""
         profiles = self.profiles
