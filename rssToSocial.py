@@ -221,6 +221,7 @@ def main():
                                 (bufferMax, lenMax, num)) 
 
                         listPosts = []
+                        link = ""
                         for j in range(num, 0, -1):
                             logging.debug("j, i %d - %d"% (j,i))
                             if (i <= 0):
