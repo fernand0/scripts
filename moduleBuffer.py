@@ -69,13 +69,18 @@ from configMod import *
 
 class moduleBuffer():
 
-    def __init__(self):
-        self.service = None
+    def __init__(self, bufferapp):
+        self.buffer = None
         self.posts = None
+        self.postsFormatted = None
         self.profiles = None
         self.lenMax = {}
+        self.bufferpp = bufferapp
 
-    def API(self):
+    def getBuffer(self):
+        return(self.buffer)
+
+    def setBuffer(self):
         config = configparser.ConfigParser()
         logging.debug("Config...%s" % CONFIGDIR)
         config.read(CONFIGDIR + '/.rssBuffer')
@@ -90,10 +95,10 @@ class moduleBuffer():
                   client_secret=clientSecret,
                   access_token=accessToken)
     
-        self.service = api
+        self.buffer = api
 
     def checkLimitPosts(self, myServices, service=''):
-        api = self.service
+        api = self.buffer
 
         lenMax = 0
         logging.info("Checking services...")
@@ -117,7 +122,7 @@ class moduleBuffer():
         return(lenMax, profileList)
 
     def setProfiles(self, service=""):
-        api = self.service
+        api = self.buffer
         logging.info("Checking services...")
         
         if (service == ""):
@@ -139,8 +144,8 @@ class moduleBuffer():
             self.setProfiles()
         return(self.profiles)
     
-    def listPosts(self, service=""):
-        api = self.service
+    def setPosts(self, service=""):
+        api = self.buffer
         outputData = {}
     
         self.setProfiles(service)
@@ -176,8 +181,16 @@ class moduleBuffer():
                             outputData[serviceName][method].append((link, link, toShow))
                 else:
                             outputData[serviceName][method].append(('Empty', 'Empty', 'Empty'))
+
+            self.lenMax[serviceName] = len(outputData[serviceName]['pending'])
     
+        self.postsFormatted = outputData
+        print(self.lenMax)
+
         return(outputData, profiles)
+
+    def getPostsFormatted(self):
+        return(self.postsFormatted)
     
     def isForMe(self, serviceName, args):
         if (serviceName[0] in args) or ('*' in args): 
@@ -185,7 +198,7 @@ class moduleBuffer():
         return False
     
     def showPost(self, profiles, args):
-        api = self.service
+        api = self.buffer
         logging.info("To publish %s" % args)
         
         for i in range(len(profiles)): 
@@ -197,7 +210,7 @@ class moduleBuffer():
         return(None)
     
     def publishPost(self, profiles, args):
-        api = self.service
+        api = self.buffer
         logging.info("To publish %s" % args)
     
         for i in range(len(profiles)): 
@@ -215,7 +228,7 @@ class moduleBuffer():
         return(None)
     
     def deletePost(self, profiles, args):
-        api = self.service
+        api = self.buffer
         logging.info("To Delete %s" % args)
     
         update = None
@@ -230,7 +243,7 @@ class moduleBuffer():
         return(update)
     
     def copyPost(self, log, profiles, toCopy, toWhere):
-        api = self.service
+        api = self.buffer
         logging.info(toCopy+' '+toWhere)
     
         profCop = toCopy[0]
@@ -269,7 +282,7 @@ class moduleBuffer():
         # Moving posts, we identify the profile by the first letter. We can use
         # several letters and if we put a '*' we'll move the posts in all the
         # social networks
-        api = self.service
+        api = self.buffer
         i = 0
         profMov = ""
         while toMove[i].isalpha():
@@ -299,7 +312,7 @@ class moduleBuffer():
     
     
     def listSentPosts(self, service=""):
-        api = self.service
+        api = self.buffer
         profiles = self.getProfiles(service)
     
         someSent = False
@@ -345,7 +358,7 @@ class moduleBuffer():
     
     
     def listPendingPosts(self, service=""):
-        api = self.service
+        api = self.buffer
         profiles = self.getProfiles(service)
         
         somePending = False
@@ -397,21 +410,21 @@ def main():
 
     # instantiate the api object 
     blog = moduleBuffer.moduleBuffer()
-    blog.API()
+    blog.setBuffer()
 
     logging.basicConfig(#filename='example.log',
                             level=logging.DEBUG,format='%(asctime)s %(message)s')
 
-    api = blog.service
+    api = blog.buffer
 
     print(api.info)
     logging.debug(api.info)
-    logging.debug(api.info.services.keys())
+    logging.debug(api.info.buffers.keys())
 
     profiles = blog.getProfiles()
     print("profiles", profiles)
 
-    posts, profiles = blog.listPosts("")
+    posts, profiles = blog.setPosts("")
     print(posts)
 
     print("\nshow")

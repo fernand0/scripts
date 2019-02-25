@@ -147,26 +147,22 @@ def main():
         blog = None
         logging.info("Section: %s"% section)
         url = config.get(section, "url")
+        print("Section: %s %s"% (section, url))
         if ("rssfeed" in config.options(section)):
-            blog = moduleRss.moduleRss()
-            print("Section: %s %s"% (section, url))
-            blog.setUrl(url)
-            # It does not preserve case
             rssFeed = config.get(section, "rssFeed")
             logging.info("Blog RSS: %s"% rssFeed)
+            blog = moduleRss.moduleRss()
+            # It does not preserve case
             blog.setRssFeed(rssFeed)
-            blog.setPostsRss()
         elif url.find('slack')>0:
             logging.info("Blog Slack: %s"% url)
             blog = moduleSlack.moduleSlack()
-            blog.setUrl(url)
             blog.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
-            blog.setPostsSlack()
-
+        blog.setUrl(url)
+        blog.setPosts()
 
         if section.find(checkBlog) >= 0:
             # If checkBlog is empty it will add all of them
-
             if ("linksToAvoid" in config.options(section)):
                 blog.setLinksToAvoid(config.get(section, "linksToAvoid"))
             if ("time" in config.options(section)):
@@ -184,8 +180,9 @@ def main():
 
             bufferMax = 9
             if blog.getBufferapp():
-                blog.buffer.API()
-                #api = moduleSocial.connectBuffer()
+                blog.buffer.setBuffer()
+                print(blog.buffer.lenMax)
+                sys.exit()
                 lenMax, profileList = blog.buffer.checkLimitPosts(blog.getBufferapp())
                 logging.debug("Lenmax %d"% lenMax)
 
