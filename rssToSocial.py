@@ -181,13 +181,13 @@ def main():
             bufferMax = 9
             if blog.getBufferapp():
                 blog.buffer.setBuffer()
-                print(blog.buffer.lenMax)
-                sys.exit()
-                lenMax, profileList = blog.buffer.checkLimitPosts(blog.getBufferapp())
-                logging.debug("Lenmax %d"% lenMax)
 
-                for profile in profileList:
+                for profile in blog.getSocialNetworks():
+                    print(profile)
                     lenMax = blog.buffer.lenMax[profile['service']]
+                    print(lenMax)
+                    sys.exit()
+                    logging.info("Lenmax %d"% lenMax)
                     logging.info("Service %s" 
                             % profile['service'] + blog.getBufferapp())
                     if (profile['service'][0] in blog.getBufferapp()): 

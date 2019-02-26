@@ -185,7 +185,6 @@ class moduleBuffer():
             self.lenMax[serviceName] = len(outputData[serviceName]['pending'])
     
         self.postsFormatted = outputData
-        print(self.lenMax)
 
         return(outputData, profiles)
 

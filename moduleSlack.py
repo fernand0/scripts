@@ -95,14 +95,15 @@ class moduleSlack():
 
     def setBuffer(self, bufferapp):
         self.bufferapp = bufferapp
-        self.buffer = moduleBuffer.moduleBuffer(bufferapp) 
+        self.buffer = moduleBuffer.moduleBuffer(self.bufferapp)
+        self.buffer.setBuffer()
+        self.buffer.setPosts()
 
     def getBufferapp(self):
         return(self.bufferapp)
  
     def setBufferapp(self, bufferapp):
         self.setBuffer(bufferapp)
-        self.buffer.setBuffer()
 
     def getCache(self):
         return(self.cache)
