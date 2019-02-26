@@ -358,8 +358,8 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
         profileList = []
         firstLink = None
     fail = 'no'
-    line = profile['service']
-    logger.info("  %s" % profile['service'])
+    line = profile
+    logger.info("  %s" % profile)
 
     if (len(title) > 240):
         titlePostT = title[:240] 
@@ -367,7 +367,7 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
         titlePostT = ""
     post = title + " " + firstLink
 
-    if (profile['service'] == 'twitter') or (profile['service'] == 'facebook'):
+    if (profile == 'twitter') or (profile == 'facebook'):
         # We should add a configuration option in order to check which
         # services are the ones with immediate posting. For now, we
         # know that we are using Twitter and Facebook
@@ -382,13 +382,13 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
     if not (firstLink[firstLink.find(':')+2:] in theList):
         # Without the http or https 
         try:
-            if titlePostT and (profile['service'] == 'twitter'):
+            if titlePostT and (profile == 'twitter'):
                 entry = urllib.parse.quote(titlePostT + " " + firstLink)#.encode('utf-8')
             else:
                 entry = urllib.parse.quote(post)#.encode('utf-8')
 
-            if (profile['service'][0] in services): 
-                profile.updates.new(entry)
+            if (profile[0] in services): 
+                blog.getBuffer().updates.new(entry)
 
             line = line + ' ok'
             time.sleep(2)

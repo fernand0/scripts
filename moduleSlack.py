@@ -116,13 +116,14 @@ class moduleSlack():
         return(self.cache)
 
     def setCache(self):
-        self.cache = []
+        self.cache = {}
         for sN in self.getSocialNetworks():
-            cacheAcc = moduleCache.moduleCache(self.getUrl(), 
-                    sN, self.getSocialNetworks()[sN]) 
-            cacheAcc.setPosts()
-            cacheAcc.setPostsFormatted()
-            self.cache.append(cacheAcc)
+            if sN[0] in self.getProgram():
+                cacheAcc = moduleCache.moduleCache(self.getUrl(), 
+                        sN, self.getSocialNetworks()[sN]) 
+                cacheAcc.setPosts()
+                cacheAcc.setPostsFormatted()
+                self.cache[sN+'_'+self.getSocialNetworks()[sN]] = cacheAcc
 
     def getProgram(self):
         return(self.program)

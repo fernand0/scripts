@@ -295,13 +295,13 @@ def main():
     blog = moduleSlack.moduleSlack()
     blog.setUrl(config.get(section, "url"))
     blog.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
+    blog.setSocialNetworks(config, section)
 
     if ('bufferapp' in config.options(section)): 
         blog.setBufferapp(config.get(section, "bufferapp"))
     if ('program' in config.options(section)): 
         blog.setProgram(config.get(section, "program"))
 
-    blog.setSocialNetworks(config, section)
     cache = []
     for sN in blog.getSocialNetworks():
         (sN, blog.getSocialNetworks()[sN])
