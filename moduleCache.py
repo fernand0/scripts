@@ -108,6 +108,7 @@ class moduleCache():
         udpate = None
         if self.isForMe(args):
             j = int(args[-1])
+            nick = profile['socialNetwork'][1]
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.postsFormatted[serviceName]['pending'][j])
             publishMethod = getattr(moduleSocial, 
                     'publish'+ serviceName)

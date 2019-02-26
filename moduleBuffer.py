@@ -154,7 +154,7 @@ class moduleBuffer():
     
         for profile in profiles:
     
-            serviceName = profile.formatted_service
+            serviceName = profile['service']
     
             logging.info("Profile %s" % serviceName)
     
