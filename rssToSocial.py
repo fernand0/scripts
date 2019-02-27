@@ -233,8 +233,11 @@ def main():
                                 logging.info("        Scheduling post %s" % post[0])
 
                                 (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post
-                                moduleSocial.publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, blog.getBufferapp())
-
+                                print("title", title, link)
+                                profileN = profile+'_'+blog.getSocialNetworks()[profile]
+                                moduleSocial.publishBuffer(blog, profileN,
+                                        title, link, firstLink, isDebug,
+                                        lenMax, blog.getBufferapp())
                             if link:
                                 updateLastLink(url, link, (profile, 
                                     blog.getSocialNetworks()[profile])) 
@@ -267,7 +270,6 @@ def main():
                                 updateLastLink(url, link, (socialNetwork, 
                                     blog.getSocialNetworks()[socialNetwork]))
 
-            sys.exit()
             if blog.getProgram():
                 t = {}
                 lenMax = 6
@@ -278,7 +280,7 @@ def main():
                     if profile[0] in blog.getProgram():
                         print("      getProgram %s" % profile)
                         lenMax = blog.cache[profile+'_'
-                                +blog.getSocialNetworks()[profile]].lenMax
+                                + blog.getSocialNetworks()[profile]].lenMax
                         logging.info("Lenmax %d"% lenMax)
                         logging.info("Service %s %s" 
                                 % (profile , blog.getProgram()))
@@ -332,10 +334,11 @@ def main():
 
 
                             socialNetwork = (profile,blog.getSocialNetworks()[profile])
-                            timeSlots = 60*60 # One hour
+                            timeSlots = 5*5 #60*60 # One hour
                             t[socialNetwork[0]] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, listPosts, socialNetwork, 1, timeSlots))
                             t[socialNetwork[0]].start()
 
+                            sys.exit()
                             if link:
                                 logging.info("Updating link %s" % profile)
                                 updateLastLink(blog.url, link, socialNetwork)

@@ -105,6 +105,11 @@ class moduleSlack():
         self.buffer = moduleBuffer.moduleBuffer(self.bufferapp)
         self.buffer.setBuffer()
         self.buffer.setPosts()
+        self.profiles = {}
+        for sN in self.buffer.getProfiles():
+            serviceName = sN['service']
+            nick =  sN['service_username']
+            self.profiles[serviceName+'_'+nick] = sN
 
     def getBufferapp(self):
         return(self.bufferapp)
@@ -123,6 +128,7 @@ class moduleSlack():
                         sN, self.getSocialNetworks()[sN]) 
                 cacheAcc.setPosts()
                 cacheAcc.setPostsFormatted()
+                # Maybe adding 'Cache_'?
                 self.cache[sN+'_'+self.getSocialNetworks()[sN]] = cacheAcc
 
     def getProgram(self):
