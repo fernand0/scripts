@@ -59,7 +59,8 @@ class moduleCache():
         outputData = {}
         files = []
     
-        serviceName = self.name.capitalize()
+        serviceName = self.name[0].capitalize() + self.name[1:]
+        print(serviceName)
         logging.info("Service %s" % serviceName)
     
         outputData[serviceName] = {'sent': [], 'pending': []}
@@ -75,8 +76,13 @@ class moduleCache():
     
     def updatePostsCache(self):
         fileNameQ = fileNamePath(self.url, self.socialNetwork) + ".queue" 
+
+        print(self.name)
+        #serviceName = self.name.capitalize()
+        serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1]
+        print(serviceName)
+        print(self.postsFormatted[serviceName]['pending'])
     
-        serviceName = self.name.capitalize()
         with open(fileNameQ, 'wb') as f:
             pickle.dump(self.postsFormatted[serviceName]['pending'], f)
         logging.info("Writing in %s" % fileNameQ)

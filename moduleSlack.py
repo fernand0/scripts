@@ -124,6 +124,7 @@ class moduleSlack():
         self.cache = {}
         for sN in self.getSocialNetworks():
             if sN[0] in self.getProgram():
+                print(self.getSocialNetworks()[sN])
                 cacheAcc = moduleCache.moduleCache(self.getUrl(), 
                         sN, self.getSocialNetworks()[sN]) 
                 cacheAcc.setPosts()

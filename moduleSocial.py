@@ -434,15 +434,20 @@ def nextPost(blog, socialNetwork):
 def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots): 
 
     serviceName = socialNetwork[0].capitalize()
+    print(serviceName)
+    print(socialNetwork[0])
+    print(socialNetwork[1])
     blog.cache[socialNetwork[0]+'_'+socialNetwork[1]]
     blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].setPosts()
     serviceName = blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].name
+    print(blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].postsFormatted)
     listP = blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].postsFormatted[serviceName]['pending']
     newListP = listP + listPosts
 
     blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].postsFormatted[serviceName]['pending'] = newListP
     logging.info("Blog url %s" % blog.getUrl())
     logging.info("Blog socialNetwork %s" % type(socialNetwork))
+    print(blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].postsFormatted[serviceName]['pending'] )
     blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].updatePostsCache()
 
     for j in  range(numPosts): 
@@ -456,7 +461,6 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
         print("         %s: waiting ... %.2f minutes" % (socialNetwork[0], tSleep/60))
 
         print(element[0], (socialNetwork[0], tSleep/60))
-        sys.exit()
         time.sleep(tSleep) 
 
         # Things can have changed during the waiting
@@ -468,8 +472,8 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
         nick = socialNetwork[1]
         publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
 
-        blog.cache.posts[serviceName]['pending'] = listP
-        blog.cache.updatePostsCache(socialNetwork)
+        blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].postsFormatted[serviceName]['pending'] = listP
+        blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].updatePostsCache()
            
         if j+1 < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))
