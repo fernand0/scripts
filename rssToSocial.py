@@ -186,7 +186,7 @@ def main():
 
                 for profile in blog.getSocialNetworks():
                     if (profile[0] in blog.getBufferapp()): 
-                        print("      getBuffer %s" % profile)
+                        print("      Checking Buffer publishing %s" % profile)
                         lenMax = blog.buffer.lenMax[profile]
                         logging.info(" Lenmax %d"% lenMax)
                         logging.info(" Service %s %s" 
@@ -242,8 +242,8 @@ def main():
                                 logging.debug("listPosts: %s"% listPosts)
             else:
                 for socialNetwork in blog.getSocialNetworks():
-                    print("      Direct publishing %s" % socialNetwork)
-                    logging.info(" Social Network %s" % socialNetwork)
+                    print("      Checking direct publishing %s" % socialNetwork)
+                    logging.info("Social Network %s" % socialNetwork)
                     lastLink, lastTime = checkLastLink(url, 
                             (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                     #blog.addLastLinkPublished(socialNetwork, 
@@ -276,7 +276,7 @@ def main():
 
                 for profile in blog.getSocialNetworks():
                     if profile[0] in blog.getProgram():
-                        print("      getProgram %s" % profile)
+                        print("      Checking Cache publishing %s" % profile)
                         lenMax = blog.cache[profile+'_'
                                 + blog.getSocialNetworks()[profile]].lenMax
                         logging.info("  Lenmax %d"% lenMax)
@@ -333,7 +333,7 @@ def main():
 
 
                             socialNetwork = (profile,blog.getSocialNetworks()[profile])
-                            timeSlots = 25*60 #60*60 # One hour
+                            timeSlots = 60*60 #60*60 # One hour
                             t[socialNetwork[0]] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, listPosts, socialNetwork, 1, timeSlots))
                             t[socialNetwork[0]].start()
 
