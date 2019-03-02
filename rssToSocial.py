@@ -133,9 +133,7 @@ def main():
                         level=loggingLevel, format='%(asctime)s %(message)s')
 
     logging.info("Launched at %s" % time.asctime())
-
     logging.debug("Parameters %s, %d" % (sys.argv, len(sys.argv)))
-
     logging.info("Configured blogs:")
 
     config = configparser.ConfigParser()
@@ -323,7 +321,7 @@ def main():
 
 
                         socialNetwork = (profile,blog.getSocialNetworks()[profile])
-                        timeSlots = 60*60 # One hour
+                        timeSlots = 20*60 # One hour
                         t[socialNetwork[0]] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, listPosts, socialNetwork, 1, timeSlots))
                         t[socialNetwork[0]].start()
 
