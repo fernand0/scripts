@@ -434,20 +434,14 @@ def nextPost(blog, socialNetwork):
 def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots): 
 
     serviceName = socialNetwork[0].capitalize()
-    print(serviceName)
-    print(socialNetwork[0])
-    print(socialNetwork[1])
-    blog.cache[socialNetwork[0]+'_'+socialNetwork[1]]
     blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].setPosts()
     serviceName = blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].name
-    print(blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].postsFormatted)
     listP = blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].postsFormatted[serviceName]['pending']
     newListP = listP + listPosts
 
     blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].postsFormatted[serviceName]['pending'] = newListP
     logging.info("Blog url %s" % blog.getUrl())
     logging.info("Blog socialNetwork %s" % type(socialNetwork))
-    print(blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].postsFormatted[serviceName]['pending'] )
     blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].updatePostsCache()
 
     for j in  range(numPosts): 

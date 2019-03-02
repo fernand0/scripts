@@ -196,10 +196,14 @@ def main():
                             lastLink, lastTime = checkLastLink(url, (profile, 
                                 blog.getSocialNetworks()[profile]))
                             i = blog.getLinkPosition(lastLink)
-                            print(i, lastLink, lastTime)
 
                             logging.debug("profile %s"% profile)
-                            logging.info("lastLink %s %d"% (lastLink, i))
+                            print("lastLink %s %s %d"% 
+                                    (time.strftime('%Y-%m-%d %H:%M:%S', 
+                                        time.localtime(lastTime)), lastLink, i))
+                            logging.info("lastLink %s %s %d"% 
+                                    (time.strftime('%Y-%m-%d %H:%M:%S', 
+                                        time.localtime(lastTime)), lastLink, i))
                             # This needs rethinking
                             #if ((profile['service'] == 'twitter') 
                             #        or (profile['service'] == 'facebook')):
@@ -240,8 +244,8 @@ def main():
                                     blog.getSocialNetworks()[profile])) 
                                 logging.debug("listPosts: %s"% listPosts)
             else:
-                for socialNetwork in blog.getSocialNetworks().keys():
-                    print("      Not buffer %s" % socialNetwork)
+                for socialNetwork in blog.getSocialNetworks():
+                    print("      Direct publishing %s" % socialNetwork)
                     logging.info("Social Network %s" % socialNetwork)
                     lastLink, lastTime = checkLastLink(url, 
                             (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
@@ -249,7 +253,12 @@ def main():
                             #lastLink, lastTime) 
                     i = blog.getLinkPosition(lastLink) 
 
-                    logging.debug("i, lastLink %d %s"% (i,lastLink))
+                    print("lastLink %s %s %d"% 
+                            (time.strftime('%Y-%m-%d %H:%M:%S', 
+                                time.localtime(lastTime)), lastLink, i))
+                    logging.info("lastLink %s %s %d"% 
+                            (time.strftime('%Y-%m-%d %H:%M:%S', 
+                                time.localtime(lastTime)), lastLink, i))
                     if (i > 0):
                         nick = blog.getSocialNetworks()[socialNetwork]
                         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
@@ -272,7 +281,6 @@ def main():
                 lenMax = 6
                 #lenMax, profileList = blog.cache.checkLimitPosts(blog.getProgram())
                 logging.info("Lenmax %d"% lenMax)
-                print(blog.getSocialNetworks())
 
                 for profile in blog.getSocialNetworks():
                     if profile[0] in blog.getProgram():
@@ -287,10 +295,14 @@ def main():
                             lastLink, lastTime = checkLastLink(url, 
                                     (profile, blog.getSocialNetworks()[profile]))
                             i = blog.getLinkPosition(lastLink) 
-                            print(i, lastLink, lastTime)
 
                             logging.debug("profile %s"% profile)
-                            logging.info("lastLink %s %d"% (lastLink, i))
+                            print("lastLink %s %s %d"% 
+                                    (time.strftime('%Y-%m-%d %H:%M:%S', 
+                                        time.localtime(lastTime)), lastLink, i))
+                            logging.info("lastLink %s %s %d"% 
+                                    (time.strftime('%Y-%m-%d %H:%M:%S', 
+                                        time.localtime(lastTime)), lastLink, i))
                             #This needs rethinking
                             #if ((profile == 'twitter') 
                             #        or (profile == 'facebook')):
