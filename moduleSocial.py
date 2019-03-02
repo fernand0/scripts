@@ -389,7 +389,6 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
             else:
                 entry = urllib.parse.quote(post)#.encode('utf-8')
 
-            print("entry %s" % entry)
             if (profile[0] in services): 
                 blog.profiles[profile].updates.new(entry)
 
