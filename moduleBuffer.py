@@ -150,7 +150,6 @@ class moduleBuffer():
     
         self.setProfiles(service)
         profiles = self.getProfiles()
-        logging.info("** %s" % profiles)
     
         for profile in profiles:
     

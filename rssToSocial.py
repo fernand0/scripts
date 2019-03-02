@@ -130,7 +130,7 @@ def main():
 
     loggingLevel = logging.INFO
     logging.basicConfig(filename = LOGDIR + "/rssSocial_.log",
-                        level=loggingLevel, format='%(asctime)s %(message)s')
+                        level=loggingLevel, format='%(asctime)s [%(filename)s] %(message)s')
 
     logging.info("Launched at %s" % time.asctime())
 
@@ -150,12 +150,12 @@ def main():
         print("Section: %s %s"% (section, url))
         if ("rssfeed" in config.options(section)):
             rssFeed = config.get(section, "rssFeed")
-            logging.info("Blog RSS: %s"% rssFeed)
+            logging.info(" Blog RSS: %s"% rssFeed)
             blog = moduleRss.moduleRss()
             # It does not preserve case
             blog.setRssFeed(rssFeed)
         elif url.find('slack')>0:
-            logging.info("Blog Slack: %s"% url)
+            logging.info(" Blog Slack: %s"% url)
             blog = moduleSlack.moduleSlack()
             blog.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
         blog.setUrl(url)
@@ -176,7 +176,7 @@ def main():
                 blog.setProgram(config.get(section, "program"))
 
 
-            logging.info("Looking for pending posts in ...%s"
+            logging.info(" Looking for pending posts in ...%s"
                     % blog.getSocialNetworks())
             print("   Looking for pending posts ... " )
 
@@ -188,8 +188,8 @@ def main():
                     if (profile[0] in blog.getBufferapp()): 
                         print("      getBuffer %s" % profile)
                         lenMax = blog.buffer.lenMax[profile]
-                        logging.info("Lenmax %d"% lenMax)
-                        logging.info("Service %s %s" 
+                        logging.info(" Lenmax %d"% lenMax)
+                        logging.info(" Service %s %s" 
                                 % (profile , blog.getBufferapp()))
                         num = bufferMax - lenMax
                         if num > 0:
@@ -197,11 +197,8 @@ def main():
                                 blog.getSocialNetworks()[profile]))
                             i = blog.getLinkPosition(lastLink)
 
-                            logging.debug("profile %s"% profile)
-                            print("lastLink %s %s %d"% 
-                                    (time.strftime('%Y-%m-%d %H:%M:%S', 
-                                        time.localtime(lastTime)), lastLink, i))
-                            logging.info("lastLink %s %s %d"% 
+                            logging.debug(" Profile %s"% profile)
+                            logging.info(" lastLink %s %s %d"% 
                                     (time.strftime('%Y-%m-%d %H:%M:%S', 
                                         time.localtime(lastTime)), lastLink, i))
                             # This needs rethinking
@@ -232,7 +229,7 @@ def main():
                                 post = blog.obtainPostData(i, False)
                                 listPosts.append(post)
                                 print("         Scheduling post %s" % post[0])
-                                logging.info("        Scheduling post %s" % post[0])
+                                logging.info("  Scheduling post %s" % post[0])
 
                                 (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post
                                 profileN = profile+'_'+blog.getSocialNetworks()[profile]
@@ -246,17 +243,14 @@ def main():
             else:
                 for socialNetwork in blog.getSocialNetworks():
                     print("      Direct publishing %s" % socialNetwork)
-                    logging.info("Social Network %s" % socialNetwork)
+                    logging.info(" Social Network %s" % socialNetwork)
                     lastLink, lastTime = checkLastLink(url, 
                             (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                     #blog.addLastLinkPublished(socialNetwork, 
                             #lastLink, lastTime) 
                     i = blog.getLinkPosition(lastLink) 
 
-                    print("lastLink %s %s %d"% 
-                            (time.strftime('%Y-%m-%d %H:%M:%S', 
-                                time.localtime(lastTime)), lastLink, i))
-                    logging.info("lastLink %s %s %d"% 
+                    logging.info("  lastLink %s %s %d"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
                                 time.localtime(lastTime)), lastLink, i))
                     if (i > 0):
@@ -264,14 +258,14 @@ def main():
                         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
                         hours = blog.getTime() 
                         if (hours and (((time.time() - lastTime) - int(hours)*60*60) < 0)): 
-                            logging.info("Not publishing because time restriction") 
+                            logging.info("  Not publishing because time restriction") 
                         else:
-                            logging.info("Publishing directly\n") 
+                            logging.info(" Publishing directly\n") 
                             serviceName = socialNetwork.capitalize()
                             publishMethod = getattr(moduleSocial, 
                                     'publish'+ serviceName)
                             result = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
-                            logging.info("Updating Link\n") 
+                            logging.info(" Updating Link\n") 
                             if result != "Fail!":
                                 updateLastLink(url, link, (socialNetwork, 
                                     blog.getSocialNetworks()[socialNetwork]))
@@ -279,16 +273,14 @@ def main():
             if blog.getProgram():
                 t = {}
                 lenMax = 6
-                #lenMax, profileList = blog.cache.checkLimitPosts(blog.getProgram())
-                logging.info("Lenmax %d"% lenMax)
 
                 for profile in blog.getSocialNetworks():
                     if profile[0] in blog.getProgram():
                         print("      getProgram %s" % profile)
                         lenMax = blog.cache[profile+'_'
                                 + blog.getSocialNetworks()[profile]].lenMax
-                        logging.info("Lenmax %d"% lenMax)
-                        logging.info("Service %s %s" 
+                        logging.info("  Lenmax %d"% lenMax)
+                        logging.info("  Service %s %s" 
                                 % (profile , blog.getProgram()))
                         num = bufferMax - lenMax
                         if num > 0:
@@ -296,11 +288,8 @@ def main():
                                     (profile, blog.getSocialNetworks()[profile]))
                             i = blog.getLinkPosition(lastLink) 
 
-                            logging.debug("profile %s"% profile)
-                            print("lastLink %s %s %d"% 
-                                    (time.strftime('%Y-%m-%d %H:%M:%S', 
-                                        time.localtime(lastTime)), lastLink, i))
-                            logging.info("lastLink %s %s %d"% 
+                            logging.debug("  Profile %s"% profile)
+                            logging.info("  lastLink %s %s %d"% 
                                     (time.strftime('%Y-%m-%d %H:%M:%S', 
                                         time.localtime(lastTime)), lastLink, i))
                             #This needs rethinking
@@ -321,7 +310,7 @@ def main():
                             #else:
                             #    theList = []
 
-                            logging.info("bufferMax - lenMax = num %d %d %d"%
+                            logging.info("  bufferMax - lenMax = num %d %d %d"%
                                     (bufferMax, lenMax, num)) 
                             
                             listPosts = []
@@ -334,7 +323,7 @@ def main():
                                 post = blog.obtainPostData(i, False)
                                 listPosts.append(post)
                                 print("        Scheduling post %s" % post[0])
-                                logging.info("         Scheduling post %s" % post[0])
+                                logging.info("   Scheduling post %s" % post[0])
 
                             if listPosts:
                                 link = listPosts[len(listPosts) - 1][1]
@@ -349,7 +338,7 @@ def main():
                             t[socialNetwork[0]].start()
 
                             if link:
-                                logging.info("Updating link %s" % profile)
+                                logging.info("  Updating link %s" % profile)
                                 updateLastLink(blog.url, link, socialNetwork)
 
             time.sleep(2)
