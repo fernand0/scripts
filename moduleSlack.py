@@ -391,12 +391,14 @@ def main():
 
     site.setSocialNetworks(config, section)
     site.setCache()
+    site.setPosts()
 
-    for ca in site.getCache(): 
-        outputData = {**outputData, **ca.getPostsFormatted()}
-    if site.getBufferapp(): 
-        site.getBuffer().setPosts()
-        outputData = {**outputData, **site.getBuffer().getPostsFormatted()}
+    #for ca in site.getCache(): 
+    #    posts = site.getCache()[ca].getPostsFormatted()
+    #    outputData = {**outputData, **posts}
+    #if site.getBufferapp(): 
+    #    site.getBuffer().setPosts()
+    #    outputData = {**outputData, **site.getBuffer().getPostsFormatted()}
 
     theChannel = site.getChanId("links")  
     # We should check for consistency 
@@ -430,50 +432,42 @@ def main():
         sys.exit()
     elif action == 'p':
         if site.getBufferapp():
-            #api = moduleSocial.connectBuffer()
 
             site.buffer.setBuffer()
-            lenMax, profileList = site.buffer.checkLimitPosts(site.getBufferapp())
-
-            for profile in profileList:
-
-                if profile['service'][0] in site.getBufferapp():
-                    print("      getBuffer %s" % profile['service'])
+            for profile in site.getSocialNetworks():
+                if profile[0] in site.getBufferapp():
+                    lenMax = site.buffer.lenMax[profile]
+                    print("      getBuffer %s" % profile)
                     (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
                     # In order to avoid saving the link as the last one
 
                     isDebug = False
-                    moduleSocial.publishBuffer(site, profile, title, link, firstLink, isDebug, lenMax, site.getBufferapp())
+                    profileN = profile+'_'+site.getSocialNetworks()[profile]
+                    moduleSocial.publishBuffer(site, profileN, title, link, firstLink, isDebug, lenMax, site.getBufferapp())
 
         if site.getProgram():
-
-            #lenMax, profileList = site.cache.checkLimitPosts(site.getProgram())
-
-            site.cache.getProfiles()
-            for ca in site.cache:
-                lenMax = site.cache.lenMax[profile]
+            for profile in site.getSocialNetworks():
                 if profile[0] in site.getProgram():
+                    nameCache = profile+'_' + site.getSocialNetworks()[profile]
+                    lenMax = site.cache[nameCache].lenMax
                     print("        getProgram %s" % profile)
-
  
-                socialNetwork = (profile,site.getSocialNetworks()[profile])
+                    socialNetwork = (profile,site.getSocialNetworks()[profile])
 
-                import moduleCache
-                listP = site.cache.listPostsCache(socialNetwork)
-                listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
-                listP = listP + listPsts
-                serviceName = socialNetwork[0].capitalize()
-                site.cache.posts[serviceName]['pending'] = listP
-                site.cache.updatePostsCache(socialNetwork)
+                    serviceName = site.cache[socialNetwork[0]+'_'+socialNetwork[1]].name
+                    listP = site.cache[nameCache].postsFormatted[serviceName]['pending']
+                    listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
+                    listP = listP + listPsts
+                    site.cache[nameCache].postsFormatted[serviceName]['pending'] = listP
+                    site.cache[nameCache].updatePostsCache()
+        client = moduleSocial.connectTumblr()
+        # We need to publish it in the Tumblr blog since we won't publish it by
+        # usuarl means (it is deleted from queue).
+        moduleSocial.publishTumblr('fernand0', title, link, summary, summaryHtml,
+                summaryLinks, image, content, links)
 
 
     site.deletePost(outputData['Slack']['pending'][elem][8], theChannel)
-
-    client = moduleSocial.connectTumblr()
-    # We need to publish it in the Tumblr blog since we won't publish it by
-    # usuarl means (it is deleted from queue).
-    moduleSocial.publishTumblr('fernand0', title, link, summary, summaryHtml,
-            summaryLinks, image, content, links)
 
 
 if __name__ == '__main__':

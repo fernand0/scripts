@@ -431,17 +431,16 @@ def nextPost(blog, socialNetwork):
     return(element,listP)
 
 def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots): 
-
-    serviceName = socialNetwork[0].capitalize()
-    blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].setPosts()
-    serviceName = blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].name
-    listP = blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].postsFormatted[serviceName]['pending']
+    nameCache = socialNetwork[0]+'_'+socialNetwork[1]
+    blog.cache[nameCache].setPosts()
+    serviceName = blog.cache[nameCache].name
+    listP = blog.cache[nameCache].postsFormatted[serviceName]['pending']
     newListP = listP + listPosts
 
-    blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].postsFormatted[serviceName]['pending'] = newListP
+    blog.cache[nameCache].postsFormatted[serviceName]['pending'] = newListP
     logging.info("Blog url %s" % blog.getUrl())
     logging.info("Blog socialNetwork %s" % type(socialNetwork))
-    blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].updatePostsCache()
+    blog.cache[nameCache].updatePostsCache()
 
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
@@ -456,6 +455,8 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
         print(element[0], (socialNetwork[0], tSleep/60))
         time.sleep(tSleep) 
 
+        blog.getPosts()
+        blog.getPostsFormatted()
         # Things can have changed during the waiting
         element, listP = nextPost(blog,socialNetwork)
 
