@@ -95,13 +95,14 @@ class moduleCache():
     
         if self.isForMe(args):
             j = int(args[-1])
-            serviceName = self.name.capitalize()
+            serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1] #self.name.capitalize()
+            logging.debug(self.postsFormatted)
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.postsFormatted[serviceName]['pending'][j])
-                        
             if title:
                 return(title+' '+link)
             else:
-                return(None)
+                return("")
+        return("")
     
     def publishPost(self, args):
         #return(self.interpretAndExecute(args,'publish'))
@@ -110,22 +111,25 @@ class moduleCache():
         udpate = None
         if self.isForMe(args):
             j = int(args[-1])
-            nick = profile['socialNetwork'][1]
+            nick = self.socialNetwork[1]
+            serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1] #self.name.capitalize()
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.postsFormatted[serviceName]['pending'][j])
             publishMethod = getattr(moduleSocial, 
-                    'publish'+ serviceName)
+                    'publish'+ self.socialNetwork[0].capitalize())
             logging.info("Publishing title: %s" % title)
             logging.info("Social network: %s Nick: %s" % (serviceName, nick))
             update = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
             if not isinstance(update, str) or (isinstance(update, str) and update[:4] != "Fail"):
-                self.posts[serviceName]['pending'] = self.posts[serviceName]['pending'][:j] + self.posts[serviceName]['pending'][j+1:]
-                logging.debug("Updating %s" % self.posts)
+                self.postsFormatted[serviceName]['pending'] = self.postsFormatted[serviceName]['pending'][:j] + self.postsFormatted[serviceName]['pending'][j+1:]
+                logging.debug("Updating %s" % self.postsFormatted)
                 #logging.info("Blog %s" % cache['blog'])
-                self.updatePostsCache(profile['socialNetwork'])
+                self.updatePostsCache()
                 if 'text' in update:
                     update = update['text']
+                logging.info("Update", update)
     
-        return(update)
+            return(update)
+        return ""
     
     def deletePost(self, args):
         #return(self.interpretAndExecute(args,'delete'))
@@ -142,6 +146,7 @@ class moduleCache():
             logging.debug("-Posts %s" % self.postsFormatted[serviceName]['pending'])
             logging.info("social network %s - %s" 
                     % (self.socialNetwork[0], self.socialNetwork[1]))
+            self.updatePostsCache()
     
         return(update)
     
@@ -153,7 +158,7 @@ class moduleCache():
         udpate = None
         if self.isForMe(args):
             j = int(args[-1])
-            serviceName = self.name.capitalize()
+            serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1] #self.name.capitalize()
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.postsFormatted[serviceName]['pending'][j])
             self.postsFormatted[serviceName]['pending'][j] = (newTitle, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
             self.updatePostsCache()
@@ -169,7 +174,7 @@ class moduleCache():
     # These need work
     #######################################################
     
-    def movePost(self, cache, posts, toMove, toWhere):
+    def movePost(self, args):
         # Moving posts, we identify the profile by the first letter. We can use
         # several letters and if we put a '*' we'll move the posts in all the
         # social networks
@@ -177,6 +182,7 @@ class moduleCache():
     
         i = 0
         profMov = ""
+        return(args)
         while toMove[i].isalpha():
             profMov = profMov + toMove[i]
             i = i + 1
@@ -316,9 +322,10 @@ def main():
         print(ca.name)
         ca.getPostsFormatted()
         print(ca.showPost('F1'))
-        print(ca.showPost('T1'))
+        print(ca.showPost('T3'))
         print(ca.showPost('TF2'))
-        print(ca.showPost('*3'))
+        print(ca.showPost('*4'))
+        ca.movePost('T4 T3')
         #ca.editPost('T4', "My Stepdad's Huge Dataset.") 
         #ca.editPost('F5', "¡Sumate al datatón y a WiDS 2019! - lanacion.com")
     sys.exit()
