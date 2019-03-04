@@ -101,7 +101,7 @@ class moduleBuffer():
         api = self.buffer
 
         lenMax = 0
-        logging.info("Checking services...")
+        logging.info("  Checking services...")
         if service: 
             profile = Profiles(api=api).filter(service=service)
             logging.debug("Profile %s" % profile)
@@ -126,9 +126,10 @@ class moduleBuffer():
         logging.info("Checking services...")
         
         if (service == ""):
-            logging.info("All available")
+            logging.info("   All available")
             profiles = Profiles(api=api).all()
         else:
+            logging.info("   %s" % service)
             logging.info(service)
             profiles = Profiles(api=api).filter(service=service)
             
@@ -155,7 +156,7 @@ class moduleBuffer():
     
             serviceName = profile['service']
     
-            logging.info("Profile %s" % serviceName)
+            logging.info("   Profile %s" % serviceName)
     
             outputData[serviceName] = {'sent': [], 'pending': []}
             for method in ['sent', 'pending']:
@@ -320,7 +321,7 @@ class moduleBuffer():
             logging.debug("Service %d %s" % (i,serviceName))
             if (profiles[i].counts['sent'] > 0):
                 someSent = True
-                logging.info("Service %s" % serviceName)
+                logging.info("   Service %s" % serviceName)
                 logging.debug("There are: %d" % profiles[i].counts['sent'])
                 logging.debug(profiles[i].updates.sent)
                 due_time=""

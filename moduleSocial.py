@@ -359,7 +359,6 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
         firstLink = None
     fail = 'no'
     line = profile
-    logger.info("  %s" % profile)
 
     if (len(title) > 240):
         titlePostT = title[:240] 
@@ -405,10 +404,9 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
                        + urllib.parse.urlparse(link).netloc
                        + ".fail", "w")
             failFile.write(post)
-            logger.info("  %s service" % line)
             fail = 'yes'
 
-    logger.info("  %s service" % line)
+    logger.info("  Profile %s" % line)
 
 def searchTwitter(search, twitter): 
     t = connectTwitter(twitter)

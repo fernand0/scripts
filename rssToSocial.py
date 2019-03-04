@@ -188,8 +188,8 @@ def main():
                     if (profile[0] in blog.getBufferapp()): 
                         print("      Checking Buffer publishing %s" % profile)
                         lenMax = blog.buffer.lenMax[profile]
-                        logging.info(" Lenmax %d"% lenMax)
-                        logging.info(" Service %s %s" 
+                        logging.debug("Lenmax %d"% lenMax)
+                        logging.info("  Service %s %s" 
                                 % (profile , blog.getBufferapp()))
                         num = bufferMax - lenMax
                         if num > 0:
@@ -243,14 +243,14 @@ def main():
             else:
                 for socialNetwork in blog.getSocialNetworks():
                     print("      Checking direct publishing %s" % socialNetwork)
-                    logging.info("Social Network %s" % socialNetwork)
+                    logging.info("  Social Network %s" % socialNetwork)
                     lastLink, lastTime = checkLastLink(url, 
                             (socialNetwork, blog.getSocialNetworks()[socialNetwork]))
                     #blog.addLastLinkPublished(socialNetwork, 
                             #lastLink, lastTime) 
                     i = blog.getLinkPosition(lastLink) 
 
-                    logging.info("  lastLink %s %s %d"% 
+                    logging.info("   Last link %s %s %d"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
                                 time.localtime(lastTime)), lastLink, i))
                     if (i > 0):
@@ -323,7 +323,7 @@ def main():
                                 post = blog.obtainPostData(i, False)
                                 listPosts.append(post)
                                 print("        Scheduling post %s" % post[0])
-                                logging.info("   Scheduling post %s" % post[0])
+                                logging.info("  Scheduling post %s" % post[0])
 
                             if listPosts:
                                 link = listPosts[len(listPosts) - 1][1]
