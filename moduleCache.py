@@ -135,11 +135,11 @@ class moduleCache():
         #return(self.interpretAndExecute(args,'delete'))
         logging.info("To Delete %s" % args)
     
-        udpate = None
+        udpate = ""
         if self.isForMe(args):
             j = int(args[-1])
-            serviceName = self.name.capitalize()
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.posts[serviceName]['pending'][j])
+            serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1] #self.name.capitalize()
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.postsFormatted[serviceName]['pending'][j])
             update = "Deleted: "+ title
             logging.debug("Posts %s" % self.postsFormatted[serviceName]['pending'])
             self.postsFormatted[serviceName]['pending'] = self.postsFormatted[serviceName]['pending'][:j] + self.postsFormatted[serviceName]['pending'][j+1:]
@@ -147,8 +147,9 @@ class moduleCache():
             logging.info("social network %s - %s" 
                     % (self.socialNetwork[0], self.socialNetwork[1]))
             self.updatePostsCache()
+            return(update)
     
-        return(update)
+        return("")
     
     def editPost(self, args, newTitle):
         #return(self.interpretAndExecute(args,'edit', newTitle))
@@ -164,7 +165,7 @@ class moduleCache():
             self.updatePostsCache()
             update = "Changed "+title+" with "+newTitle
         else:
-            update = None
+            update = ""
 
         return(update)
     

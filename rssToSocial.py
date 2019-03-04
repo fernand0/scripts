@@ -130,7 +130,7 @@ def main():
 
     loggingLevel = logging.INFO
     logging.basicConfig(filename = LOGDIR + "/rssSocial_.log",
-                        level=loggingLevel, format='%(asctime)s [%(filename)s] %(message)s')
+                        level=loggingLevel, format='%(asctime)s [%(filename)-15s] %(message)s')
 
     logging.info("Launched at %s" % time.asctime())
 

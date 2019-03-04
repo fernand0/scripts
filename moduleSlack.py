@@ -431,7 +431,7 @@ def main():
     if action == 'x':
         sys.exit()
     elif action == 'p':
-        if site.getBufferapp():
+        if False: #site.getBufferapp():
 
             site.buffer.setBuffer()
             for profile in site.getSocialNetworks():
@@ -459,6 +459,8 @@ def main():
                     listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
                     listP = listP + listPsts
                     site.cache[nameCache].postsFormatted[serviceName]['pending'] = listP
+                    print(site.cache[nameCache].postsFormatted[serviceName]['pending'])
+                    sys.exit()
                     site.cache[nameCache].updatePostsCache()
         client = moduleSocial.connectTumblr()
         # We need to publish it in the Tumblr blog since we won't publish it by
