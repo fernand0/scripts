@@ -182,6 +182,7 @@ def main():
             bufferMax = 9
             t = {}
             lenMax = 9
+            link= ""
             for profile in blog.getSocialNetworks():
                 nick = blog.getSocialNetworks()[profile]
                 socialNetwork = (profile, nick)
@@ -193,14 +194,13 @@ def main():
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
                     print("      Checking Cache publishing %s" % profile)
                     lenMax = blog.cache[nameProfile].lenMax
-                     
 
                 logging.debug("Lenmax %d"% lenMax)
                 logging.info("  Service %s %s" 
                         % (profile , blog.getBufferapp()))
 
                 num = bufferMax - lenMax
-                if (num > 0) or not (blog.getBuferapp() or blog.getProgram()):
+                if (num > 0) or not (blog.getBufferapp() or blog.getProgram()):
                     lastLink, lastTime = checkLastLink(url, socialNetwork)
                     i = blog.getLinkPosition(lastLink)
 
@@ -230,14 +230,14 @@ def main():
                             link = ''
 
                 if blog.getBufferapp() and (profile[0] in blog.getBufferapp()): 
-                    blog.buffer.addPosts(blog, profile, listPosts)
+                    blog.buffer.addPosts(blog, nameProfile, listPosts)
 
-                if blog.getProgram() and (profile[0] in blog.getProgram()):
-                    timeSlots = 60*60 #60*60 # One hour
+                if False: #blog.getProgram() and (profile[0] in blog.getProgram()):
+                    timeSlots = 6*6 #60*60 # One hour
                     t[nameProfile] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, listPosts, socialNetwork, 1, timeSlots))
                     t[nameProfile].start() 
 
-                if not (blog.getBuferapp() or blog.getProgram()):
+                if not (blog.getBufferapp() or blog.getProgram()):
                     if (i > 0):
                         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
                         hours = blog.getTime() 
