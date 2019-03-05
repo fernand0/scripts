@@ -126,7 +126,7 @@ class moduleCache():
                 self.updatePostsCache()
                 if 'text' in update:
                     update = update['text']
-                logging.info("Update", update)
+            logging.info("Update before return", update)
     
             return(update)
         return ""
