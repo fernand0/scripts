@@ -97,29 +97,29 @@ class moduleBuffer():
     
         self.buffer = api
 
-    def checkLimitPosts(self, myServices, service=''):
-        api = self.buffer
+    #def checkLimitPosts(self, myServices, service=''):
+    #    api = self.buffer
 
-        lenMax = 0
-        logging.info("  Checking services...")
-        if service: 
-            profile = Profiles(api=api).filter(service=service)
-            logging.debug("Profile %s" % profile)
-            lenMax = profile[0].counts.pending
-            profileList = []
-        else:
-            profileList = Profiles(api=api).all()
-            for profile in profileList: 
-               if (profile['service'][0] in myServices): 
-                   lenProfile = len(profile.updates.pending) 
-                   self.lenMax[profile['service']] = lenProfile
-                   if (lenProfile > lenMax): 
-                       lenMax = lenProfile 
-                       logging.info("%s ok" % profile['service'])
+    #    lenMax = 0
+    #    logging.info("  Checking services...")
+    #    if service: 
+    #        profile = Profiles(api=api).filter(service=service)
+    #        logging.debug("Profile %s" % profile)
+    #        lenMax = profile[0].counts.pending
+    #        profileList = []
+    #    else:
+    #        profileList = Profiles(api=api).all()
+    #        for profile in profileList: 
+    #           if (profile['service'][0] in myServices): 
+    #               lenProfile = len(profile.updates.pending) 
+    #               self.lenMax[profile['service']] = lenProfile
+    #               if (lenProfile > lenMax): 
+    #                   lenMax = lenProfile 
+    #                   logging.info("%s ok" % profile['service'])
 
-        logging.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
+    #    logging.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
 
-        return(lenMax, profileList)
+    #    return(lenMax, profileList)
 
     def setProfiles(self, service=""):
         api = self.buffer
