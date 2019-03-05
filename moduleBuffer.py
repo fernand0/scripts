@@ -225,7 +225,14 @@ class moduleBuffer():
                 if upd['success']:
                     return(update)
         return(None)
-    
+
+    def addPosts(self, blog, profile, listPosts):
+        for post in listPosts: 
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post 
+            textPost = title + " " + firstLink
+            entry = urllib.parse.quote(textPost)
+            blog.profiles[profile].updates.new(textPost)
+
     def deletePost(self, profiles, args):
         api = self.buffer
         logging.info("To Delete %s" % args)

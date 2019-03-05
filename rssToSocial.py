@@ -181,7 +181,7 @@ def main():
 
             bufferMax = 9
             t = {}
-            lenMax = 6
+            lenMax = 9
             for profile in blog.getSocialNetworks():
                 nick = blog.getSocialNetworks()[profile]
                 socialNetwork = (profile, nick)
@@ -193,16 +193,14 @@ def main():
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
                     print("      Checking Cache publishing %s" % profile)
                     lenMax = blog.cache[nameProfile].lenMax
-
-                if not (blog.getBuferapp() or blog.getProgram()):
-                    print("      Checking direct publishing %s" % profile)
-                    lenMax = bufferMax - 1
+                     
 
                 logging.debug("Lenmax %d"% lenMax)
                 logging.info("  Service %s %s" 
                         % (profile , blog.getBufferapp()))
+
                 num = bufferMax - lenMax
-                if num > 0:
+                if (num > 0) or not (blog.getBuferapp() or blog.getProgram()):
                     lastLink, lastTime = checkLastLink(url, socialNetwork)
                     i = blog.getLinkPosition(lastLink)
 
@@ -232,9 +230,7 @@ def main():
                             link = ''
 
                 if blog.getBufferapp() and (profile[0] in blog.getBufferapp()): 
-                    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post
-                    moduleSocial.publishBuffer(blog, nameProfile, title, link, 
-                            firstLink, isDebug, lenMax, blog.getBufferapp())
+                    blog.buffer.addPosts(blog, profile, listPosts)
 
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
                     timeSlots = 60*60 #60*60 # One hour
