@@ -437,7 +437,7 @@ def main():
             for profile in site.getSocialNetworks():
                 if profile[0] in site.getBufferapp():
                     lenMax = site.buffer.lenMax[profile]
-                    print("      getBuffer %s" % profile)
+                    print("   tBuffer %s" % profile)
                     (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
                     # In order to avoid saving the link as the last one
 
@@ -450,7 +450,7 @@ def main():
                 if profile[0] in site.getProgram():
                     nameCache = profile+'_' + site.getSocialNetworks()[profile]
                     lenMax = site.cache[nameCache].lenMax
-                    print("        getProgram %s" % profile)
+                    print("   getProgram %s" % profile)
  
                     socialNetwork = (profile,site.getSocialNetworks()[profile])
 

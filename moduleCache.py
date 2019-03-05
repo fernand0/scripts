@@ -133,8 +133,12 @@ class moduleCache():
                 logging.debug("Updating %s" % self.postsFormatted)
                 #logging.info("Blog %s" % cache['blog'])
                 self.updatePostsCache()
+                logging.info("UUpdate ... %s" % str(update))
                 if 'text' in update:
                     update = update['text']
+                if type(update) == tuple:
+                    update = update[1]['id']
+                    # link: https://www.facebook.com/[name]/posts/[second part of id]
             logging.info("Update before return", update)
     
             return(update)
