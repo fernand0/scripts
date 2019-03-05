@@ -26,7 +26,6 @@ class moduleSlack():
          self.socialNetworks = {}
          self.linksToAvoid = ""
          self.posts = None
-         self.postsCache = None
          self.time = []
          self.bufferapp = None
          self.program = None
@@ -34,7 +33,6 @@ class moduleSlack():
          self.cache = None
          self.lastLinkPublished = {}
          self.keys = []
-         #self.logger = logging.getLogger(__name__)
 
     def getUrl(self):
         return(self.url)
@@ -58,6 +56,13 @@ class moduleSlack():
             if (option in socialNetworksOpt):
                 nick = config.get(section, option)
                 socialNetwork = (option, nick)
+                self.addSocialNetwork(socialNetwork)
+        if self.getBufferapp():
+            profiles = self.buffer.getProfiles()
+            for profile in profiles:
+                nick =  profile['service_username']
+                service = profile['service']
+                socialNetwork = (service, nick)
                 self.addSocialNetwork(socialNetwork)
  
     def addSocialNetwork(self, socialNetwork):
@@ -92,12 +97,40 @@ class moduleSlack():
     def setTime(self, time):
         self.time = time
 
+    def getBuffer(self):
+        return(self.buffer)
+
+    def setBuffer(self, bufferapp):
+        self.bufferapp = bufferapp
+        self.buffer = moduleBuffer.moduleBuffer(self.bufferapp)
+        self.buffer.setBuffer()
+        self.buffer.setPosts()
+        self.profiles = {}
+        for sN in self.buffer.getProfiles():
+            serviceName = sN['service']
+            nick =  sN['service_username']
+            self.profiles[serviceName+'_'+nick] = sN
+
     def getBufferapp(self):
         return(self.bufferapp)
  
     def setBufferapp(self, bufferapp):
-        self.bufferapp = bufferapp
-        self.setBuffer()
+        self.setBuffer(bufferapp)
+
+    def getCache(self):
+        return(self.cache)
+
+    def setCache(self):
+        self.cache = {}
+        for sN in self.getSocialNetworks():
+            if sN[0] in self.getProgram():
+                print(self.getSocialNetworks()[sN])
+                cacheAcc = moduleCache.moduleCache(self.getUrl(), 
+                        sN, self.getSocialNetworks()[sN]) 
+                cacheAcc.setPosts()
+                cacheAcc.setPostsFormatted()
+                # Maybe adding 'Cache_'?
+                self.cache[sN+'_'+self.getSocialNetworks()[sN]] = cacheAcc
 
     def getProgram(self):
         return(self.program)
@@ -106,7 +139,7 @@ class moduleSlack():
         self.program = program
         self.setCache()
 
-    def setPostsSlack(self, channel='links'):
+    def setPosts(self, channel='links'):
         if self.posts is None:
             self.posts = []
             theChannel = self.getChanId(channel)
@@ -114,32 +147,26 @@ class moduleSlack():
             logging.debug(history)
             for msg in history['messages']:
                 self.posts.append(msg)
+        outputData = {}
+        serviceName = 'Slack'
+        outputData[serviceName] = {'sent': [], 'pending': []}
+        for post in self.posts:
+            if 'attachments' in post:
+                outputData[serviceName]['pending'].append(
+                    (post['text'][1:-1], post['attachments'][0]['title'], '', '', '', '', '', '', post['ts'], ''))
+            else:
+                #print(post)
+                outputData[serviceName]['pending'].append(
+                    (post['text'][1:-1], '', '', '', '', '', '', '', post['ts'], ''))
+        self.postsFormatted = outputData
+ 
+    def getPostsFormatted(self):
+        return(self.postsFormatted)
 
-    def getPostsSlack(self):
+    def getPosts(self):
         logging.debug("# posts", len(self.posts))
         logging.debug(self.posts)
         return(self.posts)
-
-    def getBuffer(self):
-        return(self.buffer)
-
-    def setBuffer(self):
-        self.buffer = moduleBuffer.moduleBuffer() 
-
-    def getCache(self):
-        return(self.cache)
-
-    def setCache(self):
-        self.cache = moduleCache.moduleCache(self.url, self.socialNetworks) 
-
-    def getPostsCache(self):
-        return(self.cache.posts)
-
-    def setPostsCache(self):
-        self.setCache() 
-        self.cache.getProfiles()
-        postsP, profiles = self.cache.listPosts('')
-        self.cache.posts = postsP
 
     def getKeys(self):
         return(self.keys)
@@ -147,41 +174,13 @@ class moduleSlack():
     def setKeys(self, keys):
         self.keys = keys
 
-    def checkLimitPosts(self, myServices, service=''):
-        profileList = self.getSocialNetworks().keys()
-        if service: 
-            self.setPostsCache() 
-            listP = self.getPostsCache() 
-            lenProfile = len(listP) 
-            #print(lenProfile)
-            lenMax = lenProfile
-            listProfiles = []
-        else:
-            for profile in self.getSocialNetworks():
-                print("-->",profile, myServices)
-                if (profile[0] in myServices): 
-                    print("Profile %s" %profile)
-                    print("Profile program %s" % myServices)
-                    listP = self.getPostsCache((profile, 
-                        self.getSocialNetworks()[profile])) 
-                    print(listP)
-                    lenProfile = len(listP) 
-                    if (lenProfile > lenMax): 
-                        lenMax = lenProfile 
-                        logger.info("%s ok" % profile)
-
-        logging.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
-
-        return(lenMax, profileList)
-
-
     def getLinkPosition(self, link):
         i = 0
-        if self.getPostsSlack():
+        if self.getPosts():
             if not link:
-                logging.debug(self.getPostsSlack())
-                return(len(self.getPostsSlack()))
-            for entry in self.getPostsSlack():
+                logging.debug(self.getPosts())
+                return(len(self.getPosts()))
+            for entry in self.getPosts():
                 linkS = link.decode()
                 if 'original_url' in entry: 
                     url = entry['original_url']
@@ -196,29 +195,12 @@ class moduleSlack():
 
     def deletePost(self, idPost, theChannel): 
         logging.info("Deleting id %s" % idPost)
-        # Needs improvement
             
         result = self.sc.api_call("chat.delete", channel=theChannel, ts=idPost)
     
         logging.info(result)
         return(result)
     
-    def listPosts(api, service=""):
-        outputData = {}
-    
-        serviceName = 'Slack'
-        outputData[serviceName] = {'sent': [], 'pending': []}
-        posts = api.getPostsSlack()
-        for post in posts:
-            if 'attachments' in post:
-                outputData[serviceName]['pending'].append(
-                    (post['text'][1:-1], post['attachments'][0]['title'], '', '', '', '', '', '', post['ts'], ''))
-            else:
-                #print(post)
-                outputData[serviceName]['pending'].append(
-                    (post['text'][1:-1], '', '', '', '', '', '', '', post['ts'], ''))
-        return(outputData, posts)
-
     def getChanId(self, name):
         chanList = self.sc.api_call("channels.list")['channels']
         for channel in chanList:
@@ -228,9 +210,9 @@ class moduleSlack():
 
     def obtainPostData(self, i, debug=False):
         if not self.posts:
-            self.setPostsSlack()
+            self.setPosts()
 
-        posts = self.getPostsSlack()
+        posts = self.getPosts()
         if not posts:
             return (None, None, None, None, None, None, None, None, None, None)
 
@@ -398,8 +380,9 @@ def main():
     site.setSlackClient(SLACKCREDENTIALS)
 
     theChannel = site.getChanId(CHANNEL)  
-    site.setPostsSlack('links')
-    site.getPostsSlack()
+    site.setPosts('links')
+    outputData = site.getPostsFormatted()
+    site.getPosts()
     
     if ('bufferapp' in config.options(section)): 
         site.setBufferapp(config.get(section, "bufferapp"))
@@ -407,12 +390,19 @@ def main():
         site.setProgram(config.get(section, "program"))
 
     site.setSocialNetworks(config, section)
+    site.setCache()
+    site.setPosts()
 
-    outputData, posts = site.listPosts()
-    site.setPostsCache()
-    site.getPostsCache()
+    #for ca in site.getCache(): 
+    #    posts = site.getCache()[ca].getPostsFormatted()
+    #    outputData = {**outputData, **posts}
+    #if site.getBufferapp(): 
+    #    site.getBuffer().setPosts()
+    #    outputData = {**outputData, **site.getBuffer().getPostsFormatted()}
+
     theChannel = site.getChanId("links")  
     # We should check for consistency 
+    # Maybe another attribute?
 
     i = 0
     listLinks = ""
@@ -442,52 +432,42 @@ def main():
         sys.exit()
     elif action == 'p':
         if site.getBufferapp():
-            #api = moduleSocial.connectBuffer()
 
-            site.buffer.API()
-            lenMax, profileList = site.buffer.checkLimitPosts(site.getBufferapp())
-
-            for profile in profileList:
-
-                if profile['service'][0] in site.getBufferapp():
-                    print("      getBuffer %s" % profile['service'])
+            site.buffer.setBuffer()
+            for profile in site.getSocialNetworks():
+                if profile[0] in site.getBufferapp():
+                    lenMax = site.buffer.lenMax[profile]
+                    print("      getBuffer %s" % profile)
                     (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
                     # In order to avoid saving the link as the last one
 
                     isDebug = False
-                    moduleSocial.publishBuffer(site, profile, title, link, firstLink, isDebug, lenMax, site.getBufferapp())
+                    profileN = profile+'_'+site.getSocialNetworks()[profile]
+                    moduleSocial.publishBuffer(site, profileN, title, link, firstLink, isDebug, lenMax, site.getBufferapp())
 
         if site.getProgram():
-
-            lenMax, profileList = site.cache.checkLimitPosts(site.getProgram())
-
-            site.cache.getProfiles()
-            site.cache.listPosts()
-
-            for profile in profileList:
-                lenMax = site.cache.lenMax[profile]
+            for profile in site.getSocialNetworks():
                 if profile[0] in site.getProgram():
+                    nameCache = profile+'_' + site.getSocialNetworks()[profile]
+                    lenMax = site.cache[nameCache].lenMax
                     print("        getProgram %s" % profile)
-
  
-                socialNetwork = (profile,site.getSocialNetworks()[profile])
+                    socialNetwork = (profile,site.getSocialNetworks()[profile])
 
-                import moduleCache
-                listP = site.cache.listPostsCache(socialNetwork)
-                listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
-                listP = listP + listPsts
-                serviceName = socialNetwork[0].capitalize()
-                site.cache.posts[serviceName]['pending'] = listP
-                site.cache.updatePostsCache(socialNetwork)
+                    serviceName = site.cache[socialNetwork[0]+'_'+socialNetwork[1]].name
+                    listP = site.cache[nameCache].postsFormatted[serviceName]['pending']
+                    listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
+                    listP = listP + listPsts
+                    site.cache[nameCache].postsFormatted[serviceName]['pending'] = listP
+                    site.cache[nameCache].updatePostsCache()
+        client = moduleSocial.connectTumblr()
+        # We need to publish it in the Tumblr blog since we won't publish it by
+        # usuarl means (it is deleted from queue).
+        moduleSocial.publishTumblr('fernand0', title, link, summary, summaryHtml,
+                summaryLinks, image, content, links)
 
 
     site.deletePost(outputData['Slack']['pending'][elem][8], theChannel)
-
-    client = moduleSocial.connectTumblr()
-    # We need to publish it in the Tumblr blog since we won't publish it by
-    # usuarl means (it is deleted from queue).
-    moduleSocial.publishTumblr('fernand0', title, link, summary, summaryHtml,
-            summaryLinks, image, content, links)
 
 
 if __name__ == '__main__':

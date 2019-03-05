@@ -353,13 +353,12 @@ def publishMail(channel, title, link, summary, summaryHtml, summaryLinks, image,
         return("Fail!")
 
 def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, services='fglt'):
-    logger.info("Publishing in Buffer:")
+    prof = blog.profiles[profile]
     if isDebug:
         profileList = []
         firstLink = None
     fail = 'no'
-    line = profile['service']
-    logger.info("  %s" % profile['service'])
+    line = profile
 
     if (len(title) > 240):
         titlePostT = title[:240] 
@@ -367,28 +366,30 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
         titlePostT = ""
     post = title + " " + firstLink
 
-    if (profile['service'] == 'twitter') or (profile['service'] == 'facebook'):
-        # We should add a configuration option in order to check which
-        # services are the ones with immediate posting. For now, we
-        # know that we are using Twitter and Facebook
-        # We are checking the links tha have been published with other
-        # toolsin order to avoid duplicates
-        
-        with open(DATADIR + '/.urls.pickle', 'rb') as f:
-            theList = pickle.load(f)
-    else:
-        theList = []
+    #Needs rethinking
+    #if (profile == 'twitter') or (profile == 'facebook'):
+    #    # We should add a configuration option in order to check which
+    #    # services are the ones with immediate posting. For now, we
+    #    # know that we are using Twitter and Facebook
+    #    # We are checking the links tha have been published with other
+    #    # toolsin order to avoid duplicates
+    #    
+    #    with open(DATADIR + '/.urls.pickle', 'rb') as f:
+    #        theList = pickle.load(f)
+    #else:
+    #    theList = []
 
+    theList = []
     if not (firstLink[firstLink.find(':')+2:] in theList):
         # Without the http or https 
         try:
-            if titlePostT and (profile['service'] == 'twitter'):
+            if titlePostT and (profile == 'twitter'):
                 entry = urllib.parse.quote(titlePostT + " " + firstLink)#.encode('utf-8')
             else:
                 entry = urllib.parse.quote(post)#.encode('utf-8')
 
-            if (profile['service'][0] in services): 
-                profile.updates.new(entry)
+            if (profile[0] in services): 
+                blog.profiles[profile].updates.new(entry)
 
             line = line + ' ok'
             time.sleep(2)
@@ -403,17 +404,17 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
                        + urllib.parse.urlparse(link).netloc
                        + ".fail", "w")
             failFile.write(post)
-            logger.info("  %s service" % line)
             fail = 'yes'
 
-    logger.info("  %s service" % line)
+    logger.info("  Profile %s" % line)
 
 def searchTwitter(search, twitter): 
     t = connectTwitter(twitter)
     return(t.search.tweets(q=search)['statuses'])
 
 def nextPost(blog, socialNetwork):
-    listP = blog.cache.listPostsCache(socialNetwork)
+    serviceName = blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].name
+    listP = blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].getPostsFormatted()[serviceName]['pending']
 
     if listP: 
         element = listP[0]
@@ -428,32 +429,34 @@ def nextPost(blog, socialNetwork):
     return(element,listP)
 
 def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots): 
-
-    blog.cache.getProfiles()
-    blog.cache.listPosts()
-    listP = blog.cache.listPostsCache(socialNetwork)
+    nameCache = socialNetwork[0]+'_'+socialNetwork[1]
+    blog.cache[nameCache].setPosts()
+    serviceName = blog.cache[nameCache].name
+    listP = blog.cache[nameCache].postsFormatted[serviceName]['pending']
     newListP = listP + listPosts
 
-    serviceName = socialNetwork[0].capitalize()
-    blog.cache.posts[serviceName]['pending'] = newListP
+    blog.cache[nameCache].postsFormatted[serviceName]['pending'] = newListP
     logging.info("Blog url %s" % blog.getUrl())
     logging.info("Blog socialNetwork %s" % type(socialNetwork))
-    blog.cache.updatePostsCache(socialNetwork)
+    blog.cache[nameCache].updatePostsCache()
 
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
         tSleep2 = timeSlots - tSleep
 
-        element, listP = nextPost(blog, socialNetwork)
+        element, listP = nextPost(blog,socialNetwork)
 
         logger.info("%s: waiting ... %.2f minutes" % (socialNetwork[0], tSleep/60))
         logger.info(" I'll publish %s" % element[0])
         print("         %s: waiting ... %.2f minutes" % (socialNetwork[0], tSleep/60))
 
+        print(element[0], (socialNetwork[0], tSleep/60))
         time.sleep(tSleep) 
 
+        blog.getPosts()
+        blog.getPostsFormatted()
         # Things can have changed during the waiting
-        element, listP = nextPost(blog, socialNetwork)
+        element, listP = nextPost(blog,socialNetwork)
 
         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = element
 
@@ -461,8 +464,8 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
         nick = socialNetwork[1]
         publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
 
-        blog.cache.posts[serviceName]['pending'] = listP
-        blog.cache.updatePostsCache(socialNetwork)
+        blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].postsFormatted[serviceName]['pending'] = listP
+        blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].updatePostsCache()
            
         if j+1 < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))
