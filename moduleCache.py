@@ -90,7 +90,7 @@ class moduleCache():
     
         with open(fileNameQ, 'wb') as f:
             pickle.dump(self.postsFormatted[serviceName]['pending'], f)
-        logging.info("Writing in %s" % fileNameQ)
+        logging.debug("Writing in %s" % fileNameQ)
     
     def isForMe(self, args):
         serviceName =  self.socialNetwork[0].capitalize()

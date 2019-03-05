@@ -150,7 +150,7 @@ def connectBuffer():
     return(api)
 
 def connectTwitter(twitterAC):    
-    logger.info("Connecting Twitter")
+    logger.info("    Connecting Twitter")
     # In order to obtain the parameters for a new account, just write twitter
     # and follow the instructions
     # The result will be at ~/.twitter_oauth
@@ -180,7 +180,7 @@ def connectTwitter(twitterAC):
     return(t)
 
 def connectFacebook(fbPage = 'me'):
-    logger.info("Connecting Facebook")
+    logger.info("    Connecting Facebook")
     config = configparser.ConfigParser()
     config.read(CONFIGDIR + '/.rssFacebook')
 
@@ -195,9 +195,9 @@ def connectFacebook(fbPage = 'me'):
 
         if (fbPage != 'me'):
             for i in range(len(pages['data'])):
-                logger.info("%s %s"% (pages['data'][i]['name'], fbPage))
+                logger.debug("%s %s"% (pages['data'][i]['name'], fbPage))
                 if (pages['data'][i]['name'] == fbPage):
-                    logger.info("\tWriting in... %s"% pages['data'][i]['name'])
+                    logger.info("    Writing in... %s"% pages['data'][i]['name'])
                     graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
                     # Publishing as the page
                     return(graph2, pages['data'][i]['id'])
@@ -451,7 +451,7 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
         if j+1 < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))
             time.sleep(tSleep2) 
-    logger.info("Finished in: %s" % socialNetwork[0].capitalize())
+    logger.info("   Finished in: %s" % socialNetwork[0].capitalize())
     print("====================================")
     print("Finished in: %s at %s" % (socialNetwork[0].capitalize(), 
         time.asctime()))
@@ -481,14 +481,14 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
 
     twitter = channel
     comment = ''
-    logger.info("   Publishing in Twitter...")
+    logger.info("    Publishing in Twitter...")
     try: 
         t = connectTwitter(twitter)
         if t:
             statusTxt = comment + " " + title + " " + link
             h = HTMLParser()
             statusTxt = h.unescape(statusTxt)
-            logger.info("   Publishing in Twitter: %s" % statusTxt)
+            logger.info("    Publishing in Twitter: %s" % statusTxt)
             return(t.statuses.update(status=statusTxt))
         else:
             logger.warning("You must configure API access for %s" % twitter)
@@ -510,7 +510,7 @@ def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, im
         logger.info("   Publishing in Facebook page %s" % fbPage)
         (graph, page) = connectFacebook(fbPage)
         textToPublish = title + " \n" + summaryLinks
-        logger.info("   Publishing in Facebook: %s" % title)
+        logger.info("    Publishing in Facebook: %s" % title)
         logger.debug("Publishing in Facebook: %s" % textToPublish)
         if (len(textToPublish) > 9980):
             textToPublish = textToPublish[:9980]
