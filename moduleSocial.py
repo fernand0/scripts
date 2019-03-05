@@ -366,19 +366,6 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
         titlePostT = ""
     post = title + " " + firstLink
 
-    #Needs rethinking
-    #if (profile == 'twitter') or (profile == 'facebook'):
-    #    # We should add a configuration option in order to check which
-    #    # services are the ones with immediate posting. For now, we
-    #    # know that we are using Twitter and Facebook
-    #    # We are checking the links tha have been published with other
-    #    # toolsin order to avoid duplicates
-    #    
-    #    with open(DATADIR + '/.urls.pickle', 'rb') as f:
-    #        theList = pickle.load(f)
-    #else:
-    #    theList = []
-
     theList = []
     if not (firstLink[firstLink.find(':')+2:] in theList):
         # Without the http or https 
