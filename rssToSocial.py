@@ -232,18 +232,18 @@ def main():
                 if blog.getBufferapp() and (profile[0] in blog.getBufferapp()): 
                     blog.buffer.addPosts(blog, nameProfile, listPosts)
 
-                if False: #blog.getProgram() and (profile[0] in blog.getProgram()):
+                if blog.getProgram() and (profile[0] in blog.getProgram()):
                     timeSlots = 6*6 #60*60 # One hour
                     t[nameProfile] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, listPosts, socialNetwork, 1, timeSlots))
                     t[nameProfile].start() 
 
                 if not (blog.getBufferapp() or blog.getProgram()):
                     if (i > 0):
-                        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
                         hours = blog.getTime() 
                         if (hours and (((time.time() - lastTime) - int(hours)*60*60) < 0)): 
                             logging.info("  Not publishing because time restriction") 
                         else:
+                            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
                             logging.info(" Publishing directly\n") 
                             serviceName = profile.capitalize()
                             publishMethod = getattr(moduleSocial, 
