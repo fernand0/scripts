@@ -417,15 +417,7 @@ def nextPost(blog, socialNetwork):
 
 def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots): 
     nameCache = socialNetwork[0]+'_'+socialNetwork[1]
-    blog.cache[nameCache].setPosts()
     serviceName = blog.cache[nameCache].name
-    listP = blog.cache[nameCache].postsFormatted[serviceName]['pending']
-    newListP = listP + listPosts
-
-    blog.cache[nameCache].postsFormatted[serviceName]['pending'] = newListP
-    logging.info("Blog url %s" % blog.getUrl())
-    logging.info("Blog socialNetwork %s" % type(socialNetwork))
-    blog.cache[nameCache].updatePostsCache()
 
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
@@ -487,14 +479,14 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
 
     twitter = channel
     comment = ''
-    logger.info("Publishing in Twitter...")
+    logger.info("   Publishing in Twitter...")
     try: 
         t = connectTwitter(twitter)
         if t:
             statusTxt = comment + " " + title + " " + link
             h = HTMLParser()
             statusTxt = h.unescape(statusTxt)
-            logger.info("Publishing in Twitter: %s" % statusTxt)
+            logger.info("   Publishing in Twitter: %s" % statusTxt)
             return(t.statuses.update(status=statusTxt))
         else:
             logger.warning("You must configure API access for %s" % twitter)
@@ -507,17 +499,16 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
    
 def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     fbPage = channel
-    logger.info("Publishing in Facebook...")
+    logger.info("   Publishing in Facebook...")
     textToPublish = ""
     textToPublish2 = ""
     try:
         h = HTMLParser()
         title = h.unescape(title)
-        logger.info("Publishing in Facebook page %s" % fbPage)
+        logger.info("   Publishing in Facebook page %s" % fbPage)
         (graph, page) = connectFacebook(fbPage)
-        logger.info("Publishing in Facebook page %s" % page)
         textToPublish = title + " \n" + summaryLinks
-        logger.info("Publishing in Facebook: %s" % title)
+        logger.info("   Publishing in Facebook: %s" % title)
         logger.debug("Publishing in Facebook: %s" % textToPublish)
         if (len(textToPublish) > 9980):
             textToPublish = textToPublish[:9980]

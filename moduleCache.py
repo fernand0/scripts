@@ -73,6 +73,15 @@ class moduleCache():
     
         self.postsFormatted = outputData
     
+    def addPosts(self, blog, profile, listPosts):
+        nameCache = profile
+        blog.cache[nameCache].setPosts()
+        serviceName = blog.cache[nameCache].name
+        listP = blog.cache[nameCache].postsFormatted[serviceName]['pending']
+        newListP = listP + listPosts
+        blog.cache[nameCache].postsFormatted[serviceName]['pending'] = newListP
+        blog.cache[nameCache].updatePostsCache()
+
     def updatePostsCache(self):
         fileNameQ = fileNamePath(self.url, self.socialNetwork) + ".queue" 
 

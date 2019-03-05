@@ -168,11 +168,12 @@ def main():
             if ('bufferapp' in config.options(section)): 
                 blog.setBufferapp(config.get(section, "bufferapp")) 
                 blog.buffer.setBuffer()
-            
+
             blog.setSocialNetworks(config, section)
 
             if ('program' in config.options(section)): 
                 blog.setProgram(config.get(section, "program"))
+                blog.setCache()
 
 
             logging.info(" Looking for pending posts in ...%s"
@@ -181,9 +182,11 @@ def main():
 
             bufferMax = 9
             t = {}
-            lenMax = 9
-            link= ""
+
             for profile in blog.getSocialNetworks():
+                lenMax = 9
+                link= ""
+
                 nick = blog.getSocialNetworks()[profile]
                 socialNetwork = (profile, nick)
                 nameProfile = profile + '_' + nick
@@ -195,17 +198,16 @@ def main():
                     print("      Checking Cache publishing %s" % profile)
                     lenMax = blog.cache[nameProfile].lenMax
 
-                logging.debug("Lenmax %d"% lenMax)
-                logging.info("  Service %s %s" 
-                        % (profile , blog.getBufferapp()))
+                logging.info("  Service %s Lenmax %d" % (profile, lenMax))
 
                 num = bufferMax - lenMax
+
                 if (num > 0) or not (blog.getBufferapp() or blog.getProgram()):
                     lastLink, lastTime = checkLastLink(url, socialNetwork)
                     i = blog.getLinkPosition(lastLink)
 
-                    logging.debug(" Profile %s"% profile)
-                    logging.info(" lastLink %s %s %d"% 
+                    logging.debug("Profile %s"% profile)
+                    logging.info("  Last link %s %s %d"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
                                 time.localtime(lastTime)), lastLink, i))
                     logging.debug("bufferMax - lenMax = num %d %d %d"%
@@ -233,6 +235,7 @@ def main():
                     blog.buffer.addPosts(blog, nameProfile, listPosts)
 
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
+                    blog.cache[nameProfile].addPosts(blog, nameProfile, listPosts)
                     timeSlots = 6*6 #60*60 # One hour
                     t[nameProfile] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, listPosts, socialNetwork, 1, timeSlots))
                     t[nameProfile].start() 
