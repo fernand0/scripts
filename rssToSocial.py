@@ -167,7 +167,7 @@ def main():
                 blog.setTime(config.get(section, "time"))
             if ('bufferapp' in config.options(section)): 
                 blog.setBufferapp(config.get(section, "bufferapp")) 
-                blog.buffer.setBuffer()
+                blog.setBuffer(blog.getBufferapp())
 
             blog.setSocialNetworks(config, section)
 
