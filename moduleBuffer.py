@@ -228,7 +228,7 @@ class moduleBuffer():
 
     def addPosts(self, blog, profile, listPosts):
         api = self.buffer
-        logging.info("Adding posts to LinkedIn")
+        logging.info("   Adding posts to LinkedIn")
         for post in listPosts: 
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post 
             textPost = title + " " + firstLink

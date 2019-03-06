@@ -207,7 +207,7 @@ def main():
                     i = blog.getLinkPosition(lastLink)
 
                     logging.debug("Profile %s"% profile)
-                    logging.info("  Last link %s %s %d"% 
+                    logging.info("   Last link %s %s %d"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
                                 time.localtime(lastTime)), lastLink, i))
                     logging.debug("bufferMax - lenMax = num %d %d %d"%
@@ -223,7 +223,7 @@ def main():
                         post = blog.obtainPostData(i, False)
                         listPosts.append(post)
                         print("         Scheduling post %s" % post[0])
-                        logging.info("  Scheduling post %s" % post[0])
+                        logging.info("   Scheduling post %s" % post[0])
 
                         if listPosts:
                             link = listPosts[len(listPosts) - 1][1]
