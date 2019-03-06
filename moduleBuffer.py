@@ -228,20 +228,12 @@ class moduleBuffer():
 
     def addPosts(self, blog, profile, listPosts):
         api = self.buffer
-        print("aquí")
         logging.info("Adding posts to LinkedIn")
         for post in listPosts: 
-            print(post)
-            #print(blog.profiles)
-            print(profile)
-            print(blog.getBuffer().getProfiles()[0])
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post 
             textPost = title + " " + firstLink
             entry = urllib.parse.quote(textPost)
-            print("Before sending")
-            print(blog.getBuffer().getProfiles())
             blog.getBuffer().getProfiles()[0].updates.new(entry)
-            print("Sent")
 
     def deletePost(self, profiles, args):
         api = self.buffer

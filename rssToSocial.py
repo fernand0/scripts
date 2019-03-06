@@ -236,8 +236,8 @@ def main():
 
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
                     blog.cache[nameProfile].addPosts(blog, nameProfile, listPosts)
-                    timeSlots = 60*60 # One hour
-                    t[nameProfile] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, listPosts, socialNetwork, 1, timeSlots))
+                    timeSlots = 6*60 #60*60 # One hour
+                    t[nameProfile] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, socialNetwork, 1, timeSlots))
                     t[nameProfile].start() 
 
                 if not (blog.getBufferapp() or blog.getProgram()):

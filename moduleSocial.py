@@ -415,7 +415,7 @@ def nextPost(blog, socialNetwork):
 
     return(element,listP)
 
-def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots): 
+def publishDelay(blog, socialNetwork, numPosts, timeSlots): 
     # We allow the rest of the Blogs to start
     time.sleep(5)
     nameCache = socialNetwork[0]+'_'+socialNetwork[1]
