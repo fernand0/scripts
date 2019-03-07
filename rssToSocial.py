@@ -247,6 +247,7 @@ def main():
                             logging.info("  Not publishing because time restriction") 
                         else:
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
+                            print("   Publishing in %s %s" % (serviceName, title))
                             logging.info(" Publishing directly\n") 
                             serviceName = profile.capitalize()
                             publishMethod = getattr(moduleSocial, 
