@@ -225,11 +225,9 @@ def main():
                         print("         Scheduling post %s" % post[0])
                         logging.info("   Scheduling post %s" % post[0])
 
-                        if listPosts:
-                            link = listPosts[len(listPosts) - 1][1]
-                            logging.debug("link -> %s"% link) 
-                        else: 
-                            link = ''
+                    if listPosts:
+                        link = listPosts[len(listPosts) - 1][1]
+                        logging.debug("link -> %s"% link)
 
                 if blog.getBufferapp() and (profile[0] in blog.getBufferapp()): 
                     blog.buffer.addPosts(blog, nameProfile, listPosts)
