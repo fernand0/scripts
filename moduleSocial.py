@@ -400,6 +400,7 @@ def searchTwitter(search, twitter):
     return(t.search.tweets(q=search)['statuses'])
 
 def nextPost(blog, socialNetwork):
+    blog.setPosts()
     serviceName = blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].name
     listP = blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].getPostsFormatted()[serviceName]['pending']
 
@@ -433,8 +434,6 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
                 % (socialNetwork[0], tSleep/60, element[0]))
         time.sleep(tSleep) 
 
-        blog.getPosts()
-        blog.getPostsFormatted()
         # Things can have changed during the waiting
         element, listP = nextPost(blog,socialNetwork)
 
