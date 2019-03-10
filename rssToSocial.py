@@ -230,7 +230,7 @@ def main():
                         logging.debug("link -> %s"% link)
 
                 if blog.getBufferapp() and (profile[0] in blog.getBufferapp()): 
-                    blog.buffer.addPosts(blog, nameProfile, listPosts)
+                    link = blog.buffer.addPosts(blog, nameProfile, listPosts)
 
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
                     blog.cache[nameProfile].addPosts(blog, nameProfile, listPosts)

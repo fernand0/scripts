@@ -354,6 +354,7 @@ def publishMail(channel, title, link, summary, summaryHtml, summaryLinks, image,
 
 def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, services='fglt'):
     prof = blog.profiles[profile]
+    linkPublished = ''
     if isDebug:
         profileList = []
         firstLink = None
@@ -364,45 +365,47 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
         titlePostT = title[:240] 
     else:
         titlePostT = ""
-    post = title + " " + firstLink
+    post = title + " " + link # firstLink
 
-    theList = []
-    if not (firstLink[firstLink.find(':')+2:] in theList):
-        # Without the http or https 
-        try:
-            if titlePostT and (profile == 'twitter'):
-                entry = urllib.parse.quote(titlePostT + " " + firstLink)#.encode('utf-8')
-            else:
-                entry = urllib.parse.quote(post)#.encode('utf-8')
+    try:
+        if titlePostT and (profile == 'twitter'):
+            entry = urllib.parse.quote(titlePostT + " " + firstLink)#.encode('utf-8')
+        else:
+            entry = urllib.parse.quote(post)#.encode('utf-8')
 
-            if (profile[0] in services): 
-                blog.profiles[profile].updates.new(entry)
+        if (profile[0] in services): 
+            blog.profiles[profile].updates.new(entry)
+            linkPublished = link
 
-            line = line + ' ok'
-            time.sleep(2)
-        except:
-            logger.warning("Buffer posting failed!")
-            logger.warning("Entry: %s"% entry)
-            logger.warning("Unexpected error: %s"% sys.exc_info()[0])
-            logger.warning("Unexpected error: %s"% sys.exc_info()[1])
+        line = line + ' ok'
+        time.sleep(2)
+    except:
+        logger.warning("Buffer posting failed!")
+        logger.warning("Entry: %s"% entry)
+        logger.warning("Unexpected error: %s"% sys.exc_info()[0])
+        logger.warning("Unexpected error: %s"% sys.exc_info()[1])
 
-            line = line + ' fail'
-            failFile = open(DATADIR + '/'
-                       + urllib.parse.urlparse(link).netloc
-                       + ".fail", "w")
-            failFile.write(post)
-            fail = 'yes'
+        line = line + ' fail'
+        failFile = open(DATADIR + '/'
+                   + urllib.parse.urlparse(link).netloc
+                   + ".fail", "w")
+        failFile.write(post)
+        fail = 'yes'
+        return(linkPublished)
 
     logger.info("  Profile %s" % line)
+    return(linkPublished)
 
 def searchTwitter(search, twitter): 
     t = connectTwitter(twitter)
     return(t.search.tweets(q=search)['statuses'])
 
 def nextPost(blog, socialNetwork):
-    blog.setPosts()
-    serviceName = blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].name
-    listP = blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].getPostsFormatted()[serviceName]['pending']
+    cacheName = socialNetwork[0]+'_'+socialNetwork[1]
+    blog.cache[cacheName].setPosts()
+    blog.cache[cacheName].setPostsFormatted()
+    serviceName = blog.cache[cacheName].name
+    listP = blog.cache[cacheName].getPostsFormatted()[serviceName]['pending']
 
     if listP: 
         element = listP[0]
@@ -428,7 +431,7 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
 
         element, listP = nextPost(blog,socialNetwork)
 
-        logger.info("    %s: waiting ... %.2f minutes" % (socialNetwork[0], tSleep/60))
+        logger.info("    %s: Waiting ... %.2f minutes" % (socialNetwork[0].capitalize(), tSleep/60))
         logger.info("      I'll publish %s" % element[0])
         print("         %s: waiting... %.2f minutes\n         I'll publish %s"
                 % (socialNetwork[0], tSleep/60, element[0]))

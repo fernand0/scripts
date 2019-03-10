@@ -429,7 +429,7 @@ def main():
             for profile in site.getSocialNetworks():
                 if profile[0] in site.getBufferapp():
                     lenMax = site.buffer.lenMax[profile]
-                    print("   tBuffer %s" % profile)
+                    print("   getBuffer %s" % profile)
                     (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
                     # In order to avoid saving the link as the last one
 
@@ -460,6 +460,7 @@ def main():
 
 
     site.deletePost(outputData['Slack']['pending'][elem][8], theChannel)
+    print(outputData['Slack']['pending'][elem][8])
 
 
 if __name__ == '__main__':
