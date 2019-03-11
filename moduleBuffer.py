@@ -233,7 +233,7 @@ class moduleBuffer():
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post 
             textPost = title + " " + firstLink
             logging.info("    Post: %s" % firstLink)
-            print("    Post: %s" % firstLink)
+            print("      Post: %s" % firstLink)
             entry = urllib.parse.quote(textPost)
             blog.getBuffer().getProfiles()[0].updates.new(entry)
 
