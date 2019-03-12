@@ -176,8 +176,8 @@ def main():
                 blog.setCache()
 
 
-            logging.info(" Looking for pending posts in ...%s"
-                    % blog.getSocialNetworks())
+            logging.info(" Looking for pending posts") # in ...%s"
+                    #% blog.getSocialNetworks())
             print("   Looking for pending posts ... " )
 
             bufferMax = 9
@@ -254,7 +254,6 @@ def main():
                             publishMethod = getattr(moduleSocial, 
                                     'publish'+ serviceName)
                             result = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
-                            logging.info(" Updating Link\n") 
 
                 if link:
                      logging.info("  Updating link %s" % profile)
