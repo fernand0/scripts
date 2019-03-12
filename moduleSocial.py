@@ -284,57 +284,6 @@ def connectPocket():
 
     return(p)
 
-#def checkLimitPosts(api, blog, service=''):
-#    # We can put as many items as the service with most items allow
-#    # The limit is ten.
-#    # Get all pending updates of a social network profile
-#
-#    lenMax = 0
-#    logger.info("Checking services...")
-#    #print("Checking services...")
-#    
-#    if api:
-#        #profileList = Profiles(api=api).all()
-#        if service: 
-#            profile = Profiles(api=api).filter(service=service)
-#            logging.debug("Profile %s" % profile)
-#            lenMax = profile[0].counts.pending
-#            profileList = []
-#        else:
-#            profileList = Profiles(api=api).all()
-#            for profile in profileList: 
-#               if (profile['service'][0] in blog.getBufferapp()): 
-#                   lenProfile = len(profile.updates.pending) 
-#                   if (lenProfile > lenMax): 
-#                       lenMax = lenProfile 
-#                       logger.info("%s ok" % profile['service'])
-#    elif blog:
-#        #print(blog.getSocialNetworks())
-#        profileList = blog.getSocialNetworks().keys()
-#        if service: 
-#            #print(service)
-#            listP = blog.cache.getPostsCache((service, 
-#                blog.getSocialNetworks()[service])) 
-#            lenProfile = len(listP) 
-#            #print(lenProfile)
-#            lenMax = lenProfile
-#            listProfiles = []
-#        else:
-#            for profile in blog.getSocialNetworks():
-#                if (profile[0] in blog.getProgram()): 
-#                    print("Profile %s" %profile)
-#                    print("Profile program %s" %blog.getProgram())
-#                    listP = blog.cache.getPostsCache((profile, 
-#                        blog.getSocialNetworks()[profile])) 
-#                    lenProfile = len(listP) 
-#                    if (lenProfile > lenMax): 
-#                        lenMax = lenProfile 
-#                        logger.info("%s ok" % profile)
-#
-#    logger.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
-#
-#    return(lenMax, profileList)
-
 def publishMail(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
     logger.info("Publishing in Gmail... ") 
@@ -352,6 +301,7 @@ def publishMail(channel, title, link, summary, summaryHtml, summaryLinks, image,
         logger.warning("Unexpected error:", sys.exc_info()[0])
         return("Fail!")
 
+# Unused ?
 def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, services='fglt'):
     prof = blog.profiles[profile]
     linkPublished = ''
@@ -433,7 +383,7 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
 
         logger.info("    %s: Waiting ... %.2f minutes" % (socialNetwork[0].capitalize(), tSleep/60))
         logger.info("    I'll publish %s" % element[0])
-        print("         %s: waiting... %.2f minutes\n          I'll publish %s"
+        print("\n         %s: waiting... %.2f minutes\n          I'll publish %s"
                 % (socialNetwork[0], tSleep/60, element[0]))
         time.sleep(tSleep) 
 
@@ -496,7 +446,8 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
             return("Fail! You must configure API access for %s" % twitter)
     except:
         logger.warning("Twitter posting failed!")
-        logger.warning("Unexpected error:", sys.exc_info()[0])
+        logger.warning("Unexpected error: %s"% sys.exc_info()[0])
+        logger.warning("Unexpected error: %s"% sys.exc_info()[1])
         return("Fail! %s" % sys.exc_info()[0])
 
    

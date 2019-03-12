@@ -97,30 +97,6 @@ class moduleBuffer():
     
         self.buffer = api
 
-    #def checkLimitPosts(self, myServices, service=''):
-    #    api = self.buffer
-
-    #    lenMax = 0
-    #    logging.info("  Checking services...")
-    #    if service: 
-    #        profile = Profiles(api=api).filter(service=service)
-    #        logging.debug("Profile %s" % profile)
-    #        lenMax = profile[0].counts.pending
-    #        profileList = []
-    #    else:
-    #        profileList = Profiles(api=api).all()
-    #        for profile in profileList: 
-    #           if (profile['service'][0] in myServices): 
-    #               lenProfile = len(profile.updates.pending) 
-    #               self.lenMax[profile['service']] = lenProfile
-    #               if (lenProfile > lenMax): 
-    #                   lenMax = lenProfile 
-    #                   logging.info("%s ok" % profile['service'])
-
-    #    logging.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
-
-    #    return(lenMax, profileList)
-
     def setProfiles(self, service=""):
         api = self.buffer
         logging.info("Checking services...")
@@ -227,15 +203,28 @@ class moduleBuffer():
         return(None)
 
     def addPosts(self, blog, profile, listPosts):
+        linkAdded = ''
         api = self.buffer
         logging.info("   Adding posts to LinkedIn")
         for post in listPosts: 
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post 
             textPost = title + " " + firstLink
-            logging.info("    Post: %s" % firstLink)
-            print("      Post: %s" % firstLink)
+            logging.info("      Post: %s" % firstLink)
+            print("        Post: %s" % firstLink)
             entry = urllib.parse.quote(textPost)
-            blog.getBuffer().getProfiles()[0].updates.new(entry)
+            try:
+                blog.getBuffer().getProfiles()[0].updates.new(entry)
+            except: 
+                logging.warning("Buffer posting failed!") 
+                logging.warning("Entry: %s"% entry) 
+                logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
+                logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
+                return(linkAdded)
+            linkAdded = firstLink
+                
+            time.sleep(2)
+
+        return(linkAdded)
 
     def deletePost(self, profiles, args):
         api = self.buffer

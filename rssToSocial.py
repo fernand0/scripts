@@ -130,7 +130,7 @@ def main():
 
     loggingLevel = logging.INFO
     logging.basicConfig(filename = LOGDIR + "/rssSocial_.log",
-                        level=loggingLevel, format='%(asctime)s [%(filename)-15s] %(message)s')
+                        level=loggingLevel, format='%(asctime)s [%(filename).12s] %(message)s', datefmt='%Y-%m-%d %H:%M')
 
     logging.info("Launched at %s" % time.asctime())
     logging.debug("Parameters %s, %d" % (sys.argv, len(sys.argv)))
@@ -202,6 +202,7 @@ def main():
 
                 num = bufferMax - lenMax
 
+                listPosts = []
                 if (num > 0) or not (blog.getBufferapp() or blog.getProgram()):
                     lastLink, lastTime = checkLastLink(url, socialNetwork)
                     i = blog.getLinkPosition(lastLink)
@@ -210,14 +211,16 @@ def main():
                     logging.info("   Last link %s %s %d"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
                                 time.localtime(lastTime)), lastLink, i))
+                    print("   Last link %s %s %d"% 
+                            (time.strftime('%Y-%m-%d %H:%M:%S', 
+                                time.localtime(lastTime)), lastLink, i))
                     logging.debug("bufferMax - lenMax = num %d %d %d"%
                             (bufferMax, lenMax, num)) 
 
-                    listPosts = []
                     link = ""
                     for j in range(num, 0, -1):
                         logging.debug("j, i %d - %d"% (j,i))
-                        if (i <= 0):
+                        if (i < 0):
                             break
                         i = i - 1
                         post = blog.obtainPostData(i, False)

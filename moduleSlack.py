@@ -175,11 +175,13 @@ class moduleSlack():
 
     def getLinkPosition(self, link):
         i = 0
-        if self.getPosts():
+        posts = self.getPosts()
+        pos = len(posts) 
+        if posts:
             if not link:
                 logging.debug(self.getPosts())
                 return(len(self.getPosts()))
-            for entry in self.getPosts():
+            for entry in posts:
                 linkS = link.decode()
                 if 'original_url' in entry: 
                     url = entry['original_url']
@@ -188,8 +190,11 @@ class moduleSlack():
                 #print(url, link)
                 lenCmp = min(len(url), len(linkS))
                 if url[:lenCmp] == linkS[:lenCmp]:
-                    return i
+                    # When there are cuñlicates (there shouldn't be) it returns
+                    # the last one
+                    pos = i
                 i = i + 1
+            return(pos)
         return(i)
 
     def deletePost(self, idPost, theChannel): 
