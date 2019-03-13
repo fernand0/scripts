@@ -207,8 +207,8 @@ def main():
                     lastLink, lastTime = checkLastLink(url, socialNetwork)
                     i = blog.getLinkPosition(lastLink)
 
-                    logging.debug("Profile %s"% profile)
-                    logging.info("   Last link %s %s %d"% 
+                    logging.info("   Profile %s"% profile)
+                    logging.info("    Last link %s %s %d"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
                                 time.localtime(lastTime)), lastLink, i))
                     print("   Last link %s %s %d"% 
@@ -237,7 +237,7 @@ def main():
 
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
                     blog.cache[nameProfile].addPosts(blog, nameProfile, listPosts)
-                    timeSlots = 60*60 # One hour
+                    timeSlots = 50*60 # One hour
                     t[nameProfile] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, socialNetwork, 1, timeSlots))
                     t[nameProfile].start() 
 
