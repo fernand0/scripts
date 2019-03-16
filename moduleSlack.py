@@ -139,6 +139,7 @@ class moduleSlack():
         self.setCache()
 
     def setPosts(self, channel='links'):
+        logging.info("  Setting posts")
         if self.posts is None:
             self.posts = []
             theChannel = self.getChanId(channel)

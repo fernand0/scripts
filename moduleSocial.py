@@ -271,16 +271,23 @@ def connectMedium():
     return(client, user)
 
 def connectPocket():
-    logger.info("Connecting Pocket")
+    logger.info("    Connecting Pocket")
+
     config = configparser.ConfigParser()
-    config.read(CONFIGDIR + '/.rssPocket')
-    consumer_key = config.get("appKeys", "consumer_key")
-    access_token = config.get("appKeys", "access_token")
     try: 
-        p = Pocket(consumer_key=consumer_key, access_token=access_token)
+        config.read(CONFIGDIR + '/.rssPocket')
+
+        consumer_key = config.get("appKeys", "consumer_key")
+        access_token = config.get("appKeys", "access_token")
+
+        try: 
+            p = Pocket(consumer_key=consumer_key, access_token=access_token)
+        except:
+            logger.warning("Pocket authentication failed!")
+            logger.warning("Unexpected error:", sys.exc_info()[0])
     except:
-        logger.warning("Pocket authentication failed!")
-        logger.warning("Unexpected error:", sys.exc_info()[0])
+        logger.warning("Account not configured")
+        p = None
 
     return(p)
 
@@ -598,10 +605,11 @@ def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, imag
         return("Fail!")
 
 def publishPocket(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
-    logger.info("Pocket...%s"%channel)
+    logger.info("    Publishing in Pocket...%s"%channel)
     try:
         pc = connectPocket()
-        pc.add(link)
+        logger.info("    Publishing in Pocket: %s" % link)
+        return(pc.add(link))
     except:
         logger.warning("Pocket posting failed!")
         logger.warning("Unexpected error:", sys.exc_info()[0])

@@ -165,12 +165,12 @@ def main():
                 blog.setLinksToAvoid(config.get(section, "linksToAvoid"))
             if ("time" in config.options(section)):
                 blog.setTime(config.get(section, "time"))
-            if ('bufferapp' in config.options(section)): 
-                blog.setBufferapp(config.get(section, "bufferapp")) 
-                blog.setBuffer(blog.getBufferapp())
 
             blog.setSocialNetworks(config, section)
 
+            if ('bufferapp' in config.options(section)): 
+                blog.setBufferapp(config.get(section, "bufferapp")) 
+                blog.setBuffer(blog.getBufferapp())
             if ('program' in config.options(section)): 
                 blog.setProgram(config.get(section, "program"))
                 blog.setCache()
@@ -208,10 +208,11 @@ def main():
                     i = blog.getLinkPosition(lastLink)
 
                     logging.info("   Profile %s"% profile)
+                    print("    Profile %s"% profile)
                     logging.info("    Last link %s %s %d"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
                                 time.localtime(lastTime)), lastLink, i))
-                    print("   Last link %s %s %d"% 
+                    print("    Last link %s %s %d"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
                                 time.localtime(lastTime)), lastLink, i))
                     logging.debug("bufferMax - lenMax = num %d %d %d"%
@@ -248,7 +249,7 @@ def main():
                             logging.info("  Not publishing because time restriction") 
                         else:
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
-                            logging.info(" Publishing directly\n") 
+                            logging.info("  Publishing directly\n") 
                             serviceName = profile.capitalize()
                             print("   Publishing in %s %s" % (serviceName, title))
                             publishMethod = getattr(moduleSocial, 

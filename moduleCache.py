@@ -61,7 +61,7 @@ class moduleCache():
     
         serviceName = self.name[0].capitalize() + self.name[1:]
         serviceName = self.name
-        logging.info("   Service %s" % serviceName)
+        logging.debug("   Service %s" % serviceName)
     
         outputData[serviceName] = {'sent': [], 'pending': []}
         listP = self.getPosts()

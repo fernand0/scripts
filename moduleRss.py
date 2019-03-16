@@ -75,6 +75,7 @@ class moduleRss():
         return(self.posts)
  
     def setPosts(self):
+        logging.info("  Setting posts")
         if self.rssFeed.find('http')>=0: 
             urlRss = self.rssFeed
         else: 

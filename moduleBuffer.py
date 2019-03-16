@@ -99,13 +99,13 @@ class moduleBuffer():
 
     def setProfiles(self, service=""):
         api = self.buffer
-        logging.info("Checking services...")
+        logging.info(" Checking services...")
         
         if (service == ""):
             logging.info(" All available")
             profiles = Profiles(api=api).all()
         else:
-            logging.info(" %s" % service)
+            logging.info("  %s" % service)
             logging.info(service)
             profiles = Profiles(api=api).filter(service=service)
             
