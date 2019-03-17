@@ -81,7 +81,7 @@ class moduleRss():
         else: 
             urlRss = self.url+self.rssFeed
         logging.debug(urlRss)
-        self.posts = feedparser.parse(urlRss)
+        self.posts = feedparser.parse(urlRss).entries
 
     def addLastLinkPublished(self, socialNetwork, lastLink, lastTime):
         self.lastLinkPublished[socialNetwork] = (lastLink, lastTime)
@@ -135,9 +135,9 @@ class moduleRss():
         i = 0
         if self.getPosts():
             if not link:
-                logging.debug(self.getPosts().entries)
-                return(len(self.getPosts().entries))
-            for entry in self.getPosts().entries:
+                logging.debug(self.getPosts())
+                return(len(self.getPosts()))
+            for entry in self.getPosts():
                 linkS = link.decode()
                 logging.debug(entry['link'], linkS)
                 lenCmp = min(len(entry['link']), len(linkS))
@@ -147,7 +147,7 @@ class moduleRss():
         return(i)
 
     def datePost(self, pos):
-        return(self.getPosts().entries[pos]['published_parsed'])
+        return(self.getPosts()[pos]['published_parsed'])
 
     def extractImage(self, soup):
         #This should go to the moduleHtml
@@ -206,7 +206,7 @@ class moduleRss():
         if not self.posts:
             self.setPosts()
 
-        posts = self.getPosts().entries
+        posts = self.getPosts()
         if not posts:
             return (None, None, None, None, None, None, None, None, None, None)
 
@@ -341,7 +341,7 @@ def main():
     print(blogs[6].cache.showPost('F1'))
     sys.exit()
 
-    numPosts = len(blogs[7].getPosts().entries)
+    numPosts = len(blogs[7].getPosts())
     for i in range(numPosts):
         print(blog.obtainPostData(numPosts - 1 - i))
 
@@ -353,10 +353,10 @@ def main():
         if 'twitterac' in blog.getSocialNetworks():
             print(blog.getSocialNetworks()['twitterac'])
         blog.setPosts()
-        print(blog.getPosts().entries[0]['link'])
-        print(blog.getLinkPosition(blog.getPosts().entries[0]['link']))
+        print(blog.getPosts()[0]['link'])
+        print(blog.getLinkPosition(blog.getPosts()[0]['link']))
         print(time.asctime(blog.datePost(0)))
-        print(blog.getLinkPosition(blog.getPosts().entries[5]['link']))
+        print(blog.getLinkPosition(blog.getPosts()[5]['link']))
         print(time.asctime(blog.datePost(5)))
         blog.obtainPostData(0)
         if blog.getUrl().find('ando')>0:
@@ -370,7 +370,7 @@ def main():
               + ".last", "r")
         linkLast = urlFile.read().rstrip()  # Last published
         print(blog.getUrl()+blog.getRssFeed(),blog.getLinkPosition(linkLast))
-        print("description ->", blog.getPosts().entries[5]['description'])
+        print("description ->", blog.getPosts()[5]['description'])
         for post in posts:
             if "content" in post:
                 print(post['content'][:100])

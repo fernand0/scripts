@@ -99,10 +99,10 @@ class moduleBuffer():
 
     def setProfiles(self, service=""):
         api = self.buffer
-        logging.info(" Checking services...")
+        logging.info("  Checking services...")
         
         if (service == ""):
-            logging.info(" All available")
+            logging.info("  All available in Buffer")
             profiles = Profiles(api=api).all()
         else:
             logging.info("  %s" % service)
@@ -132,7 +132,7 @@ class moduleBuffer():
     
             serviceName = profile['service']
     
-            logging.info(" Profile %s" % serviceName)
+            logging.info("   Service %s" % serviceName)
     
             outputData[serviceName] = {'sent': [], 'pending': []}
             for method in ['sent', 'pending']:
@@ -205,11 +205,11 @@ class moduleBuffer():
     def addPosts(self, blog, profile, listPosts):
         linkAdded = ''
         api = self.buffer
-        logging.info("   Adding posts to LinkedIn")
+        logging.info("    Adding posts to LinkedIn")
         for post in listPosts: 
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post 
             textPost = title + " " + firstLink
-            logging.info("    Post: %s" % firstLink)
+            logging.info("     Post: %s" % firstLink)
             print("        Post: %s" % firstLink)
             entry = urllib.parse.quote(textPost)
             try:
@@ -223,6 +223,7 @@ class moduleBuffer():
             linkAdded = firstLink
                 
             time.sleep(2)
+        logging.info("    Added posts to LinkedIn")
 
         return(linkAdded)
 

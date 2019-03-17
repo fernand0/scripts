@@ -166,17 +166,17 @@ def main():
             if ("time" in config.options(section)):
                 blog.setTime(config.get(section, "time"))
 
-            blog.setSocialNetworks(config, section)
 
             if ('bufferapp' in config.options(section)): 
                 blog.setBufferapp(config.get(section, "bufferapp")) 
-                blog.setBuffer(blog.getBufferapp())
+
+            blog.setSocialNetworks(config, section)
+
             if ('program' in config.options(section)): 
                 blog.setProgram(config.get(section, "program"))
-                blog.setCache()
 
 
-            logging.info(" Looking for pending posts") # in ...%s"
+            logging.info("  Looking for pending posts") # in ...%s"
                     #% blog.getSocialNetworks())
             print("   Looking for pending posts ... " )
 
@@ -227,7 +227,7 @@ def main():
                         post = blog.obtainPostData(i, False)
                         listPosts.append(post)
                         print("         Scheduling post %s" % post[0])
-                        logging.info("   Scheduling post %s" % post[0])
+                        logging.info("    Scheduling post %s" % post[0])
 
                     if listPosts:
                         link = listPosts[len(listPosts) - 1][1]

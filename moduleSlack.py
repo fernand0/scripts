@@ -122,7 +122,9 @@ class moduleSlack():
 
     def setCache(self):
         self.cache = {}
+        logging.info("  All available in Cache")
         for sN in self.getSocialNetworks():
+            logging.info("   Service %s" % sN)
             if sN[0] in self.getProgram():
                 cacheAcc = moduleCache.moduleCache(self.getUrl(), 
                         sN, self.getSocialNetworks()[sN]) 
