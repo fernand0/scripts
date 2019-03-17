@@ -393,16 +393,7 @@ def main():
     site.setCache()
     site.setPosts()
 
-    #for ca in site.getCache(): 
-    #    posts = site.getCache()[ca].getPostsFormatted()
-    #    outputData = {**outputData, **posts}
-    #if site.getBufferapp(): 
-    #    site.getBuffer().setPosts()
-    #    outputData = {**outputData, **site.getBuffer().getPostsFormatted()}
-
     theChannel = site.getChanId("links")  
-    # We should check for consistency 
-    # Maybe another attribute?
 
     i = 0
     listLinks = ""
