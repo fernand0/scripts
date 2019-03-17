@@ -145,8 +145,8 @@ class Content:
                 return(len(self.getPosts()))
             for entry in self.getPosts():
                 linkS = link.decode()
-                logging.debug(entry['link'], linkS)
                 url = self.getLinkEntry(entry)
+                logging.debug(url, linkS)
                 lenCmp = min(len(url), len(linkS))
                 if url[:lenCmp] == linkS[:lenCmp]:
                     # When there are duplicates (there shouldn't be) it returns
