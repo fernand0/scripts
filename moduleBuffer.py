@@ -208,9 +208,15 @@ class moduleBuffer():
         logging.info("    Adding posts to LinkedIn")
         for post in listPosts: 
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post 
+<<<<<<< HEAD
             textPost = title + " " + firstLink
             logging.info("     Post: %s" % firstLink)
             print("        Post: %s" % firstLink)
+=======
+            textPost = title + " " + link
+            logging.info("    Post: %s" % link)
+            print("        Post: %s" % link)
+>>>>>>> develop
             entry = urllib.parse.quote(textPost)
             try:
                 blog.getBuffer().getProfiles()[0].updates.new(entry)
@@ -220,12 +226,12 @@ class moduleBuffer():
                 logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
                 logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
                 return(linkAdded)
-            linkAdded = firstLink
+            linkAdded = link
                 
             time.sleep(2)
         logging.info("    Added posts to LinkedIn")
 
-        return(linkAdded)
+        return(link)
 
     def deletePost(self, profiles, args):
         api = self.buffer
