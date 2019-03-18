@@ -97,39 +97,15 @@ class moduleBuffer():
     
         self.buffer = api
 
-    def checkLimitPosts(self, myServices, service=''):
-        api = self.buffer
-
-        lenMax = 0
-        logging.info("  Checking services...")
-        if service: 
-            profile = Profiles(api=api).filter(service=service)
-            logging.debug("Profile %s" % profile)
-            lenMax = profile[0].counts.pending
-            profileList = []
-        else:
-            profileList = Profiles(api=api).all()
-            for profile in profileList: 
-               if (profile['service'][0] in myServices): 
-                   lenProfile = len(profile.updates.pending) 
-                   self.lenMax[profile['service']] = lenProfile
-                   if (lenProfile > lenMax): 
-                       lenMax = lenProfile 
-                       logging.info("%s ok" % profile['service'])
-
-        logging.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
-
-        return(lenMax, profileList)
-
     def setProfiles(self, service=""):
         api = self.buffer
-        logging.info("Checking services...")
+        logging.info(" Checking services...")
         
         if (service == ""):
-            logging.info("   All available")
+            logging.info(" All available")
             profiles = Profiles(api=api).all()
         else:
-            logging.info("   %s" % service)
+            logging.info("  %s" % service)
             logging.info(service)
             profiles = Profiles(api=api).filter(service=service)
             
@@ -156,7 +132,7 @@ class moduleBuffer():
     
             serviceName = profile['service']
     
-            logging.info("   Profile %s" % serviceName)
+            logging.info(" Profile %s" % serviceName)
     
             outputData[serviceName] = {'sent': [], 'pending': []}
             for method in ['sent', 'pending']:
@@ -227,11 +203,28 @@ class moduleBuffer():
         return(None)
 
     def addPosts(self, blog, profile, listPosts):
+        linkAdded = ''
+        api = self.buffer
+        logging.info("   Adding posts to LinkedIn")
         for post in listPosts: 
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post 
-            textPost = title + " " + firstLink
+            textPost = title + " " + link
+            logging.info("    Post: %s" % link)
+            print("        Post: %s" % link)
             entry = urllib.parse.quote(textPost)
-            blog.profiles[profile].updates.new(textPost)
+            try:
+                blog.getBuffer().getProfiles()[0].updates.new(entry)
+            except: 
+                logging.warning("Buffer posting failed!") 
+                logging.warning("Entry: %s"% entry) 
+                logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
+                logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
+                return(linkAdded)
+            linkAdded = link
+                
+            time.sleep(2)
+
+        return(link)
 
     def deletePost(self, profiles, args):
         api = self.buffer
@@ -328,7 +321,7 @@ class moduleBuffer():
             logging.debug("Service %d %s" % (i,serviceName))
             if (profiles[i].counts['sent'] > 0):
                 someSent = True
-                logging.info("   Service %s" % serviceName)
+                logging.debug(" Service %s" % serviceName)
                 logging.debug("There are: %d" % profiles[i].counts['sent'])
                 logging.debug(profiles[i].updates.sent)
                 due_time=""

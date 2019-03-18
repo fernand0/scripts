@@ -150,7 +150,7 @@ def connectBuffer():
     return(api)
 
 def connectTwitter(twitterAC):    
-    logger.info("Connecting Twitter")
+    logger.info("    Connecting Twitter")
     # In order to obtain the parameters for a new account, just write twitter
     # and follow the instructions
     # The result will be at ~/.twitter_oauth
@@ -180,7 +180,7 @@ def connectTwitter(twitterAC):
     return(t)
 
 def connectFacebook(fbPage = 'me'):
-    logger.info("Connecting Facebook")
+    logger.info("    Connecting Facebook")
     config = configparser.ConfigParser()
     config.read(CONFIGDIR + '/.rssFacebook')
 
@@ -195,9 +195,9 @@ def connectFacebook(fbPage = 'me'):
 
         if (fbPage != 'me'):
             for i in range(len(pages['data'])):
-                logger.info("%s %s"% (pages['data'][i]['name'], fbPage))
+                logger.debug("%s %s"% (pages['data'][i]['name'], fbPage))
                 if (pages['data'][i]['name'] == fbPage):
-                    logger.info("\tWriting in... %s"% pages['data'][i]['name'])
+                    logger.info("    Writing in... %s"% pages['data'][i]['name'])
                     graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
                     # Publishing as the page
                     return(graph2, pages['data'][i]['id'])
@@ -271,69 +271,25 @@ def connectMedium():
     return(client, user)
 
 def connectPocket():
-    logger.info("Connecting Pocket")
+    logger.info("    Connecting Pocket")
+
     config = configparser.ConfigParser()
-    config.read(CONFIGDIR + '/.rssPocket')
-    consumer_key = config.get("appKeys", "consumer_key")
-    access_token = config.get("appKeys", "access_token")
     try: 
-        p = Pocket(consumer_key=consumer_key, access_token=access_token)
+        config.read(CONFIGDIR + '/.rssPocket')
+
+        consumer_key = config.get("appKeys", "consumer_key")
+        access_token = config.get("appKeys", "access_token")
+
+        try: 
+            p = Pocket(consumer_key=consumer_key, access_token=access_token)
+        except:
+            logger.warning("Pocket authentication failed!")
+            logger.warning("Unexpected error:", sys.exc_info()[0])
     except:
-        logger.warning("Pocket authentication failed!")
-        logger.warning("Unexpected error:", sys.exc_info()[0])
+        logger.warning("Account not configured")
+        p = None
 
     return(p)
-
-def checkLimitPosts(api, blog, service=''):
-    # We can put as many items as the service with most items allow
-    # The limit is ten.
-    # Get all pending updates of a social network profile
-
-    lenMax = 0
-    logger.info("Checking services...")
-    #print("Checking services...")
-    
-    if api:
-        #profileList = Profiles(api=api).all()
-        if service: 
-            profile = Profiles(api=api).filter(service=service)
-            logging.debug("Profile %s" % profile)
-            lenMax = profile[0].counts.pending
-            profileList = []
-        else:
-            profileList = Profiles(api=api).all()
-            for profile in profileList: 
-               if (profile['service'][0] in blog.getBufferapp()): 
-                   lenProfile = len(profile.updates.pending) 
-                   if (lenProfile > lenMax): 
-                       lenMax = lenProfile 
-                       logger.info("%s ok" % profile['service'])
-    elif blog:
-        #print(blog.getSocialNetworks())
-        profileList = blog.getSocialNetworks().keys()
-        if service: 
-            #print(service)
-            listP = blog.cache.getPostsCache((service, 
-                blog.getSocialNetworks()[service])) 
-            lenProfile = len(listP) 
-            #print(lenProfile)
-            lenMax = lenProfile
-            listProfiles = []
-        else:
-            for profile in blog.getSocialNetworks():
-                if (profile[0] in blog.getProgram()): 
-                    print("Profile %s" %profile)
-                    print("Profile program %s" %blog.getProgram())
-                    listP = blog.cache.getPostsCache((profile, 
-                        blog.getSocialNetworks()[profile])) 
-                    lenProfile = len(listP) 
-                    if (lenProfile > lenMax): 
-                        lenMax = lenProfile 
-                        logger.info("%s ok" % profile)
-
-    logger.info("There are %d in some buffer, we can put %d" % (lenMax, 10-lenMax))
-
-    return(lenMax, profileList)
 
 def publishMail(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
@@ -352,8 +308,10 @@ def publishMail(channel, title, link, summary, summaryHtml, summaryLinks, image,
         logger.warning("Unexpected error:", sys.exc_info()[0])
         return("Fail!")
 
+# Unused ?
 def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, services='fglt'):
     prof = blog.profiles[profile]
+    linkPublished = ''
     if isDebug:
         profileList = []
         firstLink = None
@@ -364,44 +322,47 @@ def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, servic
         titlePostT = title[:240] 
     else:
         titlePostT = ""
-    post = title + " " + firstLink
+    post = title + " " + link # firstLink
 
-    theList = []
-    if not (firstLink[firstLink.find(':')+2:] in theList):
-        # Without the http or https 
-        try:
-            if titlePostT and (profile == 'twitter'):
-                entry = urllib.parse.quote(titlePostT + " " + firstLink)#.encode('utf-8')
-            else:
-                entry = urllib.parse.quote(post)#.encode('utf-8')
+    try:
+        if titlePostT and (profile == 'twitter'):
+            entry = urllib.parse.quote(titlePostT + " " + firstLink)#.encode('utf-8')
+        else:
+            entry = urllib.parse.quote(post)#.encode('utf-8')
 
-            if (profile[0] in services): 
-                blog.profiles[profile].updates.new(entry)
+        if (profile[0] in services): 
+            blog.profiles[profile].updates.new(entry)
+            linkPublished = link
 
-            line = line + ' ok'
-            time.sleep(2)
-        except:
-            logger.warning("Buffer posting failed!")
-            logger.warning("Entry: %s"% entry)
-            logger.warning("Unexpected error: %s"% sys.exc_info()[0])
-            logger.warning("Unexpected error: %s"% sys.exc_info()[1])
+        line = line + ' ok'
+        time.sleep(2)
+    except:
+        logger.warning("Buffer posting failed!")
+        logger.warning("Entry: %s"% entry)
+        logger.warning("Unexpected error: %s"% sys.exc_info()[0])
+        logger.warning("Unexpected error: %s"% sys.exc_info()[1])
 
-            line = line + ' fail'
-            failFile = open(DATADIR + '/'
-                       + urllib.parse.urlparse(link).netloc
-                       + ".fail", "w")
-            failFile.write(post)
-            fail = 'yes'
+        line = line + ' fail'
+        failFile = open(DATADIR + '/'
+                   + urllib.parse.urlparse(link).netloc
+                   + ".fail", "w")
+        failFile.write(post)
+        fail = 'yes'
+        return(linkPublished)
 
     logger.info("  Profile %s" % line)
+    return(linkPublished)
 
 def searchTwitter(search, twitter): 
     t = connectTwitter(twitter)
     return(t.search.tweets(q=search)['statuses'])
 
 def nextPost(blog, socialNetwork):
-    serviceName = blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].name
-    listP = blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].getPostsFormatted()[serviceName]['pending']
+    cacheName = socialNetwork[0]+'_'+socialNetwork[1]
+    blog.cache[cacheName].setPosts()
+    blog.cache[cacheName].setPostsFormatted()
+    serviceName = blog.cache[cacheName].name
+    listP = blog.cache[cacheName].getPostsFormatted()[serviceName]['pending']
 
     if listP: 
         element = listP[0]
@@ -415,17 +376,11 @@ def nextPost(blog, socialNetwork):
 
     return(element,listP)
 
-def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots): 
+def publishDelay(blog, socialNetwork, numPosts, timeSlots): 
+    # We allow the rest of the Blogs to start
+    time.sleep(2)
     nameCache = socialNetwork[0]+'_'+socialNetwork[1]
-    blog.cache[nameCache].setPosts()
     serviceName = blog.cache[nameCache].name
-    listP = blog.cache[nameCache].postsFormatted[serviceName]['pending']
-    newListP = listP + listPosts
-
-    blog.cache[nameCache].postsFormatted[serviceName]['pending'] = newListP
-    logging.info("Blog url %s" % blog.getUrl())
-    logging.info("Blog socialNetwork %s" % type(socialNetwork))
-    blog.cache[nameCache].updatePostsCache()
 
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
@@ -433,15 +388,12 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
 
         element, listP = nextPost(blog,socialNetwork)
 
-        logger.info("%s: waiting ... %.2f minutes" % (socialNetwork[0], tSleep/60))
-        logger.info(" I'll publish %s" % element[0])
-        print("         %s: waiting ... %.2f minutes" % (socialNetwork[0], tSleep/60))
-
-        print(element[0], (socialNetwork[0], tSleep/60))
+        logger.info("    %s: Waiting ... %.2f minutes" % (socialNetwork[0].capitalize(), tSleep/60))
+        logger.info("     I'll publish %s" % element[0])
+        print("\n         %s: waiting... %.2f minutes\n          I'll publish %s"
+                % (socialNetwork[0], tSleep/60, element[0]))
         time.sleep(tSleep) 
 
-        blog.getPosts()
-        blog.getPostsFormatted()
         # Things can have changed during the waiting
         element, listP = nextPost(blog,socialNetwork)
 
@@ -457,7 +409,7 @@ def publishDelay(blog, listPosts, socialNetwork, numPosts, timeSlots):
         if j+1 < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))
             time.sleep(tSleep2) 
-    logger.info("Finished in: %s" % socialNetwork[0].capitalize())
+    logger.info("   Finished in: %s" % socialNetwork[0].capitalize())
     print("====================================")
     print("Finished in: %s at %s" % (socialNetwork[0].capitalize(), 
         time.asctime()))
@@ -487,37 +439,37 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
 
     twitter = channel
     comment = ''
-    logger.info("Publishing in Twitter...")
+    logger.info("    Publishing in Twitter...")
     try: 
         t = connectTwitter(twitter)
         if t:
             statusTxt = comment + " " + title + " " + link
             h = HTMLParser()
             statusTxt = h.unescape(statusTxt)
-            logger.info("Publishing in Twitter: %s" % statusTxt)
+            logger.info("    Publishing in Twitter: %s" % statusTxt)
             return(t.statuses.update(status=statusTxt))
         else:
             logger.warning("You must configure API access for %s" % twitter)
             return("Fail! You must configure API access for %s" % twitter)
     except:
         logger.warning("Twitter posting failed!")
-        logger.warning("Unexpected error:", sys.exc_info()[0])
+        logger.warning("Unexpected error: %s"% sys.exc_info()[0])
+        logger.warning("Unexpected error: %s"% sys.exc_info()[1])
         return("Fail! %s" % sys.exc_info()[0])
 
    
 def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     fbPage = channel
-    logger.info("Publishing in Facebook...")
+    logger.info("   Publishing in Facebook...")
     textToPublish = ""
     textToPublish2 = ""
     try:
         h = HTMLParser()
         title = h.unescape(title)
-        logger.info("Publishing in Facebook page %s" % fbPage)
+        logger.info("   Publishing in Facebook page %s" % fbPage)
         (graph, page) = connectFacebook(fbPage)
-        logger.info("Publishing in Facebook page %s" % page)
         textToPublish = title + " \n" + summaryLinks
-        logger.info("Publishing in Facebook: %s" % title)
+        logger.info("    Publishing in Facebook: %s" % title)
         logger.debug("Publishing in Facebook: %s" % textToPublish)
         if (len(textToPublish) > 9980):
             textToPublish = textToPublish[:9980]
@@ -653,10 +605,11 @@ def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, imag
         return("Fail!")
 
 def publishPocket(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
-    logger.info("Pocket...%s"%channel)
+    logger.info("    Publishing in Pocket...%s"%channel)
     try:
         pc = connectPocket()
-        pc.add(link)
+        logger.info("    Publishing in Pocket: %s" % link)
+        return(pc.add(link))
     except:
         logger.warning("Pocket posting failed!")
         logger.warning("Unexpected error:", sys.exc_info()[0])

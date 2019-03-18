@@ -22,7 +22,6 @@ import urllib
 import importlib
 importlib.reload(sys)
 #sys.setdefaultencoding("UTF-8")
-import moduleRss
 import moduleSocial
 
 from configMod import *
@@ -60,7 +59,8 @@ class moduleCache():
         files = []
     
         serviceName = self.name[0].capitalize() + self.name[1:]
-        logging.info("   Service %s" % serviceName)
+        serviceName = self.name
+        logging.debug("   Service %s" % serviceName)
     
         outputData[serviceName] = {'sent': [], 'pending': []}
         listP = self.getPosts()
@@ -73,15 +73,28 @@ class moduleCache():
     
         self.postsFormatted = outputData
     
+    def addPosts(self, blog, profile, listPosts):
+        nameCache = profile
+        self.setPosts()
+        self.setPostsFormatted()
+        serviceName = self.name
+        logging.info("   Adding posts to %s"% serviceName)
+        listP = self.postsFormatted[serviceName]['pending']
+        newListP = listP + listPosts
+        self.postsFormatted[serviceName]['pending'] = newListP
+        self.updatePostsCache()
+        logging.info("   Added posts to %s"% serviceName)
+
     def updatePostsCache(self):
         fileNameQ = fileNamePath(self.url, self.socialNetwork) + ".queue" 
 
         #serviceName = self.name.capitalize()
         serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1]
+        serviceName = self.name
     
         with open(fileNameQ, 'wb') as f:
             pickle.dump(self.postsFormatted[serviceName]['pending'], f)
-        logging.info("Writing in %s" % fileNameQ)
+        logging.debug("Writing in %s" % fileNameQ)
     
     def isForMe(self, args):
         serviceName =  self.socialNetwork[0].capitalize()
@@ -124,9 +137,13 @@ class moduleCache():
                 logging.debug("Updating %s" % self.postsFormatted)
                 #logging.info("Blog %s" % cache['blog'])
                 self.updatePostsCache()
+                logging.info("UUpdate ... %s" % str(update))
                 if 'text' in update:
                     update = update['text']
-                logging.info("Update", update)
+                if type(update) == tuple:
+                    update = update[1]['id']
+                    # link: https://www.facebook.com/[name]/posts/[second part of id]
+            logging.info("Update before return", update)
     
             return(update)
         return ""
