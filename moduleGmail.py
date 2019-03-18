@@ -91,6 +91,24 @@ class moduleGmail(Content):
                 message = self.getMessageMeta(post['id'])
                 self.rawPosts.insert(0, message)
 
+        outputData = {}
+        files = []
+
+        serviceName = self.name
+
+        outputData[serviceName] = {'sent': [], 'pending': []}
+
+        listDrafts=self.getPosts()
+
+        if listDrafts:
+            logging.debug("--Posts %s"% listDrafts)
+    
+            for element in listDrafts: 
+                    outputData[serviceName]['pending'].append(element) 
+
+        self.postsFormatted = outputData
+ 
+
     def getPosts(self):
         if not self.posts:
             self.setPosts()
@@ -218,28 +236,6 @@ class moduleGmail(Content):
     
         return(listP)
     
-    def setPosts(self):
-        logging.info("  Setting posts")
-        api = self.getClient()
-
-        self.posts = self.getPosts()
- 
-        outputData = {}
-        files = []
-
-        serviceName = self.name
-
-        outputData[serviceName] = {'sent': [], 'pending': []}
-        listDrafts = self.getPosts()
-
-        if listDrafts:
-            logging.debug("--Posts %s"% listDrafts)
-    
-            for element in listDrafts: 
-                    outputData[serviceName]['pending'].append(element) 
-
-        self.postsFormatted = outputData
- 
     def listPosts(self, pp):    
         api = self.getClient()
         self.setPosts()
@@ -431,8 +427,11 @@ def main():
 
     api = moduleGmail.moduleGmail()
     api.setClient('ACC1',pp)
-    api.setPosts()
-    api.getPostsCache()
+    print("-----")
+    print(api.getPosts())
+    print("-----")
+    print(api.getPostsFormatted())
+    print("-----")
     sys.exit()
     api.editPost(pp, api.getPosts(), "M17", 'Prueba.')
 
