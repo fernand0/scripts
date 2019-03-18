@@ -208,15 +208,9 @@ class moduleBuffer():
         logging.info("    Adding posts to LinkedIn")
         for post in listPosts: 
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post 
-<<<<<<< HEAD
-            textPost = title + " " + firstLink
-            logging.info("     Post: %s" % firstLink)
-            print("        Post: %s" % firstLink)
-=======
             textPost = title + " " + link
             logging.info("    Post: %s" % link)
             print("        Post: %s" % link)
->>>>>>> develop
             entry = urllib.parse.quote(textPost)
             try:
                 blog.getBuffer().getProfiles()[0].updates.new(entry)
