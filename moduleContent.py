@@ -60,6 +60,15 @@ class Content:
                 nick = config.get(section, option)
                 socialNetwork = (option, nick)
                 self.addSocialNetwork(socialNetwork)
+
+        if self.getBufferapp():
+            profiles = self.buffer.getProfiles()
+            for profile in profiles:
+                nick =  profile['service_username']
+                service = profile['service']
+                socialNetwork = (service, nick)
+                self.addSocialNetwork(socialNetwork)
+
  
     def addSocialNetwork(self, socialNetwork):
         self.socialNetworks[socialNetwork[0]] = socialNetwork[1]

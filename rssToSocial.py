@@ -166,15 +166,16 @@ def main():
             if ("time" in config.options(section)):
                 blog.setTime(config.get(section, "time"))
 
-            blog.setSocialNetworks(config, section)
 
             if ('bufferapp' in config.options(section)): 
                 blog.setBufferapp(config.get(section, "bufferapp")) 
                 blog.setBuffer(blog.getBufferapp())
+
+            blog.setSocialNetworks(config, section)
+
             if ('program' in config.options(section)): 
                 blog.setProgram(config.get(section, "program"))
                 blog.setCache()
-
 
             logging.info(" Looking for pending posts") # in ...%s"
                     #% blog.getSocialNetworks())
@@ -182,6 +183,9 @@ def main():
 
             bufferMax = 9
             t = {}
+
+            print(blog.getSocialNetworks())
+            sys.exit()
 
             for profile in blog.getSocialNetworks():
                 lenMax = 9
