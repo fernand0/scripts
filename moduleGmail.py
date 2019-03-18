@@ -42,6 +42,9 @@ class moduleGmail(Content):
         self.rawPosts = None
         self.name = "Mail"
 
+    def API(self, Acc, pp):
+        self.setClient(Acc, pp)
+
     def setClient(self, Acc, pp):
         # based on get_credentials from 
         # Code from
@@ -65,22 +68,15 @@ class moduleGmail(Content):
         service = build('gmail', 'v1', http=credentials.authorize(Http()))
     
         self.service = service
-
         self.name = self.name + Acc[3:]
 
     def getClient(self):
         return(self.service)
 
-    def confName(self, acc):
-        api = self.getClient()
-        theName = os.path.expanduser(CONFIGDIR + '/' 
-                        + '.' + acc[0]+ '_' 
-                        + acc[1]+ '.json')
-        return(theName)
-    
     def setPosts(self):
         logging.info("  Setting posts")
         api = self.getClient()
+
         posts = api.users().drafts().list(userId='me').execute()
         logging.debug("--setPosts %s" % posts)
         if 'drafts' in posts:
@@ -104,15 +100,19 @@ class moduleGmail(Content):
             logging.debug("--Posts %s"% listDrafts)
     
             for element in listDrafts: 
-                    outputData[serviceName]['pending'].append(element) 
+                # Which elements to include?
+                outputData[serviceName]['pending'].append(element) 
 
         self.postsFormatted = outputData
  
-
+    def confName(self, acc):
+        api = self.getClient()
+        theName = os.path.expanduser(CONFIGDIR + '/' 
+                        + '.' + acc[0]+ '_' 
+                        + acc[1]+ '.json')
+        return(theName)
+    
     def getPosts(self):
-        if not self.posts:
-            self.setPosts()
-
         return(self.rawPosts)
 
     def getMessage(self, id): 
@@ -222,42 +222,25 @@ class moduleGmail(Content):
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
-    def getPostsCache(self):        
-        api = self.getClient()
-        drafts = self.getPosts()
+    #def getPostsCache(self):        
+    #    api = self.getClient()
+    #    drafts = self.getPosts()
+    #
+    #    listP = []
+    #    if drafts:
+    #        numDrafts = len(drafts)
+    #        for draft in range(numDrafts): 
+    #            message = self.obtainPostData(draft)
+    #            print(message)
+    #            listP.append(message)
+    #
+    #    return(listP)
     
-        listP = []
-        if drafts:
-            numDrafts = len(drafts)
-            for draft in range(numDrafts): 
-                message = self.obtainPostData(draft)
-                print(message)
-                listP.append(message)
-    
-        return(listP)
-    
-    def listPosts(self, pp):    
-        api = self.getClient()
-        self.setPosts()
+    #def getPostsFormatted(self):    
+    #    api = self.getClient()
+    #    self.setPosts()
+    #    return(self.getPostsFormatted())
 
-        outputData = {}
-        files = []
-    
-        serviceName = self.name
-    
-        outputData[serviceName] = {'sent': [], 'pending': []}
-        listDrafts = self.getPostsCache()
-    
-        if listDrafts:
-            logging.debug("--Posts %s"% listDrafts)
-    
-            for element in listDrafts: 
-                    outputData[serviceName]['pending'].append(element) 
-    
-        #logging.info("Service posts profiles %s" % profiles)
-        profiles = None
-        return(outputData, profiles)
-    
     def isForMe(self, args):
         serviceName = self.name
         if (serviceName[0] in args) or ('*' in args): 
@@ -440,7 +423,7 @@ def main():
 
     print("profiles")
     print(api.profile)
-    postsP, profiles = api.listPosts(pp)
+    #postsP, profiles = api.listPosts(pp)
     print("-> Posts",postsP)
     print(apil.getPostsFormatted())
     sys.exit()

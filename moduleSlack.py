@@ -38,13 +38,12 @@ class moduleSlack(Content):
  
     def setPosts(self, channel='links'):
         logging.info("  Setting posts")
-        if self.getPosts() is None:
-            self.posts = []
-            theChannel = self.getChanId(channel)
-            history = self.sc.api_call( "channels.history", count=1000, channel=theChannel)
-            logging.debug(history)
-            for msg in history['messages']:
-                self.posts.append(msg)
+        self.posts = []
+        theChannel = self.getChanId(channel)
+        history = self.sc.api_call( "channels.history", count=1000, channel=theChannel)
+        logging.debug(history)
+        for msg in history['messages']:
+            self.posts.append(msg)
 
         outputData = {}
         serviceName = 'Slack'
