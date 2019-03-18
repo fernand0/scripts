@@ -28,6 +28,7 @@ class Content:
         self.socialNetworks = {}
         self.linksToAvoid = ""
         self.posts = None
+        self.postsFormatted = None
         self.time = []
         self.bufferapp = None
         self.program = None

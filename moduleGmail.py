@@ -32,17 +32,17 @@ import email
 from email.parser import BytesParser
 
 from configMod import *
+from moduleContent import *
 
-class moduleGmail():
+class moduleGmail(Content):
 
     def __init__(self):
+        super().__init__()
         self.service = None
-        self.posts = None
         self.rawPosts = None
         self.name = "Mail"
-        self.profile = None
 
-    def API(self, Acc, pp):
+    def setClient(self, Acc, pp):
         # based on get_credentials from 
         # Code from
         # https://developers.google.com/gmail/api/v1/reference/users/messages/list
@@ -67,7 +67,6 @@ class moduleGmail():
         self.service = service
 
         self.name = self.name + Acc[3:]
-        #self.profile = self.service.users().getProfile(userId='me').execute()
 
     def getClient(self):
         return(self.service)
@@ -80,6 +79,7 @@ class moduleGmail():
         return(theName)
     
     def setPosts(self):
+        logging.info("  Setting posts")
         api = self.getClient()
         posts = api.users().drafts().list(userId='me').execute()
         logging.debug("--setPosts %s" % posts)
@@ -90,10 +90,11 @@ class moduleGmail():
                 self.posts.insert(0, post)
                 message = self.getMessageMeta(post['id'])
                 self.rawPosts.insert(0, message)
-                #print(message)
 
     def getPosts(self):
-        self.setPosts()
+        if not self.posts:
+            self.setPosts()
+
         return(self.rawPosts)
 
     def getMessage(self, id): 
@@ -217,8 +218,32 @@ class moduleGmail():
     
         return(listP)
     
+    def setPosts(self):
+        logging.info("  Setting posts")
+        api = self.getClient()
+
+        self.posts = self.getPosts()
+ 
+        outputData = {}
+        files = []
+
+        serviceName = self.name
+
+        outputData[serviceName] = {'sent': [], 'pending': []}
+        listDrafts = self.getPosts()
+
+        if listDrafts:
+            logging.debug("--Posts %s"% listDrafts)
+    
+            for element in listDrafts: 
+                    outputData[serviceName]['pending'].append(element) 
+
+        self.postsFormatted = outputData
+ 
     def listPosts(self, pp):    
         api = self.getClient()
+        self.setPosts()
+
         outputData = {}
         files = []
     
@@ -405,7 +430,7 @@ def main():
     # instantiate the api object 
 
     api = moduleGmail.moduleGmail()
-    api.API('ACC1',pp)
+    api.setClient('ACC1',pp)
     api.setPosts()
     api.getPostsCache()
     sys.exit()
@@ -418,6 +443,7 @@ def main():
     print(api.profile)
     postsP, profiles = api.listPosts(pp)
     print("-> Posts",postsP)
+    print(apil.getPostsFormatted())
     sys.exit()
     api.editPost(pp, api.getPosts(), "M11", 'No avanza.')
     sys.exit()
