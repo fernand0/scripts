@@ -184,8 +184,6 @@ def main():
             bufferMax = 9
             t = {}
 
-            print(blog.getSocialNetworks())
-            sys.exit()
 
             for profile in blog.getSocialNetworks():
                 lenMax = 9
