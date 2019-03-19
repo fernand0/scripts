@@ -294,13 +294,13 @@ def connectPocket():
 def publishMail(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
     logger.info("Publishing in Gmail... ") 
-    logger.debug("--%s, %s, %s, %s, %s, %s, %s, %s, %s" % (channel, title, link, summary, summaryHtml, summaryLinks, image, content , links))
+    logger.info("--%s, %s, %s, %s, %s, %s, %s, %s, %s" % (channel, title, link, summary, summaryHtml, summaryLinks, image, content , links))
     if True:
-        application = channel.service #connectLinkedin()
+        application = channel.service
         #presentation = 'Publicado! ' + title 
         logger.info("Publishing in Gmail: %s" % title)
-        logger.debug("Publishing in Gmail: %s" % content)
-        logger.debug("Publishing in Gmail: %s" % links)
+        logger.info("Publishing in Gmail: %s" % content)
+        logger.info("Publishing in Gmail: %s" % links)
         message = application.users().drafts().send(userId='me', body={ 'id': links}).execute()
 
     else:

@@ -48,7 +48,7 @@ class moduleSlack(Content):
         outputData = {}
         serviceName = 'Slack'
         outputData[serviceName] = {'sent': [], 'pending': []}
-        for post in self.posts:
+        for post in self.getPosts():
             if 'attachments' in post:
                 outputData[serviceName]['pending'].append(
                     (post['text'][1:-1], post['attachments'][0]['title'], '', '', '', '', '', '', post['ts'], ''))

@@ -99,9 +99,10 @@ class moduleGmail(Content):
         if listDrafts:
             logging.debug("--Posts %s"% listDrafts)
     
-            for element in listDrafts: 
+            for i in range(len(listDrafts)):
                 # Which elements to include?
-                outputData[serviceName]['pending'].append(self.extractDataMessage(element))
+                outputData[serviceName]['pending'].append(self.extractDataMessage(i))
+                i = i + 1
 
         self.postsFormatted = outputData
  
@@ -179,8 +180,10 @@ class moduleGmail(Content):
     
         return(labelId)
 
-    def extractDataMessage(self, message):
-        messageRaw = message
+    def extractDataMessage(self,i):
+        messageRaw = self.getPosts()[i]
+        # !!!! getPosts returns raw posts !!!
+        message = self.posts[i]
         #messageEmail = self.getEmail(messageRaw)
 
         theTitle = self.getHeader(messageRaw, 'Subject')
@@ -210,7 +213,7 @@ class moduleGmail(Content):
         theSummary = snippet
 
         theSummaryLinks = messageRaw
-        comment = message['id']
+        comment = message['id'] 
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
@@ -223,7 +226,7 @@ class moduleGmail(Content):
         if not self.rawPosts or (i>=(len(self.rawPosts))):
             return (None, None, None, None, None, None, None, None, None, None)
 
-        (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment) = extractDataMessage(self.rawPosts[i])
+        (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment) = self.extractDataMessage(i)
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
@@ -251,7 +254,7 @@ class moduleGmail(Content):
                     return(title)
         return(None)
     
-    def publishPost(self, pp, posts, args):
+    def publishPost(self, args):
         logging.info("To publish %s" % args)
     
         update = ""
@@ -260,14 +263,15 @@ class moduleGmail(Content):
 
         if self.isForMe(args):
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
+            logging.info("Ttitle %s" % title)
             if title:
                 publishMethod = getattr(moduleSocial, 
                         'publishMail')
-                logging.info("Publishing title: %s" % title)
  
                 logging.debug(title, link, summary, summaryHtml, summaryLinks, image, content , links )
                 logging.info(title, link, content , links )
                 logging.info(publishMethod)
+                logging.info("com %s" % comment)
                 update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
                 if update:
                     if 'text' in update: 
