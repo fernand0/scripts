@@ -227,25 +227,6 @@ class moduleGmail(Content):
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
-    #def getPostsCache(self):        
-    #    api = self.getClient()
-    #    drafts = self.getPosts()
-    #
-    #    listP = []
-    #    if drafts:
-    #        numDrafts = len(drafts)
-    #        for draft in range(numDrafts): 
-    #            message = self.obtainPostData(draft)
-    #            print(message)
-    #            listP.append(message)
-    #
-    #    return(listP)
-    
-    #def getPostsFormatted(self):    
-    #    api = self.getClient()
-    #    self.setPosts()
-    #    return(self.getPostsFormatted())
-
     def isForMe(self, args):
         serviceName = self.name
         if (serviceName[0] in args) or ('*' in args): 
