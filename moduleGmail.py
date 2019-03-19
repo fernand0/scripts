@@ -101,7 +101,7 @@ class moduleGmail(Content):
     
             for element in listDrafts: 
                 # Which elements to include?
-                outputData[serviceName]['pending'].append(element) 
+                outputData[serviceName]['pending'].append(self.extractDataMessage(element))
 
         self.postsFormatted = outputData
  
@@ -179,16 +179,8 @@ class moduleGmail(Content):
     
         return(labelId)
 
-    def obtainPostData(self, i, debug=False):
-        api = self.getClient()
-
-        if not self.posts:
-            self.setPosts()
-
-        if not self.rawPosts or (i>=(len(self.rawPosts))):
-            return (None, None, None, None, None, None, None, None, None, None)
-
-        messageRaw = self.rawPosts[i]
+    def extractDataMessage(self, message):
+        messageRaw = message
         #messageEmail = self.getEmail(messageRaw)
 
         theTitle = self.getHeader(messageRaw, 'Subject')
@@ -218,7 +210,20 @@ class moduleGmail(Content):
         theSummary = snippet
 
         theSummaryLinks = messageRaw
-        comment = self.posts[i]['id']
+        comment = message['id']
+
+        return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
+
+    def obtainPostData(self, i, debug=False):
+        api = self.getClient()
+
+        if not self.posts:
+            self.setPosts()
+
+        if not self.rawPosts or (i>=(len(self.rawPosts))):
+            return (None, None, None, None, None, None, None, None, None, None)
+
+        (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment) = extractDataMessage(self.rawPosts[i])
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
