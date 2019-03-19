@@ -19,6 +19,7 @@ from twitter import *
 #https://pypi.python.org/pypi/twitter
 #http://mike.verdone.ca/twitter/
 #https://github.com/sixohsix/twitter/tree
+from html.parser import HTMLParser
 
 from configMod import *
 from moduleContent import *
@@ -27,6 +28,8 @@ class moduleTwitter(Content):
 
     def __init__(self):
         super().__init__()
+        self.user = None
+        self.tc = None
 
     def setClient(self, twitterAC):
         logging.info("    Connecting Twitter")
@@ -34,6 +37,7 @@ class moduleTwitter(Content):
             config = configparser.ConfigParser()
             config.read(CONFIGDIR + '/.rssTwitter')
 
+            self.user = twitterAC
             CONSUMER_KEY = config.get("appKeys", "CONSUMER_KEY")
             CONSUMER_SECRET = config.get("appKeys", "CONSUMER_SECRET")
             TOKEN_KEY = config.get(twitterAC, "TOKEN_KEY")
@@ -61,7 +65,9 @@ class moduleTwitter(Content):
     def setPosts(self):
         logging.info("  Setting posts")
         self.posts = []
-        tweets = self.tc.statuses.home_timeline()
+        #tweets = self.tc.statuses.home_timeline()
+        tweets = self.tc.statuses.user_timeline()
+
         for tweet in tweets:
             self.posts.append(tweet)
 
@@ -76,6 +82,19 @@ class moduleTwitter(Content):
 
         self.postsFormatted = outputData
 
+    def publishPost(self, post):
+        logging.info("    Publishing in Twitter...")
+        h = HTMLParser()
+        post = h.unescape(post)
+        try:
+            return(self.tc.statuses.update(status=post))
+        except:        
+            logging.warning("Twitter posting failed!") 
+            logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
+            logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
+            return("Fail! %s" % sys.exc_info()[0])
+
+
 def main():
 
     import moduleTwitter
@@ -85,7 +104,10 @@ def main():
     tw.setClient('fernand0')
 
     tw.setPosts()
-    print(tw.getPostsFormatted())
+    for tweet in tw.getPostsFormatted()['Twitter']['pending']:
+        print("@%s: %s" %(tweet[2], tweet[0]))
+
+    tw.publishPost("Prueba")
 
 if __name__ == '__main__':
     main()
