@@ -192,11 +192,11 @@ def main():
                 socialNetwork = (profile, nick)
                 nameProfile = profile + '_' + nick
                 if blog.getBufferapp() and (profile[0] in blog.getBufferapp()): 
-                    print("      Checking Buffer publishing %s" % profile)
+                    print("   Checking Buffer publishing %s" % profile)
                     # Change to buffer[profile].lenMax ?
                     lenMax = blog.buffer.lenMax[profile]
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
-                    print("      Checking Cache publishing %s" % profile)
+                    print("   Checking Cache publishing %s" % profile)
                     lenMax = blog.cache[nameProfile].lenMax
 
                 logging.info("  Service %s Lenmax %d" % (profile, lenMax))
@@ -213,7 +213,7 @@ def main():
                     logging.info("    Last link %s %s %d"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
                                 time.localtime(lastTime)), lastLink, i))
-                    print("    Last link %s %s %d"% 
+                    print("     Last link %s %s %d"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
                                 time.localtime(lastTime)), lastLink, i))
                     logging.debug("bufferMax - lenMax = num %d %d %d"%
@@ -227,7 +227,7 @@ def main():
                         i = i - 1
                         post = blog.obtainPostData(i, False)
                         listPosts.append(post)
-                        print("         Scheduling post %s" % post[0])
+                        print("      Scheduling post %s" % post[0])
                         logging.info("    Scheduling post %s" % post[0])
 
                     if listPosts:

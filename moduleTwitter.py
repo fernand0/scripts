@@ -75,8 +75,9 @@ class moduleTwitter(Content):
         serviceName = 'Twitter'
         outputData[serviceName] = {'sent': [], 'pending': []}
         for post in self.getPosts():
+            #print(post)
             url = 'https://twitter.com/' + post['user']['screen_name'] + '/status/' + str(post['id'])
-            outputData[serviceName]['pending'].append((post['text'], url, 
+            outputData[serviceName]['sent'].append((post['text'], url, 
                     post['user']['screen_name'],     
                     post['created_at'], '','','','',''))
 
