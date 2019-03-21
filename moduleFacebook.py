@@ -1,0 +1,121 @@
+#!/usr/bin/env python
+
+import configparser
+import pickle
+import os
+import moduleSocial
+import moduleBuffer
+import moduleCache
+import urllib
+import logging
+from slackclient import SlackClient
+import sys
+import click
+import requests
+from bs4 import BeautifulSoup
+from bs4 import Tag
+
+import facebook
+
+from configMod import *
+from moduleContent import *
+
+class moduleFacebook(Content):
+
+    def __init__(self):
+        super().__init__()
+        self.user = None
+        self.fc = None
+
+    def setClient(self, facebookAC='me'):
+        logging.info("    Connecting Facebook")
+        try:
+            config = configparser.ConfigParser()
+            config.read(CONFIGDIR + '/.rssFacebook')
+
+            self.user = facebookAC
+            try:
+                oauth_access_token = config.get("Facebook", "oauth_access_token")
+                graph = facebook.GraphAPI(oauth_access_token, version='3.0') 
+                perms = ['publish_actions','manage_pages','publish_pages'] 
+                pages = graph.get_connections("me", "accounts") 
+                
+                if (facebookAC != 'me'): 
+                    for i in range(len(pages['data'])): 
+                        logging.debug("%s %s"% (pages['data'][i]['name'], facebookAC)) 
+                        if (pages['data'][i]['name'] == facebookAC): 
+                            logging.info("    Writing in... %s"% pages['data'][i]['name']) 
+                            graph2 = facebook.GraphAPI(pages['data'][i]['access_token']) 
+                            self.fc = graph2
+                            self.page = pages['data'][i]['id']
+                            return
+                        else: 
+                            # Publishing as me 
+                            self.fc = graph
+                            self.page = facebookAC 
+            except: 
+                logging.warning("Facebook authentication failed!") 
+                logging.warning("Unexpected error:", sys.exc_info()[0]) 
+                print("Fail!")
+        except:
+            logging.warning("Facebook authentication failed!")
+            logging.warning("Unexpected error:", sys.exc_info()[0])
+            print("Fail!")
+
+        return(0,0)
+
+    def getClient(self):
+        return self.fc
+ 
+    def setPosts(self):
+        logging.info("  Setting posts")
+        self.posts = []
+        count = 5
+        posts = self.fc.get_connections(self.page, connection_name='posts') 
+
+        for post in posts['data']:
+            self.posts.append(post)
+
+        outputData = {}
+        serviceName = 'Facebook'
+        outputData[serviceName] = {'sent': [], 'pending': []}
+        for post in self.getPosts():
+            (page, idPost) = post['id'].split('_')
+            url = 'https://facebook.com/' + page + '/posts/' + idPost
+            outputData[serviceName]['sent'].append((post['message'], url, 
+                    '',     
+                    post['created_time'], '','','','',''))
+
+        self.postsFormatted = outputData
+
+    def publishPost(self, post):
+        logging.info("    Publishing in Facebook...")
+        h = HTMLParser()
+        post = h.unescape(post)
+        try:
+            logging.info("    Publishing in Twitter: %s" % statusTxt)
+            return(self.tc.statuses.update(status=post))
+        except:        
+            logging.warning("Twitter posting failed!") 
+            logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
+            logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
+            return("Fail! %s" % sys.exc_info()[0])
+
+
+def main():
+
+    import moduleFacebook
+
+    fc = moduleFacebook.moduleFacebook()
+
+    fc.setClient('Enlaces de fernand0')
+
+    fc.setPosts()
+    for post in fc.getPostsFormatted()['Facebook']['sent']:
+        print("@%s: %s" %(post[2], post[0]))
+
+    #tw.publishPost("Prueba")
+
+if __name__ == '__main__':
+    main()
+

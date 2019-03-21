@@ -159,6 +159,7 @@ def main():
         blog.setUrl(url)
         blog.setPosts()
 
+
         if section.find(checkBlog) >= 0:
             # If checkBlog is empty it will add all of them
             if ("linksToAvoid" in config.options(section)):
@@ -175,6 +176,7 @@ def main():
 
             if ('program' in config.options(section)): 
                 blog.setProgram(config.get(section, "program"))
+
 
             logging.info(" Looking for pending posts") # in ...%s"
                     #% blog.getSocialNetworks())
@@ -239,7 +241,7 @@ def main():
 
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
                     blog.cache[nameProfile].addPosts(blog, nameProfile, listPosts)
-                    timeSlots = 50*60 # One hour
+                    timeSlots = 5*60 # One hour
                     t[nameProfile] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, socialNetwork, 1, timeSlots))
                     t[nameProfile].start() 
 
@@ -253,9 +255,20 @@ def main():
                             logging.info("  Publishing directly\n") 
                             serviceName = profile.capitalize()
                             print("   Publishing in %s %s" % (serviceName, title))
-                            publishMethod = getattr(moduleSocial, 
+                            if profile == 'twitter': 
+                                print("    New way")
+                                # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
+                                import importlib
+                                mod = importlib.import_module('module'+serviceName) 
+                                cls = getattr(mod, 'module'+serviceName)
+                                api = cls()
+                                api.setClient(nick)
+                                statusTxt = comment + " " + title + " " + link
+                                api.publishPost(statusTxt)
+                            else:
+                                publishMethod = getattr(moduleSocial, 
                                     'publish'+ serviceName)
-                            result = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
+                                result = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
 
                 if link:
                      logging.info("  Updating link %s" % profile)

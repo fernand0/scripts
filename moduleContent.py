@@ -35,6 +35,7 @@ class Content:
         self.buffer = None
         self.cache = None
         self.xmlrpc = None
+        self.api = {}
         self.lastLinkPublished = {}
         #self.logger = logging.getLogger(__name__)
  
@@ -53,6 +54,9 @@ class Content:
     def getSocialNetworks(self):
         return(self.socialNetworks)
 
+    def getSocialNetworksAPI(self):
+        return(self.api)
+
     def setSocialNetworks(self, config, section):
         socialNetworksOpt = ['twitter', 'facebook', 'telegram', 
                 'medium', 'linkedin','pocket'] 
@@ -61,6 +65,8 @@ class Content:
                 nick = config.get(section, option)
                 socialNetwork = (option, nick)
                 self.addSocialNetwork(socialNetwork)
+            if (option == 'twitter'):
+                self.addSocialNetworkAPI(socialNetwork)
 
         if self.getBufferapp():
             profiles = self.buffer.getProfiles()
@@ -70,7 +76,13 @@ class Content:
                 socialNetwork = (service, nick)
                 self.addSocialNetwork(socialNetwork)
 
- 
+    def addSocialNetworkAPI(self, socialNetwork):
+        sN = socialNetwork[0]
+        nick = socialNetwork[1]
+        #if sN == 'twitter':
+        #    self.api[socialNetwork] = moduleTwitter.moduleTwitter()
+        #    self.api[socialNetwork].setClient(nick)
+        
     def addSocialNetwork(self, socialNetwork):
         self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
 

@@ -440,23 +440,16 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
     twitter = channel
     comment = ''
     logger.info("    Publishing in Twitter...")
-    try: 
-        t = connectTwitter(twitter)
-        if t:
-            statusTxt = comment + " " + title + " " + link
-            h = HTMLParser()
-            statusTxt = h.unescape(statusTxt)
-            logger.info("    Publishing in Twitter: %s" % statusTxt)
-            return(t.statuses.update(status=statusTxt))
-        else:
-            logger.warning("You must configure API access for %s" % twitter)
-            return("Fail! You must configure API access for %s" % twitter)
-    except:
-        logger.warning("Twitter posting failed!")
-        logger.warning("Unexpected error: %s"% sys.exc_info()[0])
-        logger.warning("Unexpected error: %s"% sys.exc_info()[1])
-        return("Fail! %s" % sys.exc_info()[0])
-
+    print("    New way")
+    # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
+    import importlib
+    serviceName = 'Twitter'
+    mod = importlib.import_module('module'+serviceName) 
+    cls = getattr(mod, 'module'+serviceName)
+    api = cls()
+    api.setClient(twitter)
+    statusTxt = comment + " " + title + " " + link
+    return(api.publishPost(statusTxt))
    
 def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     fbPage = channel

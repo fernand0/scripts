@@ -88,6 +88,7 @@ class moduleTwitter(Content):
         h = HTMLParser()
         post = h.unescape(post)
         try:
+            logger.info("    Publishing in Twitter: %s" % statusTxt)
             return(self.tc.statuses.update(status=post))
         except:        
             logging.warning("Twitter posting failed!") 
