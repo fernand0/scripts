@@ -241,7 +241,7 @@ def main():
 
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
                     blog.cache[nameProfile].addPosts(blog, nameProfile, listPosts)
-                    timeSlots = 5*60 # One hour
+                    timeSlots = 50*60 # One hour
                     t[nameProfile] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, socialNetwork, 1, timeSlots))
                     t[nameProfile].start() 
 
@@ -255,7 +255,7 @@ def main():
                             logging.info("  Publishing directly\n") 
                             serviceName = profile.capitalize()
                             print("   Publishing in %s %s" % (serviceName, title))
-                            if profile == 'twitter': 
+                            if (profile == 'twitter') or (profile == 'facebook'): 
                                 print("    New way")
                                 # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
                                 import importlib
@@ -263,8 +263,9 @@ def main():
                                 cls = getattr(mod, 'module'+serviceName)
                                 api = cls()
                                 api.setClient(nick)
-                                statusTxt = comment + " " + title + " " + link
-                                api.publishPost(statusTxt)
+                                result = api.publishPost(title, link, comment)
+                                if result[:4]=='Fail':
+                                    link=''
                             else:
                                 publishMethod = getattr(moduleSocial, 
                                     'publish'+ serviceName)

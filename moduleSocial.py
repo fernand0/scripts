@@ -399,12 +399,26 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
 
         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = element
 
-        publishMethod = globals()['publish'+ socialNetwork[0].capitalize()]#()(self, ))
+        profile = socialNetwork[0]
         nick = socialNetwork[1]
-        publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
 
-        blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].postsFormatted[serviceName]['pending'] = listP
-        blog.cache[socialNetwork[0]+'_'+socialNetwork[1]].updatePostsCache()
+        if (profile == 'twitter') or (profile == 'facebook'): 
+            print("    New way")
+            # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
+            import importlib
+            mod = importlib.import_module('module'+profile.capitalize()) 
+            cls = getattr(mod, 'module'+profile.capitalize())
+            api = cls()
+            api.setClient(nick)
+            result = api.publishPost(title, link, comment)
+            if result[:4]=='Fail':
+                link=''
+        else: 
+            publishMethod = globals()['publish'+ profile.capitalize()]#()(self, ))
+            publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
+
+        blog.cache[profile+'_'+nick].postsFormatted[serviceName]['pending'] = listP
+        blog.cache[profile+'_'+nick].updatePostsCache()
            
         if j+1 < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))

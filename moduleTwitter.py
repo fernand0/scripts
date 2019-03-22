@@ -83,12 +83,13 @@ class moduleTwitter(Content):
 
         self.postsFormatted = outputData
 
-    def publishPost(self, post):
+    def publishPost(self, post, link, comment):
         logging.info("    Publishing in Twitter...")
+        post = comment + " " + post + " " + link
         h = HTMLParser()
         post = h.unescape(post)
         try:
-            logger.info("    Publishing in Twitter: %s" % statusTxt)
+            logging.info("    Publishing in Twitter: %s" % post)
             return(self.tc.statuses.update(status=post))
         except:        
             logging.warning("Twitter posting failed!") 

@@ -16,6 +16,7 @@ from bs4 import BeautifulSoup
 from bs4 import Tag
 
 import facebook
+from html.parser import HTMLParser
 
 from configMod import *
 from moduleContent import *
@@ -37,22 +38,8 @@ class moduleFacebook(Content):
             try:
                 oauth_access_token = config.get("Facebook", "oauth_access_token")
                 graph = facebook.GraphAPI(oauth_access_token, version='3.0') 
-                perms = ['publish_actions','manage_pages','publish_pages'] 
-                pages = graph.get_connections("me", "accounts") 
-                
-                if (facebookAC != 'me'): 
-                    for i in range(len(pages['data'])): 
-                        logging.debug("%s %s"% (pages['data'][i]['name'], facebookAC)) 
-                        if (pages['data'][i]['name'] == facebookAC): 
-                            logging.info("    Writing in... %s"% pages['data'][i]['name']) 
-                            graph2 = facebook.GraphAPI(pages['data'][i]['access_token']) 
-                            self.fc = graph2
-                            self.page = pages['data'][i]['id']
-                            return
-                        else: 
-                            # Publishing as me 
-                            self.fc = graph
-                            self.page = facebookAC 
+                self.fc =graph
+                self.setPage(facebookAC)
             except: 
                 logging.warning("Facebook authentication failed!") 
                 logging.warning("Unexpected error:", sys.exc_info()[0]) 
@@ -62,7 +49,23 @@ class moduleFacebook(Content):
             logging.warning("Unexpected error:", sys.exc_info()[0])
             print("Fail!")
 
-        return(0,0)
+    def setPage(self, facebookAC='me'):
+        perms = ['publish_actions','manage_pages','publish_pages'] 
+        pages = self.fc.get_connections("me", "accounts") 
+        
+        if (facebookAC != 'me'): 
+            for i in range(len(pages['data'])): 
+                logging.debug("%s %s"% (pages['data'][i]['name'], facebookAC)) 
+                if (pages['data'][i]['name'] == facebookAC): 
+                    logging.info("    Writing in... %s"% pages['data'][i]['name']) 
+                    graph2 = facebook.GraphAPI(pages['data'][i]['access_token']) 
+                    self.page = graph2
+                    self.pageId = pages['data'][i]['id']
+                    break
+                else: 
+                    # Publishing as me 
+                    self.page = facebookAC 
+
 
     def getClient(self):
         return self.fc
@@ -71,7 +74,8 @@ class moduleFacebook(Content):
         logging.info("  Setting posts")
         self.posts = []
         count = 5
-        posts = self.fc.get_connections(self.page, connection_name='posts') 
+        print(self.page)
+        posts = self.page.get_connections(self.pageId, connection_name='posts') 
 
         for post in posts['data']:
             self.posts.append(post)
@@ -88,15 +92,15 @@ class moduleFacebook(Content):
 
         self.postsFormatted = outputData
 
-    def publishPost(self, post):
+    def publishPost(self, post, link='', comment=''):
         logging.info("    Publishing in Facebook...")
         h = HTMLParser()
         post = h.unescape(post)
         try:
-            logging.info("    Publishing in Twitter: %s" % statusTxt)
-            return(self.tc.statuses.update(status=post))
+            logging.info("    Publishing in Facebook: %s" % post)
+            return(self.page.put_object(self.pageId, "feed", message=post, link=link))
         except:        
-            logging.warning("Twitter posting failed!") 
+            logging.warning("Facebook posting failed!") 
             logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
             logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
             return("Fail! %s" % sys.exc_info()[0])
@@ -112,9 +116,9 @@ def main():
 
     fc.setPosts()
     for post in fc.getPostsFormatted()['Facebook']['sent']:
-        print("@%s: %s" %(post[2], post[0]))
+        print("%s: %s" %(post[0], post[1]))
 
-    #tw.publishPost("Prueba")
+    fc.publishPost("Prueba")
 
 if __name__ == '__main__':
     main()
