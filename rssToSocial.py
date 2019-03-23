@@ -241,7 +241,7 @@ def main():
 
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
                     blog.cache[nameProfile].addPosts(blog, nameProfile, listPosts)
-                    timeSlots = 50*60 # One hour
+                    timeSlots = 5*60 # One hour
                     t[nameProfile] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, socialNetwork, 1, timeSlots))
                     t[nameProfile].start() 
 
@@ -264,8 +264,9 @@ def main():
                                 api = cls()
                                 api.setClient(nick)
                                 result = api.publishPost(title, link, comment)
-                                if result[:4]=='Fail':
-                                    link=''
+                                if isinstance(result, str):
+                                    if result[:4]=='Fail':
+                                        link=''
                             else:
                                 publishMethod = getattr(moduleSocial, 
                                     'publish'+ serviceName)

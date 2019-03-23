@@ -1,21 +1,15 @@
-# This module provides infrastructure for publishing and updating blog posts
-
-# using several generic APIs  (XML-RPC, blogger API, Metaweblog API, ...)
+# This module provides infrastructure for reading content from different places
+# It stores in a convenient and consistent way the content in order to be used
+# in other programs
 
 import configparser
 import os
-import time
-import urllib
-import requests
-import pickle
 import logging
-from slackclient import SlackClient
-from bs4 import BeautifulSoup
 from bs4 import Tag
-from pdfrw import PdfReader
 import moduleCache
-import moduleBuffer
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
+import moduleBuffer
+# https://github.com/fernand0/scripts/blob/master/moduleBuffer.py
 
 from configMod import *
 
@@ -37,7 +31,6 @@ class Content:
         self.xmlrpc = None
         self.api = {}
         self.lastLinkPublished = {}
-        #self.logger = logging.getLogger(__name__)
  
     def getUrl(self):
         return(self.url)
@@ -116,9 +109,8 @@ class Content:
     def getBuffer(self):
         return(self.buffer)
 
-    def setBuffer(self, bufferapp):
-        self.bufferapp = bufferapp
-        self.buffer = moduleBuffer.moduleBuffer(self.bufferapp)
+    def setBuffer(self):
+        self.buffer = moduleBuffer.moduleBuffer()
         self.buffer.setBuffer()
         self.buffer.setPosts()
         self.profiles = {}
@@ -131,7 +123,8 @@ class Content:
         return(self.bufferapp)
  
     def setBufferapp(self, bufferapp):
-        self.setBuffer(bufferapp)
+        self.bufferapp = bufferapp
+        self.setBuffer()
 
     def getCache(self):
         return(self.cache)
@@ -143,7 +136,6 @@ class Content:
                 cacheAcc = moduleCache.moduleCache(self.getUrl(), 
                         sN, self.getSocialNetworks()[sN]) 
                 cacheAcc.setPosts()
-                cacheAcc.setPostsFormatted()
                 # Maybe adding 'Cache_'?
                 self.cache[sN+'_'+self.getSocialNetworks()[sN]] = cacheAcc
 

@@ -90,7 +90,9 @@ class moduleTwitter(Content):
         post = h.unescape(post)
         try:
             logging.info("    Publishing in Twitter: %s" % post)
-            return(self.tc.statuses.update(status=post))
+            res = self.tc.statuses.update(status=post)
+            print(res)
+            return res
         except:        
             logging.warning("Twitter posting failed!") 
             logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
