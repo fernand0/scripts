@@ -71,6 +71,7 @@ from moduleQueue import *
 class moduleBuffer(Queue):
 
     def __init__(self): #, url, socialNetwork, nick):
+        super().__init__()
         self.buffer = None
         self.profiles = None
         #self.url = url
@@ -128,8 +129,12 @@ class moduleBuffer(Queue):
         self.setProfiles(service)
         profiles = self.getProfiles()
     
+        self.service = {}
+        i = 0
         for profile in profiles:
             serviceName = profile['service']
+            self.service[serviceName] = i
+            i = i + 1
     
             logging.info("   Service %s" % serviceName)
     
@@ -151,11 +156,11 @@ class moduleBuffer(Queue):
                         else:
                             link = ''
                         if update.text: 
-                            outputData[serviceName][method].append((update.text, link, toShow))
+                            outputData[serviceName][method].append((update.text, link, toShow, '', '', '', '', '', '', ''))
                         else:
-                            outputData[serviceName][method].append((link, link, toShow))
+                            outputData[serviceName][method].append((link, link, toShow, '', '', '', '', '', '', ''))
                 else:
-                            outputData[serviceName][method].append(('Empty', 'Empty', 'Empty'))
+                            outputData[serviceName][method].append(('Empty', 'Empty', 'Empty', '', '', '', '', '', '', ''))
 
             #self.lenMax[serviceName] = len(outputData[serviceName]['pending'])
     
@@ -396,9 +401,9 @@ class moduleBuffer(Queue):
 
     def isForMe(self, args):
         profiles = self.getProfiles()
-        serviceName =  self.socialNetwork[0].capitalize()
-        if (serviceName[0] in args) or ('*' in args): 
-           return True
+        for prof in profiles:
+            if (prof['service'][0].capitalize() in args) or ('*' in args): 
+                return prof['service']
         return False
 
 def main():
@@ -428,9 +433,11 @@ def main():
     for bu in blog.buffer.getProfiles():
         print(bu)
         print('F1', blog.buffer.showPost('F1'))
-        print('L3', blog.buffer.showPost('T3'))
-        print('TL2', blog.buffer.showPost('TF2'))
+        print('L3', blog.buffer.showPost('L3'))
+        print('TL2', blog.buffer.showPost('TL2'))
         print('*4', blog.buffer.showPost('*4'))
+        #print('edit L2', blog.buffer.editPost('L2', 'Indico.'))
+        #print('publish L2', blog.buffer.publishPost('L2'))
     sys.exit()
     print("-> PostsP",postsP)
     posts.update(postsP)

@@ -154,7 +154,7 @@ class moduleCache(Queue):
     def isForMe(self, args):
         serviceName =  self.socialNetwork[0].capitalize()
         if (serviceName[0] in args) or ('*' in args): 
-           return True
+           return serviceName
         return False
 
 
@@ -183,6 +183,8 @@ def main():
         print('T3', blog.cache[ca].showPost('T3'))
         print('TF2', blog.cache[ca].showPost('TF2'))
         print('*4', blog.cache[ca].showPost('*4'))
+        print('edit T7', blog.cache[ca].editPost('T7', 'Indico.'))
+        print('publish T7', blog.cache[ca].publishPost('T7'))
     #ca.movePost('T4 T3')
     #ca.editPost('T4', "My Stepdad's Huge Dataset.") 
     #ca.editPost('F5', "¡Sumate al datatón y a WiDS 2019! - lanacion.com")

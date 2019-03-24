@@ -113,13 +113,6 @@ class Content:
         self.buffer = moduleBuffer.moduleBuffer()
         self.buffer.setBuffer()
         self.buffer.setPosts()
-        for prof in self.buffer.getProfiles():
-            if prof['service'][0] in self.getBufferapp():
-                bufferAcc = prof
-                bufferAcc.setPosts()
-
-
-        self.buffer.setPosts()
         self.profiles = {}
         for sN in self.buffer.getProfiles():
             serviceName = sN['service']
