@@ -33,19 +33,21 @@ from email.parser import BytesParser
 
 from configMod import *
 from moduleContent import *
+from moduleQueue import *
 
-class moduleGmail(Content):
+class moduleGmail(Content,Queue):
 
     def __init__(self):
-        super().__init__()
+        Content().__init__()
+        Queue().__init__()
         self.service = None
         self.rawPosts = None
         self.name = "Mail"
 
-    def API(self, Acc, pp):
-        self.setClient(Acc, pp)
+    def API(self, Acc):
+        self.setClient(Acc)
 
-    def setClient(self, Acc, pp):
+    def setClient(self, Acc):
         # based on get_credentials from 
         # Code from
         # https://developers.google.com/gmail/api/v1/reference/users/messages/list
@@ -234,143 +236,143 @@ class moduleGmail(Content):
         serviceName = self.name
         if (serviceName[0] in args) or ('*' in args): 
             if serviceName[0] + self.name[-1] in args[:-1]:
-                return True
+                return serviceName
         return False
 
-    def showPost(self, pp, posts, args):
-        logging.info("To publish %s" % args)
-    
-        update = ""
-        serviceName = self.name
+    #def showPost(self, pp, posts, args):
+    #    logging.info("To publish %s" % args)
+    #
+    #    update = ""
+    #    serviceName = self.name
 
-        title = None
-        if self.isForMe(args):
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
-    
-            if title: 
-                if link: 
-                    return(title+link)
-                else:
-                    return(title)
-        return(None)
-    
-    def publishPost(self, args):
-        logging.info("To publish %s" % args)
-    
-        update = ""
-        serviceName = self.name
-        title = None
+    #    title = None
+    #    if self.isForMe(args):
+    #        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
+    #
+    #        if title: 
+    #            if link: 
+    #                return(title+link)
+    #            else:
+    #                return(title)
+    #    return(None)
+    #
+    #def publishPost(self, args):
+    #    logging.info("To publish %s" % args)
+    #
+    #    update = ""
+    #    serviceName = self.name
+    #    title = None
 
-        if self.isForMe(args):
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
-            logging.info("Ttitle %s" % title)
-            if title:
-                publishMethod = getattr(moduleSocial, 
-                        'publishMail')
+    #    if self.isForMe(args):
+    #        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
+    #        logging.info("Ttitle %s" % title)
+    #        if title:
+    #            publishMethod = getattr(moduleSocial, 
+    #                    'publishMail')
  
-                logging.debug(title, link, summary, summaryHtml, summaryLinks, image, content , links )
-                logging.info(title, link, content , links )
-                logging.info(publishMethod)
-                logging.info("com %s" % comment)
-                update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
-                if update:
-                    if 'text' in update: 
-                        update = update['text'] 
+    #            logging.debug(title, link, summary, summaryHtml, summaryLinks, image, content , links )
+    #            logging.info(title, link, content , links )
+    #            logging.info(publishMethod)
+    #            logging.info("com %s" % comment)
+    #            update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
+    #            if update:
+    #                if 'text' in update: 
+    #                    update = update['text'] 
    
-                return(update)
+    #            return(update)
 
-        return(None)
-    
-    def deletePost(self, cache, pp, posts, args):
-        api = self.getClient()
-        logging.info("To delete %s" % args)
-    
-        update = ""
-        serviceName = self.name
-        logging.info("In %s" % serviceName)
-        title = None
-        if self.isForMe(args):
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
+    #    return(None)
+    #
+    #def deletePost(self, cache, pp, posts, args):
+    #    api = self.getClient()
+    #    logging.info("To delete %s" % args)
+    #
+    #    update = ""
+    #    serviceName = self.name
+    #    logging.info("In %s" % serviceName)
+    #    title = None
+    #    if self.isForMe(args):
+    #        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
 
-            if title or comment:
-                #What happens if the title is empty?
-                idPost = comment
+    #        if title or comment:
+    #            #What happens if the title is empty?
+    #            idPost = comment
 
-                update = api.users().drafts().delete(userId='me', id=idPost).execute()
-                return(update)
+    #            update = api.users().drafts().delete(userId='me', id=idPost).execute()
+    #            return(update)
 
-        return(None)
+    #    return(None)
 
-    def editPost(self, pp, posts, args, newTitle):
-        api = self.getClient()
-        logging.info("To edit %s" % args)
-        logging.info("New title %s", newTitle)
+    #def editPost(self, pp, posts, args, newTitle):
+    #    api = self.getClient()
+    #    logging.info("To edit %s" % args)
+    #    logging.info("New title %s", newTitle)
 
-        update = ""
-        serviceName = self.name
-        if self.isForMe(args):
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
-            # Should we avoid two readings?
-            #message = summaryLinks 
-            message = api.users().drafts().get(userId="me", 
-                   format="raw", id=comment).execute()['message']
-            theMsg = email.message_from_bytes(base64.urlsafe_b64decode(message['raw']))
-            self.setHeaderEmail(theMsg, 'subject', newTitle)
-            message['raw'] = theMsg.as_bytes()
-            message['raw'] = base64.urlsafe_b64encode(message['raw']).decode()
+    #    update = ""
+    #    serviceName = self.name
+    #    if self.isForMe(args):
+    #        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
+    #        # Should we avoid two readings?
+    #        #message = summaryLinks 
+    #        message = api.users().drafts().get(userId="me", 
+    #               format="raw", id=comment).execute()['message']
+    #        theMsg = email.message_from_bytes(base64.urlsafe_b64decode(message['raw']))
+    #        self.setHeaderEmail(theMsg, 'subject', newTitle)
+    #        message['raw'] = theMsg.as_bytes()
+    #        message['raw'] = base64.urlsafe_b64encode(message['raw']).decode()
 
-            update = api.users().drafts().update(userId='me', 
-                    body={'message':message},id=comment).execute()
+    #        update = api.users().drafts().update(userId='me', 
+    #                body={'message':message},id=comment).execute()
 
-            return(newTitle)
+    #        return(newTitle)
 
-        return None
+    #    return None
 
-    def moveMessage(self,  message):
-        api = self.getClient()
-        labelId = self.getLabelId('imported')
-        mesGE = base64.urlsafe_b64encode(message).decode()
-        mesT = email.message_from_bytes(message)
-        if mesT['subject']: 
-            subj = email.header.decode_header(mesT['subject'])[0][0]
-        else:
-            subj = ""
-        logging.info("Subject %s",subj)
-    
-        try:
-            messageR = api.users().messages().import_(userId='me',
-                      fields='id',
-                      neverMarkSpam=False,
-                      processForCalendar=False,
-                      internalDateSource='dateHeader',
-                      body={'raw': mesGE}).execute(num_retries=5)
-           #           media_body=media).execute(num_retries=1)
-        except: 
-            # When the message is too big
-            # https://github.com/google/import-mailbox-to-gmail/blob/master/import-mailbox-to-gmail.py
-    
-            logging.info("Fail 1! Trying another method.")
-            if True:
-                mesGS = BytesParser().parsebytes(message).as_string()
-                media =  googleapiclient.http.MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
-                logging.info("vamos method")
-                messageR = api.users().messages().import_(userId='me',
-                          fields='id',
-                          neverMarkSpam=False,
-                          processForCalendar=False,
-                          internalDateSource='dateHeader',
-                          body={},
-                          media_body=media).execute(num_retries=3)
-                logging.info("messageR method")
-            else: 
-                logging.info("Error with message %s" % message) 
-                return("Fail 2!")
-        msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
-    
-        messageR = api.users().messages().modify(userId='me', id=messageR['id'],
-                                                            body=msg_labels).execute()
-    
-        return(messageR)
+    #def moveMessage(self,  message):
+    #    api = self.getClient()
+    #    labelId = self.getLabelId('imported')
+    #    mesGE = base64.urlsafe_b64encode(message).decode()
+    #    mesT = email.message_from_bytes(message)
+    #    if mesT['subject']: 
+    #        subj = email.header.decode_header(mesT['subject'])[0][0]
+    #    else:
+    #        subj = ""
+    #    logging.info("Subject %s",subj)
+    #
+    #    try:
+    #        messageR = api.users().messages().import_(userId='me',
+    #                  fields='id',
+    #                  neverMarkSpam=False,
+    #                  processForCalendar=False,
+    #                  internalDateSource='dateHeader',
+    #                  body={'raw': mesGE}).execute(num_retries=5)
+    #       #           media_body=media).execute(num_retries=1)
+    #    except: 
+    #        # When the message is too big
+    #        # https://github.com/google/import-mailbox-to-gmail/blob/master/import-mailbox-to-gmail.py
+    #
+    #        logging.info("Fail 1! Trying another method.")
+    #        if True:
+    #            mesGS = BytesParser().parsebytes(message).as_string()
+    #            media =  googleapiclient.http.MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
+    #            logging.info("vamos method")
+    #            messageR = api.users().messages().import_(userId='me',
+    #                      fields='id',
+    #                      neverMarkSpam=False,
+    #                      processForCalendar=False,
+    #                      internalDateSource='dateHeader',
+    #                      body={},
+    #                      media_body=media).execute(num_retries=3)
+    #            logging.info("messageR method")
+    #        else: 
+    #            logging.info("Error with message %s" % message) 
+    #            return("Fail 2!")
+    #    msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
+    #
+    #    messageR = api.users().messages().modify(userId='me', id=messageR['id'],
+    #                                                        body=msg_labels).execute()
+    #
+    #    return(messageR)
 
    
     #######################################################
@@ -394,17 +396,18 @@ class moduleGmail(Content):
 def main():
     import moduleGmail
 
-    pp = pprint.PrettyPrinter(indent=4)
 
     # instantiate the api object 
 
     api = moduleGmail.moduleGmail()
-    api.setClient('ACC1',pp)
+    api.setClient('ACC1')
     print("-----")
+    print(api.setPosts())
     print(api.getPosts())
     print("-----")
     print(api.getPostsFormatted())
     print("-----")
+    print('M01', api.showPost('M01'))
     sys.exit()
     api.editPost(pp, api.getPosts(), "M17", 'Prueba.')
 

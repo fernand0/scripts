@@ -403,7 +403,6 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
         nick = socialNetwork[1]
 
         if (profile == 'twitter') or (profile == 'facebook'): 
-            print("    New way")
             # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
             import importlib
             mod = importlib.import_module('module'+profile.capitalize()) 
@@ -454,7 +453,6 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
     twitter = channel
     comment = ''
     logger.info("    Publishing in Twitter...")
-    print("    New way")
     # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
     import importlib
     serviceName = 'Twitter'
