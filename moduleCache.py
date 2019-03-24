@@ -151,6 +151,13 @@ class moduleCache(Queue):
             logging.info("No sent posts")
             return someSent
 
+    def isForMe(self, args):
+        serviceName =  self.socialNetwork[0].capitalize()
+        if (serviceName[0] in args) or ('*' in args): 
+           return True
+        return False
+
+
 def main():
     import moduleCache
     import moduleSlack

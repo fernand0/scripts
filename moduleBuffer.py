@@ -72,6 +72,7 @@ class moduleBuffer(Queue):
 
     def __init__(self): #, url, socialNetwork, nick):
         self.buffer = None
+        self.profiles = None
         #self.url = url
         #self.socialNetwork = (socialNetwork, nick)
 
@@ -93,19 +94,18 @@ class moduleBuffer(Queue):
                   client_secret=clientSecret,
                   access_token=accessToken)
     
-        self.buffer = api
+        self.api = api
 
     def setProfiles(self, service=""):
-        api = self.buffer
         logging.info("  Checking services...")
         
         if (service == ""):
             logging.info("  All available in Buffer")
-            profiles = Profiles(api=api).all()
+            profiles = Profiles(api=self.api).all()
         else:
             logging.info("  %s" % service)
             logging.info(service)
-            profiles = Profiles(api=api).filter(service=service)
+            profiles = Profiles(api=self.api).filter(service=service)
             
         logging.debug("->%s" % profiles)
         numProfiles = len(profiles)
@@ -123,7 +123,6 @@ class moduleBuffer(Queue):
         return(theBuffer['service'].capitalize())
 
     def setPosts(self, service=""):
-        api = self.buffer
         outputData = {}
     
         self.setProfiles(service)
@@ -394,6 +393,14 @@ class moduleBuffer(Queue):
             logging.info("No pending posts")
             return somePending
 
+
+    def isForMe(self, args):
+        profiles = self.getProfiles()
+        serviceName =  self.socialNetwork[0].capitalize()
+        if (serviceName[0] in args) or ('*' in args): 
+           return True
+        return False
+
 def main():
 
     import moduleBuffer
@@ -416,7 +423,7 @@ def main():
         blog.setProgram(config.get(section, "program"))
         
     blog.buffer.setProfiles()
-    blog.setPosts()
+    blog.buffer.setPosts()
 
     for bu in blog.buffer.getProfiles():
         print(bu)
