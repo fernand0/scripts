@@ -83,19 +83,18 @@ class Queue:
         for serviceName in services:
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.obtainPostData(serviceName, j))
 
-            if self.socialNetwork: 
-                serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1]
+            if 'Cache' in serviceName: 
                 self.postsFormatted[serviceName]['pending'][j] = (newTitle, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
                 self.updatePostsCache()
             else:
-                serviceName = go
                 profiles = self.getProfiles()
-                i = self.service[serviceName]
-                from buffpy.models.update import Update
-                update = Update(api=self.api, id=profiles[i].updates.pending[j].id) 
-                update = update.edit(text=newTitle)
+                if serviceName in self.service:
+                    i = self.service[serviceName]
+                    from buffpy.models.update import Update
+                    update = Update(api=self.api, id=profiles[i].updates.pending[j].id) 
+                    update = update.edit(text=newTitle)
 
-            update = "Changed "+title+" with "+newTitle
+                update = "Changed "+title+" with "+newTitle
         else:
             update = ""
 

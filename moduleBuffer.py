@@ -432,7 +432,7 @@ def main():
         print('L3', blog.buffer.showPost('L3'))
         print('TL2', blog.buffer.showPost('TL2'))
         print('*4', blog.buffer.showPost('*4'))
-        #print('edit L2', blog.buffer.editPost('L2', 'Indico.'))
+        #print('edit L6', blog.buffer.editPost('L6', 'Así es Guestboard, un "Slack" para la organización de eventos.'))
         #print('publish L2', blog.buffer.publishPost('L2'))
     sys.exit()
     print("-> PostsP",postsP)
