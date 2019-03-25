@@ -27,25 +27,50 @@ class Queue:
     def getPostsFormatted(self):    
         return(self.postsFormatted)
 
+    def extractDataMessage(self,serviceName, i):
+        messageRaw = self.getPostsFormatted()[serviceName]['pending'][i]
+
+        theTitle = messageRaw[0]
+        theLink = messageRaw[1]
+
+        theLinks = None
+        content = messageRaw[4]
+        theContent = None
+        firstLink = theLink
+        theImage = messageRaw[3]
+        theSummary = content
+
+        theSummaryLinks = content
+        comment = None
+
+        return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
+
+    def obtainPostData(self, serviceName, i, debug=False):
+
+        (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment) = self.extractDataMessage(serviceName, i)
+
+
+        return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
+
+
     
     def showPost(self, args):
         #return(self.interpretAndExecute(args,'show'))
         logging.info("To show %s" % args)
 
-        go = self.isForMe(args)
-        if go:
-            j = int(args[-1])
-            if self.socialNetwork:
-                serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1] #self.name.capitalize()
-            else:
-                serviceName = go
-            logging.debug(self.postsFormatted)
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.obtainPostData(j))
+        services = self.isForMe(args)
+        j = int(args[-1])
+        reply = ""
+        for serviceName in services:
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.obtainPostData(serviceName, j))
             if title:
-                return(title+' '+link)
+                reply = reply + title
+                if link:
+                   reply = reply +' '+link
+                reply = reply + '\n'
             else:
-                return("")
-        return("")
+                reply = reply + ""
+        return(reply)
 
     def editPost(self, args, newTitle):
         #return(self.interpretAndExecute(args,'edit', newTitle))
@@ -53,11 +78,10 @@ class Queue:
         logging.info("New title %s", newTitle)
     
         udpate = None
-        go = self.isForMe(args)
-        if go:
-            j = int(args[-1])
-
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.obtainPostData(j))
+        services = self.isForMe(args)
+        j = int(args[-1])
+        for serviceName in services:
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.obtainPostData(serviceName, j))
 
             if self.socialNetwork: 
                 serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1]

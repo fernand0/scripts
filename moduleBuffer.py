@@ -396,10 +396,11 @@ class moduleBuffer(Queue):
 
     def isForMe(self, args):
         profiles = self.getProfiles()
+        lookAt = []
         for prof in profiles:
             if (prof['service'][0].capitalize() in args) or ('*' in args): 
-                return prof['service']
-        return False
+                lookAt.append(prof['service'])
+        return(lookAt)
 
 def main():
 

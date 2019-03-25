@@ -75,6 +75,9 @@ class moduleGmail(Content,Queue):
     def getClient(self):
         return(self.service)
 
+    def getPosts(self):
+        return(self.rawPosts)
+
     def setPosts(self):
         logging.info("  Setting posts")
         api = self.getClient()
@@ -145,6 +148,7 @@ class moduleGmail(Content,Queue):
             message[header]= value
 
     def getHeader(self, message, header = 'Subject'):
+        print(message)
         for head in message['payload']['headers']: 
             if head['name'] == header: 
                 return(head['value'])
@@ -216,7 +220,7 @@ class moduleGmail(Content,Queue):
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
-    def obtainPostData(self, i, debug=False):
+    def obtainPostData(self, serviceName, i, debug=False):
         api = self.getClient()
 
         if not self.posts:
@@ -231,10 +235,11 @@ class moduleGmail(Content,Queue):
 
     def isForMe(self, args):
         serviceName = self.name
+        lookAt = []
         if (serviceName[0] in args) or ('*' in args): 
-            if serviceName[0] + self.name[-1] in args[:-1]:
-                return serviceName
-        return False
+            if serviceName[0] + serviceName[-1] in args[:-1]:
+                lookAt.append(serviceName)
+        return lookAt
 
     #def showPost(self, pp, posts, args):
     #    logging.info("To publish %s" % args)
@@ -393,18 +398,17 @@ class moduleGmail(Content,Queue):
 def main():
     import moduleGmail
 
-
     # instantiate the api object 
 
     api = moduleGmail.moduleGmail()
     api.setClient('ACC1')
     print("-----")
-    print(api.setPosts())
+    api.setPosts()
     print(api.getPosts())
     print("-----")
     print(api.getPostsFormatted())
     print("-----")
-    print('M01', api.showPost('M01'))
+    print('M11', api.showPost('M11'))
     sys.exit()
     api.editPost(pp, api.getPosts(), "M17", 'Prueba.')
 
