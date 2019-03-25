@@ -115,9 +115,6 @@ class moduleGmail(Content,Queue):
                         + acc[1]+ '.json')
         return(theName)
     
-    def getPosts(self):
-        return(self.rawPosts)
-
     def getMessage(self, id): 
         api = self.getClient()
         message = api.users().drafts().get(userId="me", 
