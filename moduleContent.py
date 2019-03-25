@@ -130,14 +130,9 @@ class Content:
         return(self.cache)
 
     def setCache(self):
-        self.cache = {}
-        for sN in self.getSocialNetworks():
-            if sN[0] in self.getProgram():
-                cacheAcc = moduleCache.moduleCache(self.getUrl(), 
-                        sN, self.getSocialNetworks()[sN]) 
-                cacheAcc.setPosts()
-                # Maybe adding 'Cache_'?
-                self.cache[sN+'_'+self.getSocialNetworks()[sN]] = cacheAcc
+        self.cache = moduleCache.moduleCache()
+        self.cache.setClient(self.url, self.getSocialNetworks(),
+                self.getProgram())
 
     def getProgram(self):
         return(self.program)

@@ -115,11 +115,6 @@ class moduleBuffer(Queue):
     
         self.profiles = profiles
 
-    def getProfiles(self):
-        if not self.profiles:
-            self.setProfiles()
-        return(self.profiles)
-    
     def getService(self, theBuffer):
         return(theBuffer['service'].capitalize())
 

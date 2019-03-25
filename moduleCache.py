@@ -29,40 +29,61 @@ from moduleQueue import *
 
 class moduleCache(Queue):
     
-    def __init__(self, url, socialNetwork, nick):
+    def __init__(self):
         super().__init__()
-        self.name = "Cache_"+socialNetwork+"_"+nick
-        self.url = url
-        self.socialNetwork = (socialNetwork, nick)
+        #self.url = url
+        #self.socialNetwork = (socialNetwork, nick)
 
-    def getCache(self):
+    def getClient(self):
         return(self.cache)
 
-    def setCache(self, socialNetworks):
-        self.cache = {}
+    def setClient(self, url, socialNetworks, program=""):
+        self.url = url
+        self.socialNetworks = socialNetworks
+        self.program = program
+
+    def getProgram(self):
+        return (self.program)
+
+    def getSocialNetworks(self):
+        return (self.socialNetworks)
+
+    def setProfiles(self, service=""):
+        logging.info("  Checking services...")
+
+        socialNetworks = self.getSocialNetworks()
+        self.profiles = []
         for sN in socialNetworks:
+            print(sN)
             if sN[0] in self.getProgram():
-                cacheAcc = moduleCache.moduleCache(self.getUrl(), 
-                        sN, socialNetworks[sN]) 
-                cacheAcc.setPosts()
+                cacheAcc = {}
                 # Maybe adding 'Cache_'?
-                self.cache[sN+'_'+self.getSocialNetworks()[sN]] = cacheAcc
+                cacheAcc[sN] = socialNetworks[sN]
+                self.profiles.append(cacheAcc)
 
     def getService(self):
         return(self.socialNetwork[0].capitalize())
 
     def setPosts(self):        
-        fileNameQ = fileNamePath(self.url, self.socialNetwork) + ".queue" 
-        print(fileNameQ)
-        with open(fileNameQ,'rb') as f: 
-            try: 
-                listP = pickle.load(f) 
-            except: 
-                listP = [] 
-        self.posts = listP
-        self.lenMax= len(self.posts)
-
         outputData = {}
+
+        self.setProfiles()
+        profiles = self.getProfiles()
+
+        self.service = {}
+        i = 0
+
+        for profile in profiles:
+            fileNameQ = fileNamePath(self.url, (profile, profile[profile])) + ".queue" 
+            print(fileNameQ)
+            with open(fileNameQ,'rb') as f: 
+                try: 
+                    listP = pickle.load(f) 
+                except: 
+                    listP = [] 
+            self.posts = listP
+            self.lenMax= len(self.posts)
+
         files = []
     
         serviceName = self.name[0].capitalize() + self.name[1:]
@@ -102,7 +123,60 @@ class moduleCache(Queue):
         with open(fileNameQ, 'wb') as f:
             pickle.dump(self.postsFormatted[serviceName]['pending'], f)
         logging.debug("Writing in %s" % fileNameQ)
-    
+
+    def extractDataMessage(self,i):
+        messageRaw = self.getPosts()[i]
+        # !!!! getPosts returns raw posts !!!
+        print(messageRaw)
+        sys.exit()
+        message = self.posts[i]
+        #messageEmail = self.getEmail(messageRaw)
+
+        theTitle = self.getHeader(messageRaw, 'Subject')
+        if theTitle == None:
+            theTitle = self.getHeader(messageRaw, 'subject')
+        snippet = self.getHeader(messageRaw, 'snippet')
+
+        theLink = None
+        if snippet:
+            posIni = snippet.find('http')
+            posFin = snippet.find(' ', posIni)
+            posSignature = snippet.find('-- ')
+            if posIni < posSignature: 
+                theLink = snippet[posIni:posFin]
+        theLinks = None
+        #for part in messageEmail.walk():
+        #    if part.get_content_type() == 'text/html':
+        #        content = part.get_payload()
+        #        html = moduleHtml.moduleHtml()
+        #        theLinks = html.listLinks(content)
+        #    elif part.get_content_type() == 'text/plain':
+        #        theContent = part
+        content = None
+        theContent = None
+        firstLink = theLink
+        theImage = None
+        theSummary = snippet
+
+        theSummaryLinks = messageRaw
+        comment = message['id'] 
+
+        return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
+
+    def obtainPostData(self, i, debug=False):
+        api = self.getClient()
+
+        if not self.posts:
+            self.setPosts()
+
+        if not self.rawPosts or (i>=(len(self.rawPosts))):
+            return (None, None, None, None, None, None, None, None, None, None)
+
+        (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment) = self.extractDataMessage(i)
+
+        return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
+
+ 
     def listSentPosts(self, service=""):
         api = self.service
         profiles = getProfiles(api, service)
@@ -176,6 +250,8 @@ def main():
     if ('program' in config.options(section)): 
         blog.setProgram(config.get(section, "program"))
 
+    blog.cache.setProfiles()
+    blog.cache.setPosts()
     for ca in blog.cache:
         blog.cache[ca].setPosts()
         #print(ca.posts)
@@ -183,8 +259,8 @@ def main():
         print('T3', blog.cache[ca].showPost('T3'))
         print('TF2', blog.cache[ca].showPost('TF2'))
         print('*4', blog.cache[ca].showPost('*4'))
-        print('edit T7', blog.cache[ca].editPost('T7', 'Indico.'))
-        print('publish T7', blog.cache[ca].publishPost('T7'))
+        #print('edit T7', blog.cache[ca].editPost('T7', 'Indico.'))
+        #print('publish T7', blog.cache[ca].publishPost('T7'))
     #ca.movePost('T4 T3')
     #ca.editPost('T4', "My Stepdad's Huge Dataset.") 
     #ca.editPost('F5', "¡Sumate al datatón y a WiDS 2019! - lanacion.com")

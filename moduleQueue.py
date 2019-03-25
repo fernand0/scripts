@@ -16,6 +16,11 @@ class Queue:
         self.postsFormatted = None
         self.lenMax = -1
 
+    def getProfiles(self):
+        if not self.profiles:
+            self.setProfiles()
+        return(self.profiles)
+ 
     def getPosts(self):        
         return(self.posts)
 
@@ -35,7 +40,7 @@ class Queue:
             else:
                 serviceName = go
             logging.debug(self.postsFormatted)
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.postsFormatted[serviceName]['pending'][j])
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.obtainPostData(j))
             if title:
                 return(title+' '+link)
             else:
@@ -51,17 +56,15 @@ class Queue:
         go = self.isForMe(args)
         if go:
             j = int(args[-1])
+
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.obtainPostData(j))
+
             if self.socialNetwork: 
                 serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1]
-            else:
-                serviceName = go
-
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.postsFormatted[serviceName]['pending'][j])
-
-            if self.socialNetwork: 
                 self.postsFormatted[serviceName]['pending'][j] = (newTitle, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
                 self.updatePostsCache()
             else:
+                serviceName = go
                 profiles = self.getProfiles()
                 i = self.service[serviceName]
                 from buffpy.models.update import Update
