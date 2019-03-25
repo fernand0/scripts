@@ -256,7 +256,6 @@ def main():
                             serviceName = profile.capitalize()
                             print("   Publishing in %s %s" % (serviceName, title))
                             if (profile == 'twitter') or (profile == 'facebook'): 
-                                print("    New way")
                                 # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
                                 import importlib
                                 mod = importlib.import_module('module'+serviceName) 
@@ -264,8 +263,10 @@ def main():
                                 api = cls()
                                 api.setClient(nick)
                                 result = api.publishPost(title, link, comment)
-                                if result[:4]=='Fail':
-                                    link=''
+                                print(result)
+                                if isinstance(result, str):
+                                    if result[:4]=='Fail':
+                                        link=''
                             else:
                                 publishMethod = getattr(moduleSocial, 
                                     'publish'+ serviceName)

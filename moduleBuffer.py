@@ -225,7 +225,7 @@ class moduleBuffer():
             time.sleep(2)
         logging.info("    Added posts to LinkedIn")
 
-        return(link)
+        return(linkAdded)
 
     def deletePost(self, profiles, args):
         api = self.buffer
