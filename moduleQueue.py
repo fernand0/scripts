@@ -85,7 +85,7 @@ class Queue:
 
             if 'Cache' in serviceName: 
                 self.postsFormatted[serviceName]['pending'][j] = (newTitle, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
-                self.updatePostsCache()
+                self.updatePostsCache(serviceName)
             else:
                 profiles = self.getProfiles()
                 if serviceName in self.service:
@@ -105,22 +105,20 @@ class Queue:
         logging.info("To publish %s" % args)
     
         udpate = None
-        go = self.isForMe(args)
-        if go:
-            j = int(args[-1])
-            if self.socialNetwork: 
-                nick = self.socialNetwork[1]
-                serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1]
-            else:
-                serviceName = go
-
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.postsFormatted[serviceName]['pending'][j])
-            if self.socialNetwork: 
+        services = self.isForMe(args)
+        j = int(args[-1])
+        for serviceName in services:
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.obtainPostData(serviceName, j))
+            if 'Cache' in serviceName: 
                 import importlib
-                mod = importlib.import_module('module'+self.socialNetwork[0].capitalize()) 
-                cls = getattr(mod, 'module'+self.socialNetwork[0].capitalize())
+                service = self.profiles[self.service[serviceName]]['service']
+                service = service.capitalize()
+                nick = self.profiles[self.service[serviceName]]['service_username']
+                mod = importlib.import_module('module'+service) 
+                cls = getattr(mod, 'module'+service)
                 api = cls()
                 api.setClient(nick)
+                comment = ''
                 update = api.publishPost(title, link, comment)
                 print(update)
                 #publishMethod = getattr(moduleSocial, 
@@ -132,7 +130,7 @@ class Queue:
                     self.postsFormatted[serviceName]['pending'] = self.postsFormatted[serviceName]['pending'][:j] + self.postsFormatted[serviceName]['pending'][j+1:]
                     logging.debug("Updating %s" % self.postsFormatted)
                     #logging.info("Blog %s" % cache['blog'])
-                    self.updatePostsCache()
+                    self.updatePostsCache(serviceName)
                     logging.info("UUpdate ... %s" % str(update))
                     if 'text' in update:
                         update = update['text']

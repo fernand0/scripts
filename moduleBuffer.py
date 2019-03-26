@@ -125,6 +125,7 @@ class moduleBuffer(Queue):
         profiles = self.getProfiles()
     
         self.service = {}
+        print("------->", self)
         i = 0
         for profile in profiles:
             serviceName = profile['service']
@@ -432,8 +433,8 @@ def main():
         print('L3', blog.buffer.showPost('L3'))
         print('TL2', blog.buffer.showPost('TL2'))
         print('*4', blog.buffer.showPost('*4'))
-        #print('edit L6', blog.buffer.editPost('L6', 'Así es Guestboard, un "Slack" para la organización de eventos.'))
-        #print('publish L2', blog.buffer.publishPost('L2'))
+        #print('edit L1', blog.buffer.editPost('L1', 'How TikTok Is Rewriting the World.'))
+        print('publish L0', blog.buffer.publishPost('L0'))
     sys.exit()
     print("-> PostsP",postsP)
     posts.update(postsP)

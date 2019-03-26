@@ -53,13 +53,18 @@ class moduleCache(Queue):
 
         socialNetworks = self.getSocialNetworks()
         self.profiles = []
+        self.service = {}
+        i = 0
         for sN in socialNetworks:
-            print(sN)
             if sN[0] in self.getProgram():
                 cacheAcc = {}
-                # Maybe adding 'Cache_'?
                 cacheAcc['service'] = sN
                 cacheAcc['service_username'] = socialNetworks[sN]
+                serviceName = 'Cache_'+cacheAcc['service'].capitalize()+'_'+cacheAcc['service_username']
+                cacheAcc['Cache_name'] = serviceName
+                self.service[serviceName] = i
+                i = i + 1
+                # Maybe adding 'Cache_'?
                 self.profiles.append(cacheAcc)
 
     def getService(self):
@@ -71,7 +76,6 @@ class moduleCache(Queue):
         self.setProfiles()
         profiles = self.getProfiles()
 
-        self.service = {}
         i = 0
 
         for profile in profiles:
@@ -114,13 +118,11 @@ class moduleCache(Queue):
         self.updatePostsCache()
         logging.info("    Added posts to %s"% serviceName)
 
-    def updatePostsCache(self):
-        fileNameQ = fileNamePath(self.url, self.socialNetwork) + ".queue" 
+    def updatePostsCache(self, serviceName=''):
+        socialNetwork = (self.profiles[self.service[serviceName]]['service'], 
+                self.profiles[self.service[serviceName]]['service_username'])
+        fileNameQ = fileNamePath(self.url, socialNetwork) + ".queue" 
 
-        #serviceName = self.name.capitalize()
-        serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1]
-        serviceName = self.name
-    
         with open(fileNameQ, 'wb') as f:
             pickle.dump(self.postsFormatted[serviceName]['pending'], f)
         logging.debug("Writing in %s" % fileNameQ)
@@ -206,9 +208,9 @@ def main():
     print('T3', blog.cache.showPost('T3'))
     print('TF2', blog.cache.showPost('TF2'))
     print('*4', blog.cache.showPost('*4'))
-    print('edit T3', blog.cache.editPost('T3', 'Posting PDFs.'))
-    print('edit F2', blog.cache.editPost('F2', 'Posting PDFs.'))
-    #print('publish T7', blog.cache[ca].publishPost('T7'))
+    #print('edit T1', blog.cache.editPost('T1', 'Así es Guestboard, un "Slack" para la organización de eventos.'))
+    #print('edit F0', blog.cache.editPost('F0', 'Así es Guestboard, un "Slack" para la organización de eventos.'))
+    print('publish T0', blog.cache.publishPost('T0'))
     #ca.movePost('T4 T3')
     #ca.editPost('T4', "My Stepdad's Huge Dataset.") 
     #ca.editPost('F5', "¡Sumate al datatón y a WiDS 2019! - lanacion.com")
