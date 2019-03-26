@@ -85,10 +85,6 @@ class moduleTwitter(Content):
 
     def publishPost(self, post, link, comment):
         logging.info("    Publishing in Twitter...")
-        print(comment)
-        print(post)
-        print(link)
-        sys.exit()
         post = comment + " " + post + " " + link
         h = HTMLParser()
         post = h.unescape(post)
