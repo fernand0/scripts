@@ -409,6 +409,8 @@ def main():
     print(api.getPostsFormatted())
     print("-----")
     print('M11', api.showPost('M11'))
+    print('M11', api.publishPost('M11'))
+    print('M11', api.editPost('M11', 'Vaya'))
     sys.exit()
     api.editPost(pp, api.getPosts(), "M17", 'Prueba.')
 

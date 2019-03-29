@@ -86,6 +86,25 @@ class Queue:
             if 'Cache' in serviceName: 
                 self.postsFormatted[serviceName]['pending'][j] = (newTitle, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
                 self.updatePostsCache(serviceName)
+            elif 'Mail' in serviceName:
+                import base64
+                import email
+                from email.parser import BytesParser
+                print(serviceName)
+                api = self.getClient()
+                message = api.users().drafts().get(userId="me", 
+                   format="raw", id=comment).execute()['message']
+                theMsg = email.message_from_bytes(base64.urlsafe_b64decode(message['raw']))
+                self.setHeaderEmail(theMsg, 'subject', newTitle)
+                message['raw'] = theMsg.as_bytes()
+                message['raw'] = base64.urlsafe_b64encode(message['raw']).decode()
+
+                print(message)
+
+                sys.exit()
+                update = api.users().drafts().update(userId='me', 
+                    body={'message':message},id=comment).execute()
+
             else:
                 profiles = self.getProfiles()
                 if serviceName in self.service:
@@ -137,6 +156,23 @@ class Queue:
                     if type(update) == tuple:
                         update = update[1]['id']
                         # link: https://www.facebook.com/[name]/posts/[second part of id]
+            elif 'Mail' in serviceName:
+                import moduleSocial
+                publishMethod = getattr(moduleSocial, 
+                        'publishMail')
+                logging.debug(title, link, summary, summaryHtml, summaryLinks, image, content , links )
+                logging.info(title, link, content , links )
+                logging.info(publishMethod)
+                logging.info("com %s" % comment)
+                sys.exit()
+                update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
+                if update:
+                    if 'text' in update: 
+                        update = update['text'] 
+   
+                    return(update)
+
+                return(None)
             else:
                 profiles = self.getProfiles()
                 i = self.service[serviceName]
