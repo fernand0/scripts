@@ -52,8 +52,6 @@ class Queue:
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
-
-    
     def showPost(self, args):
         #return(self.interpretAndExecute(args,'show'))
         logging.info("To show %s" % args)
