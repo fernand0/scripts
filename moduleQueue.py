@@ -90,7 +90,6 @@ class Queue:
                 import base64
                 import email
                 from email.parser import BytesParser
-                print(serviceName)
                 api = self.getClient()
                 message = api.users().drafts().get(userId="me", 
                    format="raw", id=comment).execute()['message']
@@ -99,9 +98,6 @@ class Queue:
                 message['raw'] = theMsg.as_bytes()
                 message['raw'] = base64.urlsafe_b64encode(message['raw']).decode()
 
-                print(message)
-
-                sys.exit()
                 update = api.users().drafts().update(userId='me', 
                     body={'message':message},id=comment).execute()
 
@@ -164,7 +160,6 @@ class Queue:
                 logging.info(title, link, content , links )
                 logging.info(publishMethod)
                 logging.info("com %s" % comment)
-                sys.exit()
                 update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
                 if update:
                     if 'text' in update: 
@@ -190,17 +185,28 @@ class Queue:
         logging.info("To Delete %s" % args)
     
         udpate = ""
-        if self.isForMe(args):
-            j = int(args[-1])
-            serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1] #self.name.capitalize()
+        services = self.isForMe(args)
+        j = int(args[-1])
+        for serviceName in services:
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.postsFormatted[serviceName]['pending'][j])
             update = "Deleted: "+ title
             logging.debug("Posts %s" % self.postsFormatted[serviceName]['pending'])
-            self.postsFormatted[serviceName]['pending'] = self.postsFormatted[serviceName]['pending'][:j] + self.postsFormatted[serviceName]['pending'][j+1:]
+            if 'Cache' in serviceName: 
+                self.postsFormatted[serviceName]['pending'] = self.postsFormatted[serviceName]['pending'][:j] + self.postsFormatted[serviceName]['pending'][j+1:]
+                self.updatePostsCache(serviceName)
+            elif 'Mail' in serviceName:
+                api = self.getClient()
+                idPost = comment
+                update = api.users().drafts().delete(userId='me', id=idPost).execute() 
+            else:
+                profiles = self.getProfiles()
+                if serviceName in self.service:
+                    i = self.service[serviceName]
+                    from buffpy.models.update import Update
+                    update = Update(api=self.api, id=profiles[i].updates.pending[j].id) 
+                    update.detele()
+
             logging.debug("-Posts %s" % self.postsFormatted[serviceName]['pending'])
-            logging.info("social network %s - %s" 
-                    % (self.socialNetwork[0], self.socialNetwork[1]))
-            self.updatePostsCache()
             return(update)
     
         return("")

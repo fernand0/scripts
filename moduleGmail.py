@@ -409,9 +409,10 @@ def main():
     print(api.getPostsFormatted())
     print("-----")
     print('M11', api.showPost('M11'))
-    print('M11', api.publishPost('M11'))
-    print('M11', api.editPost('M11', 'Vaya'))
     sys.exit()
+    print('M18', api.deletePost('M18'))
+    print('M18', api.editPost('M18', 'Vaya'))
+    print('M10', api.publishPost('M10'))
     api.editPost(pp, api.getPosts(), "M17", 'Prueba.')
 
     logging.basicConfig(#filename='example.log',
