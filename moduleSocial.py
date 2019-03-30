@@ -557,12 +557,21 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
 
     logger.info("Telegram...%s "%channel)
 
+    import importlib
+    serviceName = 'Telegram'
+    mod = importlib.import_module('module'+serviceName) 
+    cls = getattr(mod, 'module'+serviceName)
+    api = cls()
+    api.setClient(channel)
+    #statusTxt = comment + " " + title + " " + link
+    return(api.publishPost(title, link, content + '\n\n' + links))
+
     if True:
         bot = connectTelegram(channel)
 
         h = HTMLParser()
         title = h.unescape(title)
-        htmlText='<a href="'+link+'">'+title + "</a>\n" + summaryHtml
+        #htmlText='<a href="'+link+'">'+title + "</a>\n" + summaryHtml
         #soup = BeautifulSoup(htmlText)
         #cleanTags(soup)
         #print(soup)
