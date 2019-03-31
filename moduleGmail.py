@@ -148,7 +148,6 @@ class moduleGmail(Content,Queue):
             message[header]= value
 
     def getHeader(self, message, header = 'Subject'):
-        print(message)
         for head in message['payload']['headers']: 
             if head['name'] == header: 
                 return(head['value'])
@@ -465,7 +464,7 @@ def main():
     print("-----")
     print('M11', api.selectAndExecute('show', 'M11'))
     print('M13', api.selectAndExecute('show', 'M13'))
-    print('M15', api.selectAndExecute('show', 'M15'))
+    print('M05', api.selectAndExecute('show', 'M05'))
     print('M17', api.selectAndExecute('edit', 'M17'+' '+'Vaya'))
     sys.exit()
     print('M18', api.selectAndExecute('delete', 'M17'))

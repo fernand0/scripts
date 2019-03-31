@@ -59,7 +59,6 @@ class Queue:
     def selectAndExecute(self, command, args):
         logging.info("Selecting %s" % args)
         services = self.isForMe(args)
-        print("args", args)
         if args.find(' ')>0: 
             j = int(args.split()[0][-1]) 
         else: 
