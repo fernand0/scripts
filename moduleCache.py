@@ -184,6 +184,60 @@ class moduleCache(Queue):
                 lookAt.append('Cache_'+prof['service'].capitalize()+'_'+prof['service_username'])
         return(lookAt)
 
+    def edit(self, post, j, newTitle):
+        logging.info("New title %s", newTitle)
+        serviceName = post[0]
+        thePost = post[2:]
+        #print(thePost)
+        thePost.insert(0, newTitle)
+        self.postsFormatted[serviceName]['pending'][j] = thePost
+        #print(self.postsFormatted[serviceName]['pending'][j])
+        self.updatePostsCache(serviceName)
+
+
+        title = post[1]
+        update = "Changed "+title+" with "+newTitle
+
+        return(update)
+
+    def publish(self, post, j):
+        logging.info("Publishing", post[1])
+        import importlib
+        service = self.profiles[self.service[serviceName]]['service']
+        service = service.capitalize()
+        nick = self.profiles[self.service[serviceName]]['service_username']
+        mod = importlib.import_module('module'+service) 
+        cls = getattr(mod, 'module'+service)
+        api = cls()
+        api.setClient(nick)
+        comment = ''
+        update = api.publishPost(title, link, comment)
+        logging.info("Publishing title: %s" % title)
+        logging.info("Social network: %s Nick: %s" % (serviceName, nick))
+        if not isinstance(update, str) or (isinstance(update, str) and update[:4] != "Fail"):
+            self.postsFormatted[serviceName]['pending'] = self.postsFormatted[serviceName]['pending'][:j] + self.postsFormatted[serviceName]['pending'][j+1:]
+            logging.debug("Updating %s" % self.postsFormatted)
+            #logging.info("Blog %s" % cache['blog'])
+            self.updatePostsCache(serviceName)
+            logging.info("UUpdate ... %s" % str(update))
+            if 'text' in update:
+                update = update['text']
+            if type(update) == tuple:
+                update = update[1]['id']
+                # link: https://www.facebook.com/[name]/posts/[second part of id]
+        logging.info("Update before return %s"% update)
+        return(update)
+    
+    def delete(self, post, j):
+        logging.info("Publishing", post[1])
+        profiles = self.getProfiles()
+        serviceName = post[0]
+        self.postsFormatted[serviceName]['pending'] = self.postsFormatted[serviceName]['pending'][:j] + self.postsFormatted[serviceName]['pending'][j+1:]
+        self.updatePostsCache(serviceName)
+
+        logging.info("Deleted %s"% post[1])
+        return("Deleted %s"% post[1])
+ 
 def main():
     import moduleCache
     import moduleSlack
@@ -204,13 +258,14 @@ def main():
 
     blog.cache.setProfiles()
     blog.cache.setPosts()
-    print('F1', blog.cache.showPost('F1'))
-    print('T3', blog.cache.showPost('T3'))
-    print('TF2', blog.cache.showPost('TF2'))
-    print('*4', blog.cache.showPost('*4'))
-    #print('edit T1', blog.cache.editPost('T1', 'Así es Guestboard, un "Slack" para la organización de eventos.'))
+    print('T0', blog.cache.selectAndExecute('show', 'T0'))
+    print('T3', blog.cache.selectAndExecute('show', 'T3'))
+    print('TF2', blog.cache.selectAndExecute('show', 'TF2'))
+    print('F4', blog.cache.selectAndExecute('show', 'F4'))
+    print('*3', blog.cache.selectAndExecute('show', '*3'))
+    #print('edit T2', blog.cache.selectAndExecute('edit', 'T2'+' '+' Three Things I Wish I Knew When I Started Designing Languages.'))
     #print('edit F0', blog.cache.editPost('F0', 'Así es Guestboard, un "Slack" para la organización de eventos.'))
-    print('publish T0', blog.cache.publishPost('T0'))
+    #print('publish T0', blog.cache.publishPost('T0'))
     #ca.movePost('T4 T3')
     #ca.editPost('T4', "My Stepdad's Huge Dataset.") 
     #ca.editPost('F5', "¡Sumate al datatón y a WiDS 2019! - lanacion.com")

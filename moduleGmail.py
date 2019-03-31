@@ -241,6 +241,61 @@ class moduleGmail(Content,Queue):
                 lookAt.append(serviceName)
         return lookAt
 
+    def edit(self, post, j, newTitle):
+        logging.info("New title %s", newTitle)
+
+        import base64
+        import email
+        from email.parser import BytesParser
+        api = self.getClient()
+        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, image, content , comment) = post[1:]
+        idPost = comment
+        message = api.users().drafts().get(userId="me", 
+           format="raw", id=idPost).execute()['message']
+        theMsg = email.message_from_bytes(base64.urlsafe_b64decode(message['raw']))
+        self.setHeaderEmail(theMsg, 'subject', newTitle)
+        message['raw'] = theMsg.as_bytes()
+        message['raw'] = base64.urlsafe_b64encode(message['raw']).decode()
+
+        update = api.users().drafts().update(userId='me', 
+            body={'message':message},id=idPost).execute()
+
+
+        logging.info("Update %s" % update)
+        return(update)
+
+    def publish(self, post, j):
+        logging.info("Publishing", post[1])                
+        
+        import moduleSocial
+        publishMethod = getattr(moduleSocial, 
+                'publishMail')
+        (title, link, summary, summaryHtml, summaryLinks, image, content , links ) = post[1:]
+        logging.debug(title, link, summary, summaryHtml, summaryLinks, image, content , links )
+        logging.info(title, link, content , links )
+        logging.info(publishMethod)
+        logging.info("com %s" % comment)
+        update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
+        if update:
+            if 'text' in update: 
+                update = update['text'] 
+        else:
+            update = ""
+   
+        return(update)
+
+    def delete(self, post, j):
+        logging.info("Publishing", post[1])
+        serviceName = post[0]                
+
+        api = self.getClient()
+        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, image, content , comment) = post[1:]
+        idPost = comment
+        #print(title, link, firstLink, image, summary, summaryHtml, summaryLinks, image, content , comment)
+        update = api.users().drafts().delete(userId='me', id=idPost).execute() 
+ 
+        return("Deleted %s"% post[1])
+ 
     #def showPost(self, pp, posts, args):
     #    logging.info("To publish %s" % args)
     #
@@ -408,9 +463,12 @@ def main():
     print("-----")
     print(api.getPostsFormatted())
     print("-----")
-    print('M11', api.showPost('M11'))
+    print('M11', api.selectAndExecute('show', 'M11'))
+    print('M13', api.selectAndExecute('show', 'M13'))
+    print('M15', api.selectAndExecute('show', 'M15'))
+    print('M17', api.selectAndExecute('edit', 'M17'+' '+'Vaya'))
     sys.exit()
-    print('M18', api.deletePost('M18'))
+    print('M18', api.selectAndExecute('delete', 'M17'))
     print('M18', api.editPost('M18', 'Vaya'))
     print('M10', api.publishPost('M10'))
     api.editPost(pp, api.getPosts(), "M17", 'Prueba.')

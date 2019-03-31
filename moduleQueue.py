@@ -30,6 +30,10 @@ class Queue:
     def extractDataMessage(self,serviceName, i):
         messageRaw = self.getPostsFormatted()[serviceName]['pending'][i]
 
+        #print("mes", messageRaw)
+        #messageRaw[1].insert(0,messageRaw[0])
+        #messageRaw = messageRaw[1]
+        #print("mes", messageRaw)
         theTitle = messageRaw[0]
         theLink = messageRaw[1]
 
@@ -52,22 +56,42 @@ class Queue:
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
-    def showPost(self, args):
-        #return(self.interpretAndExecute(args,'show'))
-        logging.info("To show %s" % args)
-
+    def selectAndExecute(self, command, args):
+        logging.info("Selecting %s" % args)
         services = self.isForMe(args)
-        j = int(args[-1])
+        print("args", args)
+        if args.find(' ')>0: 
+            j = int(args.split()[0][-1]) 
+        else: 
+            j = int(args[-1])
         reply = ""
         for serviceName in services:
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.obtainPostData(serviceName, j))
-            if title:
-                reply = reply + title
-                if link:
-                   reply = reply +' '+link
-                reply = reply + '\n'
-            else:
-                reply = reply + ""
+            post = list(self.obtainPostData(serviceName, j))
+            ##print("1",post)
+            post.insert(0, serviceName)
+            #self.getPostsFormatted()[serviceName]['pending'][j] = post[1:]
+            #print("2",self.getPostsFormatted()[serviceName]['pending'][j])
+            #self.updatePostsCache(serviceName)
+            #sys.exit()
+            cmd = getattr(self, command)
+            if args.find(' ')>0:
+                reply = reply + cmd(post, j, ' '.join(args.split()[1:]))
+            else: 
+                reply = reply + cmd(post, j)
+        return(reply)
+
+    def show(self, post, j):
+        logging.info("To show %s" % post[0])
+
+        (serviceName, title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post
+        reply = ''
+        if title:
+            reply = reply + title
+            if link:
+               reply = reply +' '+link
+            reply = reply + '\n'
+        else:
+            reply = reply + ""
         return(reply)
 
     def editPost(self, args, newTitle):
@@ -100,14 +124,7 @@ class Queue:
                     body={'message':message},id=comment).execute()
 
             else:
-                profiles = self.getProfiles()
-                if serviceName in self.service:
-                    i = self.service[serviceName]
-                    from buffpy.models.update import Update
-                    update = Update(api=self.api, id=profiles[i].updates.pending[j].id) 
-                    update = update.edit(text=newTitle)
-
-                update = "Changed "+title+" with "+newTitle
+                pass
         else:
             update = ""
 

@@ -403,6 +403,44 @@ class moduleBuffer(Queue):
                 lookAt.append(prof['service'])
         return(lookAt)
 
+    def edit(self, post, j, newTitle):
+        logging.info("New title %s", newTitle)
+        udpate = None
+        profiles = self.getProfiles()
+        serviceName = post[0]
+        i = self.service[serviceName]
+        from buffpy.models.update import Update
+        update = Update(api=self.api, id=profiles[i].updates.pending[j].id) 
+        update = update.edit(text=newTitle)
+
+        title = post[1]
+        update = "Changed "+title+" with "+newTitle
+
+        return(update)
+
+    def publish(self, post, j):
+        logging.info("Publishing", post[1])
+        udpate = None 
+        profiles = self.getProfiles() 
+        serviceName = post[0]
+        i = self.service[serviceName]
+        update = Update(api=self.api, id=profiles[i].updates.pending[j].id) 
+        update = update.publish()
+        logging.info("Update before return %s"% update)
+        return(update[0])
+    
+    def delete(self, post, j):
+        logging.info("Publishing", post[1])
+        profiles = self.getProfiles()
+        serviceName = post[0]
+        i = self.service[serviceName]
+        from buffpy.models.update import Update
+        update = Update(api=self.api, id=profiles[i].updates.pending[j].id) 
+        update.detele()
+
+        logging.info("Update before return %s"% update)
+        return(update[0])
+ 
 def main():
 
     import moduleBuffer
@@ -429,12 +467,12 @@ def main():
 
     for bu in blog.buffer.getProfiles():
         print(bu)
-        print('F1', blog.buffer.showPost('F1'))
-        print('L3', blog.buffer.showPost('L3'))
-        print('TL2', blog.buffer.showPost('TL2'))
-        print('*4', blog.buffer.showPost('*4'))
-        #print('edit L1', blog.buffer.editPost('L1', 'How TikTok Is Rewriting the World.'))
-        print('publish L0', blog.buffer.publishPost('L0'))
+        print('F1', blog.buffer.selectAndExecute('show', 'F1'))
+        print('L3', blog.buffer.selectAndExecute('show', 'L3'))
+        print('TL2', blog.buffer.selectAndExecute('show', 'TL2'))
+        print('*4', blog.buffer.selectAndExecute('show', '*4'))
+        print('publish L0', blog.buffer.selectAndExecute('publish','L0'))
+        #print('edit L1', blog.buffer.selectAndExecute('edit', 'L1'+' '+'Women: Learn to Program this Summer.'))
     sys.exit()
     print("-> PostsP",postsP)
     posts.update(postsP)
