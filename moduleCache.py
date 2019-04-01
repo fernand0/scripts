@@ -263,6 +263,7 @@ def main():
     print('TF2', blog.cache.selectAndExecute('show', 'TF2'))
     print('F4', blog.cache.selectAndExecute('show', 'F4'))
     print('*3', blog.cache.selectAndExecute('show', '*3'))
+    #print('F0', blog.cache.selectAndExecute('delete', 'F0'))
     #print('edit T2', blog.cache.selectAndExecute('edit', 'T2'+' '+' Three Things I Wish I Knew When I Started Designing Languages.'))
     #print('edit F0', blog.cache.editPost('F0', 'Así es Guestboard, un "Slack" para la organización de eventos.'))
     #print('publish T0', blog.cache.publishPost('T0'))

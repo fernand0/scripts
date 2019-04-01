@@ -269,11 +269,14 @@ class moduleGmail(Content,Queue):
         import moduleSocial
         publishMethod = getattr(moduleSocial, 
                 'publishMail')
-        (title, link, summary, summaryHtml, summaryLinks, image, content , links ) = post[1:]
+        print(len(post[1:]))
+        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, image, content , links ) = post[1:]
+
         logging.debug(title, link, summary, summaryHtml, summaryLinks, image, content , links )
         logging.info(title, link, content , links )
         logging.info(publishMethod)
-        logging.info("com %s" % comment)
+        comment = links
+
         update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
         if update:
             if 'text' in update: 
@@ -465,9 +468,9 @@ def main():
     print('M11', api.selectAndExecute('show', 'M11'))
     print('M13', api.selectAndExecute('show', 'M13'))
     print('M05', api.selectAndExecute('show', 'M05'))
+    print('M10', api.selectAndExecute('publish', 'M10'))
     print('M17', api.selectAndExecute('edit', 'M17'+' '+'Vaya'))
     sys.exit()
-    print('M18', api.selectAndExecute('delete', 'M17'))
     print('M18', api.editPost('M18', 'Vaya'))
     print('M10', api.publishPost('M10'))
     api.editPost(pp, api.getPosts(), "M17", 'Prueba.')
