@@ -397,6 +397,7 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
         # Things can have changed during the waiting
         element, listP = nextPost(blog,socialNetwork)
 
+        print("element",element)
         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = element
 
         profile = socialNetwork[0]
@@ -461,8 +462,7 @@ def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, ima
     cls = getattr(mod, 'module'+serviceName)
     api = cls()
     api.setClient(twitter)
-    statusTxt = comment + " " + title + " " + link
-    return(api.publishPost(statusTxt))
+    return(api.publishPost(title, link, comment))
    
 def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     fbPage = channel

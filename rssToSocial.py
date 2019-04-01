@@ -215,9 +215,10 @@ def main():
                     logging.info("    Last link %s %s %d"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
                                 time.localtime(lastTime)), lastLink, i))
-                    print("     Last link %s %s %d"% 
+                    print("     Last link %s"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
-                                time.localtime(lastTime)), lastLink, i))
+                                time.localtime(lastTime))))
+                    print("      %s %d"% (lastLink, i))
                     logging.debug("bufferMax - lenMax = num %d %d %d"%
                             (bufferMax, lenMax, num)) 
 
