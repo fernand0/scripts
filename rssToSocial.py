@@ -256,7 +256,7 @@ def main():
                             logging.info("  Publishing directly\n") 
                             serviceName = profile.capitalize()
                             print("   Publishing in %s %s" % (serviceName, title))
-                            if (profile == 'twitter') or (profile == 'facebook'): 
+                            if (profile == 'twitter') or (profile == 'facebook') or (profile=='telegram'): 
                                 # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
                                 import importlib
                                 mod = importlib.import_module('module'+serviceName) 
@@ -264,7 +264,7 @@ def main():
                                 api = cls()
                                 api.setClient(nick)
                                 result = api.publishPost(title, link, comment)
-                                print(result)
+                                #print(result)
                                 if isinstance(result, str):
                                     if result[:4]=='Fail':
                                         link=''
