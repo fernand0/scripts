@@ -261,6 +261,7 @@ class moduleGmail(Content,Queue):
 
 
         logging.info("Update %s" % update)
+        update = "Changed "+title+" with "+newTitle
         return(update)
 
     def publish(self, post, j):
@@ -296,7 +297,7 @@ class moduleGmail(Content,Queue):
         #print(title, link, firstLink, image, summary, summaryHtml, summaryLinks, image, content , comment)
         update = api.users().drafts().delete(userId='me', id=idPost).execute() 
  
-        return("Deleted %s"% post[1])
+        return("Deleted %s"% title)
  
     #def showPost(self, pp, posts, args):
     #    logging.info("To publish %s" % args)
@@ -468,9 +469,10 @@ def main():
     print('M11', api.selectAndExecute('show', 'M11'))
     print('M13', api.selectAndExecute('show', 'M13'))
     print('M05', api.selectAndExecute('show', 'M05'))
-    print('M10', api.selectAndExecute('publish', 'M10'))
-    print('M17', api.selectAndExecute('edit', 'M17'+' '+'Vaya'))
     sys.exit()
+    print('M15', api.selectAndExecute('edit', 'M15'+' '+'baba'))
+    print('M15', api.selectAndExecute('delete', 'M15'))
+    print('M10', api.selectAndExecute('publish', 'M10'))
     print('M18', api.editPost('M18', 'Vaya'))
     print('M10', api.publishPost('M10'))
     api.editPost(pp, api.getPosts(), "M17", 'Prueba.')
