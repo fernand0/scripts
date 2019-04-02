@@ -388,16 +388,15 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
 
         element, listP = nextPost(blog,socialNetwork)
 
-        logger.info("    %s: Waiting ... %.2f minutes" % (socialNetwork[0].capitalize(), tSleep/60))
-        logger.info("     I'll publish %s" % element[0])
-        print("\n         %s: waiting... %.2f minutes\n          I'll publish %s"
+        logger.info("    [d]%s: Waiting ... %.2f minutes" % (socialNetwork[0].capitalize(), tSleep/60))
+        logger.info("     [d]I'll publish %s" % element[0])
+        print("\n         [d]%s: waiting... %.2f minutes\n          I'll publish %s"
                 % (socialNetwork[0], tSleep/60, element[0]))
         time.sleep(tSleep) 
 
         # Things can have changed during the waiting
         element, listP = nextPost(blog,socialNetwork)
 
-        print("element",element)
         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = element
 
         profile = socialNetwork[0]
