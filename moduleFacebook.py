@@ -74,7 +74,6 @@ class moduleFacebook(Content):
         logging.info("  Setting posts")
         self.posts = []
         count = 5
-        print(self.page)
         posts = self.page.get_connections(self.pageId, connection_name='posts') 
 
         for post in posts['data']:
