@@ -214,10 +214,11 @@ def main():
                     print("    Profile %s"% profile)
                     logging.info("    Last link %s %s %d"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
-                                time.localtime(lastTime)), lastLink, i))
-                    print("     Last link %s %s %d"% 
+                                time.localtime(lastTime)), lastLink.decode(), i))
+                    print("     Last link %s"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
-                                time.localtime(lastTime)), lastLink, i))
+                                time.localtime(lastTime))))
+                    print("      %s %d"% (lastLink.decode(), i))
                     logging.debug("bufferMax - lenMax = num %d %d %d"%
                             (bufferMax, lenMax, num)) 
 
@@ -241,7 +242,7 @@ def main():
 
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
                     blog.cache[nameProfile].addPosts(blog, nameProfile, listPosts)
-                    timeSlots = 5*60 # One hour
+                    timeSlots = 50*60 # One hour
                     t[nameProfile] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, socialNetwork, 1, timeSlots))
                     t[nameProfile].start() 
 
@@ -255,7 +256,7 @@ def main():
                             logging.info("  Publishing directly\n") 
                             serviceName = profile.capitalize()
                             print("   Publishing in %s %s" % (serviceName, title))
-                            if (profile == 'twitter') or (profile == 'facebook'): 
+                            if (profile == 'twitter') or (profile == 'facebook') or (profile=='telegram'): 
                                 # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
                                 import importlib
                                 mod = importlib.import_module('module'+serviceName) 
@@ -263,6 +264,7 @@ def main():
                                 api = cls()
                                 api.setClient(nick)
                                 result = api.publishPost(title, link, comment)
+                                #print(result)
                                 if isinstance(result, str):
                                     if result[:4]=='Fail':
                                         link=''
