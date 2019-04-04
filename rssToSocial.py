@@ -214,11 +214,11 @@ def main():
                     print("    Profile %s"% profile)
                     logging.info("    Last link %s %s %d"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
-                                time.localtime(lastTime)), lastLink, i))
+                                time.localtime(lastTime)), lastLink.decode(), i))
                     print("     Last link %s"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
                                 time.localtime(lastTime))))
-                    print("      %s %d"% (str(lastLink), i))
+                    print("      %s %d"% (lastLink.decode(), i))
                     logging.debug("bufferMax - lenMax = num %d %d %d"%
                             (bufferMax, lenMax, num)) 
 
