@@ -557,57 +557,23 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
 
     logger.info("Telegram...%s "%channel)
 
-    if True:
-        bot = connectTelegram(channel)
-
-        h = HTMLParser()
-        title = h.unescape(title)
-        htmlText='<a href="'+link+'">'+title + "</a>\n" + summaryHtml
-        #soup = BeautifulSoup(htmlText)
-        #cleanTags(soup)
-        #print(soup)
-        text = '<a href="'+link+'">'+title+ "</a>\n" + content + '\n\n' + links
-        textToPublish2 = ""
-        if len(text) < 4090:
-            textToPublish = text
-            links = ""
-        else:
-            text = '<a href="'+link+'">'+title + "</a>\n" + content
-            textToPublish = text[:4080] + ' ...'
-            textToPublish2 = '... '+ text[4081:]
-        logger.info("text to "+ textToPublish)
-        logger.info("text to 2"+ textToPublish2)
-
-        bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
-        if textToPublish2:
-            try:
-                bot.sendMessage('@'+channel, textToPublish2[:4090], parse_mode='HTML') 
-            except:
-                bot.sendMessage('@'+channel, "Text is longer", parse_mode='HTML') 
-        if links:
-            bot.sendMessage('@'+channel, links, parse_mode='HTML') 
-
-    else:
-        logger.warning("Telegram posting failed!")
-        logger.warning("Unexpected error:", sys.exc_info()[0])
-        return("Fail!")
+    import importlib
+    serviceName = 'Telegram'
+    mod = importlib.import_module('module'+serviceName) 
+    cls = getattr(mod, 'module'+serviceName)
+    api = cls()
+    api.setClient(channel)
+    #statusTxt = comment + " " + title + " " + link
+    return(api.publishPost(title, link, content + '\n\n' + links))
 
 def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
     logger.info("Medium... %s"%channel)
-    try:
-        (client, user) = connectMedium()
-
-        h = HTMLParser()
-        title = h.unescape(title)
-        textOrig = 'Publicado originalmente en <a href="%s">%s</a>\n\n' % (link, title)
-        post = client.create_post(user_id=user["id"], title=title,
-                content="<h4>"+title+"</h4><br />"+textOrig+summaryHtml, canonical_url = link,
-                content_format="html", publish_status="public") #draft")
-        logger.info("My new post!", post["url"])
-    except:
-        logger.warning("Medium posting failed!")
-        logger.warning("Unexpected error:", sys.exc_info()[0])
-        return("Fail!")
+    serviceName = 'Medium'
+    mod = importlib.import_module('module'+serviceName) 
+    cls = getattr(mod, 'module'+serviceName)
+    api = cls()
+    api.setClient(channel)
+    return(api.publishPost(title, link, comment))
 
 def publishPocket(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
     logger.info("    Publishing in Pocket...%s"%channel)

@@ -39,13 +39,12 @@ class moduleTelegram(Content):
     def setPosts(self):
         logging.info("  Setting posts")
         self.posts = []
-        #tweets = self.tc.statuses.home_timeline()
         posts = self.tc.getUpdates()
 
         print(posts)
 
     def publishPost(self, post, link, comment):
-        logging.info("    Publishing in Twitter...")
+        logging.info("    Publishing in Medium...")
         bot = self.tc
         title = post
         content = comment

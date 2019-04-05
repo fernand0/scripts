@@ -214,7 +214,7 @@ def main():
                     print("    Profile %s"% profile)
                     logging.info("    Last link %s %s %d"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
-                                time.localtime(lastTime)), lastLink.decode(), i))
+                                time.localtime(lastTime)), lastLink, i))
                     print("     Last link %s"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
                                 time.localtime(lastTime))))
