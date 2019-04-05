@@ -433,21 +433,13 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
 def publishTumblr(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
 
     logger.info("Publishing in Tumblr...")
-    client = connectTumblr()                    
-    
-    blog_url = client.post('user/info')['user']['blogs'][0]['url']
-    post = client.post('post', blog_url, 
-            params={'type':'link', 
-                'state':'queue', 
-                'title': title, 
-                'thumbnail': image, 
-                'url': link, 
-                #'excerpt': summaryHtml, 
-                'publisher': ''}) 
-
-    logger.info("Posted!: %s" % post)
-
-    return(post)
+    import importlib
+    serviceName = 'Twitter'
+    mod = importlib.import_module('module'+serviceName) 
+    cls = getattr(mod, 'module'+serviceName)
+    api = cls()
+    api.setClient(channel)
+    return(api.publishPost(title, link, comment))
 
 def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
 
