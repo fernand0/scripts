@@ -242,7 +242,7 @@ def main():
 
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
                     blog.cache.addPosts(blog, profile, listPosts)
-                    timeSlots = 10*60 # One hour
+                    timeSlots = 55*60 # One hour
                     t[nameProfile] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, socialNetwork, 1, timeSlots))
                     t[nameProfile].start() 
 
