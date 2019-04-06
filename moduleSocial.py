@@ -358,11 +358,9 @@ def searchTwitter(search, twitter):
     return(t.search.tweets(q=search)['statuses'])
 
 def nextPost(blog, socialNetwork):
-    cacheName = socialNetwork[0]+'_'+socialNetwork[1]
-    blog.cache[cacheName].setPosts()
-    blog.cache[cacheName].setPostsFormatted()
-    serviceName = blog.cache[cacheName].name
-    listP = blog.cache[cacheName].getPostsFormatted()[serviceName]['pending']
+    cacheName = 'Cache_'+socialNetwork[0]+'_'+socialNetwork[1]
+    blog.cache.setPosts()
+    listP = blog.cache.getPostsFormatted()[cacheName]['pending']
 
     if listP: 
         element = listP[0]
@@ -379,8 +377,8 @@ def nextPost(blog, socialNetwork):
 def publishDelay(blog, socialNetwork, numPosts, timeSlots): 
     # We allow the rest of the Blogs to start
     time.sleep(2)
-    nameCache = socialNetwork[0]+'_'+socialNetwork[1]
-    serviceName = blog.cache[nameCache].name
+    nameCache = 'Cache_'+socialNetwork[0]+'_'+socialNetwork[1]
+    #serviceName = blog.cache[nameCache].name
 
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
@@ -410,14 +408,15 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
             api = cls()
             api.setClient(nick)
             result = api.publishPost(title, link, comment)
-            if result[:4]=='Fail':
-                link=''
+            if isinstance(result, str):
+                if result[:4]=='Fail':
+                    link=''
         else: 
             publishMethod = globals()['publish'+ profile.capitalize()]#()(self, ))
             publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
 
-        blog.cache[profile+'_'+nick].postsFormatted[serviceName]['pending'] = listP
-        blog.cache[profile+'_'+nick].updatePostsCache()
+        blog.cache.postsFormatted[nameCache]['pending'] = listP
+        blog.cache.updatePostsCache(profile)
            
         if j+1 < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))
