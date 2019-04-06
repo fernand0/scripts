@@ -14,7 +14,6 @@ class Queue:
         self.profiles = None
         self.posts = None
         self.postsFormatted = None
-        self.lenMax = -1
 
     def getProfiles(self):
         if not self.profiles:
@@ -26,6 +25,11 @@ class Queue:
 
     def getPostsFormatted(self):    
         return(self.postsFormatted)
+
+    def lenMax(self, profile):
+        for prof in self.getProfiles():
+            if (prof['service'] ==  profile): 
+                return(len(self.getPostsFormatted()[prof['cache_name']]['pending']))
 
     def extractDataMessage(self,serviceName, i):
         messageRaw = self.getPostsFormatted()[serviceName]['pending'][i]

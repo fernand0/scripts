@@ -566,41 +566,6 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
     #statusTxt = comment + " " + title + " " + link
     return(api.publishPost(title, link, content + '\n\n' + links))
 
-    if True:
-        bot = connectTelegram(channel)
-
-        h = HTMLParser()
-        title = h.unescape(title)
-        #htmlText='<a href="'+link+'">'+title + "</a>\n" + summaryHtml
-        #soup = BeautifulSoup(htmlText)
-        #cleanTags(soup)
-        #print(soup)
-        text = '<a href="'+link+'">'+title+ "</a>\n" + content + '\n\n' + links
-        textToPublish2 = ""
-        if len(text) < 4090:
-            textToPublish = text
-            links = ""
-        else:
-            text = '<a href="'+link+'">'+title + "</a>\n" + content
-            textToPublish = text[:4080] + ' ...'
-            textToPublish2 = '... '+ text[4081:]
-        logger.info("text to "+ textToPublish)
-        logger.info("text to 2"+ textToPublish2)
-
-        bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
-        if textToPublish2:
-            try:
-                bot.sendMessage('@'+channel, textToPublish2[:4090], parse_mode='HTML') 
-            except:
-                bot.sendMessage('@'+channel, "Text is longer", parse_mode='HTML') 
-        if links:
-            bot.sendMessage('@'+channel, links, parse_mode='HTML') 
-
-    else:
-        logger.warning("Telegram posting failed!")
-        logger.warning("Unexpected error:", sys.exc_info()[0])
-        return("Fail!")
-
 def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
     logger.info("Medium... %s"%channel)
     try:

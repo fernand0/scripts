@@ -112,6 +112,9 @@ class moduleBuffer(Queue):
         numProfiles = len(profiles)
         logging.debug("Num. Profiles %d" % numProfiles)
         logging.debug("Profiles %s" % profiles)
+
+        for profile in profiles:
+            profile['cache_name'] = 'Buffer_'+profile['service']+'_'+profile['service_username']
     
         self.profiles = profiles
 
@@ -125,16 +128,17 @@ class moduleBuffer(Queue):
         profiles = self.getProfiles()
     
         self.service = {}
-        print("------->", self)
         i = 0
         for profile in profiles:
             serviceName = profile['service']
-            self.service[serviceName] = i
+            nickName = profile['service_username']
+            bufferName = 'Buffer_' + serviceName + '_' + nickName
+            self.service[bufferName] = i
             i = i + 1
     
             logging.info("   Service %s" % serviceName)
     
-            outputData[serviceName] = {'sent': [], 'pending': []}
+            outputData[bufferName] = {'sent': [], 'pending': []}
             for method in ['sent', 'pending']:
                 if (profile.counts[method] > 0):
                     updates = getattr(profile.updates, method)
@@ -152,15 +156,40 @@ class moduleBuffer(Queue):
                         else:
                             link = ''
                         if update.text: 
-                            outputData[serviceName][method].append((update.text, link, toShow, '', '', '', '', '', '', ''))
+                            outputData[bufferName][method].append((update.text, link, toShow, '', '', '', '', '', '', ''))
                         else:
-                            outputData[serviceName][method].append((link, link, toShow, '', '', '', '', '', '', ''))
+                            outputData[bufferName][method].append((link, link, toShow, '', '', '', '', '', '', ''))
                 else:
-                            outputData[serviceName][method].append(('Empty', 'Empty', 'Empty', '', '', '', '', '', '', ''))
+                            outputData[bufferName][method].append(('Empty', 'Empty', 'Empty', '', '', '', '', '', '', ''))
 
             #self.lenMax[serviceName] = len(outputData[serviceName]['pending'])
     
         self.postsFormatted = outputData
+
+    def addPosts(self, blog, profile, listPosts):
+        linkAdded = ''
+        api = self.buffer
+        logging.info("    Adding posts to LinkedIn")
+        for post in listPosts: 
+            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post 
+            textPost = title + " " + link
+            logging.info("    Post: %s" % link)
+            print("        Post: %s" % link)
+            entry = urllib.parse.quote(textPost)
+            try:
+                blog.getBuffer().getProfiles()[0].updates.new(entry)
+            except: 
+                logging.warning("Buffer posting failed!") 
+                logging.warning("Entry: %s"% entry) 
+                logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
+                logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
+                return(linkAdded)
+            linkAdded = link
+                
+            time.sleep(2)
+        logging.info("    Added posts to LinkedIn")
+
+        return(linkAdded)
 
     #def showPost(self, profiles, args):
     #    api = self.buffer
@@ -191,31 +220,6 @@ class moduleBuffer(Queue):
     #            if upd['success']:
     #                return(update)
     #    return(None)
-
-    #def addPosts(self, blog, profile, listPosts):
-    #    linkAdded = ''
-    #    api = self.buffer
-    #    logging.info("    Adding posts to LinkedIn")
-    #    for post in listPosts: 
-    #        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post 
-    #        textPost = title + " " + link
-    #        logging.info("    Post: %s" % link)
-    #        print("        Post: %s" % link)
-    #        entry = urllib.parse.quote(textPost)
-    #        try:
-    #            blog.getBuffer().getProfiles()[0].updates.new(entry)
-    #        except: 
-    #            logging.warning("Buffer posting failed!") 
-    #            logging.warning("Entry: %s"% entry) 
-    #            logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
-    #            logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
-    #            return(linkAdded)
-    #        linkAdded = link
-    #            
-    #        time.sleep(2)
-    #    logging.info("    Added posts to LinkedIn")
-
-    #    return(linkAdded)
 
     #def deletePost(self, profiles, args):
     #    api = self.buffer
@@ -400,7 +404,7 @@ class moduleBuffer(Queue):
         lookAt = []
         for prof in profiles:
             if (prof['service'][0].capitalize() in args) or ('*' in args): 
-                lookAt.append(prof['service'])
+                lookAt.append('Buffer_'+prof['service']+'_'+prof['service_username'])
         return(lookAt)
 
     def edit(self, post, j, newTitle):
@@ -471,8 +475,8 @@ def main():
         print('L3', blog.buffer.selectAndExecute('show', 'L3'))
         print('TL2', blog.buffer.selectAndExecute('show', 'TL2'))
         print('*4', blog.buffer.selectAndExecute('show', '*4'))
-        print('publish L0', blog.buffer.selectAndExecute('publish','L0'))
-        #print('edit L1', blog.buffer.selectAndExecute('edit', 'L1'+' '+'Women: Learn to Program this Summer.'))
+        #print('publish L0', blog.buffer.selectAndExecute('publish','L0'))
+        #print('edit L0', blog.buffer.selectAndExecute('edit', 'L0'+' '+'A Pi-Powered Plan 9 Cluster.'))
     sys.exit()
     print("-> PostsP",postsP)
     posts.update(postsP)

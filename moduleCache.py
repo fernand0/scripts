@@ -48,27 +48,33 @@ class moduleCache(Queue):
     def getSocialNetworks(self):
         return (self.socialNetworks)
 
-    def setProfiles(self, service=""):
+    def setProfiles(self, profile=""):
         logging.info("  Checking services...")
 
         socialNetworks = self.getSocialNetworks()
         self.profiles = []
         self.service = {}
         i = 0
-        for sN in socialNetworks:
-            if sN[0] in self.getProgram():
+        for service in socialNetworks:
+            if service[0] in self.getProgram():
                 cacheAcc = {}
-                cacheAcc['service'] = sN
-                cacheAcc['service_username'] = socialNetworks[sN]
-                serviceName = 'Cache_'+cacheAcc['service'].capitalize()+'_'+cacheAcc['service_username']
-                cacheAcc['Cache_name'] = serviceName
+                cacheAcc['service'] = service
+                cacheAcc['service_username'] = socialNetworks[service]
+                serviceName = 'Cache_'+cacheAcc['service']+'_'+cacheAcc['service_username']
+                cacheAcc['cache_name'] = serviceName
                 self.service[serviceName] = i
                 i = i + 1
                 # Maybe adding 'Cache_'?
                 self.profiles.append(cacheAcc)
 
     def getService(self):
-        return(self.socialNetwork[0].capitalize())
+        return(self.socialNetwork[0])
+
+    def getName(self, service):
+        for profile in self.getProfiles():
+            if profile['service'] == service:
+                return(profile['cache_name'])
+        return ""
 
     def setPosts(self):        
         outputData = {}
@@ -77,50 +83,55 @@ class moduleCache(Queue):
         profiles = self.getProfiles()
 
         i = 0
-
         for profile in profiles:
             serviceName = profile['service']
-            nick = profile['service_username']
-            fileNameQ = fileNamePath(self.url, (serviceName, nick)) + ".queue" 
+            nickName = profile['service_username']
+            fileNameQ = fileNamePath(self.url, (serviceName, nickName)) + ".queue" 
             with open(fileNameQ,'rb') as f: 
                 try: 
                     listP = pickle.load(f) 
                 except: 
                     listP = [] 
             profile['posts'] = listP
-            self.lenMax= len(profile['posts'])
+            #self.lenMax= len(profile['posts'])
 
             files = []
     
-            serviceName = 'Cache_'+serviceName.capitalize()+'_'+nick
-            logging.debug("   Service %s" % serviceName)
+            cacheName = 'Cache_'+serviceName+'_'+nickName
+            self.service[cacheName] = i
+            i = i + 1
+            logging.debug("   Service %s" % cacheName)
     
-            outputData[serviceName] = {'sent': [], 'pending': []}
+            outputData[cacheName] = {'sent': [], 'pending': []}
             #listP = self.getPosts()
 
             logging.debug("-Posts %s"% listP)
     
             if listP and len(listP) > 0: 
                 for element in listP: 
-                    outputData[serviceName]['pending'].append(element) 
+                    outputData[cacheName]['pending'].append(element) 
     
             self.postsFormatted = outputData
     
     def addPosts(self, blog, profile, listPosts):
         nameCache = profile
         self.setPosts()
-        self.setPostsFormatted()
         serviceName = self.name
         logging.info("    Adding posts to %s"% serviceName)
-        listP = self.postsFormatted[serviceName]['pending']
+        for prof in self.getProfiles():
+            if (prof['service'] ==  profile): 
+                cacheName = prof['cache_name']
+        listP = self.postsFormatted[cacheName]['pending']
         newListP = listP + listPosts
-        self.postsFormatted[serviceName]['pending'] = newListP
-        self.updatePostsCache()
+        self.postsFormatted[cacheName]['pending'] = newListP
+        self.updatePostsCache(profile)
         logging.info("    Added posts to %s"% serviceName)
 
-    def updatePostsCache(self, serviceName=''):
-        socialNetwork = (self.profiles[self.service[serviceName]]['service'], 
-                self.profiles[self.service[serviceName]]['service_username'])
+    def updatePostsCache(self, profile=''):
+        for prof in self.getProfiles():
+            if (prof['service'] ==  profile): 
+                socialNetwork = (prof['service'], prof['service_username'])
+                serviceName = prof['cache_name']
         fileNameQ = fileNamePath(self.url, socialNetwork) + ".queue" 
 
         with open(fileNameQ, 'wb') as f:
@@ -181,7 +192,7 @@ class moduleCache(Queue):
         lookAt = []
         for prof in profiles:
             if (prof['service'][0].capitalize() in args) or ('*' in args): 
-                lookAt.append('Cache_'+prof['service'].capitalize()+'_'+prof['service_username'])
+                lookAt.append('Cache_'+prof['service']+'_'+prof['service_username'])
         return(lookAt)
 
     def edit(self, post, j, newTitle):
@@ -204,7 +215,7 @@ class moduleCache(Queue):
         logging.info("Publishing", post[1])
         import importlib
         service = self.profiles[self.service[serviceName]]['service']
-        service = service.capitalize()
+        #service = service.capitalize()
         nick = self.profiles[self.service[serviceName]]['service_username']
         mod = importlib.import_module('module'+service) 
         cls = getattr(mod, 'module'+service)
@@ -264,7 +275,7 @@ def main():
     print('F4', blog.cache.selectAndExecute('show', 'F4'))
     print('*3', blog.cache.selectAndExecute('show', '*3'))
     #print('F0', blog.cache.selectAndExecute('delete', 'F0'))
-    #print('edit T2', blog.cache.selectAndExecute('edit', 'T2'+' '+' Three Things I Wish I Knew When I Started Designing Languages.'))
+    #print('edit F0', blog.cache.selectAndExecute('edit', 'F0'+' '+'LLVM 8.0.0 Release.'))
     #print('edit F0', blog.cache.editPost('F0', 'Así es Guestboard, un "Slack" para la organización de eventos.'))
     #print('publish T0', blog.cache.publishPost('T0'))
     #ca.movePost('T4 T3')

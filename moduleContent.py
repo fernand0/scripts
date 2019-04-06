@@ -133,6 +133,7 @@ class Content:
         self.cache = moduleCache.moduleCache()
         self.cache.setClient(self.url, self.getSocialNetworks(),
                 self.getProgram())
+        self.cache.setPosts()
 
     def getProgram(self):
         return(self.program)
