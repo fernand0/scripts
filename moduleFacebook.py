@@ -97,7 +97,8 @@ class moduleFacebook(Content):
         post = h.unescape(post)
         try:
             logging.info("    Publishing in Facebook: %s" % post)
-            return(self.page.put_object(self.pageId, "feed", message=post, link=link))
+            res = self.page.put_object(self.pageId, "feed", message=post, link=link)
+            return(res)
         except:        
             logging.warning("Facebook posting failed!") 
             logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 

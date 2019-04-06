@@ -305,7 +305,7 @@ def main():
             site.buffer.setBuffer()
             for profile in site.getSocialNetworks():
                 if profile[0] in site.getBufferapp():
-                    lenMax = site.buffer.lenMax[profile]
+                    lenMax = site.buffer.lenMax(profile)
                     print("   getBuffer %s" % profile)
                     (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
                     # In order to avoid saving the link as the last one
@@ -315,19 +315,20 @@ def main():
                     moduleSocial.publishBuffer(site, profileN, title, link, firstLink, isDebug, lenMax, site.getBufferapp())
 
         if site.getProgram():
+            site.cache.setPosts()
             for profile in site.getSocialNetworks():
                 if profile[0] in site.getProgram():
-                    nameCache = profile+'_' + site.getSocialNetworks()[profile]
-                    lenMax = site.cache[nameCache].lenMax
+                    nameCache = 'Cache_'+profile.capitalize()+'_' + site.getSocialNetworks()[profile]
+                    lenMax = site.cache.lenMax(nameCache)
                     print("   getProgram %s" % profile)
  
                     socialNetwork = (profile,site.getSocialNetworks()[profile])
 
-                    serviceName = site.cache[socialNetwork[0]+'_'+socialNetwork[1]].name
-                    listP = site.cache[nameCache].postsFormatted[serviceName]['pending']
+                    #serviceName = site.cache[socialNetwork[0]+'_'+socialNetwork[1]].name
+                    listP = site.cache.getPostsFormatted()[nameCache]['pending']
                     listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
                     listP = listP + listPsts
-                    site.cache[nameCache].postsFormatted[serviceName]['pending'] = listP
+                    site.cache.getPostsFormatted()[nameCache]['pending'] = listP
                     site.cache[nameCache].updatePostsCache()
         client = moduleSocial.connectTumblr()
         # We need to publish it in the Tumblr blog since we won't publish it by

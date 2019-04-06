@@ -44,7 +44,7 @@ class moduleTelegram(Content):
         print(posts)
 
     def publishPost(self, post, link, comment):
-        logging.info("    Publishing in Medium...")
+        logging.info("    Publishing in Telegram...")
         bot = self.tc
         title = post
         content = comment
