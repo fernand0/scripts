@@ -246,7 +246,6 @@ def main():
                     t[nameProfile] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, socialNetwork, 1, timeSlots))
                     t[nameProfile].start() 
 
-                continue
                 if not (blog.getBufferapp() or blog.getProgram()):
                     if (i > 0):
                         hours = blog.getTime() 
