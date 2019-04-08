@@ -45,6 +45,7 @@ class moduleGmail(Content,Queue):
         self.name = "Mail"
 
     def API(self, Acc):
+        # Back compatibility
         self.setClient(Acc)
 
     def setClient(self, Acc):
@@ -235,6 +236,8 @@ class moduleGmail(Content,Queue):
     def isForMe(self, args):
         serviceName = self.name
         lookAt = []
+        logging.info("Args %s" % args)
+        logging.info("Name %s" % serviceName)
         if (serviceName[0] in args) or ('*' in args): 
             if serviceName[0] + serviceName[-1] in args[:-1]:
                 lookAt.append(serviceName)

@@ -69,6 +69,7 @@ class Queue:
             j = int(args[-1])
         reply = ""
         for serviceName in services:
+            logging.info("Service %s", serviceName)
             post = list(self.obtainPostData(serviceName, j))
             ##print("1",post)
             post.insert(0, serviceName)
@@ -81,6 +82,7 @@ class Queue:
                 reply = reply + cmd(post, j, ' '.join(args.split()[1:]))
             else: 
                 reply = reply + cmd(post, j)
+        logging.info("Reply: %s"%reply)
         return(reply)
 
     def show(self, post, j):

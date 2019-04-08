@@ -81,6 +81,7 @@ class moduleCache(Queue):
 
         self.setProfiles()
         profiles = self.getProfiles()
+        logging.info("Profiles %s" % profiles)
 
         i = 0
         for profile in profiles:
@@ -261,6 +262,7 @@ def main():
     blog.setUrl(config.get(section, "url"))
     blog.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
     blog.setSocialNetworks(config, section)
+    #print(blog.getSocialNetworks())
 
     if ('bufferapp' in config.options(section)): 
         blog.setBufferapp(config.get(section, "bufferapp"))
