@@ -903,10 +903,13 @@ def moveMailsRemote(M, msgs, folder):
             if (typ == 'OK'): 
                 message = data[0][1]
                 logging.debug("Message %s", message)
-                rep = service.moveMessage(message)
-                logging.info("Reply %s" %rep)
-                if rep != "Fail!":
-                    M.store(msgId, "+FLAGS", "\\Seen")
+                try:
+                    rep = service.moveMessage(message)
+                    logging.info("Reply %s" %rep)
+                    if rep != "Fail!":
+                        M.store(msgId, "+FLAGS", "\\Seen")
+                except:
+                    return
                 time.sleep(1)
 
 
