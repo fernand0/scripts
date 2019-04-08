@@ -564,7 +564,7 @@ def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, imag
     cls = getattr(mod, 'module'+serviceName)
     api = cls()
     api.setClient(channel)
-    return(api.publishPost(title, link, comment))
+    return(api.publishPost(title, link, content))
 
 def publishPocket(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
     logger.info("    Publishing in Pocket...%s"%channel)
