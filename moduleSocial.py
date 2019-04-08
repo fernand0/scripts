@@ -558,6 +558,7 @@ def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, im
 
 def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
     logger.info("Medium... %s"%channel)
+    import importlib
     serviceName = 'Medium'
     mod = importlib.import_module('module'+serviceName) 
     cls = getattr(mod, 'module'+serviceName)

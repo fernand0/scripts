@@ -81,7 +81,7 @@ class moduleCache(Queue):
 
         self.setProfiles()
         profiles = self.getProfiles()
-        logging.info("Profiles %s" % profiles)
+        logging.debug("Profiles %s" % profiles)
 
         i = 0
         for profile in profiles:

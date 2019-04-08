@@ -73,7 +73,7 @@ class moduleMedium(Content):
             post = client.create_post(user_id=user["id"], title=title,
                 content="<h4>"+title+"</h4><br />"+textOrig+content,
                 canonical_url = link, content_format="html",
-                publish_status="draft")#"public") #draft") 
+                publish_status="public")#"public") #draft") 
             return(post)
         except:
             logging.warning("Medium posting failed!")
