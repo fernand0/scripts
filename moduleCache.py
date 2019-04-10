@@ -133,11 +133,11 @@ class moduleCache(Queue):
             if (prof['service'] ==  profile): 
                 socialNetwork = (prof['service'], prof['service_username'])
                 serviceName = prof['cache_name']
-        fileNameQ = fileNamePath(self.url, socialNetwork) + ".queue" 
+                fileNameQ = fileNamePath(self.url, socialNetwork) + ".queue" 
 
-        with open(fileNameQ, 'wb') as f:
-            pickle.dump(self.postsFormatted[serviceName]['pending'], f)
-        logging.debug("Writing in %s" % fileNameQ)
+                with open(fileNameQ, 'wb') as f:
+                    pickle.dump(self.postsFormatted[serviceName]['pending'], f)
+                logging.debug("Writing in %s" % fileNameQ)
 
  
     def listSentPosts(self, service=""):
@@ -193,7 +193,8 @@ class moduleCache(Queue):
         lookAt = []
         for prof in profiles:
             if (prof['service'][0].capitalize() in args) or ('*' in args): 
-                lookAt.append('Cache_'+prof['service']+'_'+prof['service_username'])
+                #lookAt.append('Cache_'+prof['service']+'_'+prof['service_username'])
+                lookAt.append(prof['service'])
         return(lookAt)
 
     def edit(self, post, j, newTitle):
@@ -202,15 +203,19 @@ class moduleCache(Queue):
         thePost = post[2:]
         #print(thePost)
         thePost.insert(0, newTitle)
-        self.postsFormatted[serviceName]['pending'][j] = thePost
-        #print(self.postsFormatted[serviceName]['pending'][j])
-        self.updatePostsCache(serviceName)
+        for prof in self.getProfiles():
+            if (prof['service'] ==  serviceName): 
+                self.postsFormatted[prof['cache_name']]['pending'][j] = thePost
+                #print(self.postsFormatted[serviceName]['pending'][j])
+                logging.info("Service Name %s" % serviceName)
+                self.updatePostsCache(serviceName)
 
 
-        title = post[1]
-        update = "Changed "+title+" with "+newTitle
+                title = post[1]
+                update = "Changed "+title+" with "+newTitle
 
-        return(update)
+                return(update)
+        return None
 
     def publish(self, post, j):
         logging.info("Publishing", post[1])
@@ -244,11 +249,14 @@ class moduleCache(Queue):
         logging.info("Publishing", post[1])
         profiles = self.getProfiles()
         serviceName = post[0]
-        self.postsFormatted[serviceName]['pending'] = self.postsFormatted[serviceName]['pending'][:j] + self.postsFormatted[serviceName]['pending'][j+1:]
-        self.updatePostsCache(serviceName)
+        for prof in self.getProfiles():
+            if (prof['service'] ==  serviceName): 
+                cacheName = prof['cache_name']
+                self.postsFormatted[cacheName]['pending'] = self.postsFormatted[cacheName]['pending'][:j] + self.postsFormatted[cacheName]['pending'][j+1:]
+                self.updatePostsCache(serviceName)
 
-        logging.info("Deleted %s"% post[1])
-        return("Deleted %s"% post[1])
+                logging.info("Deleted %s"% post[1])
+                return("Deleted %s"% post[1])
  
 def main():
     import moduleCache

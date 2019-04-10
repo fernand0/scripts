@@ -373,7 +373,8 @@ class moduleBuffer(Queue):
         lookAt = []
         for prof in profiles:
             if (prof['service'][0].capitalize() in args) or ('*' in args): 
-                lookAt.append('Buffer_'+prof['service']+'_'+prof['service_username'])
+                #lookAt.append('Buffer_'+prof['service']+'_'+prof['service_username'])
+                lookAt.append(prof['service'])
         return(lookAt)
 
     def edit(self, post, j, newTitle):
@@ -381,15 +382,21 @@ class moduleBuffer(Queue):
         udpate = None
         profiles = self.getProfiles()
         serviceName = post[0]
-        i = self.service[serviceName]
-        from buffpy.models.update import Update
-        update = Update(api=self.api, id=profiles[i].updates.pending[j].id) 
-        update = update.edit(text=newTitle)
+        logging.info("servicename %s"%serviceName)
+        logging.info("profiles %s"%profiles)
+        for prof in self.getProfiles():
+            if (prof['service'] ==  serviceName): 
+                i = self.service[prof['cache_name']]
+                from buffpy.models.update import Update
+                update = Update(api=self.api, id=profiles[i].updates.pending[j].id) 
+                update = update.edit(text=newTitle)
 
-        title = post[1]
-        update = "Changed "+title+" with "+newTitle
+                title = post[1]
+                update = "Changed "+title+" with "+newTitle
 
-        return(update)
+                logging.info("Res update %s" % update)
+
+                return(update)
 
     def publish(self, post, j):
         logging.info("Publishing", post[1])
@@ -403,16 +410,19 @@ class moduleBuffer(Queue):
         return(update[0])
     
     def delete(self, post, j):
-        logging.info("Publishing", post[1])
+        logging.info("Deleting", post[1])
         profiles = self.getProfiles()
         serviceName = post[0]
-        i = self.service[serviceName]
-        from buffpy.models.update import Update
-        update = Update(api=self.api, id=profiles[i].updates.pending[j].id) 
-        update.detele()
+        for prof in self.getProfiles():
+            if (prof['service'] ==  serviceName): 
+                i = self.service[prof['cache_name']]
+                from buffpy.models.update import Update
+                update = Update(api=self.api, id=profiles[i].updates.pending[j].id) 
+                logging.debug("update", update)
+                update = update.delete()
 
-        logging.info("Update before return %s"% update)
-        return(update[0])
+                logging.debug("Update before return %s"% update)
+                return(update)
  
 def main():
 

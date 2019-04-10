@@ -32,26 +32,31 @@ class Queue:
                 return(len(self.getPostsFormatted()[prof['cache_name']]['pending']))
 
     def extractDataMessage(self,serviceName, i):
-        messageRaw = self.getPostsFormatted()[serviceName]['pending'][i]
+        logging.info("servicename %s"%serviceName)
+        for prof in self.getProfiles():
+            if (prof['service'] ==  serviceName): 
+                messageRaw = self.getPostsFormatted()[prof['cache_name']]['pending'][i]
 
-        #print("mes", messageRaw)
-        #messageRaw[1].insert(0,messageRaw[0])
-        #messageRaw = messageRaw[1]
-        #print("mes", messageRaw)
-        theTitle = messageRaw[0]
-        theLink = messageRaw[1]
+                #print("mes", messageRaw)
+                #messageRaw[1].insert(0,messageRaw[0])
+                #messageRaw = messageRaw[1]
+                #print("mes", messageRaw)
+                theTitle = messageRaw[0]
+                theLink = messageRaw[1]
 
-        theLinks = None
-        content = messageRaw[4]
-        theContent = None
-        firstLink = theLink
-        theImage = messageRaw[3]
-        theSummary = content
+                theLinks = None
+                content = messageRaw[4]
+                theContent = None
+                firstLink = theLink
+                theImage = messageRaw[3]
+                theSummary = content
 
-        theSummaryLinks = content
-        comment = None
+                theSummaryLinks = content
+                comment = None
 
-        return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
+                return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
+
+        return (None, None, None, None, None, None, None, None, None, None)
 
     def obtainPostData(self, serviceName, i, debug=False):
 
@@ -103,6 +108,8 @@ class Queue:
         #return(self.interpretAndExecute(args,'edit', newTitle))
         logging.info("To edit %s" % args)
         logging.info("New title %s", newTitle)
+        logging.info("New name %s", self.name)
+        return()
     
         udpate = None
         services = self.isForMe(args)

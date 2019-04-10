@@ -430,9 +430,10 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
    
 def publishTumblr(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
 
+    comment = summaryHtml
     logger.info("Publishing in Tumblr...")
     import importlib
-    serviceName = 'Twitter'
+    serviceName = 'Tumblr'
     mod = importlib.import_module('module'+serviceName) 
     cls = getattr(mod, 'module'+serviceName)
     api = cls()

@@ -318,7 +318,7 @@ def main():
             site.cache.setPosts()
             for profile in site.getSocialNetworks():
                 if profile[0] in site.getProgram():
-                    nameCache = 'Cache_'+profile.capitalize()+'_' + site.getSocialNetworks()[profile]
+                    nameCache = 'Cache_'+profile+'_' + site.getSocialNetworks()[profile]
                     lenMax = site.cache.lenMax(nameCache)
                     print("   getProgram %s" % profile)
  
@@ -329,7 +329,7 @@ def main():
                     listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
                     listP = listP + listPsts
                     site.cache.getPostsFormatted()[nameCache]['pending'] = listP
-                    site.cache[nameCache].updatePostsCache()
+                    site.cache.updatePostsCache(profile)
         client = moduleSocial.connectTumblr()
         # We need to publish it in the Tumblr blog since we won't publish it by
         # usuarl means (it is deleted from queue).
