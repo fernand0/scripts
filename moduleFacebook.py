@@ -98,6 +98,7 @@ class moduleFacebook(Content):
         try:
             logging.info("    Publishing in Facebook: %s" % post)
             res = self.page.put_object(self.pageId, "feed", message=post, link=link)
+            logging.info("Res: %s" % res)
             return(res)
         except:        
             logging.warning("Facebook posting failed!") 
