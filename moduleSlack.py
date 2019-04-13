@@ -8,6 +8,7 @@ import moduleBuffer
 import moduleCache
 import urllib
 import logging
+from pdfrw import PdfReader
 from slackclient import SlackClient
 import sys
 import click

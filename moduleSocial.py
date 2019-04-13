@@ -400,7 +400,7 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
         profile = socialNetwork[0]
         nick = socialNetwork[1]
 
-        if (profile == 'twitter') or (profile == 'facebook'): 
+        if (profile == 'twitter') or (profile == 'facebook') or (profile == 'mastodon'): 
             # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
             import importlib
             mod = importlib.import_module('module'+profile.capitalize()) 

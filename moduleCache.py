@@ -52,6 +52,7 @@ class moduleCache(Queue):
         logging.info("  Checking services...")
 
         socialNetworks = self.getSocialNetworks()
+        logging.info(socialNetworks)
         self.profiles = []
         self.service = {}
         i = 0
@@ -88,11 +89,15 @@ class moduleCache(Queue):
             serviceName = profile['service']
             nickName = profile['service_username']
             fileNameQ = fileNamePath(self.url, (serviceName, nickName)) + ".queue" 
-            with open(fileNameQ,'rb') as f: 
-                try: 
-                    listP = pickle.load(f) 
-                except: 
-                    listP = [] 
+            try:
+                with open(fileNameQ,'rb') as f: 
+                    try: 
+                        listP = pickle.load(f) 
+                    except: 
+                        listP = [] 
+            except:
+                listP = []
+
             profile['posts'] = listP
             #self.lenMax= len(profile['posts'])
 

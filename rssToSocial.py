@@ -129,8 +129,10 @@ def main():
         checkBlog = ""
 
     loggingLevel = logging.INFO
-    logging.basicConfig(filename = LOGDIR + "/rssSocial_.log",
-                        level=loggingLevel, format='%(asctime)s [%(filename).12s] %(message)s', datefmt='%Y-%m-%d %H:%M')
+    logging.basicConfig(filename = LOGDIR + "/rssSocial_.log", 
+            level=loggingLevel, 
+            format='%(asctime)s [%(filename).12s] %(message)s', 
+            datefmt='%Y-%m-%d %H:%M')
 
     logging.info("Launched at %s" % time.asctime())
     logging.debug("Parameters %s, %d" % (sys.argv, len(sys.argv)))
@@ -159,14 +161,12 @@ def main():
         blog.setUrl(url)
         blog.setPosts()
 
-
         if section.find(checkBlog) >= 0:
             # If checkBlog is empty it will add all of them
             if ("linksToAvoid" in config.options(section)):
                 blog.setLinksToAvoid(config.get(section, "linksToAvoid"))
             if ("time" in config.options(section)):
                 blog.setTime(config.get(section, "time"))
-
 
             if ('bufferapp' in config.options(section)): 
                 blog.setBufferapp(config.get(section, "bufferapp")) 
@@ -176,14 +176,12 @@ def main():
             if ('program' in config.options(section)): 
                 blog.setProgram(config.get(section, "program"))
 
-
             logging.info(" Looking for pending posts") # in ...%s"
                     #% blog.getSocialNetworks())
             print("   Looking for pending posts ... " )
 
             bufferMax = 9
             t = {}
-
 
             for profile in blog.getSocialNetworks():
                 lenMax = 9
@@ -218,7 +216,10 @@ def main():
                     print("     Last link %s Pos: %d" %
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
                                 time.localtime(lastTime)), i))
-                    print("      %s"% lastLink.decode())
+                    if isinstance(lastLink, bytes): 
+                        print("      %s"% lastLink.decode())
+                    else:
+                        print("      %s"% lastLink)
                     logging.debug("bufferMax - lenMax = num %d %d %d"%
                             (bufferMax, lenMax, num)) 
 
@@ -256,7 +257,7 @@ def main():
                             logging.info("  Publishing directly\n") 
                             serviceName = profile.capitalize()
                             print("   Publishing in %s %s" % (serviceName, title))
-                            if (profile == 'twitter') or (profile == 'facebook') or (profile=='telegram'): 
+                            if (profile == 'twitter') or (profile == 'facebook') or (profile=='telegram') or (profile=='mastodon'): 
                                 # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
                                 import importlib
                                 mod = importlib.import_module('module'+serviceName) 
