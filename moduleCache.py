@@ -225,8 +225,10 @@ class moduleCache(Queue):
     def publish(self, post, j):
         logging.info("Publishing", post[1])
         import importlib
-        service = self.profiles[self.service[serviceName]]['service']
+        #service = self.profiles[self.service[serviceName]]['service']
         #service = service.capitalize()
+        logging.info(self.getProfiles())
+        logging.info("post %s"% post)
         nick = self.profiles[self.service[serviceName]]['service_username']
         mod = importlib.import_module('module'+service) 
         cls = getattr(mod, 'module'+service)

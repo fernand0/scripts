@@ -108,188 +108,17 @@ import buffpy
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 from medium import Client
-from pocket import Pocket, PocketException
-import moduleCache
-# https://github.com/fernand0/scripts/blob/master/moduleCache.py
-import moduleBuffer
-# https://github.com/fernand0/scripts/blob/master/moduleBuffer.py
+from pocket import pocket, pocketexception
+import modulecache
+# https://github.com/fernand0/scripts/blob/master/modulecache.py
+import modulebuffer
+# https://github.com/fernand0/scripts/blob/master/modulebuffer.py
 
-from configMod import *
+from configmod import *
 
-logger = logging.getLogger(__name__)
+logger = logging.getlogger(__name__)
 
 
-def connectTumblr():
-    config = configparser.ConfigParser()
-    config.read(CONFIGDIR + '/.rssTumblr')
-
-    consumer_key = config.get("Buffer1", "consumer_key")
-    consumer_secret = config.get("Buffer1", "consumer_secret")
-    oauth_token = config.get("Buffer1", "oauth_token")
-    oauth_secret = config.get("Buffer1", "oauth_secret")
-
-    client = Tumblpy(consumer_key, consumer_secret, 
-                                       oauth_token, oauth_secret)
-
-    #logger.debug(client.info())
-
-    return(client)
-
-def connectBuffer():
-    logger.info("Connecting Buffer")
-
-    try:
-        # instantiate the api object
-        api = moduleBuffer.API()
-        logger.debug(api.info)
-    except:
-        api = None
-        logger.warning("Buffer authentication failed!")
-        logger.warning("Unexpected error: %s"% sys.exc_info()[0])
-
-    return(api)
-
-def connectTwitter(twitterAC):    
-    logger.info("    Connecting Twitter")
-    # In order to obtain the parameters for a new account, just write twitter
-    # and follow the instructions
-    # The result will be at ~/.twitter_oauth
-    config = configparser.ConfigParser()
-    try:
-        config.read(CONFIGDIR + '/.rssTwitter')
-
-        CONSUMER_KEY = config.get("appKeys", "CONSUMER_KEY")
-        CONSUMER_SECRET = config.get("appKeys", "CONSUMER_SECRET")
-        TOKEN_KEY = config.get(twitterAC, "TOKEN_KEY")
-        TOKEN_SECRET = config.get(twitterAC, "TOKEN_SECRET")
-
-        try:
-            authentication = OAuth(
-                        TOKEN_KEY,
-                        TOKEN_SECRET,
-                        CONSUMER_KEY,
-                        CONSUMER_SECRET)
-            t = Twitter(auth=authentication)
-        except:
-            logger.warning("Twitter authentication failed!")
-            logger.warning("Unexpected error:", sys.exc_info()[0])
-    except:
-        logger.warning("Account not configured")
-        t = None
-
-    return(t)
-
-def connectFacebook(fbPage = 'me'):
-    logger.info("    Connecting Facebook")
-    config = configparser.ConfigParser()
-    config.read(CONFIGDIR + '/.rssFacebook')
-
-    try:
-        oauth_access_token = config.get("Facebook", "oauth_access_token")
-        #client_token = config.get("Facebook", "client_token")
-        #app_token = config.get("Facebook", "app_token")
-
-        graph = facebook.GraphAPI(oauth_access_token, version='3.0')
-        perms = ['publish_actions','manage_pages','publish_pages']
-        pages = graph.get_connections("me", "accounts")
-
-        if (fbPage != 'me'):
-            for i in range(len(pages['data'])):
-                logger.debug("%s %s"% (pages['data'][i]['name'], fbPage))
-                if (pages['data'][i]['name'] == fbPage):
-                    logger.info("    Writing in... %s"% pages['data'][i]['name'])
-                    graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
-                    # Publishing as the page
-                    return(graph2, pages['data'][i]['id'])
-        else:
-            # Publishing as me
-            return(graph, fbPage)
-    except:
-        logger.warning("Facebook authentication failed!")
-        logger.warning("Unexpected error:", sys.exc_info()[0])
-        print("Fail!")
-
-    return(0,0)
-
-def connectLinkedin():
-    logger.info("Connecting Linkedin")
-    config = configparser.ConfigParser()
-    config.read(CONFIGDIR + '/.rssLinkedin')
-
-    CONSUMER_KEY = config.get("Linkedin", "CONSUMER_KEY")
-    CONSUMER_SECRET = config.get("Linkedin", "CONSUMER_SECRET")
-    USER_TOKEN = config.get("Linkedin", "USER_TOKEN")
-    USER_SECRET = config.get("Linkedin", "USER_SECRET")
-    RETURN_URL = config.get("Linkedin", "RETURN_URL"),
-
-    try:
-        authentication = linkedin.LinkedInDeveloperAuthentication(
-                         CONSUMER_KEY,
-                         CONSUMER_SECRET,
-                         USER_TOKEN,
-                         USER_SECRET,
-                         RETURN_URL,
-                         linkedin.PERMISSIONS.enums.values())
-
-        application = linkedin.LinkedInApplication(authentication)
-
-    except:
-        logger.warning("Linkedin authentication failed!")
-        logger.warning("Unexpected error:", sys.exc_info()[0])
-
-    return(application)
-
-def connectTelegram(channel):
-    logger.info("Connecting Telegram")
-    config = configparser.ConfigParser()
-    config.read(CONFIGDIR + '/.rssTelegram')
-
-    TOKEN = config.get("Telegram", "TOKEN")
-
-    try:
-        bot = telepot.Bot(TOKEN)
-        meMySelf = bot.getMe()
-    except:
-        logger.warning("Telegram authentication failed!")
-        logger.warning("Unexpected error:", sys.exc_info()[0])
-
-    return(bot)
-
-def connectMedium():
-    logger.info("Connecting Medium")
-    config = configparser.ConfigParser()
-    config.read(CONFIGDIR + '/.rssMedium')
-    client = Client(application_id=config.get("appKeys","ClientID"), application_secret=config.get("appKeys","ClientSecret"))
-    try:
-        client.access_token = config.get("appKeys","access_token")
-        # Get profile details of the user identified by the access token.
-        user = client.get_current_user()
-    except:
-        logger.warning("Medium authentication failed!")
-        logger.warning("Unexpected error:", sys.exc_info()[0])
-
-    return(client, user)
-
-def connectPocket():
-    logger.info("    Connecting Pocket")
-
-    config = configparser.ConfigParser()
-    try: 
-        config.read(CONFIGDIR + '/.rssPocket')
-
-        consumer_key = config.get("appKeys", "consumer_key")
-        access_token = config.get("appKeys", "access_token")
-
-        try: 
-            p = Pocket(consumer_key=consumer_key, access_token=access_token)
-        except:
-            logger.warning("Pocket authentication failed!")
-            logger.warning("Unexpected error:", sys.exc_info()[0])
-    except:
-        logger.warning("Account not configured")
-        p = None
-
-    return(p)
 
 def publishMail(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
     # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
@@ -308,50 +137,6 @@ def publishMail(channel, title, link, summary, summaryHtml, summaryLinks, image,
         logger.warning("Unexpected error:", sys.exc_info()[0])
         return("Fail!")
 
-# Unused ?
-def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, services='fglt'):
-    prof = blog.profiles[profile]
-    linkPublished = ''
-    if isDebug:
-        profileList = []
-        firstLink = None
-    fail = 'no'
-    line = profile
-
-    if (len(title) > 240):
-        titlePostT = title[:240] 
-    else:
-        titlePostT = ""
-    post = title + " " + link # firstLink
-
-    try:
-        if titlePostT and (profile == 'twitter'):
-            entry = urllib.parse.quote(titlePostT + " " + firstLink)#.encode('utf-8')
-        else:
-            entry = urllib.parse.quote(post)#.encode('utf-8')
-
-        if (profile[0] in services): 
-            blog.profiles[profile].updates.new(entry)
-            linkPublished = link
-
-        line = line + ' ok'
-        time.sleep(2)
-    except:
-        logger.warning("Buffer posting failed!")
-        logger.warning("Entry: %s"% entry)
-        logger.warning("Unexpected error: %s"% sys.exc_info()[0])
-        logger.warning("Unexpected error: %s"% sys.exc_info()[1])
-
-        line = line + ' fail'
-        failFile = open(DATADIR + '/'
-                   + urllib.parse.urlparse(link).netloc
-                   + ".fail", "w")
-        failFile.write(post)
-        fail = 'yes'
-        return(linkPublished)
-
-    logger.info("  Profile %s" % line)
-    return(linkPublished)
 
 def searchTwitter(search, twitter): 
     t = connectTwitter(twitter)
@@ -428,91 +213,6 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
     print("====================================")
 
    
-def publishTumblr(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
-
-    comment = summaryHtml
-    logger.info("Publishing in Tumblr...")
-    import importlib
-    serviceName = 'Tumblr'
-    mod = importlib.import_module('module'+serviceName) 
-    cls = getattr(mod, 'module'+serviceName)
-    api = cls()
-    api.setClient(channel)
-    return(api.publishPost(title, link, comment))
-
-def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
-
-    twitter = channel
-    comment = ''
-    logger.info("    Publishing in Twitter...")
-    # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
-    import importlib
-    serviceName = 'Twitter'
-    mod = importlib.import_module('module'+serviceName) 
-    cls = getattr(mod, 'module'+serviceName)
-    api = cls()
-    api.setClient(twitter)
-    return(api.publishPost(title, link, comment))
-   
-def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
-    fbPage = channel
-    logger.info("   Publishing in Facebook...")
-    textToPublish = ""
-    textToPublish2 = ""
-    try:
-        h = HTMLParser()
-        title = h.unescape(title)
-        logger.info("   Publishing in Facebook page %s" % fbPage)
-        (graph, page) = connectFacebook(fbPage)
-        textToPublish = title + " \n" + summaryLinks
-        logger.info("    Publishing in Facebook: %s" % title)
-        logger.debug("Publishing in Facebook: %s" % textToPublish)
-        if (len(textToPublish) > 9980):
-            textToPublish = textToPublish[:9980]
-            index = textToPublish.rfind(' ')
-            if index > 0:
-                textToPublish = (title + " \n" + summaryLinks)[:index] + ' (sigue ...)'
-                textToPublish2 = '... ' + (title + " \n" + summaryLinks)[index + 1:] + ' (... continuación)'
-        if textToPublish2: 
-            graph.put_object(page,
-                  "feed", message = textToPublish,
-                  link=link) 
-           # , picture=image,
-           #       name=title, caption='',
-           #       description=textToPublish.encode('utf-8'))
-            return (page, graph.put_object(page, 
-                "feed", message = textToPublish2, link=link))
-                          #, picture=image,
-                          
-                          #name=title, caption='',
-                          
-                          #description=textToPublish2.encode('utf-8')))
-        else:
-            return (page, graph.put_object(page, 
-                "feed", message = textToPublish, link=link)) #, picture=image,
-                          #name=title, caption='',
-                          #description=summaryLinks.encode('utf-8')))
-    except:
-        logger.warning("Facebook posting failed!")
-        logger.warning("Unexpected error:", sys.exc_info()[0])
-        return("Fail!")
-
-
-def publishLinkedin(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
-    # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
-    logger.info("Publishing in Linkedin...")
-    if True:
-        application = connectLinkedin()
-        presentation = 'Publicado! ' + title 
-        logger.info("Publishing in Linkedin: %s" % title)
-        if link:
-            return(application.submit_share(presentation, summary, link, image))
-        else:
-            return(application.submit_share(comment = title))
-    else:
-        logger.warning("Linkedin posting failed!")
-        logger.warning("Unexpected error:", sys.exc_info()[0])
-        return("Fail!")
 
 def cleanTags(soup):
     tags = [tag.name for tag in soup.find_all()]
@@ -542,41 +242,6 @@ def cleanTags(soup):
     if (len(tags)>0):
         tags[0].extract()
     # <!DOCTYPE html> in github.io
-
-def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
-    #publishTelegram("reflexioneseirreflexiones","Canal de Reflexiones e Irreflexiones", "http://fernand0.blogalia.com/", "", "", "", "")
-
-    logger.info("Telegram...%s "%channel)
-
-    import importlib
-    serviceName = 'Telegram'
-    mod = importlib.import_module('module'+serviceName) 
-    cls = getattr(mod, 'module'+serviceName)
-    api = cls()
-    api.setClient(channel)
-    #statusTxt = comment + " " + title + " " + link
-    return(api.publishPost(title, link, content + '\n\n' + links))
-
-def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
-    logger.info("Medium... %s"%channel)
-    import importlib
-    serviceName = 'Medium'
-    mod = importlib.import_module('module'+serviceName) 
-    cls = getattr(mod, 'module'+serviceName)
-    api = cls()
-    api.setClient(channel)
-    return(api.publishPost(title, link, content))
-
-def publishPocket(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
-    logger.info("    Publishing in Pocket...%s"%channel)
-    try:
-        pc = connectPocket()
-        logger.info("    Publishing in Pocket: %s" % link)
-        return(pc.add(link))
-    except:
-        logger.warning("Pocket posting failed!")
-        logger.warning("Unexpected error:", sys.exc_info()[0])
-        return("Fail!")
 
 
 if __name__ == "__main__":
@@ -620,3 +285,345 @@ if __name__ == "__main__":
     #res = publishFacebook("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "me")
     #print("Published! Text: %s Url: https://facebook.com/fernando.tricas/posts/%s"% (res[0], res[1]['id'][res[1]['id'].find('_')+1:]))
     #publishLinkedin("Hola caracola", "", "", "")
+    
+# Old Social functions
+    
+#def connectTumblr():
+#    config = configparser.ConfigParser()
+#    config.read(CONFIGDIR + '/.rssTumblr')
+#
+#    consumer_key = config.get("Buffer1", "consumer_key")
+#    consumer_secret = config.get("Buffer1", "consumer_secret")
+#    oauth_token = config.get("Buffer1", "oauth_token")
+#    oauth_secret = config.get("Buffer1", "oauth_secret")
+#
+#    client = Tumblpy(consumer_key, consumer_secret, 
+#                                       oauth_token, oauth_secret)
+#
+#    #logger.debug(client.info())
+#
+#    return(client)
+
+#def connectBuffer():
+#    logger.info("Connecting Buffer")
+#
+#    try:
+#        # instantiate the api object
+#        api = moduleBuffer.API()
+#        logger.debug(api.info)
+#    except:
+#        api = None
+#        logger.warning("Buffer authentication failed!")
+#        logger.warning("Unexpected error: %s"% sys.exc_info()[0])
+#
+#    return(api)
+
+#def connectTwitter(twitterAC):    
+#    logger.info("    Connecting Twitter")
+#    # In order to obtain the parameters for a new account, just write twitter
+#    # and follow the instructions
+#    # The result will be at ~/.twitter_oauth
+#    config = configparser.ConfigParser()
+#    try:
+#        config.read(CONFIGDIR + '/.rssTwitter')
+#
+#        CONSUMER_KEY = config.get("appKeys", "CONSUMER_KEY")
+#        CONSUMER_SECRET = config.get("appKeys", "CONSUMER_SECRET")
+#        TOKEN_KEY = config.get(twitterAC, "TOKEN_KEY")
+#        TOKEN_SECRET = config.get(twitterAC, "TOKEN_SECRET")
+#
+#        try:
+#            authentication = OAuth(
+#                        TOKEN_KEY,
+#                        TOKEN_SECRET,
+#                        CONSUMER_KEY,
+#                        CONSUMER_SECRET)
+#            t = Twitter(auth=authentication)
+#        except:
+#            logger.warning("Twitter authentication failed!")
+#            logger.warning("Unexpected error:", sys.exc_info()[0])
+#    except:
+#        logger.warning("Account not configured")
+#        t = None
+#
+#    return(t)
+
+#def connectFacebook(fbPage = 'me'):
+#    logger.info("    Connecting Facebook")
+#    config = configparser.ConfigParser()
+#    config.read(CONFIGDIR + '/.rssFacebook')
+#
+#    try:
+#        oauth_access_token = config.get("Facebook", "oauth_access_token")
+#        #client_token = config.get("Facebook", "client_token")
+#        #app_token = config.get("Facebook", "app_token")
+#
+#        graph = facebook.GraphAPI(oauth_access_token, version='3.0')
+#        perms = ['publish_actions','manage_pages','publish_pages']
+#        pages = graph.get_connections("me", "accounts")
+#
+#        if (fbPage != 'me'):
+#            for i in range(len(pages['data'])):
+#                logger.debug("%s %s"% (pages['data'][i]['name'], fbPage))
+#                if (pages['data'][i]['name'] == fbPage):
+#                    logger.info("    Writing in... %s"% pages['data'][i]['name'])
+#                    graph2 = facebook.GraphAPI(pages['data'][i]['access_token'])
+#                    # Publishing as the page
+#                    return(graph2, pages['data'][i]['id'])
+#        else:
+#            # Publishing as me
+#            return(graph, fbPage)
+#    except:
+#        logger.warning("Facebook authentication failed!")
+#        logger.warning("Unexpected error:", sys.exc_info()[0])
+#        print("Fail!")
+#
+#    return(0,0)
+
+#def connectLinkedin():
+#    logger.info("Connecting Linkedin")
+#    config = configparser.ConfigParser()
+#    config.read(CONFIGDIR + '/.rssLinkedin')
+#
+#    CONSUMER_KEY = config.get("Linkedin", "CONSUMER_KEY")
+#    CONSUMER_SECRET = config.get("Linkedin", "CONSUMER_SECRET")
+#    USER_TOKEN = config.get("Linkedin", "USER_TOKEN")
+#    USER_SECRET = config.get("Linkedin", "USER_SECRET")
+#    RETURN_URL = config.get("Linkedin", "RETURN_URL"),
+#
+#    try:
+#        authentication = linkedin.LinkedInDeveloperAuthentication(
+#                         CONSUMER_KEY,
+#                         CONSUMER_SECRET,
+#                         USER_TOKEN,
+#                         USER_SECRET,
+#                         RETURN_URL,
+#                         linkedin.PERMISSIONS.enums.values())
+#
+#        application = linkedin.LinkedInApplication(authentication)
+#
+#    except:
+#        logger.warning("Linkedin authentication failed!")
+#        logger.warning("Unexpected error:", sys.exc_info()[0])
+#
+#    return(application)
+
+#def connectTelegram(channel):
+#    logger.info("Connecting Telegram")
+#    config = configparser.ConfigParser()
+#    config.read(CONFIGDIR + '/.rssTelegram')
+#
+#    TOKEN = config.get("Telegram", "TOKEN")
+#
+#    try:
+#        bot = telepot.Bot(TOKEN)
+#        meMySelf = bot.getMe()
+#    except:
+#        logger.warning("Telegram authentication failed!")
+#        logger.warning("Unexpected error:", sys.exc_info()[0])
+#
+#    return(bot)
+
+#def connectMedium():
+#    logger.info("Connecting Medium")
+#    config = configparser.ConfigParser()
+#    config.read(CONFIGDIR + '/.rssMedium')
+#    client = Client(application_id=config.get("appKeys","ClientID"), application_secret=config.get("appKeys","ClientSecret"))
+#    try:
+#        client.access_token = config.get("appKeys","access_token")
+#        # Get profile details of the user identified by the access token.
+#        user = client.get_current_user()
+#    except:
+#        logger.warning("Medium authentication failed!")
+#        logger.warning("Unexpected error:", sys.exc_info()[0])
+#
+#    return(client, user)
+
+## Unused ?
+#def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, services='fglt'):
+#    prof = blog.profiles[profile]
+#    linkPublished = ''
+#    if isDebug:
+#        profileList = []
+#        firstLink = None
+#    fail = 'no'
+#    line = profile
+#
+#    if (len(title) > 240):
+#        titlePostT = title[:240] 
+#    else:
+#        titlePostT = ""
+#    post = title + " " + link # firstLink
+#
+#    try:
+#        if titlePostT and (profile == 'twitter'):
+#            entry = urllib.parse.quote(titlePostT + " " + firstLink)#.encode('utf-8')
+#        else:
+#            entry = urllib.parse.quote(post)#.encode('utf-8')
+#
+#        if (profile[0] in services): 
+#            blog.profiles[profile].updates.new(entry)
+#            linkPublished = link
+#
+#        line = line + ' ok'
+#        time.sleep(2)
+#    except:
+#        logger.warning("Buffer posting failed!")
+#        logger.warning("Entry: %s"% entry)
+#        logger.warning("Unexpected error: %s"% sys.exc_info()[0])
+#        logger.warning("Unexpected error: %s"% sys.exc_info()[1])
+#
+#        line = line + ' fail'
+#        failFile = open(DATADIR + '/'
+#                   + urllib.parse.urlparse(link).netloc
+#                   + ".fail", "w")
+#        failFile.write(post)
+#        fail = 'yes'
+#        return(linkPublished)
+#
+#    logger.info("  Profile %s" % line)
+#    return(linkPublished)
+
+#def connectPocket():
+#    logger.info("    Connecting Pocket")
+#
+#    config = configparser.ConfigParser()
+#    try: 
+#        config.read(CONFIGDIR + '/.rssPocket')
+#
+#        consumer_key = config.get("appKeys", "consumer_key")
+#        access_token = config.get("appKeys", "access_token")
+#
+#        try: 
+#            p = Pocket(consumer_key=consumer_key, access_token=access_token)
+#        except:
+#            logger.warning("Pocket authentication failed!")
+#            logger.warning("Unexpected error:", sys.exc_info()[0])
+#    except:
+#        logger.warning("Account not configured")
+#        p = None
+#
+#    return(p)
+#
+#def publishPocket(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
+#    logger.info("    Publishing in Pocket...%s"%channel)
+#    try:
+#        pc = connectPocket()
+#        logger.info("    Publishing in Pocket: %s" % link)
+#        return(pc.add(link))
+#    except:
+#        logger.warning("Pocket posting failed!")
+#        logger.warning("Unexpected error:", sys.exc_info()[0])
+#        return("Fail!")
+
+#def publishTumblr(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
+#
+#    comment = summaryHtml
+#    logger.info("Publishing in Tumblr...")
+#    import importlib
+#    serviceName = 'Tumblr'
+#    mod = importlib.import_module('module'+serviceName) 
+#    cls = getattr(mod, 'module'+serviceName)
+#    api = cls()
+#    api.setClient(channel)
+#    return(api.publishPost(title, link, comment))
+
+#def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
+#
+#    twitter = channel
+#    comment = ''
+#    logger.info("    Publishing in Twitter...")
+#    # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
+#    import importlib
+#    serviceName = 'Twitter'
+#    mod = importlib.import_module('module'+serviceName) 
+#    cls = getattr(mod, 'module'+serviceName)
+#    api = cls()
+#    api.setClient(twitter)
+#    return(api.publishPost(title, link, comment))
+   
+#def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
+#    fbPage = channel
+#    logger.info("   Publishing in Facebook...")
+#    textToPublish = ""
+#    textToPublish2 = ""
+#    try:
+#        h = HTMLParser()
+#        title = h.unescape(title)
+#        logger.info("   Publishing in Facebook page %s" % fbPage)
+#        (graph, page) = connectFacebook(fbPage)
+#        textToPublish = title + " \n" + summaryLinks
+#        logger.info("    Publishing in Facebook: %s" % title)
+#        logger.debug("Publishing in Facebook: %s" % textToPublish)
+#        if (len(textToPublish) > 9980):
+#            textToPublish = textToPublish[:9980]
+#            index = textToPublish.rfind(' ')
+#            if index > 0:
+#                textToPublish = (title + " \n" + summaryLinks)[:index] + ' (sigue ...)'
+#                textToPublish2 = '... ' + (title + " \n" + summaryLinks)[index + 1:] + ' (... continuación)'
+#        if textToPublish2: 
+#            graph.put_object(page,
+#                  "feed", message = textToPublish,
+#                  link=link) 
+#           # , picture=image,
+#           #       name=title, caption='',
+#           #       description=textToPublish.encode('utf-8'))
+#            return (page, graph.put_object(page, 
+#                "feed", message = textToPublish2, link=link))
+#                          #, picture=image,
+#                          
+#                          #name=title, caption='',
+#                          
+#                          #description=textToPublish2.encode('utf-8')))
+#        else:
+#            return (page, graph.put_object(page, 
+#                "feed", message = textToPublish, link=link)) #, picture=image,
+#                          #name=title, caption='',
+#                          #description=summaryLinks.encode('utf-8')))
+#    except:
+#        logger.warning("Facebook posting failed!")
+#        logger.warning("Unexpected error:", sys.exc_info()[0])
+#        return("Fail!")
+
+
+#def publishLinkedin(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
+#    # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
+#    logger.info("Publishing in Linkedin...")
+#    if True:
+#        application = connectLinkedin()
+#        presentation = 'Publicado! ' + title 
+#        logger.info("Publishing in Linkedin: %s" % title)
+#        if link:
+#            return(application.submit_share(presentation, summary, link, image))
+#        else:
+#            return(application.submit_share(comment = title))
+#    else:
+#        logger.warning("Linkedin posting failed!")
+#        logger.warning("Unexpected error:", sys.exc_info()[0])
+#        return("Fail!")
+
+#def publishTelegram(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
+#    #publishTelegram("reflexioneseirreflexiones","Canal de Reflexiones e Irreflexiones", "http://fernand0.blogalia.com/", "", "", "", "")
+#
+#    logger.info("Telegram...%s "%channel)
+#
+#    import importlib
+#    serviceName = 'Telegram'
+#    mod = importlib.import_module('module'+serviceName) 
+#    cls = getattr(mod, 'module'+serviceName)
+#    api = cls()
+#    api.setClient(channel)
+#    #statusTxt = comment + " " + title + " " + link
+#    return(api.publishPost(title, link, content + '\n\n' + links))
+
+#def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
+#    logger.info("Medium... %s"%channel)
+#    import importlib
+#    serviceName = 'Medium'
+#    mod = importlib.import_module('module'+serviceName) 
+#    cls = getattr(mod, 'module'+serviceName)
+#    api = cls()
+#    api.setClient(channel)
+#    return(api.publishPost(title, link, content))
+
+

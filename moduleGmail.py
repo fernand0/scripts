@@ -42,7 +42,7 @@ class moduleGmail(Content,Queue):
         Queue().__init__()
         self.service = None
         self.rawPosts = None
-        self.name = "Mail"
+        self.name = "GMail"
 
     def API(self, Acc):
         # Back compatibility
