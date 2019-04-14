@@ -108,16 +108,15 @@ import buffpy
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Update
 from medium import Client
-from pocket import pocket, pocketexception
-import modulecache
-# https://github.com/fernand0/scripts/blob/master/modulecache.py
-import modulebuffer
-# https://github.com/fernand0/scripts/blob/master/modulebuffer.py
+from pocket import Pocket, PocketException
+import moduleCache
+# https://github.com/fernand0/scripts/blob/master/moduleCache.py
+import moduleBuffer
+# https://github.com/fernand0/scripts/blob/master/moduleBuffer.py
 
-from configmod import *
+from configMod import *
 
-logger = logging.getlogger(__name__)
-
+logger = logging.getLogger(__name__)
 
 
 def publishMail(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
@@ -136,7 +135,6 @@ def publishMail(channel, title, link, summary, summaryHtml, summaryLinks, image,
         logger.warning("Gmail posting failed!")
         logger.warning("Unexpected error:", sys.exc_info()[0])
         return("Fail!")
-
 
 def searchTwitter(search, twitter): 
     t = connectTwitter(twitter)
@@ -213,7 +211,6 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
     print("====================================")
 
    
-
 def cleanTags(soup):
     tags = [tag.name for tag in soup.find_all()]
     validtags = ['b', 'strong', 'i', 'em', 'a', 'code', 'pre']
@@ -285,9 +282,9 @@ if __name__ == "__main__":
     #res = publishFacebook("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "me")
     #print("Published! Text: %s Url: https://facebook.com/fernando.tricas/posts/%s"% (res[0], res[1]['id'][res[1]['id'].find('_')+1:]))
     #publishLinkedin("Hola caracola", "", "", "")
-    
-# Old Social functions
-    
+
+
+
 #def connectTumblr():
 #    config = configparser.ConfigParser()
 #    config.read(CONFIGDIR + '/.rssTumblr')
@@ -303,7 +300,7 @@ if __name__ == "__main__":
 #    #logger.debug(client.info())
 #
 #    return(client)
-
+#
 #def connectBuffer():
 #    logger.info("Connecting Buffer")
 #
@@ -317,7 +314,7 @@ if __name__ == "__main__":
 #        logger.warning("Unexpected error: %s"% sys.exc_info()[0])
 #
 #    return(api)
-
+#
 #def connectTwitter(twitterAC):    
 #    logger.info("    Connecting Twitter")
 #    # In order to obtain the parameters for a new account, just write twitter
@@ -347,7 +344,7 @@ if __name__ == "__main__":
 #        t = None
 #
 #    return(t)
-
+#
 #def connectFacebook(fbPage = 'me'):
 #    logger.info("    Connecting Facebook")
 #    config = configparser.ConfigParser()
@@ -379,7 +376,7 @@ if __name__ == "__main__":
 #        print("Fail!")
 #
 #    return(0,0)
-
+#
 #def connectLinkedin():
 #    logger.info("Connecting Linkedin")
 #    config = configparser.ConfigParser()
@@ -407,7 +404,7 @@ if __name__ == "__main__":
 #        logger.warning("Unexpected error:", sys.exc_info()[0])
 #
 #    return(application)
-
+#
 #def connectTelegram(channel):
 #    logger.info("Connecting Telegram")
 #    config = configparser.ConfigParser()
@@ -423,7 +420,7 @@ if __name__ == "__main__":
 #        logger.warning("Unexpected error:", sys.exc_info()[0])
 #
 #    return(bot)
-
+#
 #def connectMedium():
 #    logger.info("Connecting Medium")
 #    config = configparser.ConfigParser()
@@ -438,6 +435,27 @@ if __name__ == "__main__":
 #        logger.warning("Unexpected error:", sys.exc_info()[0])
 #
 #    return(client, user)
+#
+#def connectPocket():
+#    logger.info("    Connecting Pocket")
+#
+#    config = configparser.ConfigParser()
+#    try: 
+#        config.read(CONFIGDIR + '/.rssPocket')
+#
+#        consumer_key = config.get("appKeys", "consumer_key")
+#        access_token = config.get("appKeys", "access_token")
+#
+#        try: 
+#            p = Pocket(consumer_key=consumer_key, access_token=access_token)
+#        except:
+#            logger.warning("Pocket authentication failed!")
+#            logger.warning("Unexpected error:", sys.exc_info()[0])
+#    except:
+#        logger.warning("Account not configured")
+#        p = None
+#
+#    return(p)
 
 ## Unused ?
 #def publishBuffer(blog, profile, title, link, firstLink, isDebug, lenMax, services='fglt'):
@@ -484,38 +502,6 @@ if __name__ == "__main__":
 #    logger.info("  Profile %s" % line)
 #    return(linkPublished)
 
-#def connectPocket():
-#    logger.info("    Connecting Pocket")
-#
-#    config = configparser.ConfigParser()
-#    try: 
-#        config.read(CONFIGDIR + '/.rssPocket')
-#
-#        consumer_key = config.get("appKeys", "consumer_key")
-#        access_token = config.get("appKeys", "access_token")
-#
-#        try: 
-#            p = Pocket(consumer_key=consumer_key, access_token=access_token)
-#        except:
-#            logger.warning("Pocket authentication failed!")
-#            logger.warning("Unexpected error:", sys.exc_info()[0])
-#    except:
-#        logger.warning("Account not configured")
-#        p = None
-#
-#    return(p)
-#
-#def publishPocket(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
-#    logger.info("    Publishing in Pocket...%s"%channel)
-#    try:
-#        pc = connectPocket()
-#        logger.info("    Publishing in Pocket: %s" % link)
-#        return(pc.add(link))
-#    except:
-#        logger.warning("Pocket posting failed!")
-#        logger.warning("Unexpected error:", sys.exc_info()[0])
-#        return("Fail!")
-
 #def publishTumblr(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
 #
 #    comment = summaryHtml
@@ -527,7 +513,7 @@ if __name__ == "__main__":
 #    api = cls()
 #    api.setClient(channel)
 #    return(api.publishPost(title, link, comment))
-
+#
 #def publishTwitter(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
 #
 #    twitter = channel
@@ -541,7 +527,7 @@ if __name__ == "__main__":
 #    api = cls()
 #    api.setClient(twitter)
 #    return(api.publishPost(title, link, comment))
-   
+#   
 #def publishFacebook(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
 #    fbPage = channel
 #    logger.info("   Publishing in Facebook...")
@@ -584,8 +570,8 @@ if __name__ == "__main__":
 #        logger.warning("Facebook posting failed!")
 #        logger.warning("Unexpected error:", sys.exc_info()[0])
 #        return("Fail!")
-
-
+#
+#
 #def publishLinkedin(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
 #    # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
 #    logger.info("Publishing in Linkedin...")
@@ -615,7 +601,7 @@ if __name__ == "__main__":
 #    api.setClient(channel)
 #    #statusTxt = comment + " " + title + " " + link
 #    return(api.publishPost(title, link, content + '\n\n' + links))
-
+#
 #def publishMedium(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
 #    logger.info("Medium... %s"%channel)
 #    import importlib
@@ -625,5 +611,16 @@ if __name__ == "__main__":
 #    api = cls()
 #    api.setClient(channel)
 #    return(api.publishPost(title, link, content))
+#
+#def publishPocket(channel, title, link, summary, summaryHtml, summaryLinks, image, content= "", links = ""):
+#    logger.info("    Publishing in Pocket...%s"%channel)
+#    try:
+#        pc = connectPocket()
+#        logger.info("    Publishing in Pocket: %s" % link)
+#        return(pc.add(link))
+#    except:
+#        logger.warning("Pocket posting failed!")
+#        logger.warning("Unexpected error:", sys.exc_info()[0])
+#        return("Fail!")
 
 
