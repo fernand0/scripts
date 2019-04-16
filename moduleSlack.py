@@ -26,6 +26,14 @@ class moduleSlack(Content):
         self.sc = None
         self.keys = []
 
+    def len(self, profile):
+        service = profile
+        nick = self.getSocialNetworks()[profile]
+        if (service, nick) in self.cache:
+            return(len(self.cache[(service, nick)].getPosts()))
+        else:
+            return(len(self.buffer.posts))
+
     def setSlackClient(self, slackCredentials):
         config = configparser.ConfigParser()
         config.read(slackCredentials)

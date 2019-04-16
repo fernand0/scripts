@@ -176,6 +176,7 @@ def main():
             if ('program' in config.options(section)): 
                 blog.setProgram(config.get(section, "program"))
 
+
             logging.info(" Looking for pending posts") # in ...%s"
                     #% blog.getSocialNetworks())
             print("   Looking for pending posts ... " )
@@ -191,17 +192,17 @@ def main():
                 socialNetwork = (profile, nick)
                 nameProfile = profile + '_' + nick
 
-                if blog.getBufferapp() and (profile[0] in blog.getBufferapp()): 
-                    print("   Checking Buffer publishing %s" % profile)
-                    lenMax = blog.buffer.lenMax(profile)
-                if blog.getProgram() and (profile[0] in blog.getProgram()):
-                    print("   Checking Cache publishing %s" % profile)
-                    lenMax = blog.cache.lenMax(profile)
+                if ((blog.getBufferapp() 
+                        and (profile[0] in blog.getBufferapp())) 
+                        or (blog.getProgram() 
+                            and (profile[0] in blog.getProgram()))): 
+                    lenMax = blog.len(profile)
 
                 logging.info("  Service %s Lenmax %d" % (profile, lenMax))
                 print("  Service %s Lenmax %d" % (profile, lenMax))
 
                 num = bufferMax - lenMax
+                continue
 
                 listPosts = []
                 if (num > 0) or not (blog.getBufferapp() or blog.getProgram()):
@@ -237,6 +238,8 @@ def main():
                     if listPosts:
                         link = listPosts[len(listPosts) - 1][1]
                         logging.debug("link -> %s"% link)
+
+                sys.exit()
 
                 if blog.getBufferapp() and (profile[0] in blog.getBufferapp()): 
                     link = blog.buffer.addPosts(blog, nameProfile, listPosts)

@@ -10,8 +10,8 @@ class Queue:
     def __init__(self):
         self.name = None
         self.service = None
+        self.nick = None
         self.socialNetwork = None
-        self.profiles = None
         self.posts = None
         self.postsFormatted = None
 
@@ -26,74 +26,41 @@ class Queue:
     def getPostsFormatted(self):    
         return(self.postsFormatted)
 
-    def lenMax(self, profile):
-        for prof in self.getProfiles():
-            if (prof['service'] ==  profile): 
-                return(len(self.getPostsFormatted()[prof['cache_name']]['pending']))
-
-    def extractDataMessage(self,serviceName, i):
-        logging.info("servicename %s"%serviceName)
-        for prof in self.getProfiles():
-            if (prof['service'] ==  serviceName): 
-                messageRaw = self.getPostsFormatted()[prof['cache_name']]['pending'][i]
-
-                #print("mes", messageRaw)
-                #messageRaw[1].insert(0,messageRaw[0])
-                #messageRaw = messageRaw[1]
-                #print("mes", messageRaw)
-                theTitle = messageRaw[0]
-                theLink = messageRaw[1]
-
-                theLinks = None
-                content = messageRaw[4]
-                theContent = None
-                firstLink = theLink
-                theImage = messageRaw[3]
-                theSummary = content
-
-                theSummaryLinks = content
-                comment = None
-
-                return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
-
-        return (None, None, None, None, None, None, None, None, None, None)
-
-    def obtainPostData(self, serviceName, i, debug=False):
-
-        (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment) = self.extractDataMessage(serviceName, i)
+    def lenMax(self): 
+        return(len(self.getPosts()))
 
 
-        return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
+    def obtainPostData(self, i, debug=False):
+        return (self.extractDataMessage(i))
 
     def selectAndExecute(self, command, args):
         logging.info("Selecting %s" % args)
-        services = self.isForMe(args)
-        if args.find(' ')>0: 
-            j = int(args.split()[0][-1]) 
-        else: 
-            j = int(args[-1])
+        print("Selecting %s" % args)
         reply = ""
-        for serviceName in services:
-            logging.info("Service %s", serviceName)
-            post = list(self.obtainPostData(serviceName, j))
-            ##print("1",post)
-            post.insert(0, serviceName)
-            #self.getPostsFormatted()[serviceName]['pending'][j] = post[1:]
-            #print("2",self.getPostsFormatted()[serviceName]['pending'][j])
-            #self.updatePostsCache(serviceName)
-            #sys.exit()
-            cmd = getattr(self, command)
-            if args.find(' ')>0:
-                reply = reply + cmd(post, j, ' '.join(args.split()[1:]))
+        argsCont = ''
+        if self.isForMe(args):
+            logging.info("Service %s", self.service)
+            print("Service %s"% self.service)
+            pos = args.find(' ')
+            if pos>0: 
+                j = int(args[:pos][-1]) 
+                args, argsCont = args[:pos], args[pos+1:]
             else: 
-                reply = reply + cmd(post, j)
+                j = int(args[-1])
+            cmd = getattr(self, command)
+            if argsCont:
+                reply = reply + cmd(j, argsCont)
+            else: 
+                reply = reply + cmd(j)
         logging.info("Reply: %s"%reply)
         return(reply)
 
-    def show(self, post, j):
-        logging.info("To show %s" % post[0])
+    def show(self, j):
+        logging.info("To show post %d" % j)
 
-        (serviceName, title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post
+        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(j)
+        logging.info("To show post %s" % title)
+
         reply = ''
         if title:
             reply = reply + title

@@ -130,10 +130,16 @@ class Content:
         return(self.cache)
 
     def setCache(self):
-        self.cache = moduleCache.moduleCache()
-        self.cache.setClient(self.url, self.getSocialNetworks(),
-                self.getProgram())
-        self.cache.setPosts()
+        print(self.getSocialNetworks())
+
+        self.cache = {}
+        for service in self.getSocialNetworks():
+            if service[0] in self.getProgram():
+                nick = self.getSocialNetworks()[service]
+                cache = moduleCache.moduleCache() 
+                cache.setClient(self.url, (service, nick))
+                cache.setPosts()
+                self.cache[(service, nick)] = cache
 
     def getProgram(self):
         return(self.program)
