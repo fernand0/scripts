@@ -218,17 +218,24 @@ class moduleGmail(Content,Queue):
 
     def edit(self, j, newTitle):
         logging.info("New title %s", newTitle)
+        thePost = self.obtainPostData(j)
+        oldTitle = thePost[0]
+        logging.info("servicename %s" %self.service)
 
         import base64
         import email
         from email.parser import BytesParser
         api = self.getClient()
-        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, image, content , comment) = self.getPosts()[j]
-        idPost = comment
-        print(title,idPost)
-        sys.exit()
+
+        print("t",thePost)
+        print("p",self.getPosts()[j])
+        print("r",self.rawPosts[j])
+
+        #(title, link, firstLink, image, summary, content, summaryLinks, content , links, comment) = self.getPosts()[j]
+        idPost = self.rawPosts[j]['id'] #thePost[-1]
         message = api.users().drafts().get(userId="me", 
            format="raw", id=idPost).execute()['message']
+        sys.exit()
         theMsg = email.message_from_bytes(base64.urlsafe_b64decode(message['raw']))
         self.setHeaderEmail(theMsg, 'subject', newTitle)
         message['raw'] = theMsg.as_bytes()
