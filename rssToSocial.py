@@ -168,13 +168,14 @@ def main():
             if ("time" in config.options(section)):
                 blog.setTime(config.get(section, "time"))
 
+            blog.setSocialNetworks(config, section)
+
             if ('bufferapp' in config.options(section)): 
                 blog.setBufferapp(config.get(section, "bufferapp")) 
 
-            blog.setSocialNetworks(config, section)
-
             if ('program' in config.options(section)): 
                 blog.setProgram(config.get(section, "program"))
+            
 
 
             logging.info(" Looking for pending posts") # in ...%s"
@@ -199,10 +200,8 @@ def main():
                     lenMax = blog.len(profile)
 
                 logging.info("  Service %s Lenmax %d" % (profile, lenMax))
-                print("  Service %s Lenmax %d" % (profile, lenMax))
 
                 num = bufferMax - lenMax
-                continue
 
                 listPosts = []
                 if (num > 0) or not (blog.getBufferapp() or blog.getProgram()):

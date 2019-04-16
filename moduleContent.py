@@ -58,16 +58,6 @@ class Content:
                 nick = config.get(section, option)
                 socialNetwork = (option, nick)
                 self.addSocialNetwork(socialNetwork)
-            if (option == 'twitter'):
-                self.addSocialNetworkAPI(socialNetwork)
-
-        if self.getBufferapp():
-            profiles = self.buffer.getProfiles()
-            for profile in profiles:
-                nick =  profile['service_username']
-                service = profile['service']
-                socialNetwork = (service, nick)
-                self.addSocialNetwork(socialNetwork)
 
     def addSocialNetworkAPI(self, socialNetwork):
         sN = socialNetwork[0]
@@ -110,14 +100,14 @@ class Content:
         return(self.buffer)
 
     def setBuffer(self):
-        self.buffer = moduleBuffer.moduleBuffer()
-        self.buffer.setBuffer()
-        self.buffer.setPosts()
-        self.profiles = {}
-        for sN in self.buffer.getProfiles():
-            serviceName = sN['service']
-            nick =  sN['service_username']
-            self.profiles[serviceName+'_'+nick] = sN
+        self.buffer = {}
+        for service in self.getSocialNetworks():
+            if service[0] in self.getBufferapp():
+                nick = self.getSocialNetworks()[service]
+                buf = moduleBuffer.moduleBuffer() 
+                buf.setClient(self.url, (service, nick))
+                buf.setPosts()
+                self.buffer[(service, nick)] = buf
 
     def getBufferapp(self):
         return(self.bufferapp)
@@ -130,8 +120,6 @@ class Content:
         return(self.cache)
 
     def setCache(self):
-        print(self.getSocialNetworks())
-
         self.cache = {}
         for service in self.getSocialNetworks():
             if service[0] in self.getProgram():
@@ -147,6 +135,15 @@ class Content:
     def setProgram(self, program):
         self.program = program
         self.setCache()
+
+    def len(self, profile):
+        service = profile
+        nick = self.getSocialNetworks()[profile]
+        if (service, nick) in self.cache:
+            return(len(self.cache[(service, nick)].getPosts()))
+        elif (service, nick) in self.buffer:
+            return(len(self.buffer[(service, nick)].getPosts()))
+
 
     def getLinkEntry(self, entry):
         pass
@@ -227,7 +224,4 @@ class Content:
             theSummaryLinks = ""
     
         return (soup.get_text().strip('\n'), theSummaryLinks)
-
-    def obtainPostData(self, i, debug=False):
-        pass
 

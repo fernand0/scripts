@@ -71,7 +71,9 @@ class moduleBuffer(Queue):
 
     def __init__(self): #, url, socialNetwork, nick):
         super().__init__()
-        self.buffer = None
+        self.service = None
+        self.nick = None
+        #self.buffer = None
         self.profiles = None
         #self.url = url
         #self.socialNetwork = (socialNetwork, nick)

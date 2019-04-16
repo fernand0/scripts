@@ -27,6 +27,8 @@ class moduleCache(Queue):
     
     def __init__(self):
         super().__init__()
+        self.service = None
+        self.nick = None
         #self.url = url
         #self.socialNetwork = (socialNetwork, nick)
 
