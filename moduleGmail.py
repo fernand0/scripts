@@ -85,8 +85,11 @@ class moduleGmail(Content,Queue):
             self.posts = []
             self.rawPosts = []
             for post in posts['drafts']:
-                self.rawPosts.insert(0, post)
-                message = self.getMessageMeta(post['id'])
+                #self.rawPosts.insert(0, post)
+                meta = self.getMessageMeta(post['id'])
+                message = {}
+                message['list'] = post
+                message['meta'] = meta
                 self.posts.insert(0, message)
 
         #outputData = {}
@@ -180,7 +183,7 @@ class moduleGmail(Content,Queue):
 
     def extractDataMessage(self, i):
         logging.info("Service %s"% self.service)
-        message = self.getPosts()[i]
+        message = self.getPosts()[i]['meta']
 
         theTitle = self.getHeader(message, 'Subject')
         if theTitle == None:
@@ -227,15 +230,9 @@ class moduleGmail(Content,Queue):
         from email.parser import BytesParser
         api = self.getClient()
 
-        print("t",thePost)
-        print("p",self.getPosts()[j])
-        print("r",self.rawPosts[j])
-
-        #(title, link, firstLink, image, summary, content, summaryLinks, content , links, comment) = self.getPosts()[j]
-        idPost = self.rawPosts[j]['id'] #thePost[-1]
-        message = api.users().drafts().get(userId="me", 
-           format="raw", id=idPost).execute()['message']
-        sys.exit()
+        idPost = self.getPosts()[j]['list']['id'] #thePost[-1]
+        title = self.getHeader(self.getPosts()[j]['meta'], 'Subject')
+        message = self.getMessageRaw(idPost)
         theMsg = email.message_from_bytes(base64.urlsafe_b64decode(message['raw']))
         self.setHeaderEmail(theMsg, 'subject', newTitle)
         message['raw'] = theMsg.as_bytes()
@@ -249,37 +246,27 @@ class moduleGmail(Content,Queue):
         update = "Changed "+title+" with "+newTitle
         return(update)
 
-    def publish(self, post, j):
-        logging.info("Publishing", post[1])                
+    def publish(self, j):
+        logging.info("Publishing %d"% j)                
+        logging.info("servicename %s" %self.service)
+        idPost = self.getPosts()[j]['list']['id'] #thePost[-1]
+        title = self.getHeader(self.getPosts()[j]['meta'], 'Subject')
         
-        import moduleSocial
-        publishMethod = getattr(moduleSocial, 
-                'publishMail')
-        print(len(post[1:]))
-        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, image, content , links ) = post[1:]
+        api = self.getClient()
+        try:
+            update = api.users().drafts().send(userId='me', 
+                       body={ 'id': idPost}).execute()
+        except:
+            return("Fail!")
 
-        logging.debug(title, link, summary, summaryHtml, summaryLinks, image, content , links )
-        logging.info(title, link, content , links )
-        logging.info(publishMethod)
-        comment = links
+        return("Published %s!"% title)
 
-        update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
-        if update:
-            if 'text' in update: 
-                update = update['text'] 
-        else:
-            update = ""
-   
-        return(update)
-
-    def delete(self, post, j):
-        logging.info("Publishing", post[1])
-        serviceName = post[0]                
+    def delete(self, j):
+        logging.info("Publishing %d"% j)
 
         api = self.getClient()
-        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, image, content , comment) = post[1:]
-        idPost = comment
-        #print(title, link, firstLink, image, summary, summaryHtml, summaryLinks, image, content , comment)
+        idPost = self.getPosts()[j]['list']['id'] #thePost[-1]
+        title = self.getHeader(self.getPosts()[j]['meta'], 'Subject')
         update = api.users().drafts().delete(userId='me', id=idPost).execute() 
  
         return("Deleted %s"% title)
@@ -454,10 +441,10 @@ def main():
     print('G21', api.selectAndExecute('show', 'G21'))
     print('G23', api.selectAndExecute('show', 'G23'))
     print('G05', api.selectAndExecute('show', 'G05'))
-    print('G25', api.selectAndExecute('edit', 'G25'+' '+'baba'))
+    print('G29', api.selectAndExecute('publish', 'G29'))
     sys.exit()
-    print('M15', api.selectAndExecute('delete', 'M15'))
-    print('M10', api.selectAndExecute('publish', 'M10'))
+    print('G29', api.selectAndExecute('delete', 'G29'))
+    print('G25', api.selectAndExecute('edit', 'G27'+' '+'Cebollinos (hechos)'))
     print('M18', api.editPost('M18', 'Vaya'))
     print('M10', api.publishPost('M10'))
     sys.exit()
