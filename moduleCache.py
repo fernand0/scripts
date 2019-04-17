@@ -57,10 +57,9 @@ class moduleCache(Queue):
 
         self.posts = listP
 
-    def addPosts(self, blog, listPosts):
-        self.setPosts()
+    def addPosts(self, listPosts):
         self.posts = self.posts + listPosts
-        self.updatePostsCache(profile)
+        self.updatePostsCache()
 
     def updatePostsCache(self):
         fileNameQ = fileNamePath(self.url, (self.service, self.nick)) + ".queue"

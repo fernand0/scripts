@@ -142,8 +142,8 @@ def searchTwitter(search, twitter):
 
 def nextPost(blog, socialNetwork):
     cacheName = 'Cache_'+socialNetwork[0]+'_'+socialNetwork[1]
-    blog.cache.setPosts()
-    listP = blog.cache.getPostsFormatted()[cacheName]['pending']
+    blog.cache[socialNetwork].setPosts()
+    listP = blog.cache[socialNetwork].getPosts()
 
     if listP: 
         element = listP[0]

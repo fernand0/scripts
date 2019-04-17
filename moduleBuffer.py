@@ -181,7 +181,7 @@ class moduleBuffer(Queue):
         linkAdded = ''
         logging.info("    Adding posts to LinkedIn")
         for post in listPosts: 
-            (title, link) = post 
+            (title, link) = post[:2] 
             textPost = title + " " + link
             logging.info("    Post: %s" % link)
             entry = urllib.parse.quote(textPost)

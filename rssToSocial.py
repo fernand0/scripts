@@ -170,13 +170,12 @@ def main():
 
             blog.setSocialNetworks(config, section)
 
+
             if ('bufferapp' in config.options(section)): 
                 blog.setBufferapp(config.get(section, "bufferapp")) 
 
             if ('program' in config.options(section)): 
                 blog.setProgram(config.get(section, "program"))
-            
-
 
             logging.info(" Looking for pending posts") # in ...%s"
                     #% blog.getSocialNetworks())
@@ -238,14 +237,13 @@ def main():
                         link = listPosts[len(listPosts) - 1][1]
                         logging.debug("link -> %s"% link)
 
-                sys.exit()
 
                 if blog.getBufferapp() and (profile[0] in blog.getBufferapp()): 
-                    link = blog.buffer.addPosts(blog, nameProfile, listPosts)
+                    link = blog.buffer[socialNetwork].addPosts(listPosts)
 
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
-                    blog.cache.addPosts(blog, profile, listPosts)
-                    timeSlots = 55*60 # One hour
+                    blog.cache[socialNetwork].addPosts(listPosts)
+                    timeSlots = 5*60 # One hour
                     t[nameProfile] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, socialNetwork, 1, timeSlots))
                     t[nameProfile].start() 
 
@@ -259,7 +257,7 @@ def main():
                             logging.info("  Publishing directly\n") 
                             serviceName = profile.capitalize()
                             print("   Publishing in %s %s" % (serviceName, title))
-                            if (profile == 'twitter') or (profile == 'facebook') or (profile=='telegram') or (profile=='mastodon'): 
+                            if (profile == 'twitter') or (profile == 'facebook') or (profile=='telegram') or (profile=='mastodon') or (profile=='linkedin'): 
                                 # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
                                 import importlib
                                 mod = importlib.import_module('module'+serviceName) 
