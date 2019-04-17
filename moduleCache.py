@@ -64,6 +64,7 @@ class moduleCache(Queue):
 
     def updatePostsCache(self):
         fileNameQ = fileNamePath(self.url, (self.service, self.nick)) + ".queue"
+        print(fileNameQ)
 
         with open(fileNameQ, 'wb') as f:
             pickle.dump(self.posts, f)
@@ -162,6 +163,7 @@ def main():
     print(cache.selectAndExecute('show', 'F1'))
     print(cache.selectAndExecute('show', '*2'))
     print(cache.selectAndExecute('show', 'TM3'))
+    print(cache.selectAndExecute('show', 'TM6'))
     #print(cache.selectAndExecute('edit', 'M0 Why Blockchain is Hard.'))
     #print(cache.selectAndExecute('publish', 'T1'))
     sys.exit()

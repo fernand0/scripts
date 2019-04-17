@@ -6,6 +6,7 @@ import os
 import moduleSocial
 import moduleBuffer
 import moduleCache
+import moduleTumblr
 import urllib
 import logging
 from pdfrw import PdfReader
@@ -58,7 +59,27 @@ class moduleSlack(Content):
                 outputData[serviceName]['pending'].append(
                     (post['text'][1:-1], '', '', '', '', '', '', '', post['ts'], ''))
         self.postsFormatted = outputData
+
+    def getTitle(self, i):
+        post = self.getPosts()[i]
+        if 'attachments' in post:
+            return(post['attachments'][0]['title'])
+        else:
+            url = post['text'][1:-1]
+            return(url)                
+
+    def getLink(self, i):
+        post = self.getPosts()[i]
+        if 'attachments' in post:
+            return(post['attachments'][0]['original_url'])
+        else:
+            url = post['text'][1:-1]
+            return(url)                
  
+    def getId(self, i):
+        post = self.getPosts()[i]
+        return(post['ts'])
+
     def getKeys(self):
         return(self.keys)
     
@@ -261,16 +282,14 @@ def main():
     theChannel = site.getChanId(CHANNEL)  
     site.setPosts('links')
     outputData = site.getPostsFormatted()
-    site.getPosts()
     
+    site.setSocialNetworks(config, section)
+
     if ('bufferapp' in config.options(section)): 
         site.setBufferapp(config.get(section, "bufferapp"))
+
     if ('program' in config.options(section)): 
         site.setProgram(config.get(section, "program"))
-
-    site.setSocialNetworks(config, section)
-    site.setCache()
-    site.setPosts()
 
     theChannel = site.getChanId("links")  
 
@@ -278,12 +297,13 @@ def main():
     listLinks = ""
 
     lastUrl = ''
-    for line in outputData['Slack']['pending']:
-        if urllib.parse.urlparse(line[0]).netloc == lastUrl: 
-            listLinks = listLinks + "%d>> %s\n" % (i, line[0])
+    for i, post in enumerate(site.getPosts()):
+        url = site.getLink(i)
+        if urllib.parse.urlparse(url).netloc == lastUrl: 
+            listLinks = listLinks + "%d>> %s\n" % (i, url)
         else:
-            listLinks = listLinks + "%d) %s\n" % (i, line[0])
-        lastUrl = urllib.parse.urlparse(line[0]).netloc
+            listLinks = listLinks + "%d) %s\n" % (i, url)
+        lastUrl = urllib.parse.urlparse(url).netloc
         i = i + 1
 
     numEntries = i
@@ -293,52 +313,54 @@ def main():
         sys.exit()
 
     elem = int(i)
-    print(outputData['Slack']['pending'][elem])
+    print(site.getPosts()[elem])
 
     action = input("Delete [d], publish [p], exit [x] ")
 
-    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
     if action == 'x':
         sys.exit()
     elif action == 'p':
         if site.getBufferapp():
-
-            site.buffer.setBuffer()
             for profile in site.getSocialNetworks():
                 if profile[0] in site.getBufferapp():
-                    lenMax = site.buffer.lenMax(profile)
+                    lenMax = site.len(profile)
                     print("   getBuffer %s" % profile)
-                    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
-                    # In order to avoid saving the link as the last one
-
-                    isDebug = False
-                    profileN = profile+'_'+site.getSocialNetworks()[profile]
-                    moduleSocial.publishBuffer(site, profileN, title, link, firstLink, isDebug, lenMax, site.getBufferapp())
+                    socialNetwork = (profile,site.getSocialNetworks()[profile])
+                    title = site.getTitle(elem)
+                    url = site.getLink(elem)
+                    listPosts = []
+                    listPosts.append((title, url))
+                    #site.buffer[socialNetwork].addPosts(listPosts)
 
         if site.getProgram():
-            site.cache.setPosts()
             for profile in site.getSocialNetworks():
+                profile='mastodon'
                 if profile[0] in site.getProgram():
-                    nameCache = 'Cache_'+profile+'_' + site.getSocialNetworks()[profile]
-                    lenMax = site.cache.lenMax(nameCache)
+                    lenMax = site.len(profile)
                     print("   getProgram %s" % profile)
  
                     socialNetwork = (profile,site.getSocialNetworks()[profile])
 
-                    #serviceName = site.cache[socialNetwork[0]+'_'+socialNetwork[1]].name
-                    listP = site.cache.getPostsFormatted()[nameCache]['pending']
-                    listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
-                    listP = listP + listPsts
-                    site.cache.getPostsFormatted()[nameCache]['pending'] = listP
-                    site.cache.updatePostsCache(profile)
-        client = moduleSocial.connectTumblr()
+                    listP = site.cache[socialNetwork].getPosts()
+                    #site.cache[socialNetwork].posts = site.cache[socialNetwork].posts[:8]  
+                    #listP = site.cache[socialNetwork].getPosts()
+                    #for i,l in enumerate(listP):
+                    #    print(i, l)
+                    #site.cache[socialNetwork].updatePostsCache()
+                    listPsts = site.obtainPostData(elem)
+                    listP = listP + [listPsts]
+                    for i,l in enumerate(listP):
+                        print(i, l)
+                    sys.exit()
+                    site.cache[socialNetwork].posts = listP
+                    site.cache[socialNetwork].updatePostsCache()
+        t = moduleTumblr.moduleTumblr()
+        t.setClient('fernand0')
         # We need to publish it in the Tumblr blog since we won't publish it by
         # usuarl means (it is deleted from queue).
-        moduleSocial.publishTumblr('fernand0', title, link, summary, summaryHtml,
-                summaryLinks, image, content, links)
+        t.publishPost(title, url, '')
 
-
-    site.deletePost(outputData['Slack']['pending'][elem][8], theChannel)
+    site.deletePost(site.getId(elem), theChannel)
     print(outputData['Slack']['pending'][elem][8])
 
 

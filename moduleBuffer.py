@@ -177,14 +177,13 @@ class moduleBuffer(Queue):
     
         #self.postsFormatted = outputData
 
-    def addPosts(self, blog, profile, listPosts):
+    def addPosts(self, listPosts):
         linkAdded = ''
         logging.info("    Adding posts to LinkedIn")
         for post in listPosts: 
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post 
+            (title, link) = post 
             textPost = title + " " + link
             logging.info("    Post: %s" % link)
-            print("        Post: %s" % link)
             entry = urllib.parse.quote(textPost)
             try:
                 self.getProfile().updates.new(entry)
@@ -429,6 +428,7 @@ class moduleBuffer(Queue):
 
     def publish(self, j):
         logging.info("Publishing %d"% j)
+        sys.exit()
         post = self.obtainPostData(j)
         logging.info("Publishing %s"% post[0])
         profile = self.getProfile() 
@@ -443,7 +443,7 @@ class moduleBuffer(Queue):
         logging.info("Deleting %s"% post[0])
         profile = self.getProfile()
         from buffpy.models.update import Update
-        update = Update(api=self.api, id=profile.updates.pending[j].id) 
+        update = Update(api=self.client, id=profile.updates.pending[j].id) 
         update = update.delete()
 
         logging.debug("Update before return %s"% update)
@@ -470,6 +470,7 @@ def main():
     #print('edit L2', buf.selectAndExecute('edit', 'L2'+' '+'El tren del tambor.'))
     #print('pub L0', buf.selectAndExecute('publish','L0'))
     sys.exit()
+    print('delete linkedin', buf.selectAndExecute('delete', 'L1'))
     print("-> PostsP",postsP)
     posts.update(postsP)
     print("-> Posts",posts)
