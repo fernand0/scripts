@@ -36,17 +36,17 @@ class Queue:
     def selectAndExecute(self, command, args):
         logging.info("Selecting %s" % args)
         print("Selecting %s" % args)
-        reply = ""
         argsCont = ''
-        if self.isForMe(args):
+        if args.find(' ')>0: 
+            argsIni = args.split()[0]
+            argsCont = args.split()[1]
+        else: 
+            argsIni = args
+        reply = ""
+        if self.isForMe(argsIni):
             logging.info("Service %s", self.service)
             print("Service %s"% self.service)
-            pos = args.find(' ')
-            if pos>0: 
-                j = int(args[:pos][-1]) 
-                args, argsCont = args[:pos], args[pos+1:]
-            else: 
-                j = int(args[-1])
+            j = int(argsIni) 
             cmd = getattr(self, command)
             if argsCont:
                 reply = reply + cmd(j, argsCont)
@@ -65,8 +65,9 @@ class Queue:
         if title and link:
             reply = reply + title + ' ' + link
         elif link:
-            reply = reply +' '+link
-return(reply)
+            reply = reply +' '+link 
+
+        return(reply)
 
     def editPost(self, args, newTitle):
         #return(self.interpretAndExecute(args,'edit', newTitle))
