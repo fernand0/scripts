@@ -198,8 +198,8 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
             publishMethod = globals()['publish'+ profile.capitalize()]#()(self, ))
             publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
 
-        blog.cache.postsFormatted[nameCache]['pending'] = listP
-        blog.cache.updatePostsCache(profile)
+        blog.cache[socialNetwork].posts = listP
+        blog.cache[socialNetwork].updatePostsCache()
            
         if j+1 < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))

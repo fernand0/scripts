@@ -198,6 +198,8 @@ def main():
                             and (profile[0] in blog.getProgram()))): 
                     lenMax = blog.len(profile)
 
+                print(lenMax)
+                print(bufferMax)
                 logging.info("  Service %s Lenmax %d" % (profile, lenMax))
 
                 num = bufferMax - lenMax
@@ -239,7 +241,10 @@ def main():
 
 
                 if blog.getBufferapp() and (profile[0] in blog.getBufferapp()): 
+                    print("---",listPosts)
                     link = blog.buffer[socialNetwork].addPosts(listPosts)
+
+                sys.exit()
 
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
                     blog.cache[socialNetwork].addPosts(listPosts)
