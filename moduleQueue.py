@@ -62,14 +62,11 @@ class Queue:
         logging.info("To show post %s" % title)
 
         reply = ''
-        if title:
-            reply = reply + title
-            if link:
-               reply = reply +' '+link
-            reply = reply + '\n'
-        else:
-            reply = reply + ""
-        return(reply)
+        if title and link:
+            reply = reply + title + ' ' + link
+        elif link:
+            reply = reply +' '+link
+return(reply)
 
     def editPost(self, args, newTitle):
         #return(self.interpretAndExecute(args,'edit', newTitle))
