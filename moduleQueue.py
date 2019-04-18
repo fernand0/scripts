@@ -67,11 +67,13 @@ class Queue:
 
     def selectAndExecute(self, command, args):
         logging.info("Selecting %s" % args)
-        services = self.isForMe(args)
         if args.find(' ')>0: 
-            j = int(args.split()[0][-1]) 
+            argsIni = args.split()[0]
         else: 
-            j = int(args[-1])
+            argsIni = args
+        services = self.isForMe(argsIni)
+        logging.info("Services %s"%services)
+        j = int(argsIni[-1])
         reply = ""
         for serviceName in services:
             logging.info("Service %s", serviceName)
@@ -95,13 +97,10 @@ class Queue:
 
         (serviceName, title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post
         reply = ''
-        if title:
-            reply = reply + title
-            if link:
-               reply = reply +' '+link
-            reply = reply + '\n'
-        else:
-            reply = reply + ""
+        if title and link:
+            reply = reply + title + ' ' + link
+        elif link:
+            reply = reply +' '+link
         return(reply)
 
     def editPost(self, args, newTitle):
