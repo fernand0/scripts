@@ -349,9 +349,9 @@ def main():
                     #site.cache[socialNetwork].updatePostsCache()
                     listPsts = site.obtainPostData(elem)
                     listP = listP + [listPsts]
-                    for i,l in enumerate(listP):
-                        print(i, l)
-                    sys.exit()
+                    #for i,l in enumerate(listP):
+                    #    print(i, l)
+                    #sys.exit()
                     site.cache[socialNetwork].posts = listP
                     site.cache[socialNetwork].updatePostsCache()
         t = moduleTumblr.moduleTumblr()

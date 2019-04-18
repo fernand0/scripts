@@ -173,26 +173,11 @@ def main():
         blog.setSocialNetworks(config, section)
 
         print(blog.getSocialNetworks())
+        blog.setCache()
 
         blogs.append(blog)
-        print(blog.obtainPostData(0))
 
     
-    #blogs[7].setPosts()
-    #print(blogs[7].getPosts())
-    blogs[7].setPostsCache()
-
-    print(blogs[7].getPostsCache())
-    print(blogs[7].cache.listPosts())
-    print(blogs[7].cache.showPost('F1'))
-    sys.exit()
-    print(blogs[6].cache.editPost('F1', '10 Tricks to Appear Smart During Meetings – The Cooper Review – Medium. ---'))
-    print(blogs[6].cache.showPost('F1'))
-    sys.exit()
-
-    numPosts = len(blogs[7].getPosts())
-    for i in range(numPosts):
-        print(blog.obtainPostData(numPosts - 1 - i))
 
 
     for blog in blogs:
@@ -202,25 +187,25 @@ def main():
         if 'twitterac' in blog.getSocialNetworks():
             print(blog.getSocialNetworks()['twitterac'])
         blog.setPosts()
-        print(blog.getPosts()[0]['link'])
-        print(blog.getLinkPosition(blog.getPosts()[0]['link']))
-        print(time.asctime(blog.datePost(0)))
-        print(blog.getLinkPosition(blog.getPosts()[5]['link']))
-        print(time.asctime(blog.datePost(5)))
-        blog.obtainPostData(0)
-        if blog.getUrl().find('ando')>0:
-            blog.newPost('Prueba %s' % time.asctime(), 'description %s' % 'prueba')
-            print(blog.selectPost())
+        if blog.getPosts():
+            print(blog.getPosts()[0]['link'])
+            print(blog.getLinkPosition(blog.getPosts()[0]['link']))
+            print(time.asctime(blog.datePost(0)))
+            print(blog.getLinkPosition(blog.getPosts()[5]['link']))
+            print(time.asctime(blog.datePost(5)))
+            blog.obtainPostData(0)
+        #    blog.newPost('Prueba %s' % time.asctime(), 'description %s' % 'prueba')
+        #    print(blog.selectPost())
 
     for blog in blogs:
-        import urllib
-        urlFile = open(DATADIR + '/' 
-              + urllib.parse.urlparse(blog.getUrl()+blog.getRssFeed()).netloc
-              + ".last", "r")
-        linkLast = urlFile.read().rstrip()  # Last published
+        for service in blog.getSocialNetworks():
+            socialNetwork = (service, blog.getSocialNetworks()[service])
+            
+        linkLast = checkLastLink(blog.getUrl(), socialNetwork)
         print(blog.getUrl()+blog.getRssFeed(),blog.getLinkPosition(linkLast))
-        print("description ->", blog.getPosts()[5]['description'])
-        for post in posts:
+        if blog.getPosts(): 
+            print("description ->", blog.getPosts()[5]['description'])
+        for post in blog.getPosts():
             if "content" in post:
                 print(post['content'][:100])
 

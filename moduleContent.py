@@ -122,12 +122,13 @@ class Content:
     def setCache(self):
         self.cache = {}
         for service in self.getSocialNetworks():
-            if service[0] in self.getProgram():
-                nick = self.getSocialNetworks()[service]
-                cache = moduleCache.moduleCache() 
-                cache.setClient(self.url, (service, nick))
-                cache.setPosts()
-                self.cache[(service, nick)] = cache
+            if self.getProgram():
+                if service[0] in self.getProgram():
+                    nick = self.getSocialNetworks()[service]
+                    cache = moduleCache.moduleCache() 
+                    cache.setClient(self.url, (service, nick))
+                    cache.setPosts()
+                    self.cache[(service, nick)] = cache
 
     def getProgram(self):
         return(self.program)
@@ -157,7 +158,9 @@ class Content:
                 logging.debug(self.getPosts())
                 return(len(self.getPosts()))
             for entry in self.getPosts():
-                linkS = link.decode()
+                linkS = link
+                if isinstance(link, bytes):
+                    linkS = linkS.decode()
                 url = self.getLinkEntry(entry)
                 logging.debug(url, linkS)
                 lenCmp = min(len(url), len(linkS))
@@ -170,7 +173,11 @@ class Content:
         return(i)
 
     def datePost(self, pos):
-        return(self.getPosts().entries[pos]['published_parsed'])
+        print(self.getPosts())
+        if 'entries' in self.getPosts():
+            return(self.getPosts().entries[pos]['published_parsed'])
+        else:
+            return(self.getPosts()[pos]['published_parsed'])
 
     def extractImage(self, soup):
         #This should go to the moduleHtml

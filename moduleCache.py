@@ -163,6 +163,7 @@ def main():
     print(cache.selectAndExecute('show', '*2'))
     print(cache.selectAndExecute('show', 'TM3'))
     print(cache.selectAndExecute('show', 'TM6'))
+    #print(cache.selectAndExecute('delete', 'F7'))
     #print(cache.selectAndExecute('edit', 'M0 Why Blockchain is Hard.'))
     #print(cache.selectAndExecute('publish', 'T1'))
     sys.exit()
