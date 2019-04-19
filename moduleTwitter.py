@@ -93,6 +93,9 @@ class moduleTwitter(Content):
         try:
             logging.info("    Publishing in Twitter: %s" % post)
             res = self.tc.statuses.update(status=post)
+            logging.info("Res: %s" % res)
+            if 'id' in res:
+                return("https://twitter.com/%s/status/%s" % (self.user, res['id']))
             return res
         except:        
             logging.warning("Twitter posting failed!") 

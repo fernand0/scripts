@@ -51,6 +51,7 @@ class modulePocket(Content):
             logging.info("    Publishing in Pocket: %s" % post)
             client = self.client 
             res = client.add(link)
+            logging.info("Res: %s" % res)
             logging.info("Posted!: %s" % post)
             return(res)
         except:        

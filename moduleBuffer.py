@@ -179,14 +179,20 @@ class moduleBuffer(Queue):
 
     def addPosts(self, listPosts):
         linkAdded = ''
-        logging.info("    Adding posts to LinkedIn")
+        logging.info("    Adding posts to %s" % self.service)
         for post in listPosts: 
             (title, link) = post[:2] 
             textPost = title + " " + link
             logging.info("    Post: %s" % link)
             entry = urllib.parse.quote(textPost)
             try:
-                self.getProfile().updates.new(entry)
+                if post[3]: 
+                    print(post[3])
+                    entry = urllib.parse.quote(post[0])
+                    self.getProfile().updates.new(entry, 
+                            media={'photo':post[3]})
+                else: 
+                    self.getProfile().updates.new(entry)
             except: 
                 logging.warning("Buffer posting failed!") 
                 logging.warning("Entry: %s"% entry) 

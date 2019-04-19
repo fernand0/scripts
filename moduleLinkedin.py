@@ -93,6 +93,7 @@ class moduleLinkedin(Content):
                 res = self.ln.submit_share(post, link, '') 
             else: 
                 res = self.ln.submit_share(comment = post)
+            logging.info("Res: %s" % res)
             return res
         except:        
             logging.warning("LinkedIn posting failed!") 

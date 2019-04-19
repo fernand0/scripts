@@ -254,8 +254,9 @@ class moduleGmail(Content,Queue):
         
         api = self.getClient()
         try:
-            update = api.users().drafts().send(userId='me', 
+            res = api.users().drafts().send(userId='me', 
                        body={ 'id': idPost}).execute()
+            logging.info("Res: %s" % res)
         except:
             return("Fail!")
 

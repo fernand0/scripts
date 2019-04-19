@@ -68,7 +68,7 @@ class moduleTumblr(Content):
             logging.info("    Publishing in Tumblr: %s" % post)
             client = self.tc 
             blog_url = client.post('user/info')['user']['blogs'][0]['url'] 
-            post = client.post('post', blog_url, params={'type':'link',
+            res = client.post('post', blog_url, params={'type':'link',
                 'state':'queue', 
                 'title': post, 
                 'thumbnail': None, 
@@ -76,8 +76,8 @@ class moduleTumblr(Content):
                 #'excerpt': summaryHtml, 
                 'publisher': ''}) 
 
-            logging.info("Posted!: %s" % post)
-            return(post)
+            logging.info("Res: %s" % res)
+            return(res)
         except:        
             logging.warning("Tumblr posting failed!") 
             logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 

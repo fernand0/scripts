@@ -70,11 +70,12 @@ class moduleMedium(Content):
         textOrig = 'Publicado originalmente en <a href="%s">%s</a>\n\n' % (link, title)
 
         try:
-            post = client.create_post(user_id=user["id"], title=title,
+            res = client.create_post(user_id=user["id"], title=title,
                 content="<h4>"+title+"</h4><br />"+textOrig+content,
                 canonical_url = link, content_format="html",
                 publish_status="public")#"public") #draft") 
-            return(post)
+            logging.info("Res: %s" % res)
+            return(res)
         except:
             logging.warning("Medium posting failed!")
             logging.warning("Unexpected error:", sys.exc_info()[0])

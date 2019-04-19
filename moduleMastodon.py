@@ -56,6 +56,9 @@ class moduleMastodon(Content):
         try:
             logging.info("    Publishing in Mastodon: %s" % post)
             res = self.getClient().toot(post)
+            logging.info("Res: %s" % res)
+            if 'uri' in res:
+                return(res['uri'])
             return res
         except:        
             logging.warning("Mastodon posting failed!") 

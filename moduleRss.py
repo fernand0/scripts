@@ -101,37 +101,40 @@ class moduleRss(Content):
         theSummary = soup.get_text()
         if self.getLinksToAvoid():
             (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())
-            logging.debug("theC", theContent)
+            logging.debug("theC %s" % theContent)
             if theContent.startswith('Anuncios'): 
                 theContent = ''
-            logging.debug("theC", theContent)
+            logging.debug("theC %s"% theContent)
         else:
             (theContent, theSummaryLinks) = self.extractLinks(soup, "") 
-            logging.debug("theC", theContent)
+            logging.debug("theC %s"% theContent)
             if theContent.startswith('Anuncios'): 
                 theContent = ''
-            logging.debug("theC", theContent)
+            logging.debug("theC %s"% theContent)
 
         if 'media_content' in posts[i]: 
-            theImage = posts[i]['media_content'][0]['url']
+            theImage = ''
+            for media in posts[i]['media_content']:
+                if media['url'].find('avatar')<0: 
+                    theImage = media['url']
         else:
             theImage = self.extractImage(soup)
-        logging.debug("theImage", theImage)
+        logging.debug("theImage %s"% theImage)
         theLinks = theSummaryLinks
         theSummaryLinks = theContent + theLinks
             
         logging.debug("=========")
         logging.debug("Results: ")
         logging.debug("=========")
-        logging.debug("Title:     ", theTitle)
-        logging.debug("Link:      ", theLink)
-        logging.debug("First Link:", firstLink)
-        logging.debug("Summary:   ", content[:200])
-        logging.debug("Sum links: ", theSummaryLinks)
-        logging.debug("the Links"  , theLinks)
-        logging.debug("Comment:   ", comment)
-        logging.debug("Image;     ", theImage)
-        logging.debug("Post       ", theTitle + " " + theLink)
+        logging.debug("Title:      %s"% theTitle)
+        logging.debug("Link:       %s"% theLink)
+        logging.debug("First Link: %s"% firstLink)
+        logging.debug("Summary:    %s"% content[:200])
+        logging.debug("Sum links:  %s"% theSummaryLinks)
+        logging.debug("the Links   %s"% theLinks)
+        logging.debug("Comment:    %s"% comment)
+        logging.debug("Image;      %s"% theImage)
+        logging.debug("Post        %s"% theTitle + " " + theLink)
         logging.debug("==============================================")
         logging.debug("")
 
