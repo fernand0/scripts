@@ -115,6 +115,9 @@ class moduleCache(Queue):
             return (link)
         return(None)
 
+    def isForMe(self, args):
+        return ((self.service[0].capitalize() in args.split()[0])
+                or (args[0] == '*'))
 
     def edit(self, j, newTitle):
         logging.info("New title %s", newTitle)

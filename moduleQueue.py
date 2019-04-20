@@ -46,7 +46,7 @@ class Queue:
         if self.isForMe(argsIni):
             logging.info("Service %s", self.service)
             print("Service %s"% self.service)
-            j = int(argsIni) 
+            j = int(argsIni[-1]) 
             cmd = getattr(self, command)
             if argsCont:
                 reply = reply + cmd(j, argsCont)
@@ -59,7 +59,6 @@ class Queue:
         logging.info("To show post %d" % j)
 
         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(j)
-        logging.info("To show post %s" % title)
 
         reply = ''
         if title and link:

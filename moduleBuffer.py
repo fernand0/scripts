@@ -126,8 +126,6 @@ class moduleBuffer(Queue):
             logging.info("  Profile %s" % service)
             profiles = Profiles(api=self.client).filter(service=service)
             
-        logging.debug("Profiles %s" % profiles)
-
         self.profile = profiles[0]
 
     def getProfile(self):
@@ -150,6 +148,7 @@ class moduleBuffer(Queue):
         for method in ['sent', 'pending']:
             if (profile.counts[method] > 0):
                 updates = getattr(profile.updates, method)
+                logging.info("sent Profile %s" % updates)
                 if method == 'pending': 
                     self.posts = updates
                 else:
@@ -412,7 +411,7 @@ class moduleBuffer(Queue):
     def getTitle(self, i):
         if i < len(self.getPosts()): 
             post = self.getPosts()[i]
-            title = post['media']['title']
+            title = post['text']
             return (title)
         return(None)
 
@@ -493,6 +492,11 @@ def main():
     print(buf.getPosts())
     print(buf.getPosts()[0])
     print(len(buf.getPosts()[0]))
+    print(buf.getTitle(0))
+    print(buf.getLink(0))
+    post = buf.getPosts()[0]
+    print(buf.getPostTitle(post))
+    print(buf.getPostLink(post))
     sys.exit()
     # It has 30 elements
     print(buf.obtainPostData(0))

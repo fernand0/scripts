@@ -81,8 +81,8 @@ class moduleGmail(Content,Queue):
 
         posts = api.users().drafts().list(userId='me').execute()
         logging.debug("--setPosts %s" % posts)
+        self.posts = []
         if 'drafts' in posts:
-            self.posts = []
             self.rawPosts = []
             for post in posts['drafts']:
                 #self.rawPosts.insert(0, post)
@@ -147,6 +147,7 @@ class moduleGmail(Content,Queue):
             message[header]= value
 
     def getHeader(self, message, header = 'Subject'):
+        message = message['meta']
         for head in message['payload']['headers']: 
             if head['name'] == header: 
                 return(head['value'])
