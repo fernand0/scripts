@@ -181,7 +181,8 @@ class moduleBuffer(Queue):
         linkAdded = ''
         logging.info("    Adding posts to %s" % self.service)
         for post in listPosts: 
-            (title, link) = post[:2] 
+            title = self.getPostTitle(post)
+            link = self.getPostLink(post)
             textPost = title + " " + link
             logging.info("    Post: %s" % link)
             entry = urllib.parse.quote(textPost)
