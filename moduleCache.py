@@ -88,9 +88,33 @@ class moduleCache(Queue):
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
-    def isForMe(self, args):
-        return ((self.service[0].capitalize() in args.split()[0])
-                or (args[0] == '*'))
+    def getTitle(self, i):
+        if i < len(self.getPosts()): 
+            post = self.getPosts()[i]
+            title = post[0]
+            return (title)
+        return(None)
+
+    def getLink(self, i):
+        if i < len(self.getPosts()): 
+            post = self.getPosts()[i]
+            link = post[1]
+            return (link)
+        return(None) 
+    
+    def getPostTitle(self, post):
+        logging.info(post)
+        if post:
+            title = post[0]
+            return (title)
+        return(None)
+
+    def getPostLink(self, post):
+        if post:
+            link = post[0]
+            return (link)
+        return(None)
+
 
     def edit(self, j, newTitle):
         logging.info("New title %s", newTitle)

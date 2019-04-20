@@ -136,6 +136,7 @@ class moduleBuffer(Queue):
     def setPosts(self):
         self.setProfile(self.service)
         profile = self.getProfile()
+        logging.info("Profile %s" % profile)
     
         #serviceName = profile['service']
         #nickName = profile['service_username']
@@ -408,6 +409,32 @@ class moduleBuffer(Queue):
     #        logging.info("No pending posts")
     #        return somePending
 
+    def getTitle(self, i):
+        if i < len(self.getPosts()): 
+            post = self.getPosts()[i]
+            title = post['media']['title']
+            return (title)
+        return(None)
+
+    def getLink(self, i):
+        if i < len(self.getPosts()): 
+            post = self.getPosts()[i]
+            link = post['media']['expanded_link']
+            return (link)
+        return(None) 
+    
+    def getPostTitle(self, post):
+        logging.info(post)
+        if post:
+            title = post['media']['title']
+            return (title)
+        return(None)
+
+    def getPostLink(self, post):
+        if post:
+            link = post['media']['expanded_link']
+            return (link)
+        return(None)
 
     def isForMe(self, args):
         profile = self.getProfile()
@@ -466,6 +493,7 @@ def main():
     print(buf.getPosts())
     print(buf.getPosts()[0])
     print(len(buf.getPosts()[0]))
+    sys.exit()
     # It has 30 elements
     print(buf.obtainPostData(0))
 
