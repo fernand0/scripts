@@ -37,9 +37,10 @@ class Queue:
         logging.info("Selecting %s" % args)
         print("Selecting %s" % args)
         argsCont = ''
-        if args.find(' ')>0: 
-            argsIni = args.split()[0]
-            argsCont = args.split()[1]
+        pos = args.find(' ')
+        if pos > 0: 
+            argsIni = args[:pos]
+            argsCont = args[pos+1:]
         else: 
             argsIni = args
         reply = ""
@@ -65,6 +66,8 @@ class Queue:
             reply = reply + title + ' ' + link
         elif link:
             reply = reply +' '+link 
+        elif title:
+            reply = reply +' '+title 
 
         return(reply)
 

@@ -137,7 +137,7 @@ class moduleGmail(Content,Queue):
 
     def setHeader(self, message, header, value):
         for head in message['payload']['headers']: 
-            if head['name'] == header: 
+            if head['name'].capitalize() == header.capitalize(): 
                 head['value'] = value
 
     def setHeaderEmail(self, message, header, value):
@@ -147,10 +147,16 @@ class moduleGmail(Content,Queue):
             message[header]= value
 
     def getHeader(self, message, header = 'Subject'):
-        message = message['meta']
+        if 'meta' in message:
+            message = message['meta']
         for head in message['payload']['headers']: 
-            if head['name'] == header: 
+            if head['name'].capitalize() == header.capitalize(): 
                 return(head['value'])
+
+    def getPostId(self, message):
+        if 'list' in message:
+            message = message['meta']
+        return(message['id'])
 
     def getHeaderEmail(self, message, header = 'Subject'):
         if header in message:
@@ -184,7 +190,8 @@ class moduleGmail(Content,Queue):
 
     def extractDataMessage(self, i):
         logging.info("Service %s"% self.service)
-        message = self.getPosts()[i]['meta']
+        message = self.getPosts()[i]
+        logging.info("Message %s"% message)
 
         theTitle = self.getHeader(message, 'Subject')
         if theTitle == None:
@@ -206,7 +213,7 @@ class moduleGmail(Content,Queue):
         theSummary = snippet
 
         theSummaryLinks = message
-        comment = message['id'] 
+        comment = self.getPostId(message) 
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
