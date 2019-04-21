@@ -140,11 +140,17 @@ class Content:
     def len(self, profile):
         service = profile
         nick = self.getSocialNetworks()[profile]
+        print(nick)
         if self.cache and (service, nick) in self.cache:
-            return(len(self.cache[(service, nick)].getPosts()))
+            if self.cache[(service, nick)].getPosts(): 
+                return(len(self.cache[(service, nick)].getPosts()))
+            else:
+                return(0)
         elif self.buffer and (service, nick) in self.buffer:
-            return(len(self.buffer[(service, nick)].getPosts()))
-
+            if self.buffer[(service, nick)].getPosts(): 
+                return(len(self.buffer[(service, nick)].getPosts()))
+            else:
+                return(0)
 
     def getLinkEntry(self, entry):
         pass

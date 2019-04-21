@@ -184,6 +184,8 @@ def main():
             bufferMax = 9
             t = {}
 
+            #print(blog.getSocialNetworks())
+            #blog.socialNetworks = {'linkedin':'Fernando Tricas'}
             for profile in blog.getSocialNetworks():
                 lenMax = 9
                 link= ""
@@ -196,6 +198,7 @@ def main():
                         and (profile[0] in blog.getBufferapp())) 
                         or (blog.getProgram() 
                             and (profile[0] in blog.getProgram()))): 
+                    print(profile)
                     lenMax = blog.len(profile)
 
                 logging.info("  Service %s Lenmax %d" % (profile, lenMax))
@@ -233,6 +236,10 @@ def main():
                         print("      Scheduling post %s" % post[0])
                         logging.info("    Scheduling post %s" % post[0])
 
+                    for post in listPosts:
+                        print(post[0]) 
+                        print(post[1]) 
+
                     if listPosts:
                         link = listPosts[len(listPosts) - 1][1]
                         logging.debug("link -> %s"% link)
@@ -241,6 +248,7 @@ def main():
                 if blog.getBufferapp() and (profile[0] in blog.getBufferapp()): 
                     print("---",listPosts)
                     link = blog.buffer[socialNetwork].addPosts(listPosts)
+
 
 
                 if blog.getProgram() and (profile[0] in blog.getProgram()):

@@ -181,19 +181,22 @@ class moduleBuffer(Queue):
         linkAdded = ''
         logging.info("    Adding posts to %s" % self.service)
         for post in listPosts: 
+            print(post)
             title = self.getPostTitle(post)
             link = self.getPostLink(post)
+            print(title)
+            print(link)
             textPost = title + " " + link
             logging.info("    Post: %s" % link)
             entry = urllib.parse.quote(textPost)
             try:
-                if post[3]: 
-                    print(post[3])
-                    entry = urllib.parse.quote(post[0])
-                    self.getProfile().updates.new(entry, 
-                            media={'photo':post[3]})
-                else: 
-                    self.getProfile().updates.new(entry)
+                #if post[3]: 
+                #    print(post[3])
+                #    entry = urllib.parse.quote(post[0])
+                #    self.getProfile().updates.new(entry, 
+                #            media={'photo':post[3]})
+                #else: 
+                self.getProfile().updates.new(entry)
             except: 
                 logging.warning("Buffer posting failed!") 
                 logging.warning("Entry: %s"% entry) 
@@ -427,7 +430,10 @@ class moduleBuffer(Queue):
         logging.info(post)
         if post:
             if 'media' in post:
-                title = post['media']['title']
+                if 'title' in post['media']:
+                     title = post['media']['title']
+                else:
+                     title = 'None'
             else:
                 title = post[0]
             return (title)
@@ -438,7 +444,7 @@ class moduleBuffer(Queue):
             if 'media' in post: 
                 link = post['media']['expanded_link']
             else:
-                link = post[0]
+                link = post[1]
             return (link)
         return(None)
 
@@ -485,7 +491,7 @@ class moduleBuffer(Queue):
         update = Update(api=self.client, id=profile.updates.pending[j].id) 
         update = update.delete()
 
-        logging.debug("Update before return %s"% update)
+        logging.info("Update before return %s"% update)
         return(update)
  
 def main():
@@ -502,6 +508,13 @@ def main():
     print(buf.getTitle(0))
     print(buf.getLink(0))
     post = buf.getPosts()[0]
+    print("post")
+    print(post)
+    print(buf.getPostTitle(post))
+    print(buf.getPostLink(post))
+    post = buf.obtainPostData(0)
+    print("post")
+    print(post)
     print(buf.getPostTitle(post))
     print(buf.getPostLink(post))
     sys.exit()
