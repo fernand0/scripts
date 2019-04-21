@@ -63,7 +63,6 @@ class moduleCache(Queue):
 
     def updatePostsCache(self):
         fileNameQ = fileNamePath(self.url, (self.service, self.nick)) + ".queue"
-        print(fileNameQ)
 
         with open(fileNameQ, 'wb') as f:
             pickle.dump(self.posts, f)

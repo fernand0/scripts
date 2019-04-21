@@ -426,13 +426,19 @@ class moduleBuffer(Queue):
     def getPostTitle(self, post):
         logging.info(post)
         if post:
-            title = post['media']['title']
+            if 'media' in post:
+                title = post['media']['title']
+            else:
+                title = post[0]
             return (title)
         return(None)
 
     def getPostLink(self, post):
         if post:
-            link = post['media']['expanded_link']
+            if 'media' in post: 
+                link = post['media']['expanded_link']
+            else:
+                link = post[0]
             return (link)
         return(None)
 
