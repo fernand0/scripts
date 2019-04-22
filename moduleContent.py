@@ -69,8 +69,8 @@ class Content:
     def addSocialNetwork(self, socialNetwork):
         self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
 
-    def getPostsFormatted(self):
-        return(self.postsFormatted)
+    #def getPostsFormatted(self):
+    #    return(self.postsFormatted)
 
     def getPosts(self):
         return(self.posts)
@@ -152,9 +152,6 @@ class Content:
             else:
                 return(0)
 
-    def getLinkEntry(self, entry):
-        pass
-
     def getLinkPosition(self, link):
         i = 0
         posts = self.getPosts()
@@ -167,7 +164,7 @@ class Content:
                 linkS = link
                 if isinstance(link, bytes):
                     linkS = linkS.decode()
-                url = self.getLinkEntry(entry)
+                url = self.getPostLink(entry)
                 logging.debug(url, linkS)
                 lenCmp = min(len(url), len(linkS))
                 if url[:lenCmp] == linkS[:lenCmp]:

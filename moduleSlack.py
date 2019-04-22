@@ -64,6 +64,13 @@ class moduleSlack(Content):
 
     def getTitle(self, i):
         post = self.getPosts()[i]
+        return(self.getPostTitle(post))
+
+    def getLink(self, i):
+        post = self.getPosts()[i]
+        return(self.getPostLink(post))
+
+    def getPostTitle(self, post):
         if 'attachments' in post:
             return(post['attachments'][0]['title'])
         else:
@@ -75,8 +82,8 @@ class moduleSlack(Content):
                 title=text[:pos]
             return(title)                
 
-    def getLink(self, i):
-        post = self.getPosts()[i]
+
+    def getPostLink(self, post):
         if 'attachments' in post:
             return(post['attachments'][0]['original_url'])
         else:
@@ -86,8 +93,8 @@ class moduleSlack(Content):
             else:
                 pos = text.find('<')
                 url=text[pos+1:-1]
-            return(url)                
- 
+            return(url) 
+
     def getId(self, i):
         post = self.getPosts()[i]
         return(post['ts'])
@@ -97,13 +104,6 @@ class moduleSlack(Content):
     
     def setKeys(self, keys):
         self.keys = keys
-
-    def getLinkEntry(self, entry):
-        if 'original_url' in entry: 
-            url = entry['original_url']
-        else:
-            url = entry['text'][1:-1]
-        return(url)
 
     def deletePost(self, idPost, theChannel): 
         logging.info("Deleting id %s" % idPost)
@@ -314,6 +314,10 @@ def main():
         else:
             listLinks = listLinks + "%d) %s\n" % (i, url)
         lastUrl = urllib.parse.urlparse(url).netloc
+        print(site.getTitle(i))
+        print(site.getLink(i))
+        print(site.getPostTitle(post))
+        print(site.getPostLink(post))
         i = i + 1
 
     numEntries = i

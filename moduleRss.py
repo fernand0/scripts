@@ -48,8 +48,24 @@ class moduleRss(Content):
         #    outputData[serviceName]['pending'].append(self.obtainPostData(i))
         #self.postsFormatted = outputData
  
-    def getLinkEntry(self, entry):
-        return(entry['link'])
+    def getPostTitle(self, post):
+        if 'title' in post:
+            return(post['title'].replace('\n', ' '))
+
+    def getLink(self, i):
+        post = self.getPosts()[i]
+        return(self.getPostLink(post))
+
+    def getTitle(self, i):
+        post = self.getPosts()[i]
+        return(self.getPostLink(post))
+
+    def getPostLink(self, post):
+        return(post['link'])
+
+    def getPostTitle(self, post):
+        if 'title' in post:
+            return(post['title'].replace('\n', ' '))
 
     def obtainPostData(self, i, debug=False):
         if not self.posts:
@@ -70,8 +86,7 @@ class moduleRss(Content):
             if content.startswith('Anuncios'): content = ''
         if 'description' in post:
             theDescription = post['description']
-        if 'title' in post:
-            theTitle = post['title'].replace('\n', ' ')
+        theTitle = self.getPostTitle(post)
         if 'link' in post:
             theLink = post['link']
         if ('comment' in post):
@@ -180,9 +195,6 @@ def main():
 
         blogs.append(blog)
 
-    
-
-
     for blog in blogs:
         print(blog.getUrl())
         print(blog.getRssFeed())
@@ -191,26 +203,23 @@ def main():
             print(blog.getSocialNetworks()['twitterac'])
         blog.setPosts()
         if blog.getPosts():
-            print(blog.getPosts()[0]['link'])
-            print(blog.getLinkPosition(blog.getPosts()[0]['link']))
-            print(time.asctime(blog.datePost(0)))
-            print(blog.getLinkPosition(blog.getPosts()[5]['link']))
-            print(time.asctime(blog.datePost(5)))
-            blog.obtainPostData(0)
-        #    blog.newPost('Prueba %s' % time.asctime(), 'description %s' % 'prueba')
-        #    print(blog.selectPost())
+            for i, post in enumerate(blog.getPosts()):
+                print(blog.getPosts()[i])
+                print(blog.getTitle(i))
+                print(blog.getLink(i))
+                print(blog.getPostTitle(post))
+                print(blog.getPostLink(post))
 
-    for blog in blogs:
         for service in blog.getSocialNetworks():
             socialNetwork = (service, blog.getSocialNetworks()[service])
             
-        linkLast = checkLastLink(blog.getUrl(), socialNetwork)
-        print(blog.getUrl()+blog.getRssFeed(),blog.getLinkPosition(linkLast))
-        if blog.getPosts(): 
-            print("description ->", blog.getPosts()[5]['description'])
-        for post in blog.getPosts():
-            if "content" in post:
-                print(post['content'][:100])
+            linkLast = checkLastLink(blog.getUrl(), socialNetwork)
+            print(blog.getUrl()+blog.getRssFeed(),blog.getLinkPosition(linkLast))
+        #if blog.getPosts(): 
+        #    print("description ->", blog.getPosts()[5]['description'])
+        #for post in blog.getPosts():
+        #    if "content" in post:
+        #        print(post['content'][:100])
 
 if __name__ == "__main__":
     main()
