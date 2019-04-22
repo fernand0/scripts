@@ -452,14 +452,19 @@ class moduleBuffer(Queue):
 
     def publish(self, j):
         logging.info("Publishing %d"% j)
-        sys.exit()
         post = self.obtainPostData(j)
         logging.info("Publishing %s"% post[0])
         profile = self.getProfile() 
         update = Update(api=self.client, id=profile.updates.pending[j].id) 
-        update = update.publish()
-        logging.info("Update before return %s"% update)
-        return(update[0])
+        res = update.publish()
+        logging.info("Update before return %s"% res)
+        if res:
+            if 'message' in res: 
+                return(res['message'])
+            else:
+                return(res)
+        else:
+            return("Published!")
     
     def delete(self, j):
         logging.info("Deleting %d"% j)
