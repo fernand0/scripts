@@ -41,12 +41,12 @@ class moduleRss(Content):
         logging.debug(urlRss)
         self.posts = feedparser.parse(urlRss).entries
 
-        outputData = {}
-        serviceName = 'Rss'
-        outputData[serviceName] = {'sent': [], 'pending': []}
-        for i in range(len(self.getPosts())):
-            outputData[serviceName]['pending'].append(self.obtainPostData(i))
-        self.postsFormatted = outputData
+        #outputData = {}
+        #serviceName = 'Rss'
+        #outputData[serviceName] = {'sent': [], 'pending': []}
+        #for i in range(len(self.getPosts())):
+        #    outputData[serviceName]['pending'].append(self.obtainPostData(i))
+        #self.postsFormatted = outputData
  
     def getLinkEntry(self, entry):
         return(entry['link'])

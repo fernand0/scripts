@@ -44,36 +44,48 @@ class moduleSlack(Content):
         theChannel = self.getChanId(channel)
         history = self.sc.api_call( "channels.history", count=1000, channel=theChannel)
         logging.debug(history)
-        for msg in history['messages']:
-            self.posts.append(msg)
+        if 'messages' in history:
+            self.posts = history['messages']
+        else:
+            self.posts = []
 
-        outputData = {}
-        serviceName = 'Slack'
-        outputData[serviceName] = {'sent': [], 'pending': []}
-        for post in self.getPosts():
-            if 'attachments' in post:
-                outputData[serviceName]['pending'].append(
-                    (post['text'][1:-1], post['attachments'][0]['title'], '', '', '', '', '', '', post['ts'], ''))
-            else:
-                #print(post)
-                outputData[serviceName]['pending'].append(
-                    (post['text'][1:-1], '', '', '', '', '', '', '', post['ts'], ''))
-        self.postsFormatted = outputData
+        #outputData = {}
+        #serviceName = 'Slack'
+        #outputData[serviceName] = {'sent': [], 'pending': []}
+        #for post in self.getPosts():
+        #    if 'attachments' in post:
+        #        outputData[serviceName]['pending'].append(
+        #            (post['text'][1:-1], post['attachments'][0]['title'], '', '', '', '', '', '', post['ts'], ''))
+        #    else:
+        #        #print(post)
+        #        outputData[serviceName]['pending'].append(
+        #            (post['text'][1:-1], '', '', '', '', '', '', '', post['ts'], ''))
+        #self.postsFormatted = outputData
 
     def getTitle(self, i):
         post = self.getPosts()[i]
         if 'attachments' in post:
             return(post['attachments'][0]['title'])
         else:
-            url = post['text'][1:-1]
-            return(url)                
+            text = post['text']
+            if text.startswith('<'): 
+                title = post['text'][1:-1]
+            else:
+                pos = text.find('<')
+                title=text[:pos]
+            return(title)                
 
     def getLink(self, i):
         post = self.getPosts()[i]
         if 'attachments' in post:
             return(post['attachments'][0]['original_url'])
         else:
-            url = post['text'][1:-1]
+            text = post['text']
+            if text.startswith('<'): 
+                url = post['text'][1:-1]
+            else:
+                pos = text.find('<')
+                url=text[pos+1:-1]
             return(url)                
  
     def getId(self, i):
@@ -126,74 +138,73 @@ class moduleSlack(Content):
         logging.debug("i %d", i)
         logging.debug("post %s", post)
 
-        if 'title' in post:
-            theTitle = post['title']
-            theLink = post['title_link']
-            if theLink.find('tumblr')>0:
-                theTitle = post['text']
-            firstLink = theLink
-            if 'text' in post: 
-                content = post['text']
-            else:
-                content = theLink
-            theSummary = content
-            theSummaryLinks = content
-            if 'image_url' in post:
-                theImage = post['image_url']
-            elif 'thumb_url' in post:
-                theImage = post['thumb_url']
-            else:
-                logging.info("Fail image")
-                logging.info("Fail image %s", post)
-                theImage = ''
-        elif 'text' in post:
-            if post['text'].startswith('<h'):
-                # It's an url
-                url = post['text'][1:-1]
-                req = requests.get(url)
-                    
-                if req.text.find('403 Forbidden')>=0:
-                    theTitle = url
-                    theSummary = url
-                    content = url
-                    theDescription = url
-                else:
-                    if url.lower().endswith('pdf'):
-                        nameFile = '/tmp/kkkkk.pdf'
-                        with open(nameFile,'wb') as f:
-                            f.write(req.content)
-                        theTitle = PdfReader(nameFile).Info.Title
-                        if theTitle:
-                            theTitle = theTitle[1:-1]
-                        else:
-                            theTitle = url
-                        theUrl = url
-                        theSummary = ''
-                        content = theSummary
-                        theDescription = theSummary
-                    else:
-                        soup = BeautifulSoup(req.text, 'lxml')
-                        #print("soup", soup)
-                        theTitle = soup.title
-                        if theTitle:
-                            theTitle = str(theTitle.string)
-                        else:
-                            # The last part of the path, without the dot part, and
-                            # capitized
-                            urlP = urllib.parse.urlparse(url)
-                            theTitle = os.path.basename(urlP.path).split('.')[0].capitalize()
-                        theSummary = str(soup.body)
-                        content = theSummary
-                        theDescription = theSummary
-            else:
-                theSummary = post['text']
-                content = post['text']
-                theDescription = post['text']
-                theTitle = post['text']
+        theTitle = self.getTitle(i)
+        theLink = self.getLink(i)
+        if theLink.find('tumblr')>0:
+            theTitle = post['text']
+        firstLink = theLink
+        if 'text' in post: 
+            content = post['text']
         else:
-            theSummary = post['title']
-            content = post['title']
-            theDescription = post['title']
+            content = theLink
+        theSummary = content
+        theSummaryLinks = content
+        if 'image_url' in post:
+            theImage = post['image_url']
+        elif 'thumb_url' in post:
+            theImage = post['thumb_url']
+        else:
+            logging.info("Fail image")
+            logging.info("Fail image %s", post)
+            theImage = ''
+        #elif 'text' in post:
+        #    if post['text'].startswith('<h'):
+        #        # It's an url
+        #        url = post['text'][1:-1]
+        #        req = requests.get(url)
+        #            
+        #        if req.text.find('403 Forbidden')>=0:
+        #            theTitle = url
+        #            theSummary = url
+        #            content = url
+        #            theDescription = url
+        #        else:
+        #            if url.lower().endswith('pdf'):
+        #                nameFile = '/tmp/kkkkk.pdf'
+        #                with open(nameFile,'wb') as f:
+        #                    f.write(req.content)
+        #                theTitle = PdfReader(nameFile).Info.Title
+        #                if theTitle:
+        #                    theTitle = theTitle[1:-1]
+        #                else:
+        #                    theTitle = url
+        #                theUrl = url
+        #                theSummary = ''
+        #                content = theSummary
+        #                theDescription = theSummary
+        #            else:
+        #                soup = BeautifulSoup(req.text, 'lxml')
+        #                #print("soup", soup)
+        #                theTitle = soup.title
+        #                if theTitle:
+        #                    theTitle = str(theTitle.string)
+        #                else:
+        #                    # The last part of the path, without the dot part, and
+        #                    # capitized
+        #                    urlP = urllib.parse.urlparse(url)
+        #                    theTitle = os.path.basename(urlP.path).split('.')[0].capitalize()
+        #                theSummary = str(soup.body)
+        #                content = theSummary
+        #                theDescription = theSummary
+        #    else:
+        #        theSummary = post['text']
+        #        content = post['text']
+        #        theDescription = post['text']
+        #        theTitle = post['text']
+        #else:
+        #    theSummary = post['title']
+        #    content = post['title']
+        #    theDescription = post['title']
 
         if 'original_url' in post: 
             theLink = post['original_url']
@@ -281,7 +292,6 @@ def main():
 
     theChannel = site.getChanId(CHANNEL)  
     site.setPosts('links')
-    outputData = site.getPostsFormatted()
     
     site.setSocialNetworks(config, section)
 
@@ -334,7 +344,6 @@ def main():
 
         if site.getProgram():
             for profile in site.getSocialNetworks():
-                profile='mastodon'
                 if profile[0] in site.getProgram():
                     lenMax = site.len(profile)
                     print("   getProgram %s" % profile)
@@ -361,7 +370,7 @@ def main():
         t.publishPost(title, url, '')
 
     site.deletePost(site.getId(elem), theChannel)
-    print(outputData['Slack']['pending'][elem][8])
+    #print(outputData['Slack']['pending'][elem][8])
 
 
 if __name__ == '__main__':

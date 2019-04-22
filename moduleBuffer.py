@@ -153,29 +153,6 @@ class moduleBuffer(Queue):
                     self.posts = updates
                 else:
                     self.posted = updates
-            #    #for j in range(min(10,len(updates))):
-            #    #    update = updates[j]
-            #    #    if method == 'pending':
-            #    #        toShow = update.due_time
-            #    #    else:
-            #    #        toShow = update.statistics.clicks
-            #    #    if ('media' in update): 
-            #    #        if ('expanded_link' in update.media):
-            #    #            link = update.media.expanded_link
-            #    #        else:
-            #    #            link = update.media.link
-            #    #    else:
-            #    #        link = ''
-            #    #    if update.text: 
-            #    #        outputData[bufferName][method].append((update.text, link, toShow, '', '', '', '', '', '', ''))
-            #    #    else:
-            #    #        outputData[bufferName][method].append((link, link, toShow, '', '', '', '', '', '', ''))
-            #else:
-            #            outputData[bufferName][method].append(('Empty', 'Empty', 'Empty', '', '', '', '', '', '', ''))
-
-        #self.lenMax[serviceName] = len(outputData[serviceName]['pending'])
-    
-        #self.postsFormatted = outputData
 
     def addPosts(self, listPosts):
         linkAdded = ''
@@ -429,7 +406,9 @@ class moduleBuffer(Queue):
     def getPostTitle(self, post):
         logging.info(post)
         if post:
-            if 'media' in post:
+            if 'text' in post:
+                title = post['text']
+            elif 'media' in post:
                 if 'title' in post['media']:
                      title = post['media']['title']
                 else:
