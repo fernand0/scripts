@@ -236,17 +236,12 @@ def main():
                         print("      Scheduling post %s" % post[0])
                         logging.info("    Scheduling post %s" % post[0])
 
-                    for post in listPosts:
-                        print(post[0]) 
-                        print(post[1]) 
-
                     if listPosts:
                         link = listPosts[len(listPosts) - 1][1]
                         logging.debug("link -> %s"% link)
 
 
                 if blog.getBufferapp() and (profile[0] in blog.getBufferapp()): 
-                    print("---",listPosts)
                     link = blog.buffer[socialNetwork].addPosts(listPosts)
 
 

@@ -100,6 +100,8 @@ class moduleFacebook(Content):
             res = self.page.put_object(self.pageId, "feed", message=post, link=link)
             logging.info("Res: %s" % res)
             if 'id' in res:
+                #id2, id1 = res['id'].split('_')
+                #urlFb = 'https://www.facebook.com/permalink.php?story_fbid=%s&id=%s'%(id1, id2)
                 return('https://www.facebook.com/%s/posts/%s' %
                         (self.user,res['id'].split('_')[1]))
             return(res)
