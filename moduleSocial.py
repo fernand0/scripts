@@ -141,7 +141,7 @@ def searchTwitter(search, twitter):
     return(t.search.tweets(q=search)['statuses'])
 
 def nextPost(blog, socialNetwork):
-    cacheName = 'Cache_'+socialNetwork[0]+'_'+socialNetwork[1]
+    #cacheName = 'Cache_'+socialNetwork[0]+'_'+socialNetwork[1]
     blog.cache[socialNetwork].setPosts()
     listP = blog.cache[socialNetwork].getPosts()
 

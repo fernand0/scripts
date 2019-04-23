@@ -244,11 +244,10 @@ def main():
                 if blog.getBufferapp() and (profile[0] in blog.getBufferapp()): 
                     link = blog.buffer[socialNetwork].addPosts(listPosts)
 
-
-
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
                     blog.cache[socialNetwork].addPosts(listPosts)
-                    timeSlots = 55*60 # One hour
+                    time.sleep(1)
+                    timeSlots = 5*60 # One hour
                     t[nameProfile] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, socialNetwork, 1, timeSlots))
                     t[nameProfile].start() 
 
