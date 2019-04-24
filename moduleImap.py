@@ -96,8 +96,6 @@ def mailFolder(account, accountData, logging, res):
         M = makeConnection(SERVER, USER, PASSWORD)
     except:
         logging.error("Error with %s - %s" % (USER,SERVER))
-        
-
 
     for actions in accountData['RULES']:
         RULES = actions[0]
@@ -292,6 +290,9 @@ def selectMessageAndFolder(M):
             elif (len(msg_number) > 0) and (msg_number[0] == '>'):
                 if msg_number[1:].isdigit():
                     moduleSieve.addToSieve(msg_data[int(msg_number[1:])])
+            elif (len(msg_number) > 0) and (not msg_number.isdigit()):
+                print("Selecting messages with %s"% msg_number)
+                return(folder, "", msg_number)
             else:
                 startMsg = 0
         else:
@@ -409,7 +410,7 @@ def selectAllMessages(folder, M):
 
     return ",".join(messages)
 
-def selectMessageSubject(folder, M, sbj, sens=0):
+def selectMessageSubject(folder, M, sbj, sens=0, partial=False):
     msg_number =""
     rows, columns = os.popen('stty size', 'r').read().split()
     numMsgs = 24
@@ -449,7 +450,12 @@ def selectMessageSubject(folder, M, sbj, sens=0):
                     # ayudita
                     # b'Visualizaci\xc3\xb3n ayudica'
 		    #dist = distance.levenshtein(headSubject[-minLen:], sbj[-minLen:])
-                    if minLen > maxLen/2:
+                    if partial:
+                        if (headSubjDec.find(sbjDec) >=0) or (sbjDec=='*'):
+                            dist = -1
+                        else:
+                            dist = 100
+                    elif minLen > maxLen/2:
                         if minLen > 0:
                             #print("len",minLen)
                             #print("he",headSubjDec[-minLen:])
@@ -499,13 +505,17 @@ def selectMessagesNew(M):
                 return(-1)
             elif (folder != 'x'):
                 if (folder != "."):
-                    sbj = msg['Subject']
+                    if msg:
+                        sbj = msg['Subject']
+                        partial = False
+                    else:
+                        sbj = msgNumber
+                        partial = True
                     ok = ""
                     badSel = ""
                     sens = 0
                     while not ok:
-                        (msgs, distMsgs) = selectMessageSubject(folder, M, sbj, sens)
-                        printMessageHeaders(M, msgs)
+                        (msgs, distMsgs) = selectMessageSubject(folder, M, sbj, sens, partial)
                         isOk = input("Less messages [-] More messages [+] Wrong message selected [x] ")
                         if isOk == '-':
                            sens = sens + 1
@@ -598,9 +608,12 @@ def printMessage(M, msg, rows = 24, columns = 80, headers = ['From', 'To', 'Subj
     wait = input("Any key to follow")
 
 
-def createFolder(M, name, folder):
-    print("We can select a folder where our new folder will be created")
-    folder = selectFolder(M, folder)
+def createFolder(M, name, folder, whereFolder=''):
+    if not whereFolder:
+        print("We can select a folder where our new folder will be created")
+        folder = selectFolder(M, folder)
+    else:
+        folder = whereFolder + folder
     print(folder)
     #folder  = nameFolder(folder)
     if (folder[-1] == '"'):
@@ -694,7 +707,7 @@ def listFolderNames(data, inNameFolder = ""):
 
     return(listFolders)
 
-def selectFolder(M, moreMessages = ""):
+def selectFolder(M, moreMessages = "", newFolderName=''):
     resp, data = M.list('""', '*')
     #print(data)
     listAllFolders = listFolderNames(data, moreMessages)
@@ -712,13 +725,19 @@ def selectFolder(M, moreMessages = ""):
         else:
             print(listFolders)
         print(len(listFolders))
-        inNameFolder = input("Folder number [-cf] Create Folder // A string to select a smaller set of folders ")
+        if not newFolderName: 
+            inNameFolder = input("Folder number [-cf] Create Folder // A string to select a smaller set of folders ")
+        else:
+            inNameFolder='-cf'
         
         if (len(inNameFolder) > 0) and (inNameFolder == '-cf'):
-           nfn = input("New folder name? ")
-           iFolder = createFolder(M, nfn, moreMessages)
-           return(iFolder)
-           #listFolders = iFolder
+            if newFolderName: 
+                nfn = newFolderName
+            else:
+                nfn = input("New folder name? ")
+            iFolder = createFolder(M, nfn, moreMessages)
+            return(iFolder)
+            #listFolders = iFolder
         listFolders = listFolderNames(listFolders.split('\n'), inNameFolder)
         if (not inNameFolder):
             print("Entra")
@@ -731,32 +750,34 @@ def selectMessages(M):
     M.select()
     end = ""
     while (not end):
-       # Could we move this parsing part out of the while?
-       # We are going to filter based on one message
-       msgs = ""
-       listMsgs = ""
-       moreMessages = ""
-       while not moreMessages:
-            (folder, msg) = selectMessage(M)
-            sbj = msg['Subject']
-            (msgs, distMsgs) = selectMessageSubject(folder, M, sbj)
+        # Could we move this parsing part out of the while?
+        # We are going to filter based on one message
+        msgs = ""
+        listMsgs = ""
+        moreMessages = ""
+        while not moreMessages:
+             (folder, msg) = selectMessage(M)
+             sbj = msg['Subject']
+             (msgs, distMsgs) = selectMessageSubject(folder, M, sbj)
 
-            printMessageHeaders(M, msgs)
+             printMessageHeaders(M, msgs)
 
-            if listMsgs: 
-                listMsgs = listMsgs + ',' + msgs
-            else:
-                listMsgs = msgs
+             if listMsgs: 
+                 listMsgs = listMsgs + ',' + msgs
+             else:
+                 listMsgs = msgs
 
-            moreMessages = input("More messages? ")    
+             moreMessages = input("More messages? ")
+        print(listMsgs)
+        syx.exit()
 
-       if listMsgs:
-            printMessageHeaders(M, listMsgs)
-            folder = selectFolder(M, moreMessages)
-            #folder = nameFolder(folder) 
-            print("Selected folder (final): ", folder)
-            moveMails(M,listMsgs, folder)
-       end = input("More rules? (empty to continue) ")
+        if listMsgs:
+             printMessageHeaders(M, listMsgs)
+             folder = selectFolder(M, moreMessages)
+             #folder = nameFolder(folder) 
+             print("Selected folder (final): ", folder)
+             moveMails(M,listMsgs, folder)
+        end = input("More rules? (empty to continue) ")
 
 def loadImapConfig():
     config = configparser.ConfigParser()
