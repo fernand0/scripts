@@ -69,43 +69,47 @@ class moduleGmail():
         self.name = self.name + Acc[3:]
         #self.profile = self.service.users().getProfile(userId='me').execute()
 
+    def getClient(self):
+        return(self.service)
+
     def confName(self, acc):
-        api = self.service
+        api = self.getClient()
         theName = os.path.expanduser(CONFIGDIR + '/' 
                         + '.' + acc[0]+ '_' 
                         + acc[1]+ '.json')
         return(theName)
     
     def setPosts(self):
-        api = self.service
+        api = self.getClient()
         posts = api.users().drafts().list(userId='me').execute()
-        logging.info("--setPosts %s" % posts)
+        logging.debug("--setPosts %s" % posts)
         if 'drafts' in posts:
             self.posts = []
             self.rawPosts = []
             for post in posts['drafts']:
                 self.posts.insert(0, post)
-                message = self.getMessageRaw(post['id'])
+                message = self.getMessageMeta(post['id'])
                 self.rawPosts.insert(0, message)
+                #print(message)
 
     def getPosts(self):
         self.setPosts()
         return(self.rawPosts)
 
     def getMessage(self, id): 
-        api = self.service
+        api = self.getClient()
         message = api.users().drafts().get(userId="me", 
                 id=id).execute()['message']
         return message
 
     def getMessageRaw(self, id): 
-        api = self.service
+        api = self.getClient()
         message = api.users().drafts().get(userId="me", 
                 id=id, format='raw').execute()['message']
         return message
 
     def getMessageMeta(self, id): 
-        api = self.service
+        api = self.getClient()
         message = api.users().drafts().get(userId="me", 
                 id=id, format='metadata').execute()['message']
         return message
@@ -138,17 +142,16 @@ class moduleGmail():
         messageEmail = email.message_from_bytes(base64.urlsafe_b64decode(messageRaw['raw']))
         return(messageEmail)
 
-
     def getBody(self, message):
         return(message['payload']['parts'])
  
     def getLabelList(self):
-        api = self.service
+        api = self.getClient()
         results = api.users().labels().list(userId='me').execute() 
         return(results['labels'])
 
     def getLabelId(self, name):
-        api = self.service
+        api = self.getClient()
         results = self.getLabelList() 
         for label in results: 
             if label['name'] == name: 
@@ -158,7 +161,7 @@ class moduleGmail():
         return(labelId)
 
     def obtainPostData(self, i, debug=False):
-        api = self.service
+        api = self.getClient()
 
         if not self.posts:
             self.setPosts()
@@ -167,25 +170,30 @@ class moduleGmail():
             return (None, None, None, None, None, None, None, None, None, None)
 
         messageRaw = self.rawPosts[i]
-        messageEmail = self.getEmail(messageRaw)
+        #messageEmail = self.getEmail(messageRaw)
 
-        theTitle = self.getHeaderEmail(messageEmail, 'Subject')
-        snippet = self.getHeaderRaw(messageRaw, 'snippet')
+        theTitle = self.getHeader(messageRaw, 'Subject')
+        if theTitle == None:
+            theTitle = self.getHeader(messageRaw, 'subject')
+        snippet = self.getHeader(messageRaw, 'snippet')
 
         theLink = None
-        posIni = snippet.find('http')
-        posFin = snippet.find(' ', posIni)
-        posSignature = snippet.find('-- ')
-        if posIni < posSignature: 
-            theLink = snippet[posIni:posFin]
+        if snippet:
+            posIni = snippet.find('http')
+            posFin = snippet.find(' ', posIni)
+            posSignature = snippet.find('-- ')
+            if posIni < posSignature: 
+                theLink = snippet[posIni:posFin]
         theLinks = None
-        for part in messageEmail.walk():
-            if part.get_content_type() == 'text/html':
-                content = part.get_payload()
-                html = moduleHtml.moduleHtml()
-                theLinks = html.listLinks(content)
-            elif part.get_content_type() == 'text/plain':
-                theContent = part
+        #for part in messageEmail.walk():
+        #    if part.get_content_type() == 'text/html':
+        #        content = part.get_payload()
+        #        html = moduleHtml.moduleHtml()
+        #        theLinks = html.listLinks(content)
+        #    elif part.get_content_type() == 'text/plain':
+        #        theContent = part
+        content = None
+        theContent = None
         firstLink = theLink
         theImage = None
         theSummary = snippet
@@ -196,7 +204,7 @@ class moduleGmail():
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
     def getPostsCache(self):        
-        api = self.service
+        api = self.getClient()
         drafts = self.getPosts()
     
         listP = []
@@ -210,7 +218,7 @@ class moduleGmail():
         return(listP)
     
     def listPosts(self, pp):    
-        api = self.service
+        api = self.getClient()
         outputData = {}
         files = []
     
@@ -267,7 +275,8 @@ class moduleGmail():
                         'publishMail')
                 logging.info("Publishing title: %s" % title)
  
-                logging.info(title, link, summary, summaryHtml, summaryLinks, image, content , links )
+                logging.debug(title, link, summary, summaryHtml, summaryLinks, image, content , links )
+                logging.info(title, link, content , links )
                 logging.info(publishMethod)
                 update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
                 if update:
@@ -279,23 +288,27 @@ class moduleGmail():
         return(None)
     
     def deletePost(self, cache, pp, posts, args):
+        api = self.getClient()
         logging.info("To delete %s" % args)
     
         update = ""
         serviceName = self.name
+        logging.info("In %s" % serviceName)
         title = None
         if self.isForMe(args):
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
 
-            if title:
+            if title or comment:
+                #What happens if the title is empty?
                 idPost = comment
 
-                update = self.service.users().drafts().delete(userId='me', id=idPost).execute()
+                update = api.users().drafts().delete(userId='me', id=idPost).execute()
                 return(update)
 
         return(None)
 
     def editPost(self, pp, posts, args, newTitle):
+        api = self.getClient()
         logging.info("To edit %s" % args)
         logging.info("New title %s", newTitle)
 
@@ -304,15 +317,15 @@ class moduleGmail():
         if self.isForMe(args):
             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
             # Should we avoid two readings?
-            message = summaryLinks 
-            #self.service.users().drafts().get(userId="me", 
-            #    format="raw", id=comment).execute()['message']
+            #message = summaryLinks 
+            message = api.users().drafts().get(userId="me", 
+                   format="raw", id=comment).execute()['message']
             theMsg = email.message_from_bytes(base64.urlsafe_b64decode(message['raw']))
             self.setHeaderEmail(theMsg, 'subject', newTitle)
             message['raw'] = theMsg.as_bytes()
             message['raw'] = base64.urlsafe_b64encode(message['raw']).decode()
 
-            update = self.service.users().drafts().update(userId='me', 
+            update = api.users().drafts().update(userId='me', 
                     body={'message':message},id=comment).execute()
 
             return(newTitle)
@@ -320,11 +333,14 @@ class moduleGmail():
         return None
 
     def moveMessage(self,  message):
-        api = self.service
+        api = self.getClient()
         labelId = self.getLabelId('imported')
         mesGE = base64.urlsafe_b64encode(message).decode()
         mesT = email.message_from_bytes(message)
-        subj = email.header.decode_header(mesT['subject'])[0][0]
+        if mesT['subject']: 
+            subj = email.header.decode_header(mesT['subject'])[0][0]
+        else:
+            subj = ""
         logging.info("Subject %s",subj)
     
         try:
@@ -392,8 +408,8 @@ def main():
     api.API('ACC1',pp)
     api.setPosts()
     api.getPostsCache()
-    api.editPost(pp, api.getPosts(), "M17", 'Prueba.')
     sys.exit()
+    api.editPost(pp, api.getPosts(), "M17", 'Prueba.')
 
     logging.basicConfig(#filename='example.log',
                             level=logging.DEBUG,format='%(asctime)s %(message)s')

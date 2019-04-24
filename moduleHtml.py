@@ -208,10 +208,9 @@ if __name__ == "__main__":
 
     url = 'https://fernand0-errbot.slack.com/'
     blog = moduleRss.moduleRss()
-    blog.setPostsSlack()
+    blog.setPosts()
     blog.setUrl(url)
     print(blog.obtainPostData(29))
-    #print(blog.getPostsSlack())
     sys.exit()
 
     for section in config.sections():
