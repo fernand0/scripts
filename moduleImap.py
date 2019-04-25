@@ -27,7 +27,6 @@ import ssl
 
 from configMod import *
 import moduleGmail
-import pprint
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
@@ -909,9 +908,8 @@ def moveMailsRemote(M, msgs, folder):
         MD.close()
         MD.logout()
     else:
-        pp = pprint.PrettyPrinter(indent=4)
         service = moduleGmail.moduleGmail()
-        service.API(acc,pp)    
+        service.API(acc)    
 
         i = 0
         for msgId in msgs.split(','): #[:25]:
