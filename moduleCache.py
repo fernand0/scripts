@@ -22,227 +22,129 @@ import urllib
 import importlib
 importlib.reload(sys)
 #sys.setdefaultencoding("UTF-8")
-import moduleRss
 import moduleSocial
 
 from configMod import *
+from moduleQueue import *
 
-class moduleCache():
+class moduleCache(Queue):
     
-    def __init__(self, url, socialNetwork, nick):
-        self.service = None
-        self.profiles = None
-        self.posts = None
-        self.postsFormatted = None
-        self.name = "Cache_"+socialNetwork+"_"+nick
+    def __init__(self):
+        super().__init__()
+        #self.url = url
+        #self.socialNetwork = (socialNetwork, nick)
+
+    def getClient(self):
+        return(self.cache)
+
+    def setClient(self, url, socialNetworks, program=""):
         self.url = url
-        self.socialNetwork = (socialNetwork, nick)
-        self.lenMax = -1
+        self.socialNetworks = socialNetworks
+        self.program = program
+
+    def getProgram(self):
+        return (self.program)
+
+    def getSocialNetworks(self):
+        return (self.socialNetworks)
+
+    def setProfiles(self, profile=""):
+        logging.info("  Checking services...")
+
+        socialNetworks = self.getSocialNetworks()
+        logging.info(socialNetworks)
+        self.profiles = []
+        self.service = {}
+        i = 0
+        for service in socialNetworks:
+            if service[0] in self.getProgram():
+                cacheAcc = {}
+                cacheAcc['service'] = service
+                cacheAcc['service_username'] = socialNetworks[service]
+                serviceName = 'Cache_'+cacheAcc['service']+'_'+cacheAcc['service_username']
+                cacheAcc['cache_name'] = serviceName
+                self.service[serviceName] = i
+                i = i + 1
+                # Maybe adding 'Cache_'?
+                self.profiles.append(cacheAcc)
+
+    def getService(self):
+        return(self.socialNetwork[0])
+
+    def getName(self, service):
+        for profile in self.getProfiles():
+            if profile['service'] == service:
+                return(profile['cache_name'])
+        return ""
 
     def setPosts(self):        
-        fileNameQ = fileNamePath(self.url, self.socialNetwork) + ".queue" 
-        with open(fileNameQ,'rb') as f: 
-            try: 
-                listP = pickle.load(f) 
-            except: 
-                listP = [] 
-        self.posts = listP
-        self.lenMax= len(self.posts)
-
-    def getPosts(self):        
-        return(self.posts)
-
-    def getPostsFormatted(self):    
-        return(self.postsFormatted)
-
-    def setPostsFormatted(self):    
         outputData = {}
-        files = []
-    
-        serviceName = self.name[0].capitalize() + self.name[1:]
-        logging.info("   Service %s" % serviceName)
-    
-        outputData[serviceName] = {'sent': [], 'pending': []}
-        listP = self.getPosts()
 
-        logging.debug("-Posts %s"% listP)
-    
-        if listP and len(listP) > 0: 
-            for element in listP: 
-                outputData[serviceName]['pending'].append(element) 
-    
-        self.postsFormatted = outputData
-    
-    def updatePostsCache(self):
-        fileNameQ = fileNamePath(self.url, self.socialNetwork) + ".queue" 
+        self.setProfiles()
+        profiles = self.getProfiles()
+        logging.debug("Profiles %s" % profiles)
 
-        #serviceName = self.name.capitalize()
-        serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1]
-    
-        with open(fileNameQ, 'wb') as f:
-            pickle.dump(self.postsFormatted[serviceName]['pending'], f)
-        logging.info("Writing in %s" % fileNameQ)
-    
-    def isForMe(self, args):
-        serviceName =  self.socialNetwork[0].capitalize()
-        if (serviceName[0] in args) or ('*' in args): 
-           return True
-        return False
-    
-    def showPost(self, args):
-        #return(self.interpretAndExecute(args,'show'))
-        logging.info("To show %s" % args)
-    
-        if self.isForMe(args):
-            j = int(args[-1])
-            serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1] #self.name.capitalize()
-            logging.debug(self.postsFormatted)
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.postsFormatted[serviceName]['pending'][j])
-            if title:
-                return(title+' '+link)
-            else:
-                return("")
-        return("")
-    
-    def publishPost(self, args):
-        #return(self.interpretAndExecute(args,'publish'))
-        logging.info("To publish %s" % args)
-    
-        udpate = None
-        if self.isForMe(args):
-            j = int(args[-1])
-            nick = self.socialNetwork[1]
-            serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1] #self.name.capitalize()
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.postsFormatted[serviceName]['pending'][j])
-            publishMethod = getattr(moduleSocial, 
-                    'publish'+ self.socialNetwork[0].capitalize())
-            logging.info("Publishing title: %s" % title)
-            logging.info("Social network: %s Nick: %s" % (serviceName, nick))
-            update = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
-            if not isinstance(update, str) or (isinstance(update, str) and update[:4] != "Fail"):
-                self.postsFormatted[serviceName]['pending'] = self.postsFormatted[serviceName]['pending'][:j] + self.postsFormatted[serviceName]['pending'][j+1:]
-                logging.debug("Updating %s" % self.postsFormatted)
-                #logging.info("Blog %s" % cache['blog'])
-                self.updatePostsCache()
-                if 'text' in update:
-                    update = update['text']
-                logging.info("Update", update)
-    
-            return(update)
-        return ""
-    
-    def deletePost(self, args):
-        #return(self.interpretAndExecute(args,'delete'))
-        logging.info("To Delete %s" % args)
-    
-        udpate = ""
-        if self.isForMe(args):
-            j = int(args[-1])
-            serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1] #self.name.capitalize()
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.postsFormatted[serviceName]['pending'][j])
-            update = "Deleted: "+ title
-            logging.debug("Posts %s" % self.postsFormatted[serviceName]['pending'])
-            self.postsFormatted[serviceName]['pending'] = self.postsFormatted[serviceName]['pending'][:j] + self.postsFormatted[serviceName]['pending'][j+1:]
-            logging.debug("-Posts %s" % self.postsFormatted[serviceName]['pending'])
-            logging.info("social network %s - %s" 
-                    % (self.socialNetwork[0], self.socialNetwork[1]))
-            self.updatePostsCache()
-            return(update)
-    
-        return("")
-    
-    def editPost(self, args, newTitle):
-        #return(self.interpretAndExecute(args,'edit', newTitle))
-        logging.info("To edit %s" % args)
-        logging.info("New title %s", newTitle)
-    
-        udpate = None
-        if self.isForMe(args):
-            j = int(args[-1])
-            serviceName = 'Cache_'+self.socialNetwork[0]+'_'+self.socialNetwork[1] #self.name.capitalize()
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (self.postsFormatted[serviceName]['pending'][j])
-            self.postsFormatted[serviceName]['pending'][j] = (newTitle, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) 
-            self.updatePostsCache()
-            update = "Changed "+title+" with "+newTitle
-        else:
-            update = ""
-
-        return(update)
-    
-   
-    
-    #######################################################
-    # These need work
-    #######################################################
-    
-    def movePost(self, args):
-        # Moving posts, we identify the profile by the first letter. We can use
-        # several letters and if we put a '*' we'll move the posts in all the
-        # social networks
-        logging.info("To move %s to %s" % (toMove,toWhere))
-    
         i = 0
-        profMov = ""
-        return(args)
-        while toMove[i].isalpha():
-            profMov = profMov + toMove[i]
+        for profile in profiles:
+            serviceName = profile['service']
+            nickName = profile['service_username']
+            fileNameQ = fileNamePath(self.url, (serviceName, nickName)) + ".queue" 
+            try:
+                with open(fileNameQ,'rb') as f: 
+                    try: 
+                        listP = pickle.load(f) 
+                    except: 
+                        listP = [] 
+            except:
+                listP = []
+
+            profile['posts'] = listP
+            #self.lenMax= len(profile['posts'])
+
+            files = []
+    
+            cacheName = 'Cache_'+serviceName+'_'+nickName
+            self.service[cacheName] = i
             i = i + 1
+            logging.debug("   Service %s" % cacheName)
     
-        profiles = cache['profiles']
-        for profile in profiles: 
-            logging.info("Social Network %s" % profile)
-            logging.info("profMov %s", profMov)
-            if 'socialNetwork' in profile:
-                logging.info("socialNetwork %s", profile['socialNetwork'])
+            outputData[cacheName] = {'sent': [], 'pending': []}
+            #listP = self.getPosts()
+
+            logging.debug("-Posts %s"% listP)
     
-                serviceName = profile['socialNetwork'][0].capitalize()
-                nick = profile['socialNetwork'][1]
-                if (serviceName[0] in profMov) or toMove[0]=='*': 
-                    logging.info("to Move %s to %s" % (toMove, toWhere))
-                    j = int(toMove[-1])
-                    k = int(toWhere[-1])
-                    postI = (posts[serviceName]['pending'][i])
-                    postJ = (posts[serviceName]['pending'][j])
-                    posts[serviceName]['pending'][i] = postJ
-                    posts[serviceName]['pending'][j] = postI
-                    updatePostsCache(profile['socialNetwork'])
+            if listP and len(listP) > 0: 
+                for element in listP: 
+                    outputData[cacheName]['pending'].append(element) 
     
-        return(posts[serviceName]['pending'][i][0]+' '+ 
-                  posts[serviceName]['pending'][j][0])
+            self.postsFormatted = outputData
     
-    def copyPost(self, api, log, profiles, toCopy, toWhere):
-        logging.info(toCopy+' '+toWhere)
-    
-        profCop = toCopy[0]
-        ii = int(toCopy[1])
-    
-        j = 0
-        profWhe = ""
-        i = 0
-        while i < len(toWhere):
-            profWhe = profWhe + toWhere[i]
-            i = i + 1
-        
-        log.info(toCopy,"|",profCop, ii, profWhe)
-        for i in range(len(profiles)):
-            serviceName = profiles[i].formatted_service
-            log.info("ii: %s" %i)
-            updates = getattr(profiles[j].updates, 'pending')
-            update = updates[ii]
-            if ('media' in update): 
-                if ('expanded_link' in update.media):
-                    link = update.media.expanded_link
-                else:
-                    link = update.media.link
-            else:
-                link = ""
-           
-            if (serviceName[0] in profCop):
-                for j in range(len(profiles)): 
-                    serviceName = profiles[j].formatted_service 
-                    if (serviceName[0] in profWhe):
-                        profiles[j].updates.new(urllib.parse.quote(update.text + " " + link).encode('utf-8'))
-    
+    def addPosts(self, blog, profile, listPosts):
+        nameCache = profile
+        self.setPosts()
+        serviceName = self.name
+        logging.info("    Adding posts to %s"% serviceName)
+        for prof in self.getProfiles():
+            if (prof['service'] ==  profile): 
+                cacheName = prof['cache_name']
+        listP = self.postsFormatted[cacheName]['pending']
+        newListP = listP + listPosts
+        self.postsFormatted[cacheName]['pending'] = newListP
+        self.updatePostsCache(profile)
+        logging.info("    Added posts to %s"% serviceName)
+
+    def updatePostsCache(self, profile=''):
+        for prof in self.getProfiles():
+            if (prof['service'] ==  profile): 
+                socialNetwork = (prof['service'], prof['service_username'])
+                serviceName = prof['cache_name']
+                fileNameQ = fileNamePath(self.url, socialNetwork) + ".queue" 
+
+                with open(fileNameQ, 'wb') as f:
+                    pickle.dump(self.postsFormatted[serviceName]['pending'], f)
+                logging.debug("Writing in %s" % fileNameQ)
+
+ 
     def listSentPosts(self, service=""):
         api = self.service
         profiles = getProfiles(api, service)
@@ -291,6 +193,78 @@ class moduleCache():
             logging.info("No sent posts")
             return someSent
 
+    def isForMe(self, args):
+        profiles = self.getProfiles()
+        lookAt = []
+        for prof in profiles:
+            if (prof['service'][0].capitalize() in args) or ('*' in args): 
+                #lookAt.append('Cache_'+prof['service']+'_'+prof['service_username'])
+                lookAt.append(prof['service'])
+        return(lookAt)
+
+    def edit(self, post, j, newTitle):
+        logging.info("New title %s", newTitle)
+        serviceName = post[0]
+        thePost = post[2:]
+        #print(thePost)
+        thePost.insert(0, newTitle)
+        for prof in self.getProfiles():
+            if (prof['service'] ==  serviceName): 
+                self.postsFormatted[prof['cache_name']]['pending'][j] = thePost
+                #print(self.postsFormatted[serviceName]['pending'][j])
+                logging.info("Service Name %s" % serviceName)
+                self.updatePostsCache(serviceName)
+
+
+                title = post[1]
+                update = "Changed "+title+" with "+newTitle
+
+                return(update)
+        return None
+
+    def publish(self, post, j):
+        logging.info("Publishing", post[1])
+        import importlib
+        #service = self.profiles[self.service[serviceName]]['service']
+        #service = service.capitalize()
+        logging.info(self.getProfiles())
+        logging.info("post %s"% post)
+        nick = self.profiles[self.service[serviceName]]['service_username']
+        mod = importlib.import_module('module'+service) 
+        cls = getattr(mod, 'module'+service)
+        api = cls()
+        api.setClient(nick)
+        comment = ''
+        update = api.publishPost(title, link, comment)
+        logging.info("Publishing title: %s" % title)
+        logging.info("Social network: %s Nick: %s" % (serviceName, nick))
+        if not isinstance(update, str) or (isinstance(update, str) and update[:4] != "Fail"):
+            self.postsFormatted[serviceName]['pending'] = self.postsFormatted[serviceName]['pending'][:j] + self.postsFormatted[serviceName]['pending'][j+1:]
+            logging.debug("Updating %s" % self.postsFormatted)
+            #logging.info("Blog %s" % cache['blog'])
+            self.updatePostsCache(serviceName)
+            logging.info("UUpdate ... %s" % str(update))
+            if 'text' in update:
+                update = update['text']
+            if type(update) == tuple:
+                update = update[1]['id']
+                # link: https://www.facebook.com/[name]/posts/[second part of id]
+        logging.info("Update before return %s"% update)
+        return(update)
+    
+    def delete(self, post, j):
+        logging.info("Publishing", post[1])
+        profiles = self.getProfiles()
+        serviceName = post[0]
+        for prof in self.getProfiles():
+            if (prof['service'] ==  serviceName): 
+                cacheName = prof['cache_name']
+                self.postsFormatted[cacheName]['pending'] = self.postsFormatted[cacheName]['pending'][:j] + self.postsFormatted[cacheName]['pending'][j+1:]
+                self.updatePostsCache(serviceName)
+
+                logging.info("Deleted %s"% post[1])
+                return("Deleted %s"% post[1])
+ 
 def main():
     import moduleCache
     import moduleSlack
@@ -303,32 +277,27 @@ def main():
     blog.setUrl(config.get(section, "url"))
     blog.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
     blog.setSocialNetworks(config, section)
+    #print(blog.getSocialNetworks())
 
     if ('bufferapp' in config.options(section)): 
         blog.setBufferapp(config.get(section, "bufferapp"))
     if ('program' in config.options(section)): 
         blog.setProgram(config.get(section, "program"))
 
-    cache = []
-    for sN in blog.getSocialNetworks():
-        (sN, blog.getSocialNetworks()[sN])
-
-        cacheAcc = moduleCache.moduleCache(blog.getUrl(), 
-                sN, blog.getSocialNetworks()[sN]) 
-        cache.append(cacheAcc)
-
-    for ca in cache:
-        ca.setPosts()
-        #print(ca.posts)
-        print(ca.name)
-        ca.getPostsFormatted()
-        print(ca.showPost('F1'))
-        print(ca.showPost('T3'))
-        print(ca.showPost('TF2'))
-        print(ca.showPost('*4'))
-        ca.movePost('T4 T3')
-        #ca.editPost('T4', "My Stepdad's Huge Dataset.") 
-        #ca.editPost('F5', "¡Sumate al datatón y a WiDS 2019! - lanacion.com")
+    blog.cache.setProfiles()
+    blog.cache.setPosts()
+    print('T0', blog.cache.selectAndExecute('show', 'T0'))
+    print('T3', blog.cache.selectAndExecute('show', 'T3'))
+    print('TF2', blog.cache.selectAndExecute('show', 'TF2'))
+    print('F4', blog.cache.selectAndExecute('show', 'F4'))
+    print('*3', blog.cache.selectAndExecute('show', '*3'))
+    #print('F0', blog.cache.selectAndExecute('delete', 'F0'))
+    #print('edit F0', blog.cache.selectAndExecute('edit', 'F0'+' '+'LLVM 8.0.0 Release.'))
+    #print('edit F0', blog.cache.editPost('F0', 'Así es Guestboard, un "Slack" para la organización de eventos.'))
+    #print('publish T0', blog.cache.publishPost('T0'))
+    #ca.movePost('T4 T3')
+    #ca.editPost('T4', "My Stepdad's Huge Dataset.") 
+    #ca.editPost('F5', "¡Sumate al datatón y a WiDS 2019! - lanacion.com")
     sys.exit()
     print(ca.editPost('F1', 'Alternative Names for the Tampon Tax - The Belladonna Comedy'))
     sys.exit()
