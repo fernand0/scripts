@@ -273,6 +273,7 @@ def main():
                                 if isinstance(result, str):
                                     if result[:4]=='Fail':
                                         link=''
+                                        logging.info("Posting failed")
                             else:
                                 publishMethod = getattr(moduleSocial, 
                                     'publish'+ serviceName)
@@ -283,6 +284,8 @@ def main():
                      updateLastLink(blog.url, link, socialNetwork) 
                      #       if result != "Fail!":
                      logging.debug("listPosts: %s"% listPosts)
+                else:
+                     logging.info("Posting failed, not link")
 
             time.sleep(2)
         else:

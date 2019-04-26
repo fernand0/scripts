@@ -107,6 +107,7 @@ class moduleFacebook(Content):
             return(res)
         except:        
             logging.warning("Facebook posting failed!") 
+            logging.warning("Post %s %s" % (post,link)) 
             logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
             logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
             return("Fail! %s" % sys.exc_info()[0])

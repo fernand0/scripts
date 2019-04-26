@@ -344,7 +344,7 @@ def main():
                     url = site.getLink(elem)
                     listPosts = []
                     listPosts.append((title, url))
-                    #site.buffer[socialNetwork].addPosts(listPosts)
+                    site.buffer[socialNetwork].addPosts(listPosts)
 
         if site.getProgram():
             for profile in site.getSocialNetworks():
