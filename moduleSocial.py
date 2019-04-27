@@ -195,8 +195,7 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
                 if result[:4]=='Fail':
                     link=''
                 else: 
-                    print("         [d] Published: %s\n" % result)
-
+                    print("         [d] Published: %s" % result)
         else: 
             publishMethod = globals()['publish'+ profile.capitalize()]#()(self, ))
             publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
