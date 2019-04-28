@@ -60,9 +60,19 @@ class moduleGcalendar(Content):
     
         self.client = service
         self.name = 'GCalendar' + Acc[3:]
+        self.active = 'primary'
 
     def getClient(self):
         return(self.client)
+
+    def setCalendarList(self): 
+        logging.info("  Setting calendar list")
+        api = self.getClient()
+        page_token = None
+        self.calendars = api.calendarList().list(pageToken=page_token).execute().get('items',[])
+
+    def getCalendarList(self): 
+        return(self.calendars)
 
     def getPosts(self):
         return(self.posts)
@@ -74,11 +84,12 @@ class moduleGcalendar(Content):
         # 'Z' indicates UTC time
         page_token = None
 
-        events_result = api.events().list(calendarId='primary',
+        self.posts = []
+        events_result = api.events().list(calendarId=self.active,
             timeMin=now, maxResults=10, singleEvents=True,
-            orderBy='startTime').execute()
+            orderBy='startTime').execute() 
+        self.posts = events_result.get('items',[])
 
-        self.posts = events_result.get('items', [])
 
     def extractDataMessage(self, i):
         logging.info("Service %s"% self.service)
@@ -97,7 +108,7 @@ class moduleGcalendar(Content):
             theLink = event['htmlLink']
         else:
             theLink = ''
-        if 'description':
+        if 'description' in event:
             theContent = event['description']
         else:
             theContent = ""
@@ -126,6 +137,11 @@ def main():
 
     print(calendar.getPosts())
     print(calendar.extractDataMessage(1))
+    print(len(calendar.getPosts()))
+    calendar.setCalendarList()
+    print(calendar.getCalendarList())
+    for i, cal in enumerate(calendar.getCalendarList()):
+        print(i, cal['summary'],cal['id'])
 
 if __name__ == "__main__":
     main()
