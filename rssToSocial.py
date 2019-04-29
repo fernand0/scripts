@@ -245,7 +245,8 @@ def main():
                     link = blog.buffer[socialNetwork].addPosts(listPosts)
 
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
-                    blog.cache[socialNetwork].addPosts(listPosts)
+                    link = blog.cache[socialNetwork].addPosts(listPosts)
+
                     time.sleep(1)
                     timeSlots = 55*60 # One hour
                     t[nameProfile] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, socialNetwork, 1, timeSlots))
@@ -275,6 +276,7 @@ def main():
                                         link=''
                                         logging.info("Posting failed")
                             else:
+                                logging.info("Still moduleSocial!")
                                 publishMethod = getattr(moduleSocial, 
                                     'publish'+ serviceName)
                                 result = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
