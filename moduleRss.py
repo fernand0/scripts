@@ -82,8 +82,9 @@ class moduleRss(Content):
             theSummary = post['summary']
             content = theSummary
         if 'content' in post:
-            content = post['description']
-            if content.startswith('Anuncios'): content = ''
+            content = post['content']
+            if isinstance(content, str):
+                if content.startswith('Anuncios'): content = ''
         if 'description' in post:
             theDescription = post['description']
         theTitle = self.getPostTitle(post)
@@ -92,7 +93,7 @@ class moduleRss(Content):
         if ('comment' in post):
             comment = post['comment']
         else:
-            comment = ""
+            comment = theSummary
 
         theSummaryLinks = ""
 
@@ -165,6 +166,20 @@ def main():
     config.read(CONFIGDIR + '/.rssBlogs')
 
     print("Configured blogs:")
+
+    blog = moduleRss.moduleRss()
+    #url = 'http://fernand0.github.io/'
+    #print("Url: %s"% url)
+    #blog.setUrl(url)
+    #rssFeed = 'feed.xml'
+    #blog.setRssFeed(rssFeed)
+    #blog.setPosts()
+    #print(blog.getPosts()[0])
+    #(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
+    #print(title, link, comment)
+    #sys.exit()
+
+
 
     blogs = []
 

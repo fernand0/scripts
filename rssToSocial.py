@@ -262,6 +262,10 @@ def main():
                             logging.info("  Publishing directly\n") 
                             serviceName = profile.capitalize()
                             print("   Publishing in %s %s" % (serviceName, title))
+                            if (profile == 'telegram') or (profile == 'facebook'):
+                                comment = summaryLinks
+                            if (profile == 'twitter') or (profile == 'mastodon'):
+                                comment = ''
                             if (profile == 'twitter') or (profile == 'facebook') or (profile=='telegram') or (profile=='mastodon') or (profile=='linkedin') or (profile == 'pocket') or (profile == 'medium'): 
                                 # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
                                 import importlib

@@ -6,6 +6,7 @@
 
 import configparser, os
 import datetime
+from dateutil.parser import parse
 import logging
 import importlib
 import sys
@@ -45,7 +46,7 @@ class moduleGcalendar(Content):
         api = {}
     
         config = configparser.ConfigParser() 
-        config.read(CONFIGDIR + '/.oauthG.cfg')
+        config.read(CONFIGDIR + '/.calendar.cfg')
         
         self.service = 'gcalendar'
         self.nick = config.get(Acc,'user')+'@'+config.get(Acc,'server')
@@ -65,6 +66,9 @@ class moduleGcalendar(Content):
     def getClient(self):
         return(self.client)
 
+    def setActive(self, idCal):
+        self.active = idCal
+
     def setCalendarList(self): 
         logging.info("  Setting calendar list")
         api = self.getClient()
@@ -77,16 +81,19 @@ class moduleGcalendar(Content):
     def getPosts(self):
         return(self.posts)
 
-    def setPosts(self):
+    def setPosts(self, date=''):
         logging.info("  Setting posts")
         api = self.getClient()
-        now = datetime.datetime.utcnow().isoformat() + 'Z' 
+        if date:
+            theDate = parse(date).isoformat()+'Z'
+        else: 
+            theDate= datetime.datetime.utcnow().isoformat() + 'Z' 
         # 'Z' indicates UTC time
         page_token = None
 
         self.posts = []
         events_result = api.events().list(calendarId=self.active,
-            timeMin=now, maxResults=10, singleEvents=True,
+            timeMin=theDate, maxResults=10, singleEvents=True,
             orderBy='startTime').execute() 
         self.posts = events_result.get('items',[])
 
@@ -137,11 +144,16 @@ def main():
 
     print(calendar.getPosts())
     print(calendar.extractDataMessage(1))
+    print(calendar.nick)
     print(len(calendar.getPosts()))
     calendar.setCalendarList()
     print(calendar.getCalendarList())
     for i, cal in enumerate(calendar.getCalendarList()):
         print(i, cal['summary'],cal['id'])
+    calendar.setActive(calendar.getCalendarList()[10]['id'])
+    calendar.setPosts()
+    print(calendar.getPosts())
+
 
 if __name__ == "__main__":
     main()
