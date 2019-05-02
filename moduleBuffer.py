@@ -176,7 +176,8 @@ class moduleBuffer(Queue):
                 logging.warning("Entry: %s"% entry) 
                 logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
                 logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
-                return(linkAdded)
+                link = ''
+                continue
             linkAdded = link
                 
             time.sleep(1)

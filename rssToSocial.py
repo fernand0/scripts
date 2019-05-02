@@ -239,6 +239,8 @@ def main():
                     if listPosts:
                         link = listPosts[len(listPosts) - 1][1]
                         logging.debug("link -> %s"% link)
+                    for post in listPosts:
+                        print(post[0])
 
 
                 if blog.getBufferapp() and (profile[0] in blog.getBufferapp()): 
@@ -286,7 +288,8 @@ def main():
                                 result = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
 
                 if link:
-                     logging.info("  Updating link %s" % profile)
+                     logging.info("  Updating link %s %s" % 
+                             (profile, link))
                      updateLastLink(blog.url, link, socialNetwork) 
                      #       if result != "Fail!":
                      logging.debug("listPosts: %s"% listPosts)

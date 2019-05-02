@@ -58,9 +58,11 @@ class moduleCache(Queue):
         self.posts = listP
 
     def addPosts(self, listPosts):
-        self.posts = self.posts + listPosts
-        self.updatePostsCache()
-        link = listPosts[len(listPosts) - 1][1]
+        link = ''
+        if listPosts:
+            self.posts = self.posts + listPosts
+            self.updatePostsCache()
+            link = listPosts[len(listPosts) - 1][1]
         return(link)
 
     def updatePostsCache(self):
@@ -170,7 +172,7 @@ class moduleCache(Queue):
         self.updatePostsCache()
 
         logging.info("Deleted %s"% post[0])
-        return("Deleted %s"% post[0])
+        return("%s"% post[0])
  
 def main():
     import moduleCache
