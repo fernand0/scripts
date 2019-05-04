@@ -142,6 +142,8 @@ def main():
     config.read(CONFIGDIR + '/.rssBlogs')
 
     blogs = []
+    delayedPosts = []
+    delayedBlogs = []
 
     for section in config.sections():
         blog = None
@@ -177,15 +179,11 @@ def main():
             if ('program' in config.options(section)): 
                 blog.setProgram(config.get(section, "program"))
 
-            logging.info(" Looking for pending posts") # in ...%s"
-                    #% blog.getSocialNetworks())
+            logging.info(" Looking for pending posts") 
             print("   Looking for pending posts ... " )
 
             bufferMax = 9
-            t = {}
 
-            #print(blog.getSocialNetworks())
-            #blog.socialNetworks = {'linkedin':'Fernando Tricas'}
             for profile in blog.getSocialNetworks():
                 lenMax = 9
                 link= ""
@@ -198,7 +196,6 @@ def main():
                         and (profile[0] in blog.getBufferapp())) 
                         or (blog.getProgram() 
                             and (profile[0] in blog.getProgram()))): 
-                    print(profile)
                     lenMax = blog.len(profile)
 
                 logging.info("  Service %s Lenmax %d" % (profile, lenMax))
@@ -215,9 +212,9 @@ def main():
                     logging.info("    Last link %s %s %d"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
                                 time.localtime(lastTime)), lastLink, i))
-                    print("     Last link %s Pos: %d" %
+                    print("     Last link %s" %
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
-                                time.localtime(lastTime)), i))
+                                time.localtime(lastTime))))
                     if isinstance(lastLink, bytes): 
                         print("      %s"% lastLink.decode())
                     else:
@@ -239,20 +236,20 @@ def main():
                     if listPosts:
                         link = listPosts[len(listPosts) - 1][1]
                         logging.debug("link -> %s"% link)
-                    for post in listPosts:
-                        print(post[0])
-
 
                 if blog.getBufferapp() and (profile[0] in blog.getBufferapp()): 
                     link = blog.buffer[socialNetwork].addPosts(listPosts)
 
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
+                    print("   Delayed")
                     link = blog.cache[socialNetwork].addPosts(listPosts)
 
                     time.sleep(1)
-                    timeSlots = 55*60 # One hour
-                    t[nameProfile] = threading.Thread(target = moduleSocial.publishDelay, args = (blog, socialNetwork, 1, timeSlots))
-                    t[nameProfile].start() 
+                    timeSlots = 20*60 # One hour
+                    #delayedPost = threading.Thread(target = moduleSocial.publishDelay, args = (blog, socialNetwork, 1, timeSlots))
+
+                    #delayedPosts.append(delayedPost) 
+                    delayedBlogs.append((blog, socialNetwork, 1, timeSlots)) 
 
                 if not (blog.getBufferapp() or blog.getProgram()):
                     if (i > 0):
@@ -303,6 +300,40 @@ def main():
     print("====================================")
     print("Finished at %s" % time.asctime())
     print("====================================")
+
+    if delayedBlogs:
+
+        print("\n====================================")
+        print("Starting delayed at %s" % time.asctime())
+        print("====================================")
+
+        import concurrent.futures 
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(delayedBlogs)) as executor:
+            delayedPosts = {executor.submit(moduleSocial.publishDelay, *args): args for args in delayedBlogs}
+            for future in concurrent.futures.as_completed(delayedPosts):
+                dataBlog = delayedPosts[future]
+                try:
+                    res = future.result()
+                except Exception as exc:
+                    print('%r generated an exception: %s' % (str(dataBlog), exc))
+                else:
+                    print('Blog %s' % str(dataBlog))
+    
+
+    #for t in delayedPosts:
+    #    t.start()
+
+    #print(" ... Waiting to finish")
+    #for args in delayedBlogs:
+    #    print("Args: %s" % str(args))
+
+    #for t in delayedPosts:
+    #    t.join()
+
+        print("\n====================================")
+        print("Finished delayed at %s" % time.asctime())
+        print("====================================")
+
     logging.info("Finished at %s" % time.asctime())
 
 if __name__ == '__main__':

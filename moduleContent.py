@@ -140,7 +140,7 @@ class Content:
     def len(self, profile):
         service = profile
         nick = self.getSocialNetworks()[profile]
-        print(nick)
+        print("Profile %s, Nick %s" % (service, nick))
         if self.cache and (service, nick) in self.cache:
             if self.cache[(service, nick)].getPosts(): 
                 return(len(self.cache[(service, nick)].getPosts()))

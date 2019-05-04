@@ -82,7 +82,6 @@ class moduleSlack(Content):
                 title=text[:pos]
             return(title)                
 
-
     def getPostLink(self, post):
         if 'attachments' in post:
             return(post['attachments'][0]['original_url'])
@@ -211,7 +210,7 @@ class moduleSlack(Content):
         elif url: 
             theLink = url
         else:
-            theLink = post['text']
+            theLink = self.getPostLink(post)
 
         if ('comment' in post):
             comment = post['comment']
@@ -292,7 +291,7 @@ def main():
 
     theChannel = site.getChanId(CHANNEL)  
     site.setPosts('links')
-    
+
     site.setSocialNetworks(config, section)
 
     if ('bufferapp' in config.options(section)): 

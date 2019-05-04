@@ -159,9 +159,6 @@ def nextPost(blog, socialNetwork):
 
 def publishDelay(blog, socialNetwork, numPosts, timeSlots): 
     # We allow the rest of the Blogs to start
-    time.sleep(2)
-    nameCache = 'Cache_'+socialNetwork[0]+'_'+socialNetwork[1]
-    #serviceName = blog.cache[nameCache].name
 
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
@@ -171,8 +168,8 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
 
         logger.info("    %s: Waiting ... %.2f minutes" % (socialNetwork[0].capitalize(), tSleep/60))
         logger.info("     I'll publish %s" % element[0])
-        print("         [d] %s: waiting... %.2f minutes\n          [d] I'll publish %s"
-                % (socialNetwork[0], tSleep/60, element[0]))
+        print(" [d] %s: waiting... %.2f minutes" 
+                % (socialNetwork[0], tSleep/60))
         time.sleep(tSleep) 
 
         # Things can have changed during the waiting
@@ -195,7 +192,7 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
                 if result[:4]=='Fail':
                     link=''
                 else: 
-                    print("         [d] Published: %s" % result)
+                    print(" [d] Published: %s - %s" % (title, result))
         else: 
             publishMethod = globals()['publish'+ profile.capitalize()]#()(self, ))
             publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
@@ -207,10 +204,8 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))
             time.sleep(tSleep2) 
     logger.info("   Finished in: %s" % socialNetwork[0].capitalize())
-    print("====================================")
-    print("Finished in: %s at %s" % (socialNetwork[0].capitalize(), 
+    print(" [d] Finished in: %s at %s" % (socialNetwork[0].capitalize(), 
         time.asctime()))
-    print("====================================")
 
    
 def cleanTags(soup):

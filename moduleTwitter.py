@@ -99,8 +99,13 @@ class moduleTwitter(Content):
             return res
         except:        
             logging.warning("Twitter posting failed!") 
+            logging.warning("Post %s %s" % (post,link)) 
             logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
             logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
+            print("Twitter posting failed!") 
+            print("Post %s %s" % (post,link)) 
+            print("Unexpected error: %s"% sys.exc_info()[0]) 
+            print("Unexpected error: %s"% sys.exc_info()[1]) 
             return("Fail! %s" % sys.exc_info()[0])
 
 
