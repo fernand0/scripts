@@ -245,7 +245,7 @@ def main():
                     link = blog.cache[socialNetwork].addPosts(listPosts)
 
                     time.sleep(1)
-                    timeSlots = 20*60 # One hour
+                    timeSlots = 55*60 # One hour
                     #delayedPost = threading.Thread(target = moduleSocial.publishDelay, args = (blog, socialNetwork, 1, timeSlots))
 
                     #delayedPosts.append(delayedPost) 
