@@ -98,16 +98,7 @@ class moduleTwitter(Content):
                 return("https://twitter.com/%s/status/%s" % (self.user, res['id']))
             return res
         except:        
-            logging.warning("Twitter posting failed!") 
-            logging.warning("Post %s %s" % (post,link)) 
-            logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
-            logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
-            print("Twitter posting failed!") 
-            print("Post %s %s" % (post,link)) 
-            print("Unexpected error: %s"% sys.exc_info()[0]) 
-            print("Unexpected error: %s"% sys.exc_info()[1]) 
-            return("Fail! %s" % sys.exc_info()[0])
-
+            return(self.report('Twitter', post, link, sys.exc_info()))
 
 def main():
 
@@ -118,10 +109,11 @@ def main():
     tw.setClient('fernand0')
 
     tw.setPosts()
-    for tweet in tw.getPostsFormatted()['Twitter']['pending']:
-        print("@%s: %s" %(tweet[2], tweet[0]))
+    #for tweet in tw.getPosts():
+    #    print(tweet)
+    #    #print("@%s: %s" %(tweet[2], tweet[0]))
 
-    tw.publishPost("Prueba")
+    tw.publishPost("Inscripciones 2019 | Congreso Web", "http://congresoweb.es/cw19/inscripciones/", '')
 
 if __name__ == '__main__':
     main()

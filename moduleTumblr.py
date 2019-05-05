@@ -79,11 +79,7 @@ class moduleTumblr(Content):
             logging.info("Res: %s" % res)
             return(res)
         except:        
-            logging.warning("Tumblr posting failed!") 
-            logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
-            logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
-            return("Fail! %s" % sys.exc_info()[0])
-
+            return(self.report('Tumblr', post, link, sys.exc_info()))
 
 def main():
 

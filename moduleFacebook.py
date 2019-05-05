@@ -106,12 +106,7 @@ class moduleFacebook(Content):
                         (self.user,res['id'].split('_')[1]))
             return(res)
         except:        
-            logging.warning("Facebook posting failed!") 
-            logging.warning("Post %s %s" % (post,link)) 
-            logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
-            logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
-            return("Fail! %s" % sys.exc_info()[0])
-
+            return(self.report('Facebook', post, link, sys.exc_info()))
 
 def main():
 

@@ -77,10 +77,7 @@ class moduleMedium(Content):
             logging.info("Res: %s" % res)
             return(res)
         except:
-            logging.warning("Medium posting failed!")
-            logging.warning("Unexpected error:", sys.exc_info()[0])
-            return("Fail!")
-
+            return(self.report('Medium', post, link, sys.exc_info()))
 
 def main():
     import moduleMedium

@@ -307,6 +307,7 @@ def main():
         import concurrent.futures 
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(delayedBlogs)) as executor:
             delayedPosts = {executor.submit(moduleSocial.publishDelay, *args): args for args in delayedBlogs}
+            time.sleep(5)
             print("")
             for future in concurrent.futures.as_completed(delayedPosts):
                 dataBlog = delayedPosts[future]

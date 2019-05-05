@@ -61,10 +61,7 @@ class moduleMastodon(Content):
                 return(res['uri'])
             return res
         except:        
-            logging.warning("Mastodon posting failed!") 
-            logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
-            logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
-            return("Fail! %s" % sys.exc_info()[0])
+            return(self.report('Mastodon', post, link, sys.exc_info()))
 
 def main():
     import moduleMastodon

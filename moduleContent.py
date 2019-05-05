@@ -235,3 +235,16 @@ class Content:
     
         return (soup.get_text().strip('\n'), theSummaryLinks)
 
+    def report(self, profile, post, link, data): 
+        logging.warning("%s posting failed!" % profile) 
+        logging.warning("Post %s %s" % (post,link)) 
+        logging.warning("Unexpected error: %s"% data[0]) 
+        logging.warning("Unexpected error: %s"% data[1]) 
+        print("%s posting failed!" % profile) 
+        print("Post %s %s" % (post,link)) 
+        print("Unexpected error: %s"% data[0]) 
+        print("Unexpected error: %s"% data[1]) 
+        return("Fail! %s" % data[0])
+        #print("----Unexpected error: %s"% data[2]) 
+
+

@@ -266,7 +266,7 @@ class moduleGmail(Content,Queue):
                        body={ 'id': idPost}).execute()
             logging.info("Res: %s" % res)
         except:
-            return("Fail!")
+            return(self.report('Gmail', idPost, '', sys.exc_info()))
 
         return("Published %s!"% title)
 

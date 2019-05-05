@@ -55,10 +55,7 @@ class modulePocket(Content):
             logging.info("Posted!: %s" % post)
             return(res)
         except:        
-            logging.warning("Pocket posting failed!") 
-            logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
-            logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
-            return("Fail! %s" % sys.exc_info()[0])
+            return(self.report('Pocket', post, link, sys.exc_info()))
  
 def main(): 
 
