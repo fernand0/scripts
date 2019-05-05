@@ -246,9 +246,6 @@ def main():
 
                     time.sleep(1)
                     timeSlots = 55*60 # One hour
-                    #delayedPost = threading.Thread(target = moduleSocial.publishDelay, args = (blog, socialNetwork, 1, timeSlots))
-
-                    #delayedPosts.append(delayedPost) 
                     delayedBlogs.append((blog, socialNetwork, 1, timeSlots)) 
 
                 if not (blog.getBufferapp() or blog.getProgram()):
@@ -303,36 +300,27 @@ def main():
 
     if delayedBlogs:
 
-        print("\n====================================")
+        print("======================================")
         print("Starting delayed at %s" % time.asctime())
-        print("====================================")
+        print("======================================")
 
         import concurrent.futures 
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(delayedBlogs)) as executor:
             delayedPosts = {executor.submit(moduleSocial.publishDelay, *args): args for args in delayedBlogs}
+            print("")
             for future in concurrent.futures.as_completed(delayedPosts):
                 dataBlog = delayedPosts[future]
                 try:
                     res = future.result()
                 except Exception as exc:
                     print('%r generated an exception: %s' % (str(dataBlog), exc))
-                else:
-                    print('Blog %s' % str(dataBlog))
+                #else:
+                #    print('Blog %s' % str(dataBlog))
     
 
-    #for t in delayedPosts:
-    #    t.start()
-
-    #print(" ... Waiting to finish")
-    #for args in delayedBlogs:
-    #    print("Args: %s" % str(args))
-
-    #for t in delayedPosts:
-    #    t.join()
-
-        print("\n====================================")
+        print("======================================")
         print("Finished delayed at %s" % time.asctime())
-        print("====================================")
+        print("\n====================================")
 
     logging.info("Finished at %s" % time.asctime())
 

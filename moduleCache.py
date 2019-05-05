@@ -74,20 +74,23 @@ class moduleCache(Queue):
 
     def extractDataMessage(self, i):
         logging.info("Service %s"% self.service)
-        messageRaw = self.getPosts()[i]
+        (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment) = (None, None, None, None, None, None, None, None, None, None) 
 
-        theTitle = messageRaw[0]
-        theLink = messageRaw[1]
+        if i < len(self.getPosts()):
+            messageRaw = self.getPosts()[i]
 
-        theLinks = None
-        content = messageRaw[4]
-        theContent = None
-        firstLink = theLink
-        theImage = messageRaw[3]
-        theSummary = content
+            theTitle = messageRaw[0]
+            theLink = messageRaw[1]
 
-        theSummaryLinks = content
-        comment = None
+            theLinks = None
+            content = messageRaw[4]
+            theContent = None
+            firstLink = theLink
+            theImage = messageRaw[3]
+            theSummary = content
+
+            theSummaryLinks = content
+            comment = None
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
