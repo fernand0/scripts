@@ -262,6 +262,8 @@ def main():
                                 comment = summaryLinks
                             if (profile == 'twitter') or (profile == 'mastodon'):
                                 comment = ''
+                            if (profile == 'medium'):
+                                comment = summaryHtml
                             if (profile == 'twitter') or (profile == 'facebook') or (profile=='telegram') or (profile=='mastodon') or (profile=='linkedin') or (profile == 'pocket') or (profile == 'medium'): 
                                 # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
                                 import importlib
