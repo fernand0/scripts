@@ -268,7 +268,7 @@ class moduleGmail(Content,Queue):
         except:
             return(self.report('Gmail', idPost, '', sys.exc_info()))
 
-        return("Published %s!"% title)
+        return("%s"% title)
 
     def delete(self, j):
         logging.info("Publishing %d"% j)
