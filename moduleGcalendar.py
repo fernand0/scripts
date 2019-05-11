@@ -6,7 +6,8 @@
 
 import configparser, os
 import datetime
-from dateutil.parser import parse
+#from dateutil.parser import parse
+import dateparser
 import logging
 import importlib
 import sys
@@ -83,11 +84,15 @@ class moduleGcalendar(Content):
 
     def setPosts(self, date=''):
         logging.info("  Setting posts")
+        logging.info("  Setting posts date %s"%date)
         api = self.getClient()
         if date:
-            theDate = parse(date).isoformat()+'Z'
-        else: 
+            theDate = dateparser.parse(date)
+            if theDate: 
+                theDate = theDate.isoformat()+'Z'
+        if not theDate: 
             theDate= datetime.datetime.utcnow().isoformat() + 'Z' 
+
         # 'Z' indicates UTC time
         page_token = None
 
@@ -96,6 +101,8 @@ class moduleGcalendar(Content):
             timeMin=theDate, maxResults=10, singleEvents=True,
             orderBy='startTime').execute() 
         self.posts = events_result.get('items',[])
+
+        return("orig. "+date+" Translated." + theDate)
 
 
     def extractDataMessage(self, i):

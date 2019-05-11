@@ -429,10 +429,14 @@ class moduleBuffer(Queue):
         profile = self.getProfile()
         return (profile['service'][0].capitalize() in args) or ('*' in args) 
 
-    def edit(self, j, newTitle):
+    def edit(self, j, newTitle=''):
         logging.info("New title %s", newTitle)
         thePost = self.obtainPostData(j)
         oldTitle = thePost[0]
+        if not newTitle:
+            newTitle = self.reorderTitle(oldTitle)
+        print(newTitle)
+        return ''
         profile = self.getProfile()
         logging.info("servicename %s" %self.service)
         from buffpy.models.update import Update
@@ -499,7 +503,6 @@ def main():
     print(post)
     print(buf.getPostTitle(post))
     print(buf.getPostLink(post))
-    sys.exit()
     # It has 30 elements
     print(buf.obtainPostData(0))
 
@@ -507,6 +510,7 @@ def main():
     print('L3', buf.selectAndExecute('show', 'L3'))
     print('TL2', buf.selectAndExecute('show', 'TL2'))
     print('*4', buf.selectAndExecute('show', '*4'))
+    print('edit L5', buf.selectAndExecute('edit', 'L5'))
     #print('edit L2', buf.selectAndExecute('edit', 'L2'+' '+'El tren del tambor.'))
     #print('pub L0', buf.selectAndExecute('publish','L0'))
     sys.exit()

@@ -290,7 +290,7 @@ def main():
                      #       if result != "Fail!":
                      logging.debug("listPosts: %s"% listPosts)
                 else:
-                     logging.info("Posting failed, no link")
+                     logging.info("No link")
 
             time.sleep(2)
         else:

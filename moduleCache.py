@@ -125,10 +125,12 @@ class moduleCache(Queue):
         return ((self.service[0].capitalize() in args.split()[0])
                 or (args[0] == '*'))
 
-    def edit(self, j, newTitle):
+    def edit(self, j, newTitle=''):
         logging.info("New title %s", newTitle)
         thePost = self.obtainPostData(j)
         oldTitle = thePost[0]
+        if not newTitle:
+            newTitle = self.reorderTitle(oldTitle)
         thePost = thePost[1:]
         thePost = (newTitle,) + thePost
         self.posts[j] = thePost
@@ -197,7 +199,8 @@ def main():
     print(cache.selectAndExecute('show', 'TM3'))
     print(cache.selectAndExecute('show', 'TM6'))
     #print(cache.selectAndExecute('delete', 'F7'))
-    #print(cache.selectAndExecute('edit', 'M0 Why Blockchain is Hard.'))
+    #print(cache.selectAndExecute('edit', 'T3'))
+    #print(cache.selectAndExecute('edit', 'T0'))
     #print(cache.selectAndExecute('publish', 'T1'))
     sys.exit()
 

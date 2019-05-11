@@ -4,6 +4,7 @@
 import configparser
 import os
 import logging
+import re
 
 class Queue:
 
@@ -28,6 +29,18 @@ class Queue:
 
     def lenMax(self): 
         return(len(self.getPosts()))
+
+    def reorderTitle(self, oldTitle):            
+        p = re.compile('\w')
+        newTitle = ''
+        for word in oldTitle.split():
+            if not p.search(word):
+                word = ' '+word+' '
+                newTitle = word.join(oldTitle.split(word)[::-1])
+                break
+        if not newTitle:
+            newTitle = oldTitle
+        return(newTitle)
 
 
     def obtainPostData(self, i, debug=False):
