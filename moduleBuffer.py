@@ -435,8 +435,6 @@ class moduleBuffer(Queue):
         oldTitle = thePost[0]
         if not newTitle:
             newTitle = self.reorderTitle(oldTitle)
-        print(newTitle)
-        return ''
         profile = self.getProfile()
         logging.info("servicename %s" %self.service)
         from buffpy.models.update import Update
