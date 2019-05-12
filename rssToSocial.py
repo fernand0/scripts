@@ -323,7 +323,7 @@ def main():
 
         print("======================================")
         print("Finished delayed at %s" % time.asctime())
-        print("\n====================================")
+        print("======================================")
 
     logging.info("Finished at %s" % time.asctime())
 
