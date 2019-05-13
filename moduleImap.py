@@ -20,7 +20,10 @@ import re
 from email.header import Header
 from email.header import decode_header
 from bs4 import BeautifulSoup
-import moduleSieve
+try:
+    import moduleSieve
+except:
+    pass
 import click
 
 import ssl
