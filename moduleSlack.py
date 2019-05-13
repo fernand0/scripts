@@ -13,7 +13,6 @@ import requests
 from bs4 import BeautifulSoup
 from bs4 import Tag
 
-from configMod import *
 from moduleContent import *
 
 class moduleSlack(Content):
