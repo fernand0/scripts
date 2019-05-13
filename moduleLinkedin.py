@@ -93,12 +93,10 @@ class moduleLinkedin(Content):
                 res = self.ln.submit_share(post, link, '') 
             else: 
                 res = self.ln.submit_share(comment = post)
+            logging.info("Res: %s" % res)
             return res
         except:        
-            logging.warning("LinkedIn posting failed!") 
-            logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
-            logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
-            return("Fail! %s" % sys.exc_info()[0])
+            return(self.report('LinkedIn', post, link, sys.exc_info()))
 
 
 def main():

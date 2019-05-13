@@ -6,6 +6,7 @@ import os
 import moduleSocial
 import moduleBuffer
 import moduleCache
+import moduleTumblr
 import urllib
 import logging
 from pdfrw import PdfReader
@@ -43,34 +44,65 @@ class moduleSlack(Content):
         theChannel = self.getChanId(channel)
         history = self.sc.api_call( "channels.history", count=1000, channel=theChannel)
         logging.debug(history)
-        for msg in history['messages']:
-            self.posts.append(msg)
+        if 'messages' in history:
+            self.posts = history['messages']
+        else:
+            self.posts = []
 
-        outputData = {}
-        serviceName = 'Slack'
-        outputData[serviceName] = {'sent': [], 'pending': []}
-        for post in self.getPosts():
-            if 'attachments' in post:
-                outputData[serviceName]['pending'].append(
-                    (post['text'][1:-1], post['attachments'][0]['title'], '', '', '', '', '', '', post['ts'], ''))
+        #outputData = {}
+        #serviceName = 'Slack'
+        #outputData[serviceName] = {'sent': [], 'pending': []}
+        #for post in self.getPosts():
+        #    if 'attachments' in post:
+        #        outputData[serviceName]['pending'].append(
+        #            (post['text'][1:-1], post['attachments'][0]['title'], '', '', '', '', '', '', post['ts'], ''))
+        #    else:
+        #        #print(post)
+        #        outputData[serviceName]['pending'].append(
+        #            (post['text'][1:-1], '', '', '', '', '', '', '', post['ts'], ''))
+        #self.postsFormatted = outputData
+
+    def getTitle(self, i):
+        post = self.getPosts()[i]
+        return(self.getPostTitle(post))
+
+    def getLink(self, i):
+        post = self.getPosts()[i]
+        return(self.getPostLink(post))
+
+    def getPostTitle(self, post):
+        if 'attachments' in post:
+            return(post['attachments'][0]['title'])
+        else:
+            text = post['text']
+            if text.startswith('<'): 
+                title = post['text'][1:-1]
             else:
-                #print(post)
-                outputData[serviceName]['pending'].append(
-                    (post['text'][1:-1], '', '', '', '', '', '', '', post['ts'], ''))
-        self.postsFormatted = outputData
- 
+                pos = text.find('<')
+                title=text[:pos]
+            return(title)                
+
+    def getPostLink(self, post):
+        if 'attachments' in post:
+            return(post['attachments'][0]['original_url'])
+        else:
+            text = post['text']
+            if text.startswith('<'): 
+                url = post['text'][1:-1]
+            else:
+                pos = text.find('<')
+                url=text[pos+1:-1]
+            return(url) 
+
+    def getId(self, i):
+        post = self.getPosts()[i]
+        return(post['ts'])
+
     def getKeys(self):
         return(self.keys)
     
     def setKeys(self, keys):
         self.keys = keys
-
-    def getLinkEntry(self, entry):
-        if 'original_url' in entry: 
-            url = entry['original_url']
-        else:
-            url = entry['text'][1:-1]
-        return(url)
 
     def deletePost(self, idPost, theChannel): 
         logging.info("Deleting id %s" % idPost)
@@ -105,81 +137,80 @@ class moduleSlack(Content):
         logging.debug("i %d", i)
         logging.debug("post %s", post)
 
-        if 'title' in post:
-            theTitle = post['title']
-            theLink = post['title_link']
-            if theLink.find('tumblr')>0:
-                theTitle = post['text']
-            firstLink = theLink
-            if 'text' in post: 
-                content = post['text']
-            else:
-                content = theLink
-            theSummary = content
-            theSummaryLinks = content
-            if 'image_url' in post:
-                theImage = post['image_url']
-            elif 'thumb_url' in post:
-                theImage = post['thumb_url']
-            else:
-                logging.info("Fail image")
-                logging.info("Fail image %s", post)
-                theImage = ''
-        elif 'text' in post:
-            if post['text'].startswith('<h'):
-                # It's an url
-                url = post['text'][1:-1]
-                req = requests.get(url)
-                    
-                if req.text.find('403 Forbidden')>=0:
-                    theTitle = url
-                    theSummary = url
-                    content = url
-                    theDescription = url
-                else:
-                    if url.lower().endswith('pdf'):
-                        nameFile = '/tmp/kkkkk.pdf'
-                        with open(nameFile,'wb') as f:
-                            f.write(req.content)
-                        theTitle = PdfReader(nameFile).Info.Title
-                        if theTitle:
-                            theTitle = theTitle[1:-1]
-                        else:
-                            theTitle = url
-                        theUrl = url
-                        theSummary = ''
-                        content = theSummary
-                        theDescription = theSummary
-                    else:
-                        soup = BeautifulSoup(req.text, 'lxml')
-                        #print("soup", soup)
-                        theTitle = soup.title
-                        if theTitle:
-                            theTitle = str(theTitle.string)
-                        else:
-                            # The last part of the path, without the dot part, and
-                            # capitized
-                            urlP = urllib.parse.urlparse(url)
-                            theTitle = os.path.basename(urlP.path).split('.')[0].capitalize()
-                        theSummary = str(soup.body)
-                        content = theSummary
-                        theDescription = theSummary
-            else:
-                theSummary = post['text']
-                content = post['text']
-                theDescription = post['text']
-                theTitle = post['text']
+        theTitle = self.getTitle(i)
+        theLink = self.getLink(i)
+        if theLink.find('tumblr')>0:
+            theTitle = post['text']
+        firstLink = theLink
+        if 'text' in post: 
+            content = post['text']
         else:
-            theSummary = post['title']
-            content = post['title']
-            theDescription = post['title']
+            content = theLink
+        theSummary = content
+        theSummaryLinks = content
+        if 'image_url' in post:
+            theImage = post['image_url']
+        elif 'thumb_url' in post:
+            theImage = post['thumb_url']
+        else:
+            logging.info("Fail image")
+            logging.info("Fail image %s", post)
+            theImage = ''
+        #elif 'text' in post:
+        #    if post['text'].startswith('<h'):
+        #        # It's an url
+        #        url = post['text'][1:-1]
+        #        req = requests.get(url)
+        #            
+        #        if req.text.find('403 Forbidden')>=0:
+        #            theTitle = url
+        #            theSummary = url
+        #            content = url
+        #            theDescription = url
+        #        else:
+        #            if url.lower().endswith('pdf'):
+        #                nameFile = '/tmp/kkkkk.pdf'
+        #                with open(nameFile,'wb') as f:
+        #                    f.write(req.content)
+        #                theTitle = PdfReader(nameFile).Info.Title
+        #                if theTitle:
+        #                    theTitle = theTitle[1:-1]
+        #                else:
+        #                    theTitle = url
+        #                theUrl = url
+        #                theSummary = ''
+        #                content = theSummary
+        #                theDescription = theSummary
+        #            else:
+        #                soup = BeautifulSoup(req.text, 'lxml')
+        #                #print("soup", soup)
+        #                theTitle = soup.title
+        #                if theTitle:
+        #                    theTitle = str(theTitle.string)
+        #                else:
+        #                    # The last part of the path, without the dot part, and
+        #                    # capitized
+        #                    urlP = urllib.parse.urlparse(url)
+        #                    theTitle = os.path.basename(urlP.path).split('.')[0].capitalize()
+        #                theSummary = str(soup.body)
+        #                content = theSummary
+        #                theDescription = theSummary
+        #    else:
+        #        theSummary = post['text']
+        #        content = post['text']
+        #        theDescription = post['text']
+        #        theTitle = post['text']
+        #else:
+        #    theSummary = post['title']
+        #    content = post['title']
+        #    theDescription = post['title']
 
         if 'original_url' in post: 
             theLink = post['original_url']
         elif url: 
             theLink = url
         else:
-            theLink = post['text']
+            theLink = self.getPostLink(post)
 
         if ('comment' in post):
             comment = post['comment']
@@ -260,17 +291,14 @@ def main():
 
     theChannel = site.getChanId(CHANNEL)  
     site.setPosts('links')
-    outputData = site.getPostsFormatted()
-    site.getPosts()
-    
-    if ('bufferapp' in config.options(section)): 
-        site.setBufferapp(config.get(section, "bufferapp"))
-    if ('program' in config.options(section)): 
-        site.setProgram(config.get(section, "program"))
 
     site.setSocialNetworks(config, section)
-    site.setCache()
-    site.setPosts()
+
+    if ('bufferapp' in config.options(section)): 
+        site.setBufferapp(config.get(section, "bufferapp"))
+
+    if ('program' in config.options(section)): 
+        site.setProgram(config.get(section, "program"))
 
     theChannel = site.getChanId("links")  
 
@@ -278,12 +306,17 @@ def main():
     listLinks = ""
 
     lastUrl = ''
-    for line in outputData['Slack']['pending']:
-        if urllib.parse.urlparse(line[0]).netloc == lastUrl: 
-            listLinks = listLinks + "%d>> %s\n" % (i, line[0])
+    for i, post in enumerate(site.getPosts()):
+        url = site.getLink(i)
+        if urllib.parse.urlparse(url).netloc == lastUrl: 
+            listLinks = listLinks + "%d>> %s\n" % (i, url)
         else:
-            listLinks = listLinks + "%d) %s\n" % (i, line[0])
-        lastUrl = urllib.parse.urlparse(line[0]).netloc
+            listLinks = listLinks + "%d) %s\n" % (i, url)
+        lastUrl = urllib.parse.urlparse(url).netloc
+        print(site.getTitle(i))
+        print(site.getLink(i))
+        print(site.getPostTitle(post))
+        print(site.getPostLink(post))
         i = i + 1
 
     numEntries = i
@@ -293,53 +326,54 @@ def main():
         sys.exit()
 
     elem = int(i)
-    print(outputData['Slack']['pending'][elem])
+    print(site.getPosts()[elem])
 
     action = input("Delete [d], publish [p], exit [x] ")
 
-    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
     if action == 'x':
         sys.exit()
     elif action == 'p':
         if site.getBufferapp():
-
-            site.buffer.setBuffer()
             for profile in site.getSocialNetworks():
                 if profile[0] in site.getBufferapp():
-                    lenMax = site.buffer.lenMax(profile)
+                    lenMax = site.len(profile)
                     print("   getBuffer %s" % profile)
-                    (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = (site.obtainPostData(elem, False))
-                    # In order to avoid saving the link as the last one
-
-                    isDebug = False
-                    profileN = profile+'_'+site.getSocialNetworks()[profile]
-                    moduleSocial.publishBuffer(site, profileN, title, link, firstLink, isDebug, lenMax, site.getBufferapp())
+                    socialNetwork = (profile,site.getSocialNetworks()[profile])
+                    title = site.getTitle(elem)
+                    url = site.getLink(elem)
+                    listPosts = []
+                    listPosts.append((title, url))
+                    site.buffer[socialNetwork].addPosts(listPosts)
 
         if site.getProgram():
-            site.cache.setPosts()
             for profile in site.getSocialNetworks():
                 if profile[0] in site.getProgram():
-                    nameCache = 'Cache_'+profile+'_' + site.getSocialNetworks()[profile]
-                    lenMax = site.cache.lenMax(nameCache)
+                    lenMax = site.len(profile)
                     print("   getProgram %s" % profile)
  
                     socialNetwork = (profile,site.getSocialNetworks()[profile])
 
-                    #serviceName = site.cache[socialNetwork[0]+'_'+socialNetwork[1]].name
-                    listP = site.cache.getPostsFormatted()[nameCache]['pending']
-                    listPsts = [(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment)]
-                    listP = listP + listPsts
-                    site.cache.getPostsFormatted()[nameCache]['pending'] = listP
-                    site.cache.updatePostsCache(profile)
-        client = moduleSocial.connectTumblr()
+                    listP = site.cache[socialNetwork].getPosts()
+                    #site.cache[socialNetwork].posts = site.cache[socialNetwork].posts[:8]  
+                    #listP = site.cache[socialNetwork].getPosts()
+                    #for i,l in enumerate(listP):
+                    #    print(i, l)
+                    #site.cache[socialNetwork].updatePostsCache()
+                    listPsts = site.obtainPostData(elem)
+                    listP = listP + [listPsts]
+                    #for i,l in enumerate(listP):
+                    #    print(i, l)
+                    #sys.exit()
+                    site.cache[socialNetwork].posts = listP
+                    site.cache[socialNetwork].updatePostsCache()
+        t = moduleTumblr.moduleTumblr()
+        t.setClient('fernand0')
         # We need to publish it in the Tumblr blog since we won't publish it by
         # usuarl means (it is deleted from queue).
-        moduleSocial.publishTumblr('fernand0', title, link, summary, summaryHtml,
-                summaryLinks, image, content, links)
+        t.publishPost(title, url, '')
 
-
-    site.deletePost(outputData['Slack']['pending'][elem][8], theChannel)
-    print(outputData['Slack']['pending'][elem][8])
+    site.deletePost(site.getId(elem), theChannel)
+    #print(outputData['Slack']['pending'][elem][8])
 
 
 if __name__ == '__main__':

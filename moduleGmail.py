@@ -5,18 +5,12 @@
 # stored as Drafts in a Gmail account
 
 import configparser, os
-import pickle
-from bs4 import BeautifulSoup
 import logging
 import importlib
-import pprint
-import time
 import sys
-import urllib
-importlib.reload(sys)
+#importlib.reload(sys)
 #sys.setdefaultencoding("UTF-8")
 import moduleSocial
-import moduleHtml
 import moduleImap
 
 import googleapiclient
@@ -41,8 +35,7 @@ class moduleGmail(Content,Queue):
         Content().__init__()
         Queue().__init__()
         self.service = None
-        self.rawPosts = None
-        self.name = "GMail"
+        self.nick = None
 
     def API(self, Acc):
         # Back compatibility
@@ -56,11 +49,14 @@ class moduleGmail(Content,Queue):
         # http://stackoverflow.com/questions/30742943/create-a-desktop-application-using-gmail-api
     
         SCOPES = 'https://www.googleapis.com/auth/gmail.modify'
+        self.url = SCOPES
         api = {}
     
         config = configparser.ConfigParser() 
         config.read(CONFIGDIR + '/.oauthG.cfg')
         
+        self.service = 'gmail'
+        self.nick = config.get(Acc,'user')+'@'+config.get(Acc,'server')
         fileStore = self.confName((config.get(Acc,'server'), 
             config.get(Acc,'user'))) 
     
@@ -70,14 +66,14 @@ class moduleGmail(Content,Queue):
         
         service = build('gmail', 'v1', http=credentials.authorize(Http()))
     
-        self.service = service
-        self.name = self.name + Acc[3:]
+        self.client = service
+        self.name = 'GMail' + Acc[3:]
 
     def getClient(self):
-        return(self.service)
+        return(self.client)
 
     def getPosts(self):
-        return(self.rawPosts)
+        return(self.posts)
 
     def setPosts(self):
         logging.info("  Setting posts")
@@ -85,38 +81,40 @@ class moduleGmail(Content,Queue):
 
         posts = api.users().drafts().list(userId='me').execute()
         logging.debug("--setPosts %s" % posts)
+        self.posts = []
         if 'drafts' in posts:
-            self.posts = []
             self.rawPosts = []
             for post in posts['drafts']:
-                self.posts.insert(0, post)
-                message = self.getMessageMeta(post['id'])
-                self.rawPosts.insert(0, message)
+                #self.rawPosts.insert(0, post)
+                meta = self.getMessageMeta(post['id'])
+                message = {}
+                message['list'] = post
+                message['meta'] = meta
+                self.posts.insert(0, message)
 
-        outputData = {}
-        files = []
+        #outputData = {}
+        #files = []
 
-        serviceName = self.name
+        #serviceName = self.name
 
-        outputData[serviceName] = {'sent': [], 'pending': []}
+        #outputData[serviceName] = {'sent': [], 'pending': []}
 
-        listDrafts=self.getPosts()
+        #listDrafts=self.getPosts()
 
-        if listDrafts:
-            logging.debug("--Posts %s"% listDrafts)
+        #if listDrafts:
+        #    logging.debug("--Posts %s"% listDrafts)
     
-            for i in range(len(listDrafts)):
-                # Which elements to include?
-                outputData[serviceName]['pending'].append(self.extractDataMessage(i))
-                i = i + 1
+        #    for i in range(len(listDrafts)):
+        #        # Which elements to include?
+        #        outputData[serviceName]['pending'].append(self.extractDataMessage(i))
+        #        i = i + 1
 
-        self.postsFormatted = outputData
+        #self.postsFormatted = outputData
  
     def confName(self, acc):
-        api = self.getClient()
-        theName = os.path.expanduser(CONFIGDIR + '/' 
-                        + '.' + acc[0]+ '_' 
-                        + acc[1]+ '.json')
+        theName = os.path.expanduser(CONFIGDIR + '/' + '.' 
+                + acc[0]+ '_' 
+                + acc[1]+ '.json')
         return(theName)
     
     def getMessage(self, id): 
@@ -139,7 +137,7 @@ class moduleGmail(Content,Queue):
 
     def setHeader(self, message, header, value):
         for head in message['payload']['headers']: 
-            if head['name'] == header: 
+            if head['name'].capitalize() == header.capitalize(): 
                 head['value'] = value
 
     def setHeaderEmail(self, message, header, value):
@@ -149,9 +147,16 @@ class moduleGmail(Content,Queue):
             message[header]= value
 
     def getHeader(self, message, header = 'Subject'):
+        if 'meta' in message:
+            message = message['meta']
         for head in message['payload']['headers']: 
-            if head['name'] == header: 
+            if head['name'].capitalize() == header.capitalize(): 
                 return(head['value'])
+
+    def getPostId(self, message):
+        if 'list' in message:
+            message = message['meta']
+        return(message['id'])
 
     def getHeaderEmail(self, message, header = 'Subject'):
         if header in message:
@@ -183,16 +188,15 @@ class moduleGmail(Content,Queue):
     
         return(labelId)
 
-    def extractDataMessage(self,i):
-        messageRaw = self.getPosts()[i]
-        # !!!! getPosts returns raw posts !!!
-        message = self.posts[i]
-        #messageEmail = self.getEmail(messageRaw)
+    def extractDataMessage(self, i):
+        logging.info("Service %s"% self.service)
+        message = self.getPosts()[i]
+        logging.info("Message %s"% message)
 
-        theTitle = self.getHeader(messageRaw, 'Subject')
+        theTitle = self.getHeader(message, 'Subject')
         if theTitle == None:
-            theTitle = self.getHeader(messageRaw, 'subject')
-        snippet = self.getHeader(messageRaw, 'snippet')
+            theTitle = self.getHeader(message, 'subject')
+        snippet = self.getHeader(message, 'snippet')
 
         theLink = None
         if snippet:
@@ -202,34 +206,14 @@ class moduleGmail(Content,Queue):
             if posIni < posSignature: 
                 theLink = snippet[posIni:posFin]
         theLinks = None
-        #for part in messageEmail.walk():
-        #    if part.get_content_type() == 'text/html':
-        #        content = part.get_payload()
-        #        html = moduleHtml.moduleHtml()
-        #        theLinks = html.listLinks(content)
-        #    elif part.get_content_type() == 'text/plain':
-        #        theContent = part
         content = None
         theContent = None
         firstLink = theLink
         theImage = None
         theSummary = snippet
 
-        theSummaryLinks = messageRaw
-        comment = message['id'] 
-
-        return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
-
-    def obtainPostData(self, serviceName, i, debug=False):
-        api = self.getClient()
-
-        if not self.posts:
-            self.setPosts()
-
-        if not self.rawPosts or (i>=(len(self.rawPosts))):
-            return (None, None, None, None, None, None, None, None, None, None)
-
-        (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment) = self.extractDataMessage(i)
+        theSummaryLinks = message
+        comment = self.getPostId(message) 
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
@@ -243,17 +227,20 @@ class moduleGmail(Content,Queue):
                 lookAt.append(serviceName)
         return lookAt
 
-    def edit(self, post, j, newTitle):
+    def edit(self, j, newTitle):
         logging.info("New title %s", newTitle)
+        thePost = self.obtainPostData(j)
+        oldTitle = thePost[0]
+        logging.info("servicename %s" %self.service)
 
         import base64
         import email
         from email.parser import BytesParser
         api = self.getClient()
-        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, image, content , comment) = post[1:]
-        idPost = comment
-        message = api.users().drafts().get(userId="me", 
-           format="raw", id=idPost).execute()['message']
+
+        idPost = self.getPosts()[j]['list']['id'] #thePost[-1]
+        title = self.getHeader(self.getPosts()[j]['meta'], 'Subject')
+        message = self.getMessageRaw(idPost)
         theMsg = email.message_from_bytes(base64.urlsafe_b64decode(message['raw']))
         self.setHeaderEmail(theMsg, 'subject', newTitle)
         message['raw'] = theMsg.as_bytes()
@@ -267,37 +254,28 @@ class moduleGmail(Content,Queue):
         update = "Changed "+title+" with "+newTitle
         return(update)
 
-    def publish(self, post, j):
-        logging.info("Publishing", post[1])                
+    def publish(self, j):
+        logging.info("Publishing %d"% j)                
+        logging.info("servicename %s" %self.service)
+        idPost = self.getPosts()[j]['list']['id'] #thePost[-1]
+        title = self.getHeader(self.getPosts()[j]['meta'], 'Subject')
         
-        import moduleSocial
-        publishMethod = getattr(moduleSocial, 
-                'publishMail')
-        print(len(post[1:]))
-        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, image, content , links ) = post[1:]
+        api = self.getClient()
+        try:
+            res = api.users().drafts().send(userId='me', 
+                       body={ 'id': idPost}).execute()
+            logging.info("Res: %s" % res)
+        except:
+            return(self.report('Gmail', idPost, '', sys.exc_info()))
 
-        logging.debug(title, link, summary, summaryHtml, summaryLinks, image, content , links )
-        logging.info(title, link, content , links )
-        logging.info(publishMethod)
-        comment = links
+        return("%s"% title)
 
-        update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
-        if update:
-            if 'text' in update: 
-                update = update['text'] 
-        else:
-            update = ""
-   
-        return(update)
-
-    def delete(self, post, j):
-        logging.info("Publishing", post[1])
-        serviceName = post[0]                
+    def delete(self, j):
+        logging.info("Publishing %d"% j)
 
         api = self.getClient()
-        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, image, content , comment) = post[1:]
-        idPost = comment
-        #print(title, link, firstLink, image, summary, summaryHtml, summaryLinks, image, content , comment)
+        idPost = self.getPosts()[j]['list']['id'] #thePost[-1]
+        title = self.getHeader(self.getPosts()[j]['meta'], 'Subject')
         update = api.users().drafts().delete(userId='me', id=idPost).execute() 
  
         return("Deleted %s"% title)
@@ -391,51 +369,51 @@ class moduleGmail(Content,Queue):
 
     #    return None
 
-    #def moveMessage(self,  message):
-    #    api = self.getClient()
-    #    labelId = self.getLabelId('imported')
-    #    mesGE = base64.urlsafe_b64encode(message).decode()
-    #    mesT = email.message_from_bytes(message)
-    #    if mesT['subject']: 
-    #        subj = email.header.decode_header(mesT['subject'])[0][0]
-    #    else:
-    #        subj = ""
-    #    logging.info("Subject %s",subj)
-    #
-    #    try:
-    #        messageR = api.users().messages().import_(userId='me',
-    #                  fields='id',
-    #                  neverMarkSpam=False,
-    #                  processForCalendar=False,
-    #                  internalDateSource='dateHeader',
-    #                  body={'raw': mesGE}).execute(num_retries=5)
-    #       #           media_body=media).execute(num_retries=1)
-    #    except: 
-    #        # When the message is too big
-    #        # https://github.com/google/import-mailbox-to-gmail/blob/master/import-mailbox-to-gmail.py
-    #
-    #        logging.info("Fail 1! Trying another method.")
-    #        if True:
-    #            mesGS = BytesParser().parsebytes(message).as_string()
-    #            media =  googleapiclient.http.MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
-    #            logging.info("vamos method")
-    #            messageR = api.users().messages().import_(userId='me',
-    #                      fields='id',
-    #                      neverMarkSpam=False,
-    #                      processForCalendar=False,
-    #                      internalDateSource='dateHeader',
-    #                      body={},
-    #                      media_body=media).execute(num_retries=3)
-    #            logging.info("messageR method")
-    #        else: 
-    #            logging.info("Error with message %s" % message) 
-    #            return("Fail 2!")
-    #    msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
-    #
-    #    messageR = api.users().messages().modify(userId='me', id=messageR['id'],
-    #                                                        body=msg_labels).execute()
-    #
-    #    return(messageR)
+    def moveMessage(self,  message):
+        api = self.getClient()
+        labelId = self.getLabelId('imported')
+        mesGE = base64.urlsafe_b64encode(message).decode()
+        mesT = email.message_from_bytes(message)
+        if mesT['subject']: 
+            subj = email.header.decode_header(mesT['subject'])[0][0]
+        else:
+            subj = ""
+        logging.info("Subject %s",subj)
+    
+        try:
+            messageR = api.users().messages().import_(userId='me',
+                      fields='id',
+                      neverMarkSpam=False,
+                      processForCalendar=False,
+                      internalDateSource='dateHeader',
+                      body={'raw': mesGE}).execute(num_retries=5)
+           #           media_body=media).execute(num_retries=1)
+        except: 
+            # When the message is too big
+            # https://github.com/google/import-mailbox-to-gmail/blob/master/import-mailbox-to-gmail.py
+    
+            logging.info("Fail 1! Trying another method.")
+            if True:
+                mesGS = BytesParser().parsebytes(message).as_string()
+                media =  googleapiclient.http.MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
+                logging.info("vamos method")
+                messageR = api.users().messages().import_(userId='me',
+                          fields='id',
+                          neverMarkSpam=False,
+                          processForCalendar=False,
+                          internalDateSource='dateHeader',
+                          body={},
+                          media_body=media).execute(num_retries=3)
+                logging.info("messageR method")
+            else: 
+                logging.info("Error with message %s" % message) 
+                return("Fail 2!")
+        msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
+    
+        messageR = api.users().messages().modify(userId='me', id=messageR['id'],
+                                                            body=msg_labels).execute()
+    
+        return(messageR)
 
    
     #######################################################
@@ -462,22 +440,23 @@ def main():
     # instantiate the api object 
 
     api = moduleGmail.moduleGmail()
-    api.setClient('ACC1')
-    print("-----")
+    api.setClient('ACC2')
     api.setPosts()
     print(api.getPosts())
-    print("-----")
-    print(api.getPostsFormatted())
-    print("-----")
-    print('M11', api.selectAndExecute('show', 'M11'))
-    print('M13', api.selectAndExecute('show', 'M13'))
-    print('M05', api.selectAndExecute('show', 'M05'))
+    print(api.getPosts()[0])
+    print(len(api.getPosts()[0]))
+    # It has 8 elements
+    print(api.obtainPostData(0))
+    print('G21', api.selectAndExecute('show', 'G21'))
+    print('G23', api.selectAndExecute('show', 'G23'))
+    print('G05', api.selectAndExecute('show', 'G05'))
     sys.exit()
-    print('M15', api.selectAndExecute('edit', 'M15'+' '+'baba'))
-    print('M15', api.selectAndExecute('delete', 'M15'))
-    print('M10', api.selectAndExecute('publish', 'M10'))
+    print('G29', api.selectAndExecute('publish', 'G29'))
+    print('G29', api.selectAndExecute('delete', 'G29'))
+    print('G25', api.selectAndExecute('edit', 'G27'+' '+'Cebollinos (hechos)'))
     print('M18', api.editPost('M18', 'Vaya'))
     print('M10', api.publishPost('M10'))
+    sys.exit()
     api.editPost(pp, api.getPosts(), "M17", 'Prueba.')
 
     logging.basicConfig(#filename='example.log',

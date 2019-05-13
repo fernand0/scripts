@@ -141,9 +141,9 @@ def searchTwitter(search, twitter):
     return(t.search.tweets(q=search)['statuses'])
 
 def nextPost(blog, socialNetwork):
-    cacheName = 'Cache_'+socialNetwork[0]+'_'+socialNetwork[1]
-    blog.cache.setPosts()
-    listP = blog.cache.getPostsFormatted()[cacheName]['pending']
+    #cacheName = 'Cache_'+socialNetwork[0]+'_'+socialNetwork[1]
+    blog.cache[socialNetwork].setPosts()
+    listP = blog.cache[socialNetwork].getPosts()
 
     if listP: 
         element = listP[0]
@@ -159,9 +159,6 @@ def nextPost(blog, socialNetwork):
 
 def publishDelay(blog, socialNetwork, numPosts, timeSlots): 
     # We allow the rest of the Blogs to start
-    time.sleep(2)
-    nameCache = 'Cache_'+socialNetwork[0]+'_'+socialNetwork[1]
-    #serviceName = blog.cache[nameCache].name
 
     for j in  range(numPosts): 
         tSleep = random.random()*timeSlots
@@ -171,8 +168,8 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
 
         logger.info("    %s: Waiting ... %.2f minutes" % (socialNetwork[0].capitalize(), tSleep/60))
         logger.info("     I'll publish %s" % element[0])
-        print("         [d] %s: waiting... %.2f minutes\n          [d] I'll publish %s"
-                % (socialNetwork[0], tSleep/60, element[0]))
+        print(" [d] Profile %s: waiting... %.2f minutes" 
+                % (socialNetwork[0], tSleep/60))
         time.sleep(tSleep) 
 
         # Things can have changed during the waiting
@@ -194,21 +191,21 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
             if isinstance(result, str):
                 if result[:4]=='Fail':
                     link=''
+                else: 
+                    print(" [d] Published: %s - %s" % (title, result))
         else: 
             publishMethod = globals()['publish'+ profile.capitalize()]#()(self, ))
             publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
 
-        blog.cache.postsFormatted[nameCache]['pending'] = listP
-        blog.cache.updatePostsCache(profile)
+        blog.cache[socialNetwork].posts = listP
+        blog.cache[socialNetwork].updatePostsCache()
            
         if j+1 < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))
             time.sleep(tSleep2) 
     logger.info("   Finished in: %s" % socialNetwork[0].capitalize())
-    print("====================================")
-    print("Finished in: %s at %s" % (socialNetwork[0].capitalize(), 
+    print(" [d] Finished in: %s at %s" % (socialNetwork[0].capitalize(), 
         time.asctime()))
-    print("====================================")
 
    
 def cleanTags(soup):

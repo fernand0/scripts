@@ -38,7 +38,6 @@
 
 
 import configparser, os
-from bs4 import BeautifulSoup
 import logging
 import time
 import sys
@@ -72,15 +71,14 @@ class moduleBuffer(Queue):
 
     def __init__(self): #, url, socialNetwork, nick):
         super().__init__()
-        self.buffer = None
+        self.service = None
+        self.nick = None
+        #self.buffer = None
         self.profiles = None
         #self.url = url
         #self.socialNetwork = (socialNetwork, nick)
 
-    def getBuffer(self):
-        return(self.buffer)
-
-    def setBuffer(self):
+    def setClient(self, url, socialNetwork):
         config = configparser.ConfigParser()
         logging.debug("Config...%s" % CONFIGDIR)
         config.read(CONFIGDIR + '/.rssBuffer')
@@ -95,368 +93,426 @@ class moduleBuffer(Queue):
                   client_secret=clientSecret,
                   access_token=accessToken)
     
-        self.api = api
+        self.client = api
 
-    def setProfiles(self, service=""):
+        self.url = url
+        self.service = socialNetwork[0]
+        self.nick = socialNetwork[1]
+
+    #def setBuffer(self):
+    #    config = configparser.ConfigParser()
+    #    logging.debug("Config...%s" % CONFIGDIR)
+    #    config.read(CONFIGDIR + '/.rssBuffer')
+    #
+    #    clientId = config.get("appKeys", "client_id")
+    #    clientSecret = config.get("appKeys", "client_secret")
+    #    redirectUrl = config.get("appKeys", "redirect_uri")
+    #    accessToken = config.get("appKeys", "access_token")
+    #    
+    #    # instantiate the api object 
+    #    api = buffpy.api.API(client_id=clientId,
+    #              client_secret=clientSecret,
+    #              access_token=accessToken)
+    #
+    #    self.api = api
+
+    def setProfile(self, service=""):
         logging.info("  Checking services...")
         
         if (service == ""):
             logging.info("  All available in Buffer")
-            profiles = Profiles(api=self.api).all()
+            profiles = Profiles(api=self.client).all()
         else:
-            logging.info("  %s" % service)
-            logging.info(service)
-            profiles = Profiles(api=self.api).filter(service=service)
+            logging.info("  Profile %s" % service)
+            profiles = Profiles(api=self.client).filter(service=service)
             
-        logging.debug("->%s" % profiles)
-        numProfiles = len(profiles)
-        logging.debug("Num. Profiles %d" % numProfiles)
-        logging.debug("Profiles %s" % profiles)
+        self.profile = profiles[0]
 
-        for profile in profiles:
-            profile['cache_name'] = 'Buffer_'+profile['service']+'_'+profile['service_username']
-    
-        self.profiles = profiles
+    def getProfile(self):
+        return(self.profile)
 
-    def getService(self, theBuffer):
-        return(theBuffer['service'].capitalize())
-
-    def setPosts(self, service=""):
-        outputData = {}
+    def setPosts(self):
+        self.setProfile(self.service)
+        profile = self.getProfile()
+        logging.info("Profile %s" % profile)
     
-        self.setProfiles(service)
-        profiles = self.getProfiles()
+        #serviceName = profile['service']
+        #nickName = profile['service_username']
+        #bufferName = 'Buffer_' + serviceName + '_' + nickName
+        #self.service[bufferName] = i
+        #i = i + 1
     
-        self.service = {}
-        i = 0
-        for profile in profiles:
-            serviceName = profile['service']
-            nickName = profile['service_username']
-            bufferName = 'Buffer_' + serviceName + '_' + nickName
-            self.service[bufferName] = i
-            i = i + 1
+        #logging.info("   Service %s" % serviceName)
     
-            logging.info("   Service %s" % serviceName)
-    
-            outputData[bufferName] = {'sent': [], 'pending': []}
-            for method in ['sent', 'pending']:
-                if (profile.counts[method] > 0):
-                    updates = getattr(profile.updates, method)
-                    for j in range(min(10,len(updates))):
-                        update = updates[j]
-                        if method == 'pending':
-                            toShow = update.due_time
-                        else:
-                            toShow = update.statistics.clicks
-                        if ('media' in update): 
-                            if ('expanded_link' in update.media):
-                                link = update.media.expanded_link
-                            else:
-                                link = update.media.link
-                        else:
-                            link = ''
-                        if update.text: 
-                            outputData[bufferName][method].append((update.text, link, toShow, '', '', '', '', '', '', ''))
-                        else:
-                            outputData[bufferName][method].append((link, link, toShow, '', '', '', '', '', '', ''))
+        #outputData[bufferName] = {'sent': [], 'pending': []}
+        for method in ['sent', 'pending']:
+            if (profile.counts[method] > 0):
+                updates = getattr(profile.updates, method)
+                logging.info("sent Profile %s" % updates)
+                if method == 'pending': 
+                    self.posts = updates
                 else:
-                            outputData[bufferName][method].append(('Empty', 'Empty', 'Empty', '', '', '', '', '', '', ''))
+                    self.posted = updates
 
-            #self.lenMax[serviceName] = len(outputData[serviceName]['pending'])
-    
-        self.postsFormatted = outputData
-
-    def addPosts(self, blog, profile, listPosts):
+    def addPosts(self, listPosts):
         linkAdded = ''
-        api = self.buffer
-        logging.info("    Adding posts to LinkedIn")
+        logging.info("    Adding posts to %s" % self.service)
         for post in listPosts: 
-            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = post 
+            title = self.getPostTitle(post)
+            link = self.getPostLink(post)
             textPost = title + " " + link
             logging.info("    Post: %s" % link)
-            print("        Post: %s" % link)
             entry = urllib.parse.quote(textPost)
             try:
-                blog.getBuffer().getProfiles()[0].updates.new(entry)
+                #if post[3]: 
+                #    print(post[3])
+                #    entry = urllib.parse.quote(post[0])
+                #    self.getProfile().updates.new(entry, 
+                #            media={'photo':post[3]})
+                #else: 
+                self.getProfile().updates.new(entry)
             except: 
                 logging.warning("Buffer posting failed!") 
                 logging.warning("Entry: %s"% entry) 
                 logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
                 logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
-                return(linkAdded)
+                link = ''
+                continue
             linkAdded = link
                 
-            time.sleep(2)
+            time.sleep(1)
         logging.info("    Added posts to LinkedIn")
 
         return(linkAdded)
 
-    def deletePost(self, profiles, args):
-        api = self.buffer
-        logging.info("To Delete %s" % args)
-    
-        update = None
-        for i in range(len(profiles)):
-            serviceName = profiles[i].formatted_service
-            if self.isForMe(serviceName, args):
-                j = int(args[-1])
-                update = Update(api=api, id=profiles[i].updates.pending[j].id)
-                logging.debug(update)
-                update.delete()
-    
-        return(update)
-    
-    def copyPost(self, log, profiles, toCopy, toWhere):
-        api = self.buffer
-        logging.info(toCopy+' '+toWhere)
-    
-        profCop = toCopy[0]
-        ii = int(toCopy[1])
-    
-        j = 0
-        profWhe = ""
-        i = 0
-        while i < len(toWhere):
-            profWhe = profWhe + toWhere[i]
-            i = i + 1
-        
-        log.info(toCopy,"|",profCop, ii, profWhe)
-        for i in range(len(profiles)):
-            serviceName = profiles[i].formatted_service
-            print(serviceName)
-            log.info("ii: %s" %i)
-            updates = getattr(profiles[j].updates, 'pending')
-            update = updates[ii]
-            if ('media' in update): 
-                if ('expanded_link' in update.media):
-                    link = update.media.expanded_link
-                else:
-                    link = update.media.link
-            else:
-                link = ""
-            print(update.text, link)
-           
-            if (serviceName[0] in profCop):
-                for j in range(len(profiles)): 
-                    serviceName = profiles[j].formatted_service 
-                    if (serviceName[0] in profWhe):
-                        profiles[j].updates.new(urllib.parse.quote(update.text + " " + link).encode('utf-8'))
-    
-    def movePost(self, log, profiles, toMove, toWhere):
-        # Moving posts, we identify the profile by the first letter. We can use
-        # several letters and if we put a '*' we'll move the posts in all the
-        # social networks
-        api = self.buffer
-        i = 0
-        profMov = ""
-        while toMove[i].isalpha():
-            profMov = profMov + toMove[i]
-            i = i + 1
-    
-        for i in range(len(profiles)):
-            serviceName = profiles[i].formatted_service
-            log.info("ii: %s" %i)
-            if (serviceName[0] in profMov) or toMove[0]=='*':
-                listIds = []
-                for j in range(len(profiles[i].updates.pending)):
-                    # counts seems to be not ok
-                    listIds.append(profiles[i].updates.pending[j]['id'])
-    
-                logging.info("to Move %s to %s" % (toMove, toWhere))
-                j = int(toMove[-1])
-                logging.info("i %d j %d"  % (i,j))
-                logging.info("Profiles[i]--> %s <--"  % profiles)
-                logging.info("Profiles[i]--> %s <---"  % profiles[i].updates.pending[j])
-                k = int(toWhere[-1])
-                idUpdate = listIds.pop(j)
-                listIds.insert(k, idUpdate)
-    
-                update = Update(api=api, id=profiles[i].updates.pending[j].id)
-                profiles[i].updates.reorder(listIds)
-    
-    def listSentPosts(self, service=""):
-        api = self.buffer
-        profiles = self.getProfiles(service)
-    
-        someSent = False
-        outputStr = ([],[])
-        for i in range(len(profiles)):
-            serviceName = profiles[i].formatted_service
-            logging.debug("Service %d %s" % (i,serviceName))
-            if (profiles[i].counts['sent'] > 0):
-                someSent = True
-                logging.debug(" Service %s" % serviceName)
-                logging.debug("There are: %d" % profiles[i].counts['sent'])
-                logging.debug(profiles[i].updates.sent)
-                due_time=""
-                for j in range(min(8,profiles[i].counts['sent'])):
-                    updatesSent = profiles[i].updates.sent[j]
-                    update = Update(api=api, id= updatesSent.id)
-                    if (due_time == ""):
-                        due_time=update.due_time # Not used here
-                        outputStr[0].append("*%s*" % serviceName)
-                        outputStr[1].append("")
-                    logging.debug("Service %s" % updatesSent)
-                    selectionStr = "" #"%d%d) " % (i,j)
-                    if ('media' in updatesSent): 
-                        try:
-                            lineTxt = "%s %s %s" % (selectionStr, 
-                                    updatesSent.text, updatesSent.media.expanded_link)
-                        except:
-                            lineTxt = "%s %s %s" % (selectionStr,
-                                    updatesSent.text, updatesSent.media.link)
-                    else:
-                        lineTxt = "%s %s" % (selectionStr,updatesSent.text)
-                    logging.info(lineTxt)
-                    outputStr[0].append("%s" % lineTxt)
-                    outputStr[1].append(" (%d clicks)" % updatesSent['statistics']['clicks'])
-            else:
-                logging.debug("No")
-        
-        if someSent:
-            return (outputStr, profiles)
-        else:
-            logging.info("No sent posts")
-            return someSent
-    
-    
-    def listPendingPosts(self, service=""):
-        api = self.buffer
-        profiles = self.getProfiles(service)
-        
-        somePending = False
-        outputStr = [] 
-        for i in range(len(profiles)):
-            serviceName = profiles[i].formatted_service
-            logging.debug("Service %d %s" % (i,serviceName))
-            if (profiles[i].counts['pending'] > 0):
-                somePending = True
-                logging.info("Service %s" % serviceName)
-                logging.debug("There are: %d" % profiles[i].counts['pending'])
-                logging.debug(profiles[i].updates.pending)
-                due_time=""
-                for j in range(profiles[i].counts['pending']):
-                    updatesPending = profiles[i].updates.pending[j]
-                    update = Update(api=api, id=updatesPending.id)
-                    if (due_time == ""):
-                        due_time=update.due_time
-                        outputStr.append("*%s* ( %s )" % (serviceName, due_time))
-    
-                    logging.debug("Service %s" % updatesPending)
-                    selectionStr = "%d%d) " % (i,j)
-                    if ('media' in updatesPending): 
-                        try:
-                            lineTxt = "%s %s %s" % (selectionStr,
-                                    updatesPending.text, updatesPending.media.expanded_link)
-                        except:
-                            lineTxt = "%s %s %s" % (selectionStr,
-                                    updatesPending.text, updatesPending.media.link)
-                    else:
-                        lineTxt = "%s %s" % (selectionStr,updatesPending.text)
-                    logging.info(lineTxt)
-                    outputStr.append(lineTxt)
-                    logging.debug("-- %s" % (update))
-                    logging.debug("-- %s" % (dir(update)))
-            else:
-                logging.debug("Service %d %s" % (i, serviceName))
-                logging.debug("No")
-        
-        if somePending:
-            return (outputStr, profiles)
-        else:
-            logging.info("No pending posts")
-            return somePending
+    def extractDataMessage(self, i):
+        logging.info("Service %s"% self.service)
+        messageRaw = self.getPosts()[i]
 
+        theTitle = messageRaw['text']
+        theLink = ''
+        content = ''
+        if 'media' in messageRaw:
+            if ('expanded_link' in messageRaw['media']):
+                theLink = messageRaw['media']['expanded_link']
+            else:
+                theLlink = messageRaw['media']['link']
+            if ('description' in messageRaw['media']): 
+                content = messageRaw['media']['description']
+
+        theLinks = None
+        theContent = content
+        firstLink = theLink
+        theImage = None
+        theSummary = content
+
+        theSummaryLinks = content
+        comment = None
+
+        return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
+
+    #def deletePost(self, profiles, args):
+    #    api = self.buffer
+    #    logging.info("To Delete %s" % args)
+    #
+    #    update = None
+    #    for i in range(len(profiles)):
+    #        serviceName = profiles[i].formatted_service
+    #        if self.isForMe(serviceName, args):
+    #            j = int(args[-1])
+    #            update = Update(api=api, id=profiles[i].updates.pending[j].id)
+    #            logging.debug(update)
+    #            update.delete()
+    #
+    #    return(update)
+    #
+    #def copyPost(self, log, profiles, toCopy, toWhere):
+    #    api = self.buffer
+    #    logging.info(toCopy+' '+toWhere)
+    #
+    #    profCop = toCopy[0]
+    #    ii = int(toCopy[1])
+    #
+    #    j = 0
+    #    profWhe = ""
+    #    i = 0
+    #    while i < len(toWhere):
+    #        profWhe = profWhe + toWhere[i]
+    #        i = i + 1
+    #    
+    #    log.info(toCopy,"|",profCop, ii, profWhe)
+    #    for i in range(len(profiles)):
+    #        serviceName = profiles[i].formatted_service
+    #        print(serviceName)
+    #        log.info("ii: %s" %i)
+    #        updates = getattr(profiles[j].updates, 'pending')
+    #        update = updates[ii]
+    #        if ('media' in update): 
+    #            if ('expanded_link' in update.media):
+    #                link = update.media.expanded_link
+    #            else:
+    #                link = update.media.link
+    #        else:
+    #            link = ""
+    #        print(update.text, link)
+    #       
+    #        if (serviceName[0] in profCop):
+    #            for j in range(len(profiles)): 
+    #                serviceName = profiles[j].formatted_service 
+    #                if (serviceName[0] in profWhe):
+    #                    profiles[j].updates.new(urllib.parse.quote(update.text + " " + link).encode('utf-8'))
+    #
+    #def movePost(self, log, profiles, toMove, toWhere):
+    #    # Moving posts, we identify the profile by the first letter. We can use
+    #    # several letters and if we put a '*' we'll move the posts in all the
+    #    # social networks
+    #    api = self.buffer
+    #    i = 0
+    #    profMov = ""
+    #    while toMove[i].isalpha():
+    #        profMov = profMov + toMove[i]
+    #        i = i + 1
+    #
+    #    for i in range(len(profiles)):
+    #        serviceName = profiles[i].formatted_service
+    #        log.info("ii: %s" %i)
+    #        if (serviceName[0] in profMov) or toMove[0]=='*':
+    #            listIds = []
+    #            for j in range(len(profiles[i].updates.pending)):
+    #                # counts seems to be not ok
+    #                listIds.append(profiles[i].updates.pending[j]['id'])
+    #
+    #            logging.info("to Move %s to %s" % (toMove, toWhere))
+    #            j = int(toMove[-1])
+    #            logging.info("i %d j %d"  % (i,j))
+    #            logging.info("Profiles[i]--> %s <--"  % profiles)
+    #            logging.info("Profiles[i]--> %s <---"  % profiles[i].updates.pending[j])
+    #            k = int(toWhere[-1])
+    #            idUpdate = listIds.pop(j)
+    #            listIds.insert(k, idUpdate)
+    #
+    #            update = Update(api=api, id=profiles[i].updates.pending[j].id)
+    #            profiles[i].updates.reorder(listIds)
+    #
+    #def listSentPosts(self, service=""):
+    #    api = self.buffer
+    #    profiles = self.getProfiles(service)
+    #
+    #    someSent = False
+    #    outputStr = ([],[])
+    #    for i in range(len(profiles)):
+    #        serviceName = profiles[i].formatted_service
+    #        logging.debug("Service %d %s" % (i,serviceName))
+    #        if (profiles[i].counts['sent'] > 0):
+    #            someSent = True
+    #            logging.debug(" Service %s" % serviceName)
+    #            logging.debug("There are: %d" % profiles[i].counts['sent'])
+    #            logging.debug(profiles[i].updates.sent)
+    #            due_time=""
+    #            for j in range(min(8,profiles[i].counts['sent'])):
+    #                updatesSent = profiles[i].updates.sent[j]
+    #                update = Update(api=api, id= updatesSent.id)
+    #                if (due_time == ""):
+    #                    due_time=update.due_time # Not used here
+    #                    outputStr[0].append("*%s*" % serviceName)
+    #                    outputStr[1].append("")
+    #                logging.debug("Service %s" % updatesSent)
+    #                selectionStr = "" #"%d%d) " % (i,j)
+    #                if ('media' in updatesSent): 
+    #                    try:
+    #                        lineTxt = "%s %s %s" % (selectionStr, 
+    #                                updatesSent.text, updatesSent.media.expanded_link)
+    #                    except:
+    #                        lineTxt = "%s %s %s" % (selectionStr,
+    #                                updatesSent.text, updatesSent.media.link)
+    #                else:
+    #                    lineTxt = "%s %s" % (selectionStr,updatesSent.text)
+    #                logging.info(lineTxt)
+    #                outputStr[0].append("%s" % lineTxt)
+    #                outputStr[1].append(" (%d clicks)" % updatesSent['statistics']['clicks'])
+    #        else:
+    #            logging.debug("No")
+    #    
+    #    if someSent:
+    #        return (outputStr, profiles)
+    #    else:
+    #        logging.info("No sent posts")
+    #        return someSent
+    #
+    #
+    #def listPendingPosts(self, service=""):
+    #    api = self.buffer
+    #    profiles = self.getProfiles(service)
+    #    
+    #    somePending = False
+    #    outputStr = [] 
+    #    for i in range(len(profiles)):
+    #        serviceName = profiles[i].formatted_service
+    #        logging.debug("Service %d %s" % (i,serviceName))
+    #        if (profiles[i].counts['pending'] > 0):
+    #            somePending = True
+    #            logging.info("Service %s" % serviceName)
+    #            logging.debug("There are: %d" % profiles[i].counts['pending'])
+    #            logging.debug(profiles[i].updates.pending)
+    #            due_time=""
+    #            for j in range(profiles[i].counts['pending']):
+    #                updatesPending = profiles[i].updates.pending[j]
+    #                update = Update(api=api, id=updatesPending.id)
+    #                if (due_time == ""):
+    #                    due_time=update.due_time
+    #                    outputStr.append("*%s* ( %s )" % (serviceName, due_time))
+    #
+    #                logging.debug("Service %s" % updatesPending)
+    #                selectionStr = "%d%d) " % (i,j)
+    #                if ('media' in updatesPending): 
+    #                    try:
+    #                        lineTxt = "%s %s %s" % (selectionStr,
+    #                                updatesPending.text, updatesPending.media.expanded_link)
+    #                    except:
+    #                        lineTxt = "%s %s %s" % (selectionStr,
+    #                                updatesPending.text, updatesPending.media.link)
+    #                else:
+    #                    lineTxt = "%s %s" % (selectionStr,updatesPending.text)
+    #                logging.info(lineTxt)
+    #                outputStr.append(lineTxt)
+    #                logging.debug("-- %s" % (update))
+    #                logging.debug("-- %s" % (dir(update)))
+    #        else:
+    #            logging.debug("Service %d %s" % (i, serviceName))
+    #            logging.debug("No")
+    #    
+    #    if somePending:
+    #        return (outputStr, profiles)
+    #    else:
+    #        logging.info("No pending posts")
+    #        return somePending
+
+    def getTitle(self, i):
+        if i < len(self.getPosts()): 
+            post = self.getPosts()[i]
+            title = post['text']
+            return (title)
+        return(None)
+
+    def getLink(self, i):
+        if i < len(self.getPosts()): 
+            post = self.getPosts()[i]
+            link = post['media']['expanded_link']
+            return (link)
+        return(None) 
+    
+    def getPostTitle(self, post):
+        logging.info(post)
+        if post:
+            if 'text' in post:
+                title = post['text']
+            elif 'media' in post:
+                if 'title' in post['media']:
+                     title = post['media']['title']
+                else:
+                     title = 'None'
+            else:
+                title = post[0]
+            return (title)
+        return(None)
+
+    def getPostLink(self, post):
+        if post:
+            if 'media' in post: 
+                link = post['media']['expanded_link']
+            else:
+                link = post[1]
+            return (link)
+        return(None)
 
     def isForMe(self, args):
-        profiles = self.getProfiles()
-        lookAt = []
-        for prof in profiles:
-            if (prof['service'][0].capitalize() in args) or ('*' in args): 
-                #lookAt.append('Buffer_'+prof['service']+'_'+prof['service_username'])
-                lookAt.append(prof['service'])
-        return(lookAt)
+        profile = self.getProfile()
+        return (profile['service'][0].capitalize() in args) or ('*' in args) 
 
-    def edit(self, post, j, newTitle):
+    def edit(self, j, newTitle=''):
         logging.info("New title %s", newTitle)
-        udpate = None
-        profiles = self.getProfiles()
-        serviceName = post[0]
-        logging.info("servicename %s"%serviceName)
-        logging.info("profiles %s"%profiles)
-        for prof in self.getProfiles():
-            if (prof['service'] ==  serviceName): 
-                i = self.service[prof['cache_name']]
-                from buffpy.models.update import Update
-                update = Update(api=self.api, id=profiles[i].updates.pending[j].id) 
-                update = update.edit(text=newTitle)
+        thePost = self.obtainPostData(j)
+        oldTitle = thePost[0]
+        if not newTitle:
+            newTitle = self.reorderTitle(oldTitle)
+        profile = self.getProfile()
+        logging.info("servicename %s" %self.service)
+        from buffpy.models.update import Update
+        i=0
+        update = Update(api=self.client, id=profile.updates.pending[j].id) 
+        print(update)
+        update = update.edit(text=newTitle)
 
-                title = post[1]
-                update = "Changed "+title+" with "+newTitle
+        title = oldTitle
+        update = "Changed "+title+" with "+newTitle
 
-                logging.info("Res update %s" % update)
+        logging.info("Res update %s" % update)
 
-                return(update)
+        return(update)
 
-    def publish(self, post, j):
-        logging.info("Publishing", post[1])
-        udpate = None 
-        profiles = self.getProfiles() 
-        serviceName = post[0]
-        i = self.service[serviceName]
-        update = Update(api=self.api, id=profiles[i].updates.pending[j].id) 
-        update = update.publish()
-        logging.info("Update before return %s"% update)
-        return(update[0])
+    def publish(self, j):
+        logging.info("Publishing %d"% j)
+        post = self.obtainPostData(j)
+        logging.info("Publishing %s"% post[0])
+        profile = self.getProfile() 
+        update = Update(api=self.client, id=profile.updates.pending[j].id) 
+        res = update.publish()
+        logging.info("Update before return %s"% res)
+        if res:
+            if 'message' in res: 
+                return(res['message'])
+            else:
+                return(res)
+        else:
+            return("Published!")
     
-    def delete(self, post, j):
-        logging.info("Deleting", post[1])
-        profiles = self.getProfiles()
-        serviceName = post[0]
-        for prof in self.getProfiles():
-            if (prof['service'] ==  serviceName): 
-                i = self.service[prof['cache_name']]
-                from buffpy.models.update import Update
-                update = Update(api=self.api, id=profiles[i].updates.pending[j].id) 
-                logging.debug("update", update)
-                update = update.delete()
+    def delete(self, j):
+        logging.info("Deleting %d"% j)
+        post = self.obtainPostData(j)
+        logging.info("Deleting %s"% post[0])
+        profile = self.getProfile()
+        from buffpy.models.update import Update
+        update = Update(api=self.client, id=profile.updates.pending[j].id) 
+        update = update.delete()
 
-                logging.debug("Update before return %s"% update)
-                return(update)
+        logging.info("Update before return %s"% update)
+        return(update)
  
 def main():
 
     import moduleBuffer
-    import moduleSlack
-
-    config = configparser.ConfigParser()
-    config.read(CONFIGDIR + '/.rssBlogs')
-
-    section = "Blog7"
-    blog = moduleSlack.moduleSlack()
-    blog.setUrl(config.get(section, "url"))
-    blog.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
-
-    if ('bufferapp' in config.options(section)): 
-        blog.setBufferapp(config.get(section, "bufferapp"))
-
-    blog.setSocialNetworks(config, section)
-
-    if ('program' in config.options(section)): 
-        blog.setProgram(config.get(section, "program"))
         
-    blog.buffer.setProfiles()
-    blog.buffer.setPosts()
+    buf = moduleBuffer.moduleBuffer()
+    buf.setClient('http://fernand0-errbot.slack.com/', 
+            ('linkedin', 'Fernando Tricas'))
+    buf.setPosts()
+    print(buf.getPosts())
+    print(buf.getPosts()[0])
+    print(len(buf.getPosts()[0]))
+    print(buf.getTitle(0))
+    print(buf.getLink(0))
+    post = buf.getPosts()[0]
+    print("post")
+    print(post)
+    print(buf.getPostTitle(post))
+    print(buf.getPostLink(post))
+    post = buf.obtainPostData(0)
+    print("post")
+    print(post)
+    print(buf.getPostTitle(post))
+    print(buf.getPostLink(post))
+    # It has 30 elements
+    print(buf.obtainPostData(0))
 
-    for bu in blog.buffer.getProfiles():
-        print(bu)
-        print('F1', blog.buffer.selectAndExecute('show', 'F1'))
-        print('L3', blog.buffer.selectAndExecute('show', 'L3'))
-        print('TL2', blog.buffer.selectAndExecute('show', 'TL2'))
-        print('*4', blog.buffer.selectAndExecute('show', '*4'))
-        #print('publish L0', blog.buffer.selectAndExecute('publish','L0'))
-        #print('edit L0', blog.buffer.selectAndExecute('edit', 'L0'+' '+'A Pi-Powered Plan 9 Cluster.'))
+    print('F1', buf.selectAndExecute('show', 'F1'))
+    print('L3', buf.selectAndExecute('show', 'L3'))
+    print('TL2', buf.selectAndExecute('show', 'TL2'))
+    print('*4', buf.selectAndExecute('show', '*4'))
+    print('edit L5', buf.selectAndExecute('edit', 'L5'))
+    #print('edit L2', buf.selectAndExecute('edit', 'L2'+' '+'El tren del tambor.'))
+    #print('pub L0', buf.selectAndExecute('publish','L0'))
     sys.exit()
+    print('delete linkedin', buf.selectAndExecute('delete', 'L1'))
     print("-> PostsP",postsP)
     posts.update(postsP)
     print("-> Posts",posts)

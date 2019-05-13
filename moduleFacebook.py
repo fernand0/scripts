@@ -99,13 +99,14 @@ class moduleFacebook(Content):
             logging.info("    Publishing in Facebook: %s" % post)
             res = self.page.put_object(self.pageId, "feed", message=post, link=link)
             logging.info("Res: %s" % res)
+            if 'id' in res:
+                #id2, id1 = res['id'].split('_')
+                #urlFb = 'https://www.facebook.com/permalink.php?story_fbid=%s&id=%s'%(id1, id2)
+                return('https://www.facebook.com/%s/posts/%s' %
+                        (self.user,res['id'].split('_')[1]))
             return(res)
         except:        
-            logging.warning("Facebook posting failed!") 
-            logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
-            logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
-            return("Fail! %s" % sys.exc_info()[0])
-
+            return(self.report('Facebook', post, link, sys.exc_info()))
 
 def main():
 

@@ -41,15 +41,31 @@ class moduleRss(Content):
         logging.debug(urlRss)
         self.posts = feedparser.parse(urlRss).entries
 
-        outputData = {}
-        serviceName = 'Rss'
-        outputData[serviceName] = {'sent': [], 'pending': []}
-        for i in range(len(self.getPosts())):
-            outputData[serviceName]['pending'].append(self.obtainPostData(i))
-        self.postsFormatted = outputData
+        #outputData = {}
+        #serviceName = 'Rss'
+        #outputData[serviceName] = {'sent': [], 'pending': []}
+        #for i in range(len(self.getPosts())):
+        #    outputData[serviceName]['pending'].append(self.obtainPostData(i))
+        #self.postsFormatted = outputData
  
-    def getLinkEntry(self, entry):
-        return(entry['link'])
+    def getPostTitle(self, post):
+        if 'title' in post:
+            return(post['title'].replace('\n', ' '))
+
+    def getLink(self, i):
+        post = self.getPosts()[i]
+        return(self.getPostLink(post))
+
+    def getTitle(self, i):
+        post = self.getPosts()[i]
+        return(self.getPostLink(post))
+
+    def getPostLink(self, post):
+        return(post['link'])
+
+    def getPostTitle(self, post):
+        if 'title' in post:
+            return(post['title'].replace('\n', ' '))
 
     def obtainPostData(self, i, debug=False):
         if not self.posts:
@@ -66,18 +82,18 @@ class moduleRss(Content):
             theSummary = post['summary']
             content = theSummary
         if 'content' in post:
-            content = post['description']
-            if content.startswith('Anuncios'): content = ''
+            content = post['content']
+            if isinstance(content, str):
+                if content.startswith('Anuncios'): content = ''
         if 'description' in post:
             theDescription = post['description']
-        if 'title' in post:
-            theTitle = post['title'].replace('\n', ' ')
+        theTitle = self.getPostTitle(post)
         if 'link' in post:
             theLink = post['link']
         if ('comment' in post):
             comment = post['comment']
         else:
-            comment = ""
+            comment = theSummary
 
         theSummaryLinks = ""
 
@@ -101,37 +117,40 @@ class moduleRss(Content):
         theSummary = soup.get_text()
         if self.getLinksToAvoid():
             (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())
-            logging.debug("theC", theContent)
+            logging.debug("theC %s" % theContent)
             if theContent.startswith('Anuncios'): 
                 theContent = ''
-            logging.debug("theC", theContent)
+            logging.debug("theC %s"% theContent)
         else:
             (theContent, theSummaryLinks) = self.extractLinks(soup, "") 
-            logging.debug("theC", theContent)
+            logging.debug("theC %s"% theContent)
             if theContent.startswith('Anuncios'): 
                 theContent = ''
-            logging.debug("theC", theContent)
+            logging.debug("theC %s"% theContent)
 
         if 'media_content' in posts[i]: 
-            theImage = posts[i]['media_content'][0]['url']
+            theImage = ''
+            for media in posts[i]['media_content']:
+                if media['url'].find('avatar')<0: 
+                    theImage = media['url']
         else:
             theImage = self.extractImage(soup)
-        logging.debug("theImage", theImage)
+        logging.debug("theImage %s"% theImage)
         theLinks = theSummaryLinks
         theSummaryLinks = theContent + theLinks
             
         logging.debug("=========")
         logging.debug("Results: ")
         logging.debug("=========")
-        logging.debug("Title:     ", theTitle)
-        logging.debug("Link:      ", theLink)
-        logging.debug("First Link:", firstLink)
-        logging.debug("Summary:   ", content[:200])
-        logging.debug("Sum links: ", theSummaryLinks)
-        logging.debug("the Links"  , theLinks)
-        logging.debug("Comment:   ", comment)
-        logging.debug("Image;     ", theImage)
-        logging.debug("Post       ", theTitle + " " + theLink)
+        logging.debug("Title:      %s"% theTitle)
+        logging.debug("Link:       %s"% theLink)
+        logging.debug("First Link: %s"% firstLink)
+        logging.debug("Summary:    %s"% content[:200])
+        logging.debug("Sum links:  %s"% theSummaryLinks)
+        logging.debug("the Links   %s"% theLinks)
+        logging.debug("Comment:    %s"% comment)
+        logging.debug("Image;      %s"% theImage)
+        logging.debug("Post        %s"% theTitle + " " + theLink)
         logging.debug("==============================================")
         logging.debug("")
 
@@ -147,6 +166,20 @@ def main():
     config.read(CONFIGDIR + '/.rssBlogs')
 
     print("Configured blogs:")
+
+    blog = moduleRss.moduleRss()
+    #url = 'http://fernand0.github.io/'
+    #print("Url: %s"% url)
+    #blog.setUrl(url)
+    #rssFeed = 'feed.xml'
+    #blog.setRssFeed(rssFeed)
+    #blog.setPosts()
+    #print(blog.getPosts()[0])
+    #(title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
+    #print(title, link, comment)
+    #sys.exit()
+
+
 
     blogs = []
 
@@ -173,27 +206,9 @@ def main():
         blog.setSocialNetworks(config, section)
 
         print(blog.getSocialNetworks())
+        blog.setCache()
 
         blogs.append(blog)
-        print(blog.obtainPostData(0))
-
-    
-    #blogs[7].setPosts()
-    #print(blogs[7].getPosts())
-    blogs[7].setPostsCache()
-
-    print(blogs[7].getPostsCache())
-    print(blogs[7].cache.listPosts())
-    print(blogs[7].cache.showPost('F1'))
-    sys.exit()
-    print(blogs[6].cache.editPost('F1', '10 Tricks to Appear Smart During Meetings – The Cooper Review – Medium. ---'))
-    print(blogs[6].cache.showPost('F1'))
-    sys.exit()
-
-    numPosts = len(blogs[7].getPosts())
-    for i in range(numPosts):
-        print(blog.obtainPostData(numPosts - 1 - i))
-
 
     for blog in blogs:
         print(blog.getUrl())
@@ -202,27 +217,24 @@ def main():
         if 'twitterac' in blog.getSocialNetworks():
             print(blog.getSocialNetworks()['twitterac'])
         blog.setPosts()
-        print(blog.getPosts()[0]['link'])
-        print(blog.getLinkPosition(blog.getPosts()[0]['link']))
-        print(time.asctime(blog.datePost(0)))
-        print(blog.getLinkPosition(blog.getPosts()[5]['link']))
-        print(time.asctime(blog.datePost(5)))
-        blog.obtainPostData(0)
-        if blog.getUrl().find('ando')>0:
-            blog.newPost('Prueba %s' % time.asctime(), 'description %s' % 'prueba')
-            print(blog.selectPost())
+        if blog.getPosts():
+            for i, post in enumerate(blog.getPosts()):
+                print(blog.getPosts()[i])
+                print(blog.getTitle(i))
+                print(blog.getLink(i))
+                print(blog.getPostTitle(post))
+                print(blog.getPostLink(post))
 
-    for blog in blogs:
-        import urllib
-        urlFile = open(DATADIR + '/' 
-              + urllib.parse.urlparse(blog.getUrl()+blog.getRssFeed()).netloc
-              + ".last", "r")
-        linkLast = urlFile.read().rstrip()  # Last published
-        print(blog.getUrl()+blog.getRssFeed(),blog.getLinkPosition(linkLast))
-        print("description ->", blog.getPosts()[5]['description'])
-        for post in posts:
-            if "content" in post:
-                print(post['content'][:100])
+        for service in blog.getSocialNetworks():
+            socialNetwork = (service, blog.getSocialNetworks()[service])
+            
+            linkLast = checkLastLink(blog.getUrl(), socialNetwork)
+            print(blog.getUrl()+blog.getRssFeed(),blog.getLinkPosition(linkLast))
+        #if blog.getPosts(): 
+        #    print("description ->", blog.getPosts()[5]['description'])
+        #for post in blog.getPosts():
+        #    if "content" in post:
+        #        print(post['content'][:100])
 
 if __name__ == "__main__":
     main()
