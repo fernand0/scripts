@@ -3,10 +3,6 @@
 import configparser
 import pickle
 import os
-import moduleSocial
-import moduleBuffer
-import moduleCache
-import moduleTumblr
 import urllib
 import logging
 from pdfrw import PdfReader
@@ -43,7 +39,6 @@ class moduleSlack(Content):
         self.posts = []
         theChannel = self.getChanId(channel)
         history = self.sc.api_call( "channels.history", count=1000, channel=theChannel)
-        logging.debug(history)
         if 'messages' in history:
             self.posts = history['messages']
         else:
@@ -105,6 +100,7 @@ class moduleSlack(Content):
         self.keys = keys
 
     def deletePost(self, idPost, theChannel): 
+        #theChannel or the name of the channel?
         logging.info("Deleting id %s" % idPost)
             
         result = self.sc.api_call("chat.delete", channel=theChannel, ts=idPost)
@@ -272,9 +268,18 @@ class moduleSlack(Content):
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
+    def publishPost(self, chan, msg):
+        theChan = self.getChanId(chan)
+        logging.info("Publishing %s" % msg)
+        result = self.sc.api_call("chat.postMessage", 
+                channel = theChan, text = msg)
+        logging.info(result)
+        return(result)
+
 def main():
     CHANNEL = 'tavern-of-the-bots' 
 
+    import moduleTumblr
     import moduleSlack
 
     config = configparser.ConfigParser()
