@@ -1,0 +1,122 @@
+#!/usr/bin/env python
+
+import configparser
+import pickle
+import os
+import moduleSocial
+import moduleBuffer
+import moduleCache
+import urllib
+import logging
+from slackclient import SlackClient
+import sys
+import click
+import requests
+from bs4 import BeautifulSoup
+from bs4 import Tag
+
+from tumblpy import Tumblpy
+from twitter import *
+from twitter import *
+
+from configMod import *
+from moduleContent import *
+
+class moduleTumblr(Content):
+
+    def __init__(self):
+        super().__init__()
+        self.user = None
+        self.tc = None
+
+    def setClient(self, tumblr):
+        logging.info("    Connecting Twitter")
+        try:
+            config = configparser.ConfigParser()
+            config.read(CONFIGDIR + '/.rssTumblr')
+
+            self.user = tumblr
+
+            consumer_key = config.get("Buffer1", "consumer_key")
+            consumer_secret = config.get("Buffer1", "consumer_secret")
+            oauth_token = config.get("Buffer1", "oauth_token")
+            oauth_secret = config.get("Buffer1", "oauth_secret")
+
+            try:
+                client = Tumblpy(consumer_key, consumer_secret, 
+                                       oauth_token, oauth_secret)
+            except:
+                logging.warning("Tumblr authentication failed!")
+                logging.warning("Unexpected error:", sys.exc_info()[0])
+                client = None
+        except:
+            logging.warning("Account not configured")
+            client = None
+
+        self.tc = client
+ 
+    def getClient(self):
+        return self.tc
+ 
+    def setPosts(self):
+        logging.info("  Setting posts")
+        self.posts = []
+
+    def publishPost(self, post, link, comment):
+    
+        try:
+            logging.info("    Publishing in Tumblr: %s" % post)
+            client = self.tc 
+            blog_url = client.post('user/info')['user']['blogs'][0]['url'] 
+            post = client.post('post', blog_url, params={'type':'link',
+                'state':'queue', 
+                'title': post, 
+                'thumbnail': None, 
+                'url': link, 
+                #'excerpt': summaryHtml, 
+                'publisher': ''}) 
+
+            logging.info("Posted!: %s" % post)
+            return(post)
+        except:        
+            logging.warning("Tumblr posting failed!") 
+            logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
+            logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
+            return("Fail! %s" % sys.exc_info()[0])
+
+
+def main():
+
+    import moduleTumblr
+
+    t = moduleTumblr.moduleTumblr()
+
+    t.setClient('fernand0')
+
+    t.setPosts()
+
+    config = configparser.ConfigParser()
+    config.read(CONFIGDIR + '/.rssBlogs')
+
+    section = 'Blog2'
+    url = config.get(section, "url")
+    rssFeed = config.get(section, "rssFeed")
+    logging.info(" Blog RSS: %s"% rssFeed)
+    import moduleRss
+    blog = moduleRss.moduleRss()
+    # It does not preserve case
+    blog.setRssFeed(rssFeed)
+    blog.setUrl(url)
+    blog.setPosts()
+    post = blog.obtainPostData(1)
+
+    title = post[0]
+    link = post[1]
+    content = post[7]
+    links = post[8]
+    t.publishPost(title,link,content)
+
+
+if __name__ == '__main__':
+    main()
+

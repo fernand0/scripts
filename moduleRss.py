@@ -18,194 +18,44 @@ import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
 
 from configMod import *
+from moduleContent import *
 
-class moduleRss():
+class moduleRss(Content):
 
     def __init__(self):
-         self.url = ""
-         self.name = ""
-         self.rssFeed = ''
-         self.Id = 0
-         self.socialNetworks = {}
-         self.linksToAvoid = ""
-         self.posts = None
-         self.time = []
-         self.bufferapp = None
-         self.program = None
-         self.buffer = None
-         self.cache = None
-         self.xmlrpc = None
-         self.lastLinkPublished = {}
-         #self.logger = logging.getLogger(__name__)
+        super().__init__()
+        self.rssFeed = ''
  
-    def getUrl(self):
-        return(self.url)
-
-    def setUrl(self, url):
-        self.url = url
-
-    def getName(self):
-        return(self.name)
-
-    def setName(self, name):
-        self.name = name
-
-    def getSocialNetworks(self):
-        return(self.socialNetworks)
-
-    def setSocialNetworks(self, config, section):
-        socialNetworksOpt = ['twitter', 'facebook', 'telegram', 
-                'medium', 'linkedin','pocket'] 
-        for option in config.options(section):
-            if (option in socialNetworksOpt):
-                nick = config.get(section, option)
-                socialNetwork = (option, nick)
-                self.addSocialNetwork(socialNetwork)
- 
-    def addSocialNetwork(self, socialNetwork):
-        self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
-
     def getRssFeed(self):
         return(self.rssFeed)
 
     def setRssFeed(self, feed):
         self.rssFeed = feed
 
-    def getPosts(self):
-        return(self.posts)
- 
     def setPosts(self):
+        logging.info("  Setting posts")
         if self.rssFeed.find('http')>=0: 
-            urlRss = self.rssFeed
+            urlRss = self.getRssFeed()
         else: 
-            urlRss = self.url+self.rssFeed
+            urlRss = self.url+self.getRssFeed()
         logging.debug(urlRss)
-        self.posts = feedparser.parse(urlRss)
+        self.posts = feedparser.parse(urlRss).entries
 
-    def addLastLinkPublished(self, socialNetwork, lastLink, lastTime):
-        self.lastLinkPublished[socialNetwork] = (lastLink, lastTime)
-
-    def getLastLinkPublished(self):
-        return(self.lastLinkPublished)
+        outputData = {}
+        serviceName = 'Rss'
+        outputData[serviceName] = {'sent': [], 'pending': []}
+        for i in range(len(self.getPosts())):
+            outputData[serviceName]['pending'].append(self.obtainPostData(i))
+        self.postsFormatted = outputData
  
-    def getLinksToAvoid(self):
-        return(self.linksToAvoid)
- 
-    def setLinksToAvoid(self,linksToAvoid):
-        self.linksToAvoid = linksToAvoid
- 
-    def getTime(self):
-        return(self.time)
- 
-    def setTime(self, time):
-        self.time = time
-
-    def getBuffer(self):
-        return(self.buffer)
-
-    def setBuffer(self):
-        self.buffer = moduleBuffer.moduleBuffer() 
-
-    def getBufferapp(self):
-        return(self.bufferapp)
- 
-    def setBufferapp(self):
-        self.setBuffer()
-
-    def getCache(self):
-        return(self.cache)
-
-    def setCache(self):
-        self.cache = []
-        for sN in self.getSocialNetworks():
-            cacheAcc = moduleCache.moduleCache(self.getUrl(), 
-                    sN, self.getSocialNetworks()[sN]) 
-            cacheAcc.setPosts()
-            cacheAcc.listPosts()
-
-    def getProgram(self):
-        return(self.program)
- 
-    def setProgram(self, program):
-        self.program = program
-        self.setCache()
-
-    def getLinkPosition(self, link):
-        i = 0
-        if self.getPosts():
-            if not link:
-                logging.debug(self.getPosts().entries)
-                return(len(self.getPosts().entries))
-            for entry in self.getPosts().entries:
-                linkS = link.decode()
-                logging.debug(entry['link'], linkS)
-                lenCmp = min(len(entry['link']), len(linkS))
-                if entry['link'][:lenCmp] == linkS[:lenCmp]:
-                    return i
-                i = i + 1
-        return(i)
-
-    def datePost(self, pos):
-        return(self.getPosts().entries[pos]['published_parsed'])
-
-    def extractImage(self, soup):
-        #This should go to the moduleHtml
-        pageImage = soup.findAll("img")
-        #  Only the first one
-        if len(pageImage) > 0:
-            imageLink = (pageImage[0]["src"])
-        else:
-            imageLink = ""
-    
-        if imageLink.find('?') > 0:
-            return imageLink[:imageLink.find('?')]
-        else:
-            return imageLink
-
-    def extractLinks(self, soup, linksToAvoid=""):
-        #This should go to the moduleHtml
-        j = 0
-        linksTxt = ""
-        links = soup.find_all(["a","iframe"])
-        for link in soup.find_all(["a","iframe"]):
-            theLink = ""
-            if len(link.contents) > 0: 
-                if not isinstance(link.contents[0], Tag):
-                    # We want to avoid embdeded tags (mainly <img ... )
-                    if link.has_attr('href'):
-                        theLink = link['href']
-                    else:
-                        if 'src' in link: 
-                            theLink = link['src']
-                        else:
-                            continue
-            else:
-                if 'src' in link: 
-                    theLink = link['src']
-                else:
-                    continue
-    
-            if ((linksToAvoid == "") or
-               (not re.search(linksToAvoid, theLink))):
-                    if theLink:
-                        link.append(" ["+str(j)+"]")
-                        linksTxt = linksTxt + "["+str(j)+"] " + \
-                            link.contents[0] + "\n"
-                        linksTxt = linksTxt + "    " + theLink + "\n"
-                        j = j + 1
-    
-        if linksTxt != "":
-            theSummaryLinks = linksTxt
-        else:
-            theSummaryLinks = ""
-    
-        return (soup.get_text().strip('\n'), theSummaryLinks)
+    def getLinkEntry(self, entry):
+        return(entry['link'])
 
     def obtainPostData(self, i, debug=False):
         if not self.posts:
             self.setPosts()
 
-        posts = self.getPosts().entries
+        posts = self.getPosts()
         if not posts:
             return (None, None, None, None, None, None, None, None, None, None)
 
@@ -329,18 +179,18 @@ def main():
 
     
     #blogs[7].setPosts()
-    #print(blogs[7].getPosts().entries)
-    blogs[6].setPostsCache()
+    #print(blogs[7].getPosts())
+    blogs[7].setPostsCache()
 
-    print(blogs[6].getPostsCache())
-    print(blogs[6].cache.listPosts())
-    print(blogs[6].cache.showPost('F1'))
+    print(blogs[7].getPostsCache())
+    print(blogs[7].cache.listPosts())
+    print(blogs[7].cache.showPost('F1'))
     sys.exit()
     print(blogs[6].cache.editPost('F1', '10 Tricks to Appear Smart During Meetings – The Cooper Review – Medium. ---'))
     print(blogs[6].cache.showPost('F1'))
     sys.exit()
 
-    numPosts = len(blogs[7].getPosts().entries)
+    numPosts = len(blogs[7].getPosts())
     for i in range(numPosts):
         print(blog.obtainPostData(numPosts - 1 - i))
 
@@ -352,10 +202,10 @@ def main():
         if 'twitterac' in blog.getSocialNetworks():
             print(blog.getSocialNetworks()['twitterac'])
         blog.setPosts()
-        print(blog.getPosts().entries[0]['link'])
-        print(blog.getLinkPosition(blog.getPosts().entries[0]['link']))
+        print(blog.getPosts()[0]['link'])
+        print(blog.getLinkPosition(blog.getPosts()[0]['link']))
         print(time.asctime(blog.datePost(0)))
-        print(blog.getLinkPosition(blog.getPosts().entries[5]['link']))
+        print(blog.getLinkPosition(blog.getPosts()[5]['link']))
         print(time.asctime(blog.datePost(5)))
         blog.obtainPostData(0)
         if blog.getUrl().find('ando')>0:
@@ -369,7 +219,7 @@ def main():
               + ".last", "r")
         linkLast = urlFile.read().rstrip()  # Last published
         print(blog.getUrl()+blog.getRssFeed(),blog.getLinkPosition(linkLast))
-        print("description ->", blog.getPosts().entries[5]['description'])
+        print("description ->", blog.getPosts()[5]['description'])
         for post in posts:
             if "content" in post:
                 print(post['content'][:100])
