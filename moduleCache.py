@@ -123,7 +123,19 @@ class moduleCache(Queue):
 
     def isForMe(self, args):
         return ((self.service[0].capitalize() in args.split()[0])
-                or (args[0] == '*'))
+               or (args[0] == '*'))
+
+    def editl(self, j, newLink=''):
+        logging.info("New link %s", newLink)
+        thePost = self.obtainPostData(j)
+        oldLink = thePost[1]
+        thePost = thePost[:1] + ( newLink, ) + thePost[2:]
+        print(thePost)
+        self.posts[j] = thePost
+        logging.info("Service Name %s" % self.name)
+        self.updatePostsCache()
+        update = "Changed "+oldLink+" with "+newLink
+        return(update)
 
     def edit(self, j, newTitle=''):
         logging.info("New title %s", newTitle)
@@ -198,6 +210,7 @@ def main():
     print(cache.selectAndExecute('show', '*2'))
     print(cache.selectAndExecute('show', 'TM3'))
     print(cache.selectAndExecute('show', 'TM6'))
+    print(cache.selectAndExecute('editl', 'T1 https://www.pagetable.com/?p=1152'))
     #print(cache.selectAndExecute('delete', 'F7'))
     #print(cache.selectAndExecute('edit', 'T3'))
     #print(cache.selectAndExecute('edit', 'T0'))
