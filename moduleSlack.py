@@ -379,6 +379,5 @@ def main():
     site.deletePost(site.getId(elem), theChannel)
     #print(outputData['Slack']['pending'][elem][8])
 
-
 if __name__ == '__main__':
     main()

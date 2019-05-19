@@ -227,6 +227,9 @@ class moduleGmail(Content,Queue):
                 lookAt.append(serviceName)
         return lookAt
 
+    def editl(self, j, newTitle):
+        return('Not implemented!')
+
     def edit(self, j, newTitle):
         logging.info("New title %s", newTitle)
         thePost = self.obtainPostData(j)

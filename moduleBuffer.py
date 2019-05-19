@@ -429,6 +429,28 @@ class moduleBuffer(Queue):
         profile = self.getProfile()
         return (profile['service'][0].capitalize() in args) or ('*' in args) 
 
+    def editl(self, j, newLink=''):
+        logging.info("New link %s", newLink)
+        thePost = self.obtainPostData(j)
+        oldLink = thePost[1]
+        profile = self.getProfile()
+        logging.info("servicename %s" %self.service)
+        from buffpy.models.update import Update
+        i=0
+        update = Update(api=self.client, id=profile.updates.pending[j].id) 
+        print(update)
+        # media = {'original': newLink } 
+        return('Not implemented!')
+        update = update.edit(text=newTitle)
+
+        title = oldTitle
+        update = "Changed "+title+" with "+newTitle
+
+        logging.info("Res update %s" % update)
+
+        return(update)
+
+
     def edit(self, j, newTitle=''):
         logging.info("New title %s", newTitle)
         thePost = self.obtainPostData(j)
@@ -508,7 +530,7 @@ def main():
     print('L3', buf.selectAndExecute('show', 'L3'))
     print('TL2', buf.selectAndExecute('show', 'TL2'))
     print('*4', buf.selectAndExecute('show', '*4'))
-    print('edit L5', buf.selectAndExecute('edit', 'L5'))
+    print('edit L5', buf.selectAndExecute('editl', 'L5 https://www.nytimes.com/2019/05/04/us/key-fobs-north-olmsted-ohio.html'))
     #print('edit L2', buf.selectAndExecute('edit', 'L2'+' '+'El tren del tambor.'))
     #print('pub L0', buf.selectAndExecute('publish','L0'))
     sys.exit()
