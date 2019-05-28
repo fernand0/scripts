@@ -149,56 +149,8 @@ class moduleSlack(Content):
             theImage = post['thumb_url']
         else:
             logging.info("Fail image")
-            logging.info("Fail image %s", post)
+            logging.debug("Fail image %s", post)
             theImage = ''
-        #elif 'text' in post:
-        #    if post['text'].startswith('<h'):
-        #        # It's an url
-        #        url = post['text'][1:-1]
-        #        req = requests.get(url)
-        #            
-        #        if req.text.find('403 Forbidden')>=0:
-        #            theTitle = url
-        #            theSummary = url
-        #            content = url
-        #            theDescription = url
-        #        else:
-        #            if url.lower().endswith('pdf'):
-        #                nameFile = '/tmp/kkkkk.pdf'
-        #                with open(nameFile,'wb') as f:
-        #                    f.write(req.content)
-        #                theTitle = PdfReader(nameFile).Info.Title
-        #                if theTitle:
-        #                    theTitle = theTitle[1:-1]
-        #                else:
-        #                    theTitle = url
-        #                theUrl = url
-        #                theSummary = ''
-        #                content = theSummary
-        #                theDescription = theSummary
-        #            else:
-        #                soup = BeautifulSoup(req.text, 'lxml')
-        #                #print("soup", soup)
-        #                theTitle = soup.title
-        #                if theTitle:
-        #                    theTitle = str(theTitle.string)
-        #                else:
-        #                    # The last part of the path, without the dot part, and
-        #                    # capitized
-        #                    urlP = urllib.parse.urlparse(url)
-        #                    theTitle = os.path.basename(urlP.path).split('.')[0].capitalize()
-        #                theSummary = str(soup.body)
-        #                content = theSummary
-        #                theDescription = theSummary
-        #    else:
-        #        theSummary = post['text']
-        #        content = post['text']
-        #        theDescription = post['text']
-        #        theTitle = post['text']
-        #else:
-        #    theSummary = post['title']
-        #    content = post['title']
-        #    theDescription = post['title']
 
         if 'original_url' in post: 
             theLink = post['original_url']

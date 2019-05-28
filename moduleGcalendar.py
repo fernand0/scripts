@@ -148,6 +148,10 @@ def main():
 
     calendar = moduleGcalendar()
     calendar.setClient('ACC0')
+    calendar.setCalendarList()
+    print(calendar.getCalendarList())
+    calendar.setActive('dpi6ce608h8j09ocolamshl8kk@group.calendar.google.com')
+    sys.exit()
     calendar.setPosts()
 
     print(calendar.getPosts())

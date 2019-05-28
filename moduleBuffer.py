@@ -134,21 +134,12 @@ class moduleBuffer(Queue):
     def setPosts(self):
         self.setProfile(self.service)
         profile = self.getProfile()
-        logging.info("Profile %s" % profile)
+        logging.debug("Profile %s" % profile)
     
-        #serviceName = profile['service']
-        #nickName = profile['service_username']
-        #bufferName = 'Buffer_' + serviceName + '_' + nickName
-        #self.service[bufferName] = i
-        #i = i + 1
-    
-        #logging.info("   Service %s" % serviceName)
-    
-        #outputData[bufferName] = {'sent': [], 'pending': []}
         for method in ['sent', 'pending']:
             if (profile.counts[method] > 0):
                 updates = getattr(profile.updates, method)
-                logging.info("sent Profile %s" % updates)
+                logging.debug("sent Profile %s" % updates)
                 if method == 'pending': 
                     self.posts = updates
                 else:

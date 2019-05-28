@@ -84,15 +84,15 @@ class moduleLinkedin(Content):
         logging.info("    Publishing in LinkedIn...")
         if comment == None:
             comment = ''
-        post = comment + " " + post + " " + link
+        postC = comment + " " + post + " " + link
         h = HTMLParser()
-        post = h.unescape(post)
+        postC = h.unescape(post)
         try:
             logging.info("    Publishing in Linkedin: %s" % post)
             if link: 
                 res = self.ln.submit_share(post, link, '') 
             else: 
-                res = self.ln.submit_share(comment = post)
+                res = self.ln.submit_share(comment = postC)
             logging.info("Res: %s" % res)
             return res
         except:        

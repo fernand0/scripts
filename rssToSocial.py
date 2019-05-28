@@ -260,7 +260,7 @@ def main():
                             print("   Publishing in %s %s" % (serviceName, title))
                             if (profile == 'telegram') or (profile == 'facebook'):
                                 comment = summaryLinks
-                            if (profile == 'twitter') or (profile == 'mastodon'):
+                            if (profile == 'twitter') or (profile == 'mastodon') or (profile == 'linkedin'):
                                 comment = ''
                             if (profile == 'medium'):
                                 comment = summaryHtml
