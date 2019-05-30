@@ -48,7 +48,7 @@ class moduleLinkedin(Content):
 
  
     def getClient(self):
-        return self.ln
+        return None
  
     def setPosts(self):
         logging.info("  Setting posts")
