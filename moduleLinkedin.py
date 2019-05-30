@@ -15,7 +15,6 @@ import requests
 from bs4 import BeautifulSoup
 from bs4 import Tag
 
-from linkedin import linkedin
 from html.parser import HTMLParser
 
 from configMod import *
@@ -36,30 +35,17 @@ class moduleLinkedin(Content):
 
             self.user = linkedinAC    
 
-            CONSUMER_KEY = config.get("Linkedin", "CONSUMER_KEY") 
-            CONSUMER_SECRET = config.get("Linkedin", "CONSUMER_SECRET") 
-            USER_TOKEN = config.get("Linkedin", "USER_TOKEN") 
-            USER_SECRET = config.get("Linkedin", "USER_SECRET") 
-            RETURN_URL = config.get("Linkedin", "RETURN_URL"),
+            self.CONSUMER_KEY = config.get("Linkedin", "CONSUMER_KEY") 
+            self.CONSUMER_SECRET = config.get("Linkedin", "CONSUMER_SECRET") 
+            self.USER_TOKEN = config.get("Linkedin", "USER_TOKEN") 
+            self.USER_SECRET = config.get("Linkedin", "USER_SECRET") 
+            self.RETURN_URL = config.get("Linkedin", "RETURN_URL")
+            self.ACCESS_TOKEN = config.get("Linkedin", "ACCESS_TOKEN")
+            self.URN = config.get("Linkedin", "URN")
 
-            try: 
-                authentication = linkedin.LinkedInDeveloperAuthentication(
-                         CONSUMER_KEY,
-                         CONSUMER_SECRET,
-                         USER_TOKEN,
-                         USER_SECRET,
-                         RETURN_URL,
-                         linkedin.PERMISSIONS.enums.values())
-
-                l = linkedin.LinkedInApplication(authentication)
-            except:
-                logging.warning("LinkedIn authentication failed!")
-                logging.warning("Unexpected error:", sys.exc_info()[0])
         except:
             logging.warning("Account not configured")
-            l = None
 
-        self.ln = l
  
     def getClient(self):
         return self.ln
@@ -81,6 +67,20 @@ class moduleLinkedin(Content):
         self.postsFormatted = outputData
 
     def publishPost(self, post, link, comment):
+        # Based on https://github.com/gutsytechster/linkedin-post
+        access_token = self.ACCESS_TOKEN
+        urn = self.URN
+
+        author = f"urn:li:person:{urn}"
+
+        headers = {'X-Restli-Protocol-Version': '2.0.0',
+           'Content-Type': 'application/json',
+           'Authorization': f'Bearer {access_token}'}
+
+
+        api_url_base = 'https://api.linkedin.com/v2/'
+        api_url = f'{api_url_base}ugcPosts'
+    
         logging.info("    Publishing in LinkedIn...")
         if comment == None:
             comment = ''
@@ -90,11 +90,55 @@ class moduleLinkedin(Content):
         try:
             logging.info("    Publishing in Linkedin: %s" % post)
             if link: 
-                res = self.ln.submit_share(post, link, '') 
+                post_data = {
+                    "author": author,
+                    "lifecycleState": "PUBLISHED",
+                    "specificContent": {
+                        "com.linkedin.ugc.ShareContent": {
+                            "shareCommentary": {
+                                "text": comment
+                            },
+                            "shareMediaCategory": "ARTICLE",
+                            "media": [
+                                { "status": "READY",
+                                    #"description": {
+                                    #    "text": "El mundo es imperfecto"
+                                    #    },
+                                    "originalUrl": link,
+                                    "title": {
+                                        "text": post
+                                    }
+                               }
+                            ]
+                        },
+                    },
+                    "visibility": {
+                        "com.linkedin.ugc.MemberNetworkVisibility": "CONNECTIONS"
+                    },
+                }
             else: 
-                res = self.ln.submit_share(comment = postC)
+                post_data = {
+                     "author": author,
+                     "lifecycleState": "PUBLISHED",
+                     "specificContent": {
+                         "com.linkedin.ugc.ShareContent": {
+                             "shareCommentary": {
+                                 "text": post
+                             },
+                             "shareMediaCategory": "NONE"
+                         },
+                     },
+                     "visibility": {
+                         "com.linkedin.ugc.MemberNetworkVisibility": "CONNECTIONS"
+                     },
+                }
+
+            res = requests.post(api_url, headers=headers, json=post_data)
             logging.info("Res: %s" % res)
-            return res
+            if res.status_code == 201: 
+                return("Success ") 
+            else: 
+                return(res.content)
         except:        
             return(self.report('LinkedIn', post, link, sys.exc_info()))
 
@@ -107,11 +151,13 @@ def main():
 
     ln.setClient('fernand0')
 
-    ln.setPosts()
-    for tweet in ln.getPostsFormatted()['Linkedin']['pending']:
-        print("@%s: %s" %(tweet[2], tweet[0]))
+    #ln.post_on_linkedin()
+    #sys.exit()
+    #ln.setPosts()
+    #for post in ln.getPosts:
+    #    print("@%s: %s" %(post[2], post[0]))
 
-    ln.publishPost("Prueba",'','')
+    print(ln.publishPost("El mundo es Imperfecto",'http://elmundoesimperfecto.com/',''))
 
 if __name__ == '__main__':
     main()
