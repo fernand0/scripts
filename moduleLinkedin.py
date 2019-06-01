@@ -3,17 +3,9 @@
 import configparser
 import pickle
 import os
-import moduleSocial
-import moduleBuffer
-import moduleCache
-import urllib
 import logging
-from slackclient import SlackClient
 import sys
-import click
 import requests
-from bs4 import BeautifulSoup
-from bs4 import Tag
 
 from html.parser import HTMLParser
 
@@ -35,14 +27,13 @@ class moduleLinkedin(Content):
 
             self.user = linkedinAC    
 
-            self.CONSUMER_KEY = config.get("Linkedin", "CONSUMER_KEY") 
-            self.CONSUMER_SECRET = config.get("Linkedin", "CONSUMER_SECRET") 
-            self.USER_TOKEN = config.get("Linkedin", "USER_TOKEN") 
-            self.USER_SECRET = config.get("Linkedin", "USER_SECRET") 
-            self.RETURN_URL = config.get("Linkedin", "RETURN_URL")
+            #self.CONSUMER_KEY = config.get("Linkedin", "CONSUMER_KEY") 
+            #self.CONSUMER_SECRET = config.get("Linkedin", "CONSUMER_SECRET") 
+            #self.USER_TOKEN = config.get("Linkedin", "USER_TOKEN") 
+            #self.USER_SECRET = config.get("Linkedin", "USER_SECRET") 
+            #self.RETURN_URL = config.get("Linkedin", "RETURN_URL")
             self.ACCESS_TOKEN = config.get("Linkedin", "ACCESS_TOKEN")
             self.URN = config.get("Linkedin", "URN")
-
         except:
             logging.warning("Account not configured")
 
@@ -54,18 +45,6 @@ class moduleLinkedin(Content):
         logging.info("  Setting posts")
         self.posts = []
 
-        outputData = {}
-        serviceName = 'Linkedin'
-        outputData[serviceName] = {'sent': [], 'pending': []}
-        for post in self.getPosts():
-            #print(post)
-            #url = 'https://twitter.com/' + post['user']['screen_name'] + '/status/' + str(post['id'])
-            outputData[serviceName]['sent'].append((post['text'], url, 
-                    post['user']['screen_name'],     
-                    post['created_at'], '','','','',''))
-
-        self.postsFormatted = outputData
-
     def publishPost(self, post, link, comment):
         # Based on https://github.com/gutsytechster/linkedin-post
         access_token = self.ACCESS_TOKEN
@@ -76,7 +55,6 @@ class moduleLinkedin(Content):
         headers = {'X-Restli-Protocol-Version': '2.0.0',
            'Content-Type': 'application/json',
            'Authorization': f'Bearer {access_token}'}
-
 
         api_url_base = 'https://api.linkedin.com/v2/'
         api_url = f'{api_url_base}ugcPosts'
@@ -151,12 +129,7 @@ def main():
 
     ln.setClient('fernand0')
 
-    #ln.post_on_linkedin()
-    #sys.exit()
-    #ln.setPosts()
-    #for post in ln.getPosts:
-    #    print("@%s: %s" %(post[2], post[0]))
-
+    print(ln.publishPost("Probando á é í ó ú — ",'',''))
     print(ln.publishPost("El mundo es Imperfecto",'http://elmundoesimperfecto.com/',''))
 
 if __name__ == '__main__':
