@@ -227,6 +227,28 @@ class moduleSlack(Content):
         logging.info(result)
         return(result)
 
+    def getBots(self):
+        self.setPosts('tavern-of-the-bots')
+        msgs = {}
+        for msg in self.getPosts():
+            if msg['text'].find('Hello')>=0: 
+                posN = msg['text'].find('Name:')+6
+                posFN = msg['text'].find('"',posN)
+                posI = msg['text'].find('IP:')+4
+                posFI = msg['text'].find(' ',posI+1)-1
+                posC = msg['text'].find('[')
+                name = msg['text'][posN:posFN]
+                ip = msg['text'][posI:posFI]
+                command = msg['text'][posC+1:posC+2]
+                #print("IP %s %s" % (ip,name))
+                if name not in msgs:
+                    msgs[name] = (ip, command)
+        theBots = ""
+        for name in msgs:
+            theBots = theBots + "[%s] %16s %s\n"%(msgs[name][1], msgs[name][0], name)
+        return(theBots)
+
+
 def main():
     CHANNEL = 'tavern-of-the-bots' 
 
@@ -246,6 +268,11 @@ def main():
     site.setSlackClient(SLACKCREDENTIALS)
 
     theChannel = site.getChanId(CHANNEL)  
+
+    site.setPosts('tavern-of-the-bots')
+    print(site.getPosts())
+    site.getBots()
+    sys.exit()
     site.setPosts('links')
 
     site.setSocialNetworks(config, section)
