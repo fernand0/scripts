@@ -454,7 +454,8 @@ class moduleBuffer(Queue):
         i=0
         update = Update(api=self.client, id=profile.updates.pending[j].id) 
         print(update)
-        update = update.edit(text=newTitle)
+        import urllib.parse
+        update = update.edit(text=urllib.parse.quote(newTitle))
 
         title = oldTitle
         update = "Changed "+title+" with "+newTitle
