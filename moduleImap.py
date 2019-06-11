@@ -27,6 +27,7 @@ import ssl
 
 from configMod import *
 import moduleGmail
+import pprint
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
@@ -96,6 +97,7 @@ def mailFolder(account, accountData, logging, res):
     except:
         logging.error("Error with %s - %s" % (USER,SERVER))
         sys.exit()
+        
 
     for actions in accountData['RULES']:
         RULES = actions[0]
@@ -290,9 +292,6 @@ def selectMessageAndFolder(M):
             elif (len(msg_number) > 0) and (msg_number[0] == '>'):
                 if msg_number[1:].isdigit():
                     moduleSieve.addToSieve(msg_data[int(msg_number[1:])])
-            elif (len(msg_number) > 0) and (not msg_number.isdigit()):
-                print("Selecting messages with %s"% msg_number)
-                return(folder, "", msg_number)
             else:
                 startMsg = 0
         else:
@@ -410,7 +409,7 @@ def selectAllMessages(folder, M):
 
     return ",".join(messages)
 
-def selectMessageSubject(folder, M, sbj, sens=0, partial=False):
+def selectMessageSubject(folder, M, sbj, sens=0):
     msg_number =""
     rows, columns = os.popen('stty size', 'r').read().split()
     numMsgs = 24
@@ -451,12 +450,7 @@ def selectMessageSubject(folder, M, sbj, sens=0, partial=False):
                     # ayudita
                     # b'Visualizaci\xc3\xb3n ayudica'
 		    #dist = distance.levenshtein(headSubject[-minLen:], sbj[-minLen:])
-                    if partial:
-                        if (headSubjDec.find(sbjDec) >=0) or (sbjDec=='*'):
-                            dist = -1
-                        else:
-                            dist = 100
-                    elif minLen > maxLen/2:
+                    if minLen > maxLen/2:
                         if minLen > 0:
                             #print("len",minLen)
                             #print("he",headSubjDec[-minLen:])
@@ -506,12 +500,7 @@ def selectMessagesNew(M):
                 return(-1)
             elif (folder != 'x'):
                 if (folder != "."):
-                    if msg:
-                        sbj = msg['Subject']
-                        partial = False
-                    else:
-                        sbj = msgNumber
-                        partial = True
+                    sbj = msg['Subject']
                     ok = ""
                     badSel = ""
                     sens = 0
@@ -610,12 +599,9 @@ def printMessage(M, msg, rows = 24, columns = 80, headers = ['From', 'To', 'Subj
     wait = input("Any key to follow")
 
 
-def createFolder(M, name, folder, whereFolder=''):
-    if not whereFolder:
-        print("We can select a folder where our new folder will be created")
-        folder = selectFolder(M, folder)
-    else:
-        folder = whereFolder + folder
+def createFolder(M, name, folder):
+    print("We can select a folder where our new folder will be created")
+    folder = selectFolder(M, folder)
     print(folder)
     #folder  = nameFolder(folder)
     if (folder[-1] == '"'):
@@ -729,10 +715,7 @@ def selectFolder(M, moreMessages = "", newFolderName='', folderM=''):
         else:
             print(listFolders)
         print(len(listFolders))
-        if not newFolderName: 
-            inNameFolder = input("Folder number [-cf] Create Folder // A string to select a smaller set of folders ")
-        else:
-            inNameFolder='-cf'
+        inNameFolder = input("Folder number [-cf] Create Folder // A string to select a smaller set of folders ")
         
         if (len(inNameFolder) > 0) and (inNameFolder == '-cf'):
             if newFolderName: 
@@ -928,8 +911,9 @@ def moveMailsRemote(M, msgs, folder):
         MD.close()
         MD.logout()
     else:
+        pp = pprint.PrettyPrinter(indent=4)
         service = moduleGmail.moduleGmail()
-        service.API(acc)    
+        service.API(acc,pp)    
 
         i = 0
         for msgId in msgs.split(','): #[:25]:
@@ -942,13 +926,10 @@ def moveMailsRemote(M, msgs, folder):
             if (typ == 'OK'): 
                 message = data[0][1]
                 logging.debug("Message %s", message)
-                try:
-                    rep = service.moveMessage(message)
-                    logging.info("Reply %s" %rep)
-                    if rep != "Fail!":
-                        M.store(msgId, "+FLAGS", "\\Seen")
-                except:
-                    return
+                rep = service.moveMessage(message)
+                logging.info("Reply %s" %rep)
+                if rep != "Fail!":
+                    M.store(msgId, "+FLAGS", "\\Seen")
                 time.sleep(1)
 
 

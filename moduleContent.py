@@ -58,16 +58,6 @@ class Content:
                 nick = config.get(section, option)
                 socialNetwork = (option, nick)
                 self.addSocialNetwork(socialNetwork)
-            if (option == 'twitter'):
-                self.addSocialNetworkAPI(socialNetwork)
-
-        if self.getBufferapp():
-            profiles = self.buffer.getProfiles()
-            for profile in profiles:
-                nick =  profile['service_username']
-                service = profile['service']
-                socialNetwork = (service, nick)
-                self.addSocialNetwork(socialNetwork)
 
     def addSocialNetworkAPI(self, socialNetwork):
         sN = socialNetwork[0]
@@ -79,8 +69,8 @@ class Content:
     def addSocialNetwork(self, socialNetwork):
         self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
 
-    def getPostsFormatted(self):
-        return(self.postsFormatted)
+    #def getPostsFormatted(self):
+    #    return(self.postsFormatted)
 
     def getPosts(self):
         return(self.posts)
@@ -110,14 +100,14 @@ class Content:
         return(self.buffer)
 
     def setBuffer(self):
-        self.buffer = moduleBuffer.moduleBuffer()
-        self.buffer.setBuffer()
-        self.buffer.setPosts()
-        self.profiles = {}
-        for sN in self.buffer.getProfiles():
-            serviceName = sN['service']
-            nick =  sN['service_username']
-            self.profiles[serviceName+'_'+nick] = sN
+        self.buffer = {}
+        for service in self.getSocialNetworks():
+            if service[0] in self.getBufferapp():
+                nick = self.getSocialNetworks()[service]
+                buf = moduleBuffer.moduleBuffer() 
+                buf.setClient(self.url, (service, nick))
+                buf.setPosts()
+                self.buffer[(service, nick)] = buf
 
     def getBufferapp(self):
         return(self.bufferapp)
@@ -130,10 +120,15 @@ class Content:
         return(self.cache)
 
     def setCache(self):
-        self.cache = moduleCache.moduleCache()
-        self.cache.setClient(self.url, self.getSocialNetworks(),
-                self.getProgram())
-        self.cache.setPosts()
+        self.cache = {}
+        for service in self.getSocialNetworks():
+            if self.getProgram():
+                if service[0] in self.getProgram():
+                    nick = self.getSocialNetworks()[service]
+                    cache = moduleCache.moduleCache() 
+                    cache.setClient(self.url, (service, nick))
+                    cache.setPosts()
+                    self.cache[(service, nick)] = cache
 
     def getProgram(self):
         return(self.program)
@@ -142,8 +137,20 @@ class Content:
         self.program = program
         self.setCache()
 
-    def getLinkEntry(self, entry):
-        pass
+    def len(self, profile):
+        service = profile
+        nick = self.getSocialNetworks()[profile]
+        print("Profile %s, Nick %s" % (service, nick))
+        if self.cache and (service, nick) in self.cache:
+            if self.cache[(service, nick)].getPosts(): 
+                return(len(self.cache[(service, nick)].getPosts()))
+            else:
+                return(0)
+        elif self.buffer and (service, nick) in self.buffer:
+            if self.buffer[(service, nick)].getPosts(): 
+                return(len(self.buffer[(service, nick)].getPosts()))
+            else:
+                return(0)
 
     def getLinkPosition(self, link):
         i = 0
@@ -154,8 +161,10 @@ class Content:
                 logging.debug(self.getPosts())
                 return(len(self.getPosts()))
             for entry in self.getPosts():
-                linkS = link.decode()
-                url = self.getLinkEntry(entry)
+                linkS = link
+                if isinstance(link, bytes):
+                    linkS = linkS.decode()
+                url = self.getPostLink(entry)
                 logging.debug(url, linkS)
                 lenCmp = min(len(url), len(linkS))
                 if url[:lenCmp] == linkS[:lenCmp]:
@@ -167,7 +176,11 @@ class Content:
         return(i)
 
     def datePost(self, pos):
-        return(self.getPosts().entries[pos]['published_parsed'])
+        print(self.getPosts())
+        if 'entries' in self.getPosts():
+            return(self.getPosts().entries[pos]['published_parsed'])
+        else:
+            return(self.getPosts()[pos]['published_parsed'])
 
     def extractImage(self, soup):
         #This should go to the moduleHtml
@@ -222,6 +235,16 @@ class Content:
     
         return (soup.get_text().strip('\n'), theSummaryLinks)
 
-    def obtainPostData(self, i, debug=False):
-        pass
+    def report(self, profile, post, link, data): 
+        logging.warning("%s posting failed!" % profile) 
+        logging.warning("Post %s %s" % (post,link)) 
+        logging.warning("Unexpected error: %s"% data[0]) 
+        logging.warning("Unexpected error: %s"% data[1]) 
+        print("%s posting failed!" % profile) 
+        print("Post %s %s" % (post,link)) 
+        print("Unexpected error: %s"% data[0]) 
+        print("Unexpected error: %s"% data[1]) 
+        return("Fail! %s" % data[0])
+        #print("----Unexpected error: %s"% data[2]) 
+
 

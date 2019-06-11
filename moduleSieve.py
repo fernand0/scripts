@@ -3,7 +3,7 @@
 import configparser
 import os
 import sys
-import sievelib
+#import sievelib
 import time
 import getpass
 import io
