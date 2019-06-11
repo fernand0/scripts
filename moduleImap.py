@@ -95,6 +95,7 @@ def mailFolder(account, accountData, logging, res):
         M = makeConnection(SERVER, USER, PASSWORD)
     except:
         logging.error("Error with %s - %s" % (USER,SERVER))
+        sys.exit()
 
     for actions in accountData['RULES']:
         RULES = actions[0]
@@ -419,6 +420,7 @@ def selectMessageSubject(folder, M, sbj, sens=0, partial=False):
        numMsgs = int(rows) - 3
     try: 
         M.select(folder)
+        folderM = folder.split('/')[-1]
     except:
         return("","")
         
@@ -485,7 +487,7 @@ def selectMessageSubject(folder, M, sbj, sens=0, partial=False):
                         print(".", end ="", flush = True)
         print("")
 
-    return (msgs,distMsgs)
+    return (msgs,distMsgs, folderM)
 
 def selectMessagesNew(M):
     M.select()
@@ -514,7 +516,7 @@ def selectMessagesNew(M):
                     badSel = ""
                     sens = 0
                     while not ok:
-                        (msgs, distMsgs) = selectMessageSubject(folder, M, sbj, sens, partial)
+                        (msgs, distMsgs, folderM) = selectMessageSubject(folder, M, sbj, sens, partial)
                         isOk = input("Less messages [-] More messages [+] Wrong message selected [x] ")
                         if isOk == '-':
                            sens = sens + 1
@@ -530,6 +532,7 @@ def selectMessagesNew(M):
                     msgs = msgNumber
                     isOk = ""
                     moreMessages = input("String in the folder ("+moreMessages+') ')
+                    folderM = folder
                 if listMsgs: 
                     listMsgs = listMsgs + ',' + msgs
                 else:
@@ -547,10 +550,10 @@ def selectMessagesNew(M):
             printMessageHeaders(M, listMsgs)
             if isOk:
                 moreMessages = isOk    
-            folder = selectFolder(M, moreMessages)
+            folder = selectFolder(M, moreMessages, folderM=folderM)
             #print("Selected folder (before): ", folder)
             #folder = nameFolder(folder) 
-            #print("Selected folder (final): ", folder)
+            print("Selected folder (final): ", folder)
             moveMails(M,listMsgs, folder)
        elif badSel == "yes": 
            listMsgs = ""
@@ -631,7 +634,7 @@ def createFolder(M, name, folder, whereFolder=''):
 
     return(folder)
 
-def selectFolderOld(M, moreMessages = ""):
+def selectFolderOld(M, moreMessages = "", folderM=''):
     resp, data = M.list('""', '*')
     listFolders = ""
     numberFolder = -1
@@ -674,7 +677,9 @@ def selectFolderOld(M, moreMessages = ""):
             iFolder = nameFolder(data[numberFolder])
         elif (len(iFolder) > 0) and (iFolder[0] == '-'):
             if (len(iFolder) == 3) and (iFolder == '-cf'):
-                nfn = input("New folder name? ")
+                nfn = input("New folder name? (%s)"% folderM)
+                if not nfn:
+                    nfn = folderM
                 iFolder = createFolder(M, nfn, moreMessages)
                 listFolders = iFolder
             else:
@@ -706,7 +711,7 @@ def listFolderNames(data, inNameFolder = ""):
 
     return(listFolders)
 
-def selectFolder(M, moreMessages = "", newFolderName=''):
+def selectFolder(M, moreMessages = "", newFolderName='', folderM=''):
     resp, data = M.list('""', '*')
     #print(data)
     listAllFolders = listFolderNames(data, moreMessages)
@@ -733,7 +738,10 @@ def selectFolder(M, moreMessages = "", newFolderName=''):
             if newFolderName: 
                 nfn = newFolderName
             else:
-                nfn = input("New folder name? ")
+                nfn = input("New folder name? (%s)" % folderM)
+                if not nfn:
+                    print(folderM)
+                    nfn = folderM
             iFolder = createFolder(M, nfn, moreMessages)
             return(iFolder)
             #listFolders = iFolder
@@ -757,7 +765,7 @@ def selectMessages(M):
         while not moreMessages:
              (folder, msg) = selectMessage(M)
              sbj = msg['Subject']
-             (msgs, distMsgs) = selectMessageSubject(folder, M, sbj)
+             (msgs, distMsgs, folderM) = selectMessageSubject(folder, M, sbj)
 
              printMessageHeaders(M, msgs)
 
@@ -807,10 +815,22 @@ def readImapConfig(config, confPos = 0):
 
 def makeConnection(SERVER, USER, PASSWORD):
     # IMAP client connection
-    context = ssl.create_default_context()
+    import ssl
+    context = ssl.create_default_context(ssl.PROTOCOL_TLSv1)
     context.check_hostname = False
     context.verify_mode = ssl.CERT_NONE
-    M = imaplib.IMAP4_SSL(SERVER,ssl_context=context)
+
+    #context.protocol = ssl.OP_NO_SSLv3 
+    try: 
+        #M = imaplib.IMAP4_SSL(SERVER)
+        M = imaplib.IMAP4(SERVER)
+        M.starttls(ssl_context=context)
+    except:
+        print("except", SERVER, USER)
+        print("except", sys.exc_info()[0])
+        print("except", sys.exc_info()[1])
+        print("except", sys.exc_info()[2])
+        sys.exit()
     ok = ''
     while not ok:
         try:

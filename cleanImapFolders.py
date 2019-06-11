@@ -79,11 +79,11 @@ def organize():
 def main():
 
     if (len(sys.argv)>1 and (sys.argv[1] == "-d")):
-        logging.basicConfig(filename = os.path.expanduser('~/usr/var/IMAP.log'),
+        logging.basicConfig(filename = os.path.expanduser('~/usr/var/log/IMAP.log'),
                             level=logging.DEBUG,format='%(asctime)s %(message)s')
                             #filename='example.log',
     else:
-        logging.basicConfig(filename = os.path.expanduser('~/usr/var/IMAP.log'),
+        logging.basicConfig(filename = os.path.expanduser('~/usr/var/log/IMAP.log'),
                             level=logging.INFO,format='%(asctime)s %(message)s')
                             #filename='example.log',
 

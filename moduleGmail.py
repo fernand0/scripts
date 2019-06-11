@@ -391,51 +391,52 @@ class moduleGmail(Content,Queue):
 
     #    return None
 
-    #def moveMessage(self,  message):
-    #    api = self.getClient()
-    #    labelId = self.getLabelId('imported')
-    #    mesGE = base64.urlsafe_b64encode(message).decode()
-    #    mesT = email.message_from_bytes(message)
-    #    if mesT['subject']: 
-    #        subj = email.header.decode_header(mesT['subject'])[0][0]
-    #    else:
-    #        subj = ""
-    #    logging.info("Subject %s",subj)
-    #
-    #    try:
-    #        messageR = api.users().messages().import_(userId='me',
-    #                  fields='id',
-    #                  neverMarkSpam=False,
-    #                  processForCalendar=False,
-    #                  internalDateSource='dateHeader',
-    #                  body={'raw': mesGE}).execute(num_retries=5)
-    #       #           media_body=media).execute(num_retries=1)
-    #    except: 
-    #        # When the message is too big
-    #        # https://github.com/google/import-mailbox-to-gmail/blob/master/import-mailbox-to-gmail.py
-    #
-    #        logging.info("Fail 1! Trying another method.")
-    #        if True:
-    #            mesGS = BytesParser().parsebytes(message).as_string()
-    #            media =  googleapiclient.http.MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
-    #            logging.info("vamos method")
-    #            messageR = api.users().messages().import_(userId='me',
-    #                      fields='id',
-    #                      neverMarkSpam=False,
-    #                      processForCalendar=False,
-    #                      internalDateSource='dateHeader',
-    #                      body={},
-    #                      media_body=media).execute(num_retries=3)
-    #            logging.info("messageR method")
-    #        else: 
-    #            logging.info("Error with message %s" % message) 
-    #            return("Fail 2!")
-    #    msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
-    #
-    #    messageR = api.users().messages().modify(userId='me', id=messageR['id'],
-    #                                                        body=msg_labels).execute()
-    #
-    #    return(messageR)
+    def moveMessage(self,  message):
+        api = self.getClient()
+        labelId = self.getLabelId('imported')
+        mesGE = base64.urlsafe_b64encode(message).decode()
+        mesT = email.message_from_bytes(message)
+        if mesT['subject']: 
+            subj = email.header.decode_header(mesT['subject'])[0][0]
+        else:
+            subj = ""
+        logging.info("Subject %s",subj)
+    
+        try:
+            messageR = api.users().messages().import_(userId='me',
+                      fields='id',
+                      neverMarkSpam=False,
+                      processForCalendar=False,
+                      internalDateSource='dateHeader',
+                      body={'raw': mesGE}).execute(num_retries=5)
+           #           media_body=media).execute(num_retries=1)
+        except: 
+           # When the message is too big
+           # https://github.com/google/import-mailbox-to-gmail/blob/master/import-mailbox-to-gmail.py
+    
+           logging.info("Fail 1! Trying another method.")
+           if True:
+               mesGS = BytesParser().parsebytes(message).as_string()
+               media =  googleapiclient.http.MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
+               logging.info("vamos method")
+               messageR = api.users().messages().import_(userId='me',
+                          fields='id',
+                          neverMarkSpam=False,
+                          processForCalendar=False,
+                          internalDateSource='dateHeader',
+                          body={},
+                          media_body=media).execute(num_retries=3)
+               logging.info("messageR method")
+           else: 
+               logging.info("Error with message %s" % message) 
+               return("Fail 2!")
+
+        msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
+    
+        messageR = api.users().messages().modify(userId='me',
+                id=messageR['id'], body=msg_labels).execute()
+    
+        return(messageR)
 
    
     #######################################################
