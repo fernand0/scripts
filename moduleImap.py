@@ -292,6 +292,9 @@ def selectMessageAndFolder(M):
             elif (len(msg_number) > 0) and (msg_number[0] == '>'):
                 if msg_number[1:].isdigit():
                     moduleSieve.addToSieve(msg_data[int(msg_number[1:])])
+            elif (len(msg_number) > 0) and (not msg_number.isdigit()):
+                print("Selecting messages with %s" % msg_number)
+                return(folder, "", msg_number)
             else:
                 startMsg = 0
         else:
@@ -409,7 +412,7 @@ def selectAllMessages(folder, M):
 
     return ",".join(messages)
 
-def selectMessageSubject(folder, M, sbj, sens=0):
+def selectMessageSubject(folder, M, sbj, sens=0, partial=False):
     msg_number =""
     rows, columns = os.popen('stty size', 'r').read().split()
     numMsgs = 24
@@ -445,12 +448,17 @@ def selectMessageSubject(folder, M, sbj, sens=0):
                     headSubjDec =  stripRe(headerToString(headSubject))
                     minLen = min(len(headSubjDec), len(sbjDec))
                     maxLen = max(len(headSubjDec), len(sbjDec))
-		    # What happens when the subjects are very similar in the
-		    # final part only?
+		            # What happens when the subjects are very similar in the
+		            # final part only?
                     # ayudita
                     # b'Visualizaci\xc3\xb3n ayudica'
-		    #dist = distance.levenshtein(headSubject[-minLen:], sbj[-minLen:])
-                    if minLen > maxLen/2:
+		            #dist = distance.levenshtein(headSubject[-minLen:], sbj[-minLen:])
+                    if partial:
+                        if (headSubjDec.find(sbjDec)>=0) or (sbjDec=='*'):
+                            dist = -1
+                        else:
+                            dist = 100
+                    elif minLen > maxLen/2:
                         if minLen > 0:
                             #print("len",minLen)
                             #print("he",headSubjDec[-minLen:])
@@ -468,7 +476,6 @@ def selectMessageSubject(folder, M, sbj, sens=0):
                         dist = maxLen
                     #print("dist", dist)
                  
-
                     if (dist < minLen/(4+sens)):
                         print("+", end = "", flush = True)
                         if msgs:
@@ -481,7 +488,7 @@ def selectMessageSubject(folder, M, sbj, sens=0):
                         print(".", end ="", flush = True)
         print("")
 
-    return (msgs,distMsgs, folderM)
+    return (msgs,distMsgs)
 
 def selectMessagesNew(M):
     M.select()
@@ -500,12 +507,17 @@ def selectMessagesNew(M):
                 return(-1)
             elif (folder != 'x'):
                 if (folder != "."):
-                    sbj = msg['Subject']
+                    if msg: 
+                        sbj = msg['Subject']
+                        partial = False
+                    else:
+                        sbj = msgNumber
+                        partial = True
                     ok = ""
                     badSel = ""
                     sens = 0
                     while not ok:
-                        (msgs, distMsgs, folderM) = selectMessageSubject(folder, M, sbj, sens, partial)
+                        (msgs, distMsgs) = selectMessageSubject(folder, M, sbj, sens, partial)
                         isOk = input("Less messages [-] More messages [+] Wrong message selected [x] ")
                         if isOk == '-':
                            sens = sens + 1
@@ -539,7 +551,7 @@ def selectMessagesNew(M):
             printMessageHeaders(M, listMsgs)
             if isOk:
                 moreMessages = isOk    
-            folder = selectFolder(M, moreMessages, folderM=folderM)
+            folder = selectFolder(M, moreMessages)
             #print("Selected folder (before): ", folder)
             #folder = nameFolder(folder) 
             print("Selected folder (final): ", folder)
@@ -799,7 +811,7 @@ def readImapConfig(config, confPos = 0):
 def makeConnection(SERVER, USER, PASSWORD):
     # IMAP client connection
     import ssl
-    context = ssl.create_default_context(ssl.PROTOCOL_TLSv1)
+    context = ssl.create_default_context() #ssl.PROTOCOL_TLSv1)
     context.check_hostname = False
     context.verify_mode = ssl.CERT_NONE
 
@@ -913,7 +925,7 @@ def moveMailsRemote(M, msgs, folder):
     else:
         pp = pprint.PrettyPrinter(indent=4)
         service = moduleGmail.moduleGmail()
-        service.API(acc,pp)    
+        service.API(acc)    
 
         i = 0
         for msgId in msgs.split(','): #[:25]:

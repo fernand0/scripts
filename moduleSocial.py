@@ -90,9 +90,9 @@ from html.parser import HTMLParser
 import facebook
 import urllib
 import time
-from linkedin import linkedin
-from tumblpy import Tumblpy
-from twitter import *
+#from linkedin import linkedin
+#from tumblpy import Tumblpy
+#from twitter import *
 #https://pypi.python.org/pypi/twitter
 #http://mike.verdone.ca/twitter/
 #https://github.com/sixohsix/twitter/tree
@@ -104,11 +104,11 @@ import telepot
 # git clone https://github.com/vtemian/buffpy.git
 # cd buffpy
 # sudo python setup.py install
-import buffpy
-from buffpy.managers.profiles import Profiles
-from buffpy.managers.updates import Update
-from medium import Client
-from pocket import Pocket, PocketException
+#import buffpy
+#from buffpy.managers.profiles import Profiles
+#from buffpy.managers.updates import Update
+#from medium import Client
+#from pocket import Pocket, PocketException
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
 import moduleBuffer
