@@ -945,7 +945,6 @@ def moveMailsRemote(M, msgs, folder):
                 time.sleep(1)
 
 
-
     # We are returning a different code from 'OK' because we do not want to
     # delte these messages.
     if (i == len(msgs.split(','))):

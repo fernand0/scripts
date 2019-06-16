@@ -72,45 +72,60 @@ class moduleGmail(Content,Queue):
     def getClient(self):
         return(self.client)
 
+    def createLabel(self, labelName):
+        api = self.getClient()
+        label_object = {'messageListVisibility': 'show', 
+                'name': labelName, 'labelListVisibility': 'labelShow'}
+        return(api.users().labels().create(userId='me', 
+                body=label_object).execute())
+
+    def setLabels(self):
+        api = self.getClient()
+        response = api.users().labels().list(userId='me').execute()
+        if 'labels' in response:
+            self.labels = response['labels']
+
+    def getLabels(self, sel=''):
+        return(list(filter(lambda x: sel in x['name'] ,self.labels)))
+
+    def getLabelsIds(self, sel=''):
+        labels = (list(filter(lambda x: sel in x['name'] ,self.labels)))
+        return (list(map(lambda x: x['id'], labels)))
+
     def getPosts(self):
         return(self.posts)
 
-    def setPosts(self):
+    def setPosts(self, label='drafts', mode=''):
         logging.info("  Setting posts")
         api = self.getClient()
 
-        posts = api.users().drafts().list(userId='me').execute()
-        logging.debug("--setPosts %s" % posts)
         self.posts = []
-        if 'drafts' in posts:
-            self.rawPosts = []
-            for post in posts['drafts']:
-                #self.rawPosts.insert(0, post)
-                meta = self.getMessageMeta(post['id'])
-                message = {}
-                message['list'] = post
-                message['meta'] = meta
-                self.posts.insert(0, message)
+        if label == 'drafts':
+            typePosts = 'drafts'
+            posts = api.users().drafts().list(userId='me').execute()
+        else:
+            typePosts = 'messages'
+            posts = api.users().messages().list(userId='me',labelIds=label).execute()
 
-        #outputData = {}
-        #files = []
+        logging.debug("--setPosts %s" % posts)
 
-        #serviceName = self.name
+        if typePosts in posts:
+           self.rawPosts = []
+           for post in posts[typePosts]: 
+               if mode != 'raw':
+                   meta = self.getMessageMeta(post['id'],typePosts)
+                   message = {}
+                   message['list'] = post
+                   message['meta'] = meta
+                   self.posts.insert(0, message)
+               else:
+                   raw = self.getMessageRaw(post['id'],typePosts)
+                   message = {}
+                   message['list'] = post
+                   message['meta'] = ''
+                   message['raw'] = raw
+                   self.posts.insert(0, message)
 
-        #outputData[serviceName] = {'sent': [], 'pending': []}
-
-        #listDrafts=self.getPosts()
-
-        #if listDrafts:
-        #    logging.debug("--Posts %s"% listDrafts)
-    
-        #    for i in range(len(listDrafts)):
-        #        # Which elements to include?
-        #        outputData[serviceName]['pending'].append(self.extractDataMessage(i))
-        #        i = i + 1
-
-        #self.postsFormatted = outputData
- 
     def confName(self, acc):
         theName = os.path.expanduser(CONFIGDIR + '/' + '.' 
                 + acc[0]+ '_' 
@@ -123,16 +138,25 @@ class moduleGmail(Content,Queue):
                 id=id).execute()['message']
         return message
 
-    def getMessageRaw(self, id): 
+    def getMessageRaw(self, msgId, typePost='drafts'): 
         api = self.getClient()
-        message = api.users().drafts().get(userId="me", 
-                id=id, format='raw').execute()['message']
+        if typePost == 'drafts': 
+            message = api.users().drafts().get(userId="me", 
+                id=msgId, format='raw').execute()['message']
+        else:
+            message = api.users().messages().get(userId="me", 
+                id=msgId, format='raw').execute()
+
         return message
 
-    def getMessageMeta(self, id): 
+    def getMessageMeta(self, msgId, typePost='drafts'): 
         api = self.getClient()
-        message = api.users().drafts().get(userId="me", 
-                id=id, format='metadata').execute()['message']
+        if typePost == 'drafts': 
+            message = api.users().drafts().get(userId="me", 
+                id=msgId, format='metadata').execute()['message']
+        else:
+            message = api.users().messages().get(userId="me", 
+                id=msgId, format='metadata').execute()
         return message
 
     def setHeader(self, message, header, value):
@@ -181,6 +205,7 @@ class moduleGmail(Content,Queue):
     def getLabelId(self, name):
         api = self.getClient()
         results = self.getLabelList() 
+        labelId = None
         for label in results: 
             if label['name'] == name: 
                 labelId = label['id'] 
@@ -273,13 +298,35 @@ class moduleGmail(Content,Queue):
 
         return("%s"% title)
 
-    def delete(self, j):
-        logging.info("Publishing %d"% j)
+    def trash(self, j, typePost='drafts'):
+        logging.info("Trashing %d"% j)
 
         api = self.getClient()
         idPost = self.getPosts()[j]['list']['id'] #thePost[-1]
-        title = self.getHeader(self.getPosts()[j]['meta'], 'Subject')
-        update = api.users().drafts().delete(userId='me', id=idPost).execute() 
+        try: 
+            title = self.getHeader(self.getPosts()[j]['meta'], 'Subject')
+        except:
+            title = ''
+        if typePost == 'drafts': 
+            update = api.users().drafts().trash(userId='me', id=idPost).execute() 
+        else:
+            update = api.users().messages().trash(userId='me', id=idPost).execute() 
+ 
+        return("Trashed %s"% title)
+ 
+    def delete(self, j, typePost='drafts'):
+        logging.info("Deleting %d"% j)
+
+        api = self.getClient()
+        idPost = self.getPosts()[j]['list']['id'] #thePost[-1]
+        try: 
+            title = self.getHeader(self.getPosts()[j]['meta'], 'Subject')
+        except:
+            title = ''
+        if typePost == 'drafts': 
+            update = api.users().drafts().delete(userId='me', id=idPost).execute() 
+        else:
+            update = api.users().messages().delete(userId='me', id=idPost).execute() 
  
         return("Deleted %s"% title)
  
@@ -372,16 +419,34 @@ class moduleGmail(Content,Queue):
 
     #    return None
 
-    def moveMessage(self,  message):
+    def moveMessage(self,  message, labels =''):
         api = self.getClient()
         labelId = self.getLabelId('imported')
-        mesGE = base64.urlsafe_b64encode(message).decode()
-        mesT = email.message_from_bytes(message)
-        if mesT['subject']: 
-            subj = email.header.decode_header(mesT['subject'])[0][0]
+        labelIdName = 'imported'
+        if not labelId:
+            rep = input("Label id '%s' not available, create? (y/n) " 
+                    % labelIdName)
+            if rep == 'y':
+                print(self.createLabel(labelIdName))
+        labelIds = [labelId]
+        labelIdsNames = [labelIdName]
+        for label in labels: 
+            labelId = self.getLabelId(label)
+            if labelId:
+                labelIds.append(labelId)
+                labelIdsNames.append(label)
+
+        if not isinstance(message,dict):
+            mesGE = base64.urlsafe_b64encode(message).decode()
+            mesT = email.message_from_bytes(message)
+            if mesT['subject']: 
+                subj = email.header.decode_header(mesT['subject'])[0][0]
+            else:
+                subj = ""
+            logging.info("Subject %s",subj)
         else:
-            subj = ""
-        logging.info("Subject %s",subj)
+            if 'raw' in message: 
+                mesGE = message['raw']
     
         try:
             messageR = api.users().messages().import_(userId='me',
@@ -396,23 +461,29 @@ class moduleGmail(Content,Queue):
            # https://github.com/google/import-mailbox-to-gmail/blob/master/import-mailbox-to-gmail.py
     
            logging.info("Fail 1! Trying another method.")
-           if True:
-               mesGS = BytesParser().parsebytes(message).as_string()
-               media =  googleapiclient.http.MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
-               logging.info("vamos method")
+           try: 
+               if not isinstance(message,dict): 
+                   mesGS = BytesParser().parsebytes(message).as_string()
+                   media =  googleapiclient.http.MediaIoBaseUpload(io.StringIO(mesGS), mimetype='message/rfc822')
+                   logging.info("vamos method")
+               else:
+                    media = message
+               print(media)
+                 
                messageR = api.users().messages().import_(userId='me',
-                          fields='id',
-                          neverMarkSpam=False,
-                          processForCalendar=False,
-                          internalDateSource='dateHeader',
-                          body={},
-                          media_body=media).execute(num_retries=3)
+                           fields='id',
+                           neverMarkSpam=False,
+                           processForCalendar=False,
+                           internalDateSource='dateHeader',
+                           body={},
+                           media_body=media).execute(num_retries=3)
                logging.info("messageR method")
-           else: 
+           except: 
                logging.info("Error with message %s" % message) 
                return("Fail 2!")
 
         msg_labels = {'removeLabelIds': [], 'addLabelIds': ['UNREAD', labelId]}
+        msg_labels = {'removeLabelIds': [], 'addLabelIds': labelIds }# ['UNREAD', labelId]}
     
         messageR = api.users().messages().modify(userId='me',
                 id=messageR['id'], body=msg_labels).execute()
