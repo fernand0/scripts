@@ -269,10 +269,6 @@ def main():
 
     theChannel = site.getChanId(CHANNEL)  
 
-    site.setPosts('tavern-of-the-bots')
-    print(site.getPosts())
-    site.getBots()
-    sys.exit()
     site.setPosts('links')
 
     site.setSocialNetworks(config, section)

@@ -93,9 +93,11 @@ class moduleTwitter(Content):
         try:
             logging.info("    Publishing in Twitter: %s" % post)
             res = self.tc.statuses.update(status=post)
-            logging.info("Res: %s" % res)
+            tweet = "https://twitter.com/%s/status/%s" % (self.user, res['id'])
+            logging.debug("Res: %s" % res)
+            logging.info("Tweet: %s" % tweet)
             if 'id' in res:
-                return("https://twitter.com/%s/status/%s" % (self.user, res['id']))
+                return(tweet)
             return res
         except:        
             return(self.report('Twitter', post, link, sys.exc_info()))

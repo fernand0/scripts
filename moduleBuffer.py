@@ -429,10 +429,17 @@ class moduleBuffer(Queue):
         from buffpy.models.update import Update
         i=0
         update = Update(api=self.client, id=profile.updates.pending[j].id) 
-        print(update)
+        title = thePost[0]
         # media = {'original': newLink } 
-        return('Not implemented!')
-        update = update.edit(text=newTitle)
+        #update = update.edit(media={})
+        print(title)
+        self.delete(j)
+        #update = update.edit(text=title+' '+newLink, media={})
+        textPost = title + " " + newLink
+        entry = urllib.parse.quote(textPost)
+        update = self.getProfile().updates.new(entry)
+        print(update)
+        return('Updated!  %s' % update)
 
         title = oldTitle
         update = "Changed "+title+" with "+newTitle
@@ -522,7 +529,7 @@ def main():
     print('L3', buf.selectAndExecute('show', 'L3'))
     print('TL2', buf.selectAndExecute('show', 'TL2'))
     print('*4', buf.selectAndExecute('show', '*4'))
-    print('edit L5', buf.selectAndExecute('editl', 'L5 https://www.nytimes.com/2019/05/04/us/key-fobs-north-olmsted-ohio.html'))
+    print('edit L3', buf.selectAndExecute('editl', 'L3 http://www.danilat.com/weblog/2019/06/10/kpis-equipos-desarrollo-software'))
     #print('edit L2', buf.selectAndExecute('edit', 'L2'+' '+'El tren del tambor.'))
     #print('pub L0', buf.selectAndExecute('publish','L0'))
     sys.exit()
