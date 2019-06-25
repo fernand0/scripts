@@ -102,8 +102,7 @@ class moduleFacebook(Content):
             if 'id' in res:
                 #id2, id1 = res['id'].split('_')
                 #urlFb = 'https://www.facebook.com/permalink.php?story_fbid=%s&id=%s'%(id1, id2)
-                urlFb = 'https://www.facebook.com/%s/posts/%s' %
-                        (self.user,res['id'].split('_')[1])
+                urlFb = 'https://www.facebook.com/%s/posts/%s' % (self.user,res['id'].split('_')[1])
                 logging.info("Post: %s" % urlFb)
                 return(urlFb)
 
