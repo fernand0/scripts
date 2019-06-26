@@ -84,18 +84,18 @@ class moduleTwitter(Content):
         self.postsFormatted = outputData
 
     def publishPost(self, post, link, comment):
-        logging.info("    Publishing in Twitter...")
+        logging.debug("     Publishing in Twitter...")
         if comment == None:
             comment = ''
         post = comment + " " + post + " " + link
         h = HTMLParser()
         post = h.unescape(post)
         try:
-            logging.info("    Publishing in Twitter: %s" % post)
+            logging.info("     Publishing in Twitter: %s" % post)
             res = self.tc.statuses.update(status=post)
             tweet = "https://twitter.com/%s/status/%s" % (self.user, res['id'])
             logging.debug("Res: %s" % res)
-            logging.info("Tweet: %s" % tweet)
+            logging.info("     Tweet: %s" % tweet)
             if 'id' in res:
                 return(tweet)
             return res

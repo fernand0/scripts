@@ -43,19 +43,6 @@ class moduleSlack(Content):
         else:
             self.posts = []
 
-        #outputData = {}
-        #serviceName = 'Slack'
-        #outputData[serviceName] = {'sent': [], 'pending': []}
-        #for post in self.getPosts():
-        #    if 'attachments' in post:
-        #        outputData[serviceName]['pending'].append(
-        #            (post['text'][1:-1], post['attachments'][0]['title'], '', '', '', '', '', '', post['ts'], ''))
-        #    else:
-        #        #print(post)
-        #        outputData[serviceName]['pending'].append(
-        #            (post['text'][1:-1], '', '', '', '', '', '', '', post['ts'], ''))
-        #self.postsFormatted = outputData
-
     def getTitle(self, i):
         post = self.getPosts()[i]
         return(self.getPostTitle(post))
