@@ -38,7 +38,7 @@ class moduleFacebook(Content):
             try:
                 oauth_access_token = config.get("Facebook", "oauth_access_token")
                 graph = facebook.GraphAPI(oauth_access_token, version='3.0') 
-                self.fc =graph
+                self.fc = graph
                 self.setPage(facebookAC)
             except: 
                 logging.warning("Facebook authentication failed!") 
@@ -52,7 +52,8 @@ class moduleFacebook(Content):
     def setPage(self, facebookAC='me'):
         perms = ['publish_actions','manage_pages','publish_pages'] 
         pages = self.fc.get_connections("me", "accounts") 
-        
+        self.pages = pages
+
         if (facebookAC != 'me'): 
             for i in range(len(pages['data'])): 
                 logging.debug("%s %s"% (pages['data'][i]['name'], facebookAC)) 
@@ -95,14 +96,14 @@ class moduleFacebook(Content):
         logging.debug("    Publishing in Facebook...")
         h = HTMLParser()
         post = h.unescape(post)
+        res = None
         try:
             logging.info("     Publishing in Facebook: %s" % post)
             res = self.page.put_object(self.pageId, "feed", message=post, link=link)
             logging.debug("Res: %s" % res)
             if 'id' in res:
                 #id2, id1 = res['id'].split('_')
-                #urlFb = 'https://www.facebook.com/permalink.php?story_fbid=%s&id=%s'%(id1, id2)
-                urlFb = 'https://www.facebook.com/%s/posts/%s' % (self.user,res['id'].split('_')[1])
+                urlFb = 'https://www.facebook.com/%s' % res['id']
                 logging.info("     Post: %s" % urlFb)
                 return(urlFb)
 
@@ -117,6 +118,10 @@ def main():
     fc = moduleFacebook.moduleFacebook()
 
     fc.setClient('Enlaces de fernand0')
+    fc.setPage()
+
+    for page in fc.pages['data']:
+        print(page['name'])
 
     fc.setPosts()
     for post in fc.getPostsFormatted()['Facebook']['sent']:

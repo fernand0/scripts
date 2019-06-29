@@ -154,8 +154,8 @@ class moduleSlack(Content):
         #print("content", content)
         theSummaryLinks = ""
 
-        soup = BeautifulSoup(content, 'lxml')
         if not content.startswith('http'):
+            soup = BeautifulSoup(content, 'lxml')
             link = soup.a
             if link: 
                 firstLink = link.get('href')
@@ -215,7 +215,8 @@ class moduleSlack(Content):
         return(result)
 
     def getBots(self):
-        self.setPosts('tavern-of-the-bots')
+        if not self.posts:
+            self.setPosts('tavern-of-the-bots')
         msgs = {}
         for msg in self.getPosts():
             if msg['text'].find('Hello')>=0: 
