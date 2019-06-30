@@ -17,7 +17,7 @@ class moduleMastodon(Content):
         super().__init__()
 
     def setClient(self, user):
-        logging.info("    Connecting Mastodon")
+        logging.info("     Connecting Mastodon")
         if True:
             maCli = mastodon.Mastodon( 
                access_token = CONFIGDIR + '.'+'pytooter_usercred.secret', 

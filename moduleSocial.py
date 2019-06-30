@@ -180,6 +180,9 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
         profile = socialNetwork[0]
         nick = socialNetwork[1]
 
+        logger.info("    Publishing in: %s" % socialNetwork[0].capitalize())
+        print(" [d] Publishing in: %s at %s" % (socialNetwork[0].capitalize(), 
+
         if (profile == 'twitter') or (profile == 'facebook') or (profile == 'mastodon'): 
             # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
             import importlib
@@ -203,9 +206,9 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
         if j+1 < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))
             time.sleep(tSleep2) 
-    logger.info("    Finished in: %s" % socialNetwork[0].capitalize())
-    print(" [d] Finished in: %s at %s" % (socialNetwork[0].capitalize(), 
-        time.asctime()))
+        logger.info("    Finished in: %s" % socialNetwork[0].capitalize())
+        print(" [d] Finished in: %s at %s" % (socialNetwork[0].capitalize(), 
+            time.asctime()))
 
    
 def cleanTags(soup):

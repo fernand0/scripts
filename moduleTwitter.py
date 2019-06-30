@@ -32,7 +32,7 @@ class moduleTwitter(Content):
         self.tc = None
 
     def setClient(self, twitterAC):
-        logging.info("    Connecting Twitter")
+        logging.info("     Connecting Twitter")
         try:
             config = configparser.ConfigParser()
             config.read(CONFIGDIR + '/.rssTwitter')

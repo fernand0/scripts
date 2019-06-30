@@ -29,7 +29,7 @@ class moduleFacebook(Content):
         self.fc = None
 
     def setClient(self, facebookAC='me'):
-        logging.info("    Connecting Facebook")
+        logging.info("     Connecting Facebook")
         try:
             config = configparser.ConfigParser()
             config.read(CONFIGDIR + '/.rssFacebook')
