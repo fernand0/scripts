@@ -182,6 +182,7 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
 
         logger.info("    Publishing in: %s" % socialNetwork[0].capitalize())
         print(" [d] Publishing in: %s at %s" % (socialNetwork[0].capitalize(), 
+            time.asctime()))
 
         if (profile == 'twitter') or (profile == 'facebook') or (profile == 'mastodon'): 
             # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically

@@ -58,7 +58,7 @@ class moduleFacebook(Content):
             for i in range(len(pages['data'])): 
                 logging.debug("%s %s"% (pages['data'][i]['name'], facebookAC)) 
                 if (pages['data'][i]['name'] == facebookAC): 
-                    logging.info("    Writing in... %s"% pages['data'][i]['name']) 
+                    logging.info("     Writing in... %s"% pages['data'][i]['name']) 
                     graph2 = facebook.GraphAPI(pages['data'][i]['access_token']) 
                     self.page = graph2
                     self.pageId = pages['data'][i]['id']
@@ -98,13 +98,13 @@ class moduleFacebook(Content):
         post = h.unescape(post)
         res = None
         try:
-            logging.info("     Publishing in Facebook: %s" % post)
+            logging.info("     Publishing: %s" % post)
             res = self.page.put_object(self.pageId, "feed", message=post, link=link)
             logging.debug("Res: %s" % res)
             if 'id' in res:
                 #id2, id1 = res['id'].split('_')
                 urlFb = 'https://www.facebook.com/%s' % res['id']
-                logging.info("     Post: %s" % urlFb)
+                logging.info("     Link: %s" % urlFb)
                 return(urlFb)
 
             return(res)

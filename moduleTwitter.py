@@ -91,7 +91,7 @@ class moduleTwitter(Content):
         h = HTMLParser()
         post = h.unescape(post)
         try:
-            logging.info("     Publishing in Twitter: %s" % post)
+            logging.info("     Publishing: %s" % post)
             res = self.tc.statuses.update(status=post)
             tweet = "https://twitter.com/%s/status/%s" % (self.user, res['id'])
             logging.debug("Res: %s" % res)
