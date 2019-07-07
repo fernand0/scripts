@@ -69,8 +69,8 @@ class moduleInstagram(Content):
     def publishPost(self, post, link, comment):
         logging.debug("     Publishing in Instagram...")
         res = self.ic.uploadPhoto(comment, caption=post)
-        print(res)
-        print(self.ic.LastJson)
+        #print(res)
+        #print(self.ic.LastJson)
         self.setPosts()
         mediaId = self.getPosts()[0]['caption']['media_id']
         if link:
@@ -81,9 +81,9 @@ class moduleInstagram(Content):
                 yy = path[1]
                 mm = path[2]
                 dd = path[3]
-                self.ic.comment(mediaId, 'Original: %s [%s-%s-%s]'% (url,yy,mm,dd))
+                self.ic.comment(mediaId, 'Original: %s [%s-%s-%s]'% (link,yy,mm,dd))
             else:
-                self.ic.comment(mediaId, 'Original: %s'% url)
+                self.ic.comment(mediaId, 'Original: %s'% link)
 
         return(self.getPosts()[0]['code'])
 
@@ -96,7 +96,7 @@ def main():
 
     ig.setClient('a_veces_una_foto')
 
-    url = 'https://avecesunafoto.wordpress.com/2017/07/13/hamburguesa/'
+    url = 'https://avecesunafoto.wordpress.com/2017/07/14/albahaca/'
     # lin rel='next'
     # soup.findAll('link', {'rel': 'next'})
     import requests
@@ -105,6 +105,7 @@ def main():
         from bs4 import BeautifulSoup
         soup = BeautifulSoup(req.text, 'html.parser')
         imgUrl = soup.img['src']
+        title = soup.findAll('h1')[1].text
         pos = imgUrl.find('?')
         if pos > 0:
             imgUrl = imgUrl[:pos]
@@ -130,7 +131,7 @@ def main():
             region = im.crop(box)
             region.save(fileName+'_croped.jpg')
 
-            print(ig.publishPost('Canelón', url, fileName+'_croped.jpg'))
+            print(ig.publishPost(title, url, fileName+'_croped.jpg'))
 
     print("Setting posts")
     ig.setPosts()
