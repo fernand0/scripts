@@ -14,6 +14,10 @@ from InstagramAPI import InstagramAPI
 import getpass
 import keyring
 import keyrings
+import urllib.parse
+import requests
+import shutil
+from PIL import Image
 
 class moduleInstagram(Content):
 
@@ -87,6 +91,26 @@ class moduleInstagram(Content):
 
         return(self.getPosts()[0]['code'])
 
+    def resizeImage(self, imgUrl):
+        response = requests.get(imgUrl, stream=True)
+
+        fileName = '/tmp/'+urllib.parse.urlparse(response.url)[2].split('/')[-1]
+        with open(fileName,'wb') as f: 
+            shutil.copyfileobj(response.raw, f)
+
+        im = Image.open(fileName)
+        size = im.size
+    
+        if size[0] < size[1]: 
+           dif = size[1]-size[0]
+           box = (0, dif/2 , size[0], dif/2+size[0])
+        else:
+           dif = size[0]-size[1]
+           box = (dif/2, 0 , dif/2 + size[1], size[1])
+        region = im.crop(box)
+        region.save(fileName+'_croped.jpg')
+        return(fileName+'_croped.jpg')
+
 
 def main():
 
@@ -96,7 +120,7 @@ def main():
 
     ig.setClient('a_veces_una_foto')
 
-    url = 'https://avecesunafoto.wordpress.com/2017/07/14/albahaca/'
+    url = 'https://avecesunafoto.wordpress.com/2017/07/16/wikimedia/'
     # lin rel='next'
     # soup.findAll('link', {'rel': 'next'})
     import requests
@@ -110,28 +134,9 @@ def main():
         if pos > 0:
             imgUrl = imgUrl[:pos]
         if imgUrl: 
-            response = requests.get(imgUrl, stream=True)
-            import urllib.parse
-            fileName = '/tmp/'+urllib.parse.urlparse(response.url)[2].split('/')[-1]
-            import shutil
-            with open(fileName,'wb') as f: 
-                shutil.copyfileobj(response.raw, f)
+            fileName = ig.resizeImage(imgUrl)
 
-            # We are going to crop de image
-            from PIL import Image
-            im = Image.open(fileName)
-            size = im.size
-    
-            if size[0] < size[1]: 
-               dif = size[1]-size[0]
-               box = (0, dif/2 , size[0], dif/2+size[0])
-            else:
-               dif = size[0]-size[1]
-               box = (dif/2, 0 , dif/2 + size[1], size[1])
-            region = im.crop(box)
-            region.save(fileName+'_croped.jpg')
-
-            print(ig.publishPost(title, url, fileName+'_croped.jpg'))
+            print(ig.publishPost(title, url, fileName))
 
     print("Setting posts")
     ig.setPosts()

@@ -251,13 +251,21 @@ def main():
                 if not (blog.getBufferapp() or blog.getProgram()):
                     if (i > 0):
                         hours = blog.getTime() 
-                        if (hours and (((time.time() - lastTime) - int(hours)*60*60) < 0)): 
+                        if (hours and (((time.time() - lastTime) - round(float(hours)*60*60)) < 0)): 
                             logging.info("  Not publishing because time restriction") 
                         else:
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
                             logging.info("  Publishing directly\n") 
                             serviceName = profile.capitalize()
+
                             print("   Publishing in %s %s" % (serviceName, title))
+                            if profile == 'instagram':
+                                import moduleInstagram
+                                api = moduleInstagram.moduleInstagram()
+                                api.setClient(nick)
+                                comment = api.resizeImage(image)
+                                api.publishPost(title, link, comment)
+
                             if (profile == 'telegram') or (profile == 'facebook'):
                                 comment = summaryLinks
                             if (profile == 'twitter') or (profile == 'mastodon') or (profile == 'linkedin'):
