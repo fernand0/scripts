@@ -259,13 +259,6 @@ def main():
                             serviceName = profile.capitalize()
 
                             print("   Publishing in %s %s" % (serviceName, title))
-                            if profile == 'instagram':
-                                import moduleInstagram
-                                api = moduleInstagram.moduleInstagram()
-                                api.setClient(nick)
-                                comment = api.resizeImage(image)
-                                api.publishPost(title, link, comment)
-
                             if (profile == 'telegram') or (profile == 'facebook'):
                                 comment = summaryLinks
                             if (profile == 'twitter') or (profile == 'mastodon') or (profile == 'linkedin'):
@@ -285,6 +278,12 @@ def main():
                                     if result[:4]=='Fail':
                                         link=''
                                         logging.info("Posting failed")
+                            elif profile == 'instagram':
+                                import moduleInstagram
+                                api = moduleInstagram.moduleInstagram()
+                                api.setClient(nick)
+                                comment = api.resizeImage(image)
+                                api.publishPost(title, link, comment)
                             else:
                                 logging.info("Still moduleSocial!")
                                 publishMethod = getattr(moduleSocial, 

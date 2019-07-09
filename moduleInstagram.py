@@ -146,6 +146,8 @@ def main():
         print("Image: %s" % igP['image_versions2']['candidates'][0]['url'])
         print("Likes: %d" % igP['like_count'])
 
+    return("https://instagram.com/p/%s" % igP['code'])
+
 
 
 
