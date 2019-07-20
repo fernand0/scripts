@@ -94,20 +94,23 @@ class moduleFacebook(Content):
 
     def publishPost(self, post, link='', comment=''):
         logging.debug("    Publishing in Facebook...")
+        if comment == None:
+            comment = ''
+        post = comment + " " + post
         h = HTMLParser()
         post = h.unescape(post)
         res = None
         try:
             logging.info("     Publishing: %s" % post)
             res = self.page.put_object(self.pageId, "feed", message=post, link=link)
-            logging.debug("Res: %s" % res)
-            if 'id' in res:
-                #id2, id1 = res['id'].split('_')
-                urlFb = 'https://www.facebook.com/%s' % res['id']
-                logging.info("     Link: %s" % urlFb)
-                return(urlFb)
+            if res:
+                logging.debug("Res: %s" % res)
+                if 'id' in res:
+                    urlFb = 'https://www.facebook.com/%s' % res['id']
+                    logging.info("     Link: %s" % urlFb)
+                    return(urlFb)
 
-            return(res)
+                return(res)
         except:        
             return(self.report('Facebook', post, link, sys.exc_info()))
 
