@@ -45,7 +45,7 @@ class moduleMastodon(Content):
         #    print("@%s: %s" % (post['account']['username'],post['content']))
 
     def publishPost(self, post, link, comment):
-        logging.info("    Publishing in Mastodon...")
+        logging.debug("    Publishing in Mastodon...")
         if comment == None:
             comment = ''
         title = post
@@ -54,10 +54,11 @@ class moduleMastodon(Content):
         h = HTMLParser()
         post = h.unescape(post)
         try:
-            logging.info("    Publishing in Mastodon: %s" % post)
+            logging.info("     Publishing in Mastodon: %s" % post)
             res = self.getClient().toot(post)
-            logging.info("Res: %s" % res)
+            logging.debug("Res: %s" % res)
             if 'uri' in res:
+                logging.info("     Toot: %s" % res['uri'])
                 return(res['uri'])
             return res
         except:        

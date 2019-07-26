@@ -43,19 +43,6 @@ class moduleSlack(Content):
         else:
             self.posts = []
 
-        #outputData = {}
-        #serviceName = 'Slack'
-        #outputData[serviceName] = {'sent': [], 'pending': []}
-        #for post in self.getPosts():
-        #    if 'attachments' in post:
-        #        outputData[serviceName]['pending'].append(
-        #            (post['text'][1:-1], post['attachments'][0]['title'], '', '', '', '', '', '', post['ts'], ''))
-        #    else:
-        #        #print(post)
-        #        outputData[serviceName]['pending'].append(
-        #            (post['text'][1:-1], '', '', '', '', '', '', '', post['ts'], ''))
-        #self.postsFormatted = outputData
-
     def getTitle(self, i):
         post = self.getPosts()[i]
         return(self.getPostTitle(post))
@@ -167,8 +154,8 @@ class moduleSlack(Content):
         #print("content", content)
         theSummaryLinks = ""
 
-        soup = BeautifulSoup(content, 'lxml')
         if not content.startswith('http'):
+            soup = BeautifulSoup(content, 'lxml')
             link = soup.a
             if link: 
                 firstLink = link.get('href')
@@ -228,7 +215,8 @@ class moduleSlack(Content):
         return(result)
 
     def getBots(self):
-        self.setPosts('tavern-of-the-bots')
+        if not self.posts:
+            self.setPosts('tavern-of-the-bots')
         msgs = {}
         for msg in self.getPosts():
             if msg['text'].find('Hello')>=0: 
@@ -269,10 +257,6 @@ def main():
 
     theChannel = site.getChanId(CHANNEL)  
 
-    site.setPosts('tavern-of-the-bots')
-    print(site.getPosts())
-    site.getBots()
-    sys.exit()
     site.setPosts('links')
 
     site.setSocialNetworks(config, section)

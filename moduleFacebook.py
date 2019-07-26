@@ -29,7 +29,7 @@ class moduleFacebook(Content):
         self.fc = None
 
     def setClient(self, facebookAC='me'):
-        logging.info("    Connecting Facebook")
+        logging.info("     Connecting Facebook")
         try:
             config = configparser.ConfigParser()
             config.read(CONFIGDIR + '/.rssFacebook')
@@ -38,7 +38,7 @@ class moduleFacebook(Content):
             try:
                 oauth_access_token = config.get("Facebook", "oauth_access_token")
                 graph = facebook.GraphAPI(oauth_access_token, version='3.0') 
-                self.fc =graph
+                self.fc = graph
                 self.setPage(facebookAC)
             except: 
                 logging.warning("Facebook authentication failed!") 
@@ -52,12 +52,13 @@ class moduleFacebook(Content):
     def setPage(self, facebookAC='me'):
         perms = ['publish_actions','manage_pages','publish_pages'] 
         pages = self.fc.get_connections("me", "accounts") 
-        
+        self.pages = pages
+
         if (facebookAC != 'me'): 
             for i in range(len(pages['data'])): 
                 logging.debug("%s %s"% (pages['data'][i]['name'], facebookAC)) 
                 if (pages['data'][i]['name'] == facebookAC): 
-                    logging.info("    Writing in... %s"% pages['data'][i]['name']) 
+                    logging.info("     Writing in... %s"% pages['data'][i]['name']) 
                     graph2 = facebook.GraphAPI(pages['data'][i]['access_token']) 
                     self.page = graph2
                     self.pageId = pages['data'][i]['id']
@@ -92,19 +93,24 @@ class moduleFacebook(Content):
         self.postsFormatted = outputData
 
     def publishPost(self, post, link='', comment=''):
-        logging.info("    Publishing in Facebook...")
+        logging.debug("    Publishing in Facebook...")
+        if comment == None:
+            comment = ''
+        post = comment + " " + post
         h = HTMLParser()
         post = h.unescape(post)
+        res = None
         try:
-            logging.info("    Publishing in Facebook: %s" % post)
+            logging.info("     Publishing: %s" % post)
             res = self.page.put_object(self.pageId, "feed", message=post, link=link)
-            logging.info("Res: %s" % res)
-            if 'id' in res:
-                #id2, id1 = res['id'].split('_')
-                #urlFb = 'https://www.facebook.com/permalink.php?story_fbid=%s&id=%s'%(id1, id2)
-                return('https://www.facebook.com/%s/posts/%s' %
-                        (self.user,res['id'].split('_')[1]))
-            return(res)
+            if res:
+                logging.debug("Res: %s" % res)
+                if 'id' in res:
+                    urlFb = 'https://www.facebook.com/%s' % res['id']
+                    logging.info("     Link: %s" % urlFb)
+                    return(urlFb)
+
+                return(res)
         except:        
             return(self.report('Facebook', post, link, sys.exc_info()))
 
@@ -115,6 +121,10 @@ def main():
     fc = moduleFacebook.moduleFacebook()
 
     fc.setClient('Enlaces de fernand0')
+    fc.setPage()
+
+    for page in fc.pages['data']:
+        print(page['name'])
 
     fc.setPosts()
     for post in fc.getPostsFormatted()['Facebook']['sent']:

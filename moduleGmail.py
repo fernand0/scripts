@@ -93,6 +93,8 @@ class moduleGmail(Content,Queue):
         return (list(map(lambda x: x['id'], labels)))
 
     def getPosts(self):
+        if not self.posts:
+            self.setPosts()
         return(self.posts)
 
     def setPosts(self, label='drafts', mode=''):

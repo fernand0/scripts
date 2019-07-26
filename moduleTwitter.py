@@ -32,7 +32,7 @@ class moduleTwitter(Content):
         self.tc = None
 
     def setClient(self, twitterAC):
-        logging.info("    Connecting Twitter")
+        logging.info("     Connecting Twitter")
         try:
             config = configparser.ConfigParser()
             config.read(CONFIGDIR + '/.rssTwitter')
@@ -83,20 +83,24 @@ class moduleTwitter(Content):
 
         self.postsFormatted = outputData
 
-    def publishPost(self, post, link, comment):
-        logging.info("    Publishing in Twitter...")
+    def publishPost(self, post, link='', comment=''):
+        logging.debug("     Publishing in Twitter...")
         if comment == None:
             comment = ''
-        post = comment + " " + post + " " + link
+        post = comment + " " + post
         h = HTMLParser()
         post = h.unescape(post)
+        res = None
         try:
-            logging.info("    Publishing in Twitter: %s" % post)
-            res = self.tc.statuses.update(status=post)
-            logging.info("Res: %s" % res)
-            if 'id' in res:
-                return("https://twitter.com/%s/status/%s" % (self.user, res['id']))
-            return res
+            logging.info("     Publishing: %s" % post)
+            res = self.tc.statuses.update(status=post+" " + link)
+
+            if res: 
+                logging.debug("Res: %s" % res)
+                urlTw = "https://twitter.com/%s/status/%s" % (self.user, res['id'])
+                logging.info("     Link: %s" % urlTw)
+                return(urlTw)
+
         except:        
             return(self.report('Twitter', post, link, sys.exc_info()))
 
