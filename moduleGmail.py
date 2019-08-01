@@ -421,20 +421,20 @@ class moduleGmail(Content,Queue):
 
     #    return None
 
-    def moveMessage(self,  message, labels =''):
+    def copyMessage(self,  message, labels =''):
         api = self.getClient()
-        labelId = self.getLabelId('imported')
-        labelIdName = 'imported'
+        labelIdName = 'importedd'
+        labelId = self.getLabelId(labelIdName)
         if not labelId:
-            rep = input("Label id '%s' not available, create? (y/n) " 
-                    % labelIdName)
-            if rep == 'y':
-                print(self.createLabel(labelIdName))
+            labelId = self.createLabel(labelIdName)
         labelIds = [labelId]
         labelIdsNames = [labelIdName]
-        for label in labels: 
-            labelId = self.getLabelId(label)
-            if labelId:
+        if labels:
+            for label in labels: 
+                print("label %s"%label)
+                labelId = self.getLabelId(label)
+                if not labelId: 
+                    labelId = self.createLabel(label)
                 labelIds.append(labelId)
                 labelIdsNames.append(label)
 
@@ -470,7 +470,7 @@ class moduleGmail(Content,Queue):
                    logging.info("vamos method")
                else:
                     media = message
-               print(media)
+               #print(media)
                  
                messageR = api.users().messages().import_(userId='me',
                            fields='id',
@@ -547,7 +547,7 @@ def main():
     api.editPost(pp, api.getPosts(), "M11", 'No avanza.')
     sys.exit()
     msg = 353
-    moveMessage(api[1], msg)
+    copyMessage(api[1], msg)
 
     #publishPost(api, pp, postsP, ('G',1))
     #deletePost(api, pp, postsP, ('M0',0))

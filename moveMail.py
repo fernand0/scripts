@@ -87,7 +87,7 @@ def main():
             if 'raw' in msg:
                 logging.info("i: %d, Snippet: %s" % (i, msg['raw']['snippet']))
                 logging.info("Result: %s" % 
-                        serviceDest.moveMessage(msg['raw'], [label]))
+                        serviceDest.copyMessage(msg['raw'], [label]))
                 serviceOrig.trash(i,'message')
         serviceOrig.setPosts(label=labels, mode='raw')
         print("Waiting ...")

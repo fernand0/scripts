@@ -27,7 +27,6 @@ import ssl
 
 from configMod import *
 import moduleGmail
-import pprint
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
@@ -158,7 +157,7 @@ def mailFolder(account, accountData, logging, res):
                     if FOLDER.find('@')>=0:
                         #print("msgs", msgs)
                         #print("remote")
-                        status = moveMailsRemote(M, msgs, FOLDER)
+                        status = copyMailsRemote(M, msgs, FOLDER)
                     else:
                         logging.info("msgs %s", msgs)
                         result = M.copy(msgs, FOLDER)
@@ -611,10 +610,11 @@ def printMessage(M, msg, rows = 24, columns = 80, headers = ['From', 'To', 'Subj
     wait = input("Any key to follow")
 
 
-def createFolder(M, name, folder):
-    print("We can select a folder where our new folder will be created")
-    folder = selectFolder(M, folder)
-    print(folder)
+def createFolder(M, name, folder, search=True):
+    if search:
+        print("We can select a folder where our new folder will be created")
+        folder = selectFolder(M, folder)
+        print(folder)
     #folder  = nameFolder(folder)
     if (folder[-1] == '"'):
        folder = folder[:-1]+'/'+name+'"'
@@ -871,17 +871,20 @@ def moveSent(M):
     if msgs:
         moveMails(M,  msgs, 'INBOX')
 
-def moveMailsRemote(M, msgs, folder):
+def copyMailsRemote(M, msgs, account, folder=None):
+
     # We start at the end because we can have accounts where the user includes
     # an @ (there can be two): user@host@mailhost
+    pos = account.rfind('@')
 
-    pos = folder.rfind('@')
-
-    SERVERD = folder[pos+1:]
-    USERD   = folder[:pos]
+    SERVERD = account[pos+1:]
+    USERD   = account[:pos]
     logging.info("Datos.... %s %s" %(SERVERD, USERD))
-    method = 'imap'
+
+    method = None
+
     try:
+        # First we try to see if there is a Gmail configuration
         config = configparser.ConfigParser()
         config.read(os.path.expanduser(CONFIGDIR+'/.oauthG.cfg'))
         for sect in config.sections():
@@ -890,32 +893,39 @@ def moveMailsRemote(M, msgs, folder):
                     method = 'oauth'
                     acc = sect
                     break
-    except:
+    except: 
         logging.info("No oauth config!")
 
+    if not method: 
+        PASSWORDD = getPassword(SERVERD, USERD) 
+        method = 'imap'
     
     logging.info("Method %s" % method)
     if method == 'imap':
-        PASSWORDD = getPassword(SERVERD, USERD)
-
         MD = makeConnection(SERVERD, USERD, PASSWORDD)
-        MD.select('INBOX')
+        if not folder: 
+            folder = 'INBOX'
+            MD.select('INBOX')
+        else:
+            MD.select(folder)
     
         i = 0
         for msgId in msgs.split(','): #[:25]:
             #print('.', end='')
+            logging.info("Message %s" % msgId)
             typ, data = M.fetch(msgId, '(RFC822)')
             M.store(msgId, "-FLAGS", "\\Seen")
             
             if (typ == 'OK'): 
                 message = data[0][1]
-        
+                logging.debug("Message %s", message)
+
                 flags = '' 
         
                 msg = email.message_from_bytes(message);
                 msgDate = email.utils.parsedate(msg['Date'])
                 
-                res = MD.append('INBOX',flags, msgDate, message)
+                res = MD.append(folder,flags, msgDate, message)
                 
                 if res[0] == 'OK':
                     M.store(msgId, "+FLAGS", "\\Seen")
@@ -923,7 +933,6 @@ def moveMailsRemote(M, msgs, folder):
         MD.close()
         MD.logout()
     else:
-        pp = pprint.PrettyPrinter(indent=4)
         service = moduleGmail.moduleGmail()
         service.API(acc)    
 
@@ -934,11 +943,11 @@ def moveMailsRemote(M, msgs, folder):
             typ, data = M.fetch(msgId, '(RFC822)')
             M.store(msgId, "-FLAGS", "\\Seen")
             
-            logging.info("Typ %s" % typ)
             if (typ == 'OK'): 
                 message = data[0][1]
                 logging.debug("Message %s", message)
-                rep = service.moveMessage(message)
+
+                rep = service.copyMessage(message, folder)
                 logging.info("Reply %s" %rep)
                 if rep != "Fail!":
                     M.store(msgId, "+FLAGS", "\\Seen")
@@ -946,7 +955,7 @@ def moveMailsRemote(M, msgs, folder):
 
 
     # We are returning a different code from 'OK' because we do not want to
-    # delte these messages.
+    # delete these messages.
     if (i == len(msgs.split(','))):
        return('OKOK')
     else:
@@ -1025,7 +1034,7 @@ def main():
     PASSWORD = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
     M.select()
 
-    moveMailsRemote(M, None, 'fernand0movilizado@gmail.com')
+    copyMailsRemote(M, None, 'fernand0movilizado@gmail.com')
 
 if __name__ == "__main__":
     main()
