@@ -118,15 +118,24 @@ class moduleBuffer(Queue):
 
     def setProfile(self, service=""):
         logging.info("  Checking services...")
+
+        self.profile = None
         
         if (service == ""):
             logging.info("  All available in Buffer")
-            profiles = Profiles(api=self.client).all()
+            try: 
+                profiles = Profiles(api=self.client).all()
+                self.profile = profiles[0]
+            except:
+                logging.info("   Something went wrong")
         else:
             logging.info("  Profile %s" % service)
-            profiles = Profiles(api=self.client).filter(service=service)
+            try: 
+                profiles = Profiles(api=self.client).filter(service=service)
+                self.profile = profiles[0]
+            except:
+                logging.info("   Something went wrong")
             
-        self.profile = profiles[0]
 
     def getProfile(self):
         return(self.profile)
