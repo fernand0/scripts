@@ -190,6 +190,22 @@ class moduleCache(Queue):
 
         logging.info("Deleted %s"% post[0])
         return("%s"% post[0])
+
+    def move(self, j, dest):
+        k = int(dest)
+        logging.info("Moving %d to %d"% (j, k))
+        post = self.posts[j]
+        if j > k:
+            logging.info("Moving %s"% post[0])
+            for i in range(j-1,k-1,-1):
+                self.posts[i+1] = self.posts[i]
+            self.posts[k] = post
+
+            self.updatePostsCache()
+            logging.info("Moved %s"% post[0])
+        return("%s"% post[0])
+
+
  
 def main():
     import moduleCache
@@ -210,7 +226,8 @@ def main():
     print(cache.selectAndExecute('show', '*2'))
     print(cache.selectAndExecute('show', 'TM3'))
     print(cache.selectAndExecute('show', 'TM6'))
-    print(cache.selectAndExecute('editl', 'T1 https://www.pagetable.com/?p=1152'))
+    print(cache.selectAndExecute('move', 'T5 0'))
+    #print(cache.selectAndExecute('editl', 'T1 https://www.pagetable.com/?p=1152'))
     #print(cache.selectAndExecute('delete', 'F7'))
     #print(cache.selectAndExecute('edit', 'T3'))
     #print(cache.selectAndExecute('edit', 'T0'))
