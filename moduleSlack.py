@@ -71,7 +71,8 @@ class moduleSlack(Content):
             if text.startswith('<'): 
                 url = post['text'][1:-1]
             else:
-                pos = text.find('<')
+                # Some people include URLs in the title of the page
+                pos = text.rfind('<')
                 url=text[pos+1:-1]
             return(url) 
 
@@ -121,6 +122,8 @@ class moduleSlack(Content):
 
         theTitle = self.getTitle(i)
         theLink = self.getLink(i)
+        print(theTitle)
+        print(theLink)
         if theLink.find('tumblr')>0:
             theTitle = post['text']
         firstLink = theLink
