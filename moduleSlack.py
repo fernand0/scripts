@@ -217,8 +217,12 @@ class moduleSlack(Content):
     def publishPost(self, chan, msg):
         theChan = self.getChanId(chan)
         logging.info("Publishing %s" % msg)
-        result = self.sc.api_call("chat.postMessage", 
+        try:
+            result = self.sc.api_call("chat.postMessage", 
                 channel = theChan, text = msg)
+        except:
+            result = self.sc.chat_postMessage(channel=theChan, 
+                    text=msg)
         logging.info(result)
         return(result)
 
