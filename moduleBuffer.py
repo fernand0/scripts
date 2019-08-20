@@ -148,10 +148,6 @@ class moduleBuffer(Queue):
             if (profile.counts[method] > 0):
                 profile.id = profile['id']
                 profile.profile_id = profile['service_id']
-                print(profile)
-                print(profile.id)
-                print("prof",profile.profile_id)
-                print(profile.updates.pending)
                 updates = getattr(profile.updates, method)
                 logging.debug("sent Profile %s" % updates)
                 if method == 'pending': 
@@ -337,6 +333,25 @@ class moduleBuffer(Queue):
 
         logging.info("Update before return %s"% update)
         return(update)
+
+    def move(self, j, dest):
+        k = int(dest)
+        logging.info("Moving %d to %d"% (j, k))
+        listPostIds = []
+        for post in self.getPosts():
+            listPostIds.append(post['id'])
+        idPost = listPostIds[j]
+        if j > k:
+            logging.info("Moving %s"% idPost)
+            for i in range(j-1,k-1,-1):
+                listPostIds[i+1] = listPostIds[i]
+            listPostIds[k] = idPost
+        profile = self.getProfile()
+
+        res = profile.updates.reorder(listPostIds)
+
+        return(res)
+
  
 def main():
 
@@ -368,6 +383,7 @@ def main():
     print('L3', buf.selectAndExecute('show', 'L3'))
     print('TL2', buf.selectAndExecute('show', 'TL2'))
     print('*4', buf.selectAndExecute('show', '*4'))
+    print('L4', buf.selectAndExecute('move', 'L9 0'))
     sys.exit()
     print('L0', buf.selectAndExecute('publish', 'L0'))
     #print('edit L3', buf.selectAndExecute('editl', 'L3 http://www.danilat.com/weblog/2019/06/10/kpis-equipos-desarrollo-software'))
