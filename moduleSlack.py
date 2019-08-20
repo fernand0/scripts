@@ -6,7 +6,11 @@ import os
 import urllib
 import logging
 from pdfrw import PdfReader
-from slackclient import SlackClient
+try: 
+    from slackclient import SlackClient
+except:
+    import slack
+
 import sys
 import click
 import requests
@@ -14,6 +18,7 @@ from bs4 import BeautifulSoup
 from bs4 import Tag
 
 from moduleContent import *
+
 
 class moduleSlack(Content):
 
@@ -28,7 +33,10 @@ class moduleSlack(Content):
     
         slack_token = config["Slack"].get('api-key')
         
-        self.sc = SlackClient(slack_token)
+        try: 
+            self.sc = SlackClient(slack_token)
+        except:
+            self.sc = slack.WebClient(token=slack_token)
  
     def getSlackClient(self):
         return self.sc
@@ -212,8 +220,12 @@ class moduleSlack(Content):
     def publishPost(self, chan, msg):
         theChan = self.getChanId(chan)
         logging.info("Publishing %s" % msg)
-        result = self.sc.api_call("chat.postMessage", 
+        try:
+            result = self.sc.api_call("chat.postMessage", 
                 channel = theChan, text = msg)
+        except:
+            result = self.sc.chat_postMessage(channel=theChan, 
+                    text=msg)
         logging.info(result)
         return(result)
 

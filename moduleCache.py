@@ -205,7 +205,6 @@ class moduleCache(Queue):
             logging.info("Moved %s"% post[0])
         return("%s"% post[0])
 
-
  
 def main():
     import moduleCache
