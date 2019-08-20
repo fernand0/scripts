@@ -53,7 +53,7 @@ importlib.reload(sys)
 # sudo python setup.py install
 from colorama import Fore
 import buffpy
-from buffpy.models.update import Update
+from buffpy.models import Update
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Updates
 
@@ -125,6 +125,7 @@ class moduleBuffer(Queue):
         else:
             logging.info("  Profile %s" % service)
             profiles = Profiles(api=self.client).filter(service=service)
+
             
         self.profile = profiles[0]
 
@@ -134,10 +135,16 @@ class moduleBuffer(Queue):
     def setPosts(self):
         self.setProfile(self.service)
         profile = self.getProfile()
-        logging.debug("Profile %s" % profile)
+        logging.info("Profile %s" % profile)
     
         for method in ['sent', 'pending']:
             if (profile.counts[method] > 0):
+                profile.id = profile['id']
+                profile.profile_id = profile['service_id']
+                print(profile)
+                print(profile.id)
+                print("prof",profile.profile_id)
+                print(profile.updates.pending)
                 updates = getattr(profile.updates, method)
                 logging.debug("sent Profile %s" % updates)
                 if method == 'pending': 
@@ -148,12 +155,13 @@ class moduleBuffer(Queue):
     def addPosts(self, listPosts):
         linkAdded = ''
         logging.info("    Adding posts to %s" % self.service)
+        print(listPosts)
         for post in listPosts: 
             title = self.getPostTitle(post)
             link = self.getPostLink(post)
             textPost = title + " " + link
             logging.info("    Post: %s" % link)
-            entry = urllib.parse.quote(textPost)
+            entry = textPost #urllib.parse.quote(textPost)
             try:
                 #if post[3]: 
                 #    print(post[3])
@@ -428,7 +436,7 @@ class moduleBuffer(Queue):
         logging.info("servicename %s" %self.service)
         from buffpy.models.update import Update
         i=0
-        update = Update(api=self.client, id=profile.updates.pending[j].id) 
+        update = Update(api=self.client, id=profile.updates.pending[j]['id']) 
         title = thePost[0]
         # media = {'original': newLink } 
         #update = update.edit(media={})
@@ -459,7 +467,7 @@ class moduleBuffer(Queue):
         logging.info("servicename %s" %self.service)
         from buffpy.models.update import Update
         i=0
-        update = Update(api=self.client, id=profile.updates.pending[j].id) 
+        update = Update(api=self.client, id=profile.updates.pending[j]['id']) 
         print(update)
         import urllib.parse
         update = update.edit(text=urllib.parse.quote(newTitle))
@@ -476,7 +484,7 @@ class moduleBuffer(Queue):
         post = self.obtainPostData(j)
         logging.info("Publishing %s"% post[0])
         profile = self.getProfile() 
-        update = Update(api=self.client, id=profile.updates.pending[j].id) 
+        update = Update(api=self.client, id=profile.updates.pending[j]['id']) 
         res = update.publish()
         logging.info("Update before return %s"% res)
         if res:
@@ -493,7 +501,7 @@ class moduleBuffer(Queue):
         logging.info("Deleting %s"% post[0])
         profile = self.getProfile()
         from buffpy.models.update import Update
-        update = Update(api=self.client, id=profile.updates.pending[j].id) 
+        update = Update(api=self.client, id=profile.updates.pending[j]['id']) 
         update = update.delete()
 
         logging.info("Update before return %s"% update)
@@ -529,10 +537,11 @@ def main():
     print('L3', buf.selectAndExecute('show', 'L3'))
     print('TL2', buf.selectAndExecute('show', 'TL2'))
     print('*4', buf.selectAndExecute('show', '*4'))
-    print('edit L3', buf.selectAndExecute('editl', 'L3 http://www.danilat.com/weblog/2019/06/10/kpis-equipos-desarrollo-software'))
+    sys.exit()
+    print('L0', buf.selectAndExecute('publish', 'L0'))
+    #print('edit L3', buf.selectAndExecute('editl', 'L3 http://www.danilat.com/weblog/2019/06/10/kpis-equipos-desarrollo-software'))
     #print('edit L2', buf.selectAndExecute('edit', 'L2'+' '+'El tren del tambor.'))
     #print('pub L0', buf.selectAndExecute('publish','L0'))
-    sys.exit()
     print('delete linkedin', buf.selectAndExecute('delete', 'L1'))
     print("-> PostsP",postsP)
     posts.update(postsP)

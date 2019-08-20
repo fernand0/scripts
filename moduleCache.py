@@ -190,6 +190,21 @@ class moduleCache(Queue):
 
         logging.info("Deleted %s"% post[0])
         return("%s"% post[0])
+
+    def move(self, j, dest):
+        k = int(dest)
+        logging.info("Moving %d to %d"% (j, k))
+        post = self.posts[j]
+        if j > k:
+            logging.info("Moving %s"% post[0])
+            for i in range(j-1,k-1,-1):
+                self.posts[i+1] = self.posts[i]
+            self.posts[k] = post
+
+            self.updatePostsCache()
+            logging.info("Moved %s"% post[0])
+        return("%s"% post[0])
+
  
 def main():
     import moduleCache
