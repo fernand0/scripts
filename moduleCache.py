@@ -46,6 +46,7 @@ class moduleCache(Queue):
     def setPosts(self):        
         fileNameQ = fileNamePath(self.url, 
                 (self.service, self.nick)) + ".queue"
+        logging.debug("File %s" % fileNameQ)
         try:
             with open(fileNameQ,'rb') as f: 
                 try: 
@@ -109,7 +110,6 @@ class moduleCache(Queue):
         return(None) 
     
     def getPostTitle(self, post):
-        logging.info(post)
         if post:
             title = post[0]
             return (title)

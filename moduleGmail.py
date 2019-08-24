@@ -41,7 +41,7 @@ class moduleGmail(Content,Queue):
         # Back compatibility
         self.setClient(Acc)
 
-    def setClient(self, Acc):
+    def setClient(self, url, Acc):
         # based on get_credentials from 
         # Code from
         # https://developers.google.com/gmail/api/v1/reference/users/messages/list
@@ -56,9 +56,17 @@ class moduleGmail(Content,Queue):
         config.read(CONFIGDIR + '/.oauthG.cfg')
         
         self.service = 'gmail'
-        self.nick = config.get(Acc,'user')+'@'+config.get(Acc,'server')
-        fileStore = self.confName((config.get(Acc,'server'), 
-            config.get(Acc,'user'))) 
+        if type(Acc) == str: 
+            self.nick = config.get(Acc,'user') #+'@'+config.get(Acc,'server')
+            self.server = config.get(Acc,'server')
+            self.name = 'GMail' + Acc[3:]
+        else:
+            pos = Acc[1].rfind('@') 
+            self.server = Acc[1][pos+1:] 
+            self.nick   = Acc[1][:pos]
+            self.name = 'GMail_{}'.format(Acc[0]) 
+
+        fileStore = self.confName((self.server, self.nick))
     
         logging.debug("Filestore %s"% fileStore)
         store = file.Storage(fileStore)
@@ -67,7 +75,6 @@ class moduleGmail(Content,Queue):
         service = build('gmail', 'v1', http=credentials.authorize(Http()))
     
         self.client = service
-        self.name = 'GMail' + Acc[3:]
 
     def getClient(self):
         return(self.client)
@@ -171,6 +178,16 @@ class moduleGmail(Content,Queue):
         if header in message:
             del message[header]
             message[header]= value
+
+    def getPostLink(self, post):
+        return ''
+
+    def getPostTitle(self, post):
+        logging.debug(post)
+        if post:
+            title = self.getHeader(post)
+            return (title)
+        return(None)
 
     def getHeader(self, message, header = 'Subject'):
         if 'meta' in message:
@@ -516,12 +533,19 @@ def main():
     # instantiate the api object 
 
     api = moduleGmail.moduleGmail()
-    api.setClient('ACC2')
+    api.setClient('ACC1')
     api.setPosts()
     print(api.getPosts())
     print(api.getPosts()[0])
     print(len(api.getPosts()[0]))
-    # It has 8 elements
+    api = moduleGmail.moduleGmail()
+    api.setClient(('gmail','ftricas@elmundoesimperfecto.com'))
+    api.setPosts()
+    print(api.getPosts())
+    print(api.getPosts()[0])
+    print(len(api.getPosts()[0]))
+    sys.exit()
+     # It has 8 elements
     print(api.obtainPostData(0))
     print('G21', api.selectAndExecute('show', 'G21'))
     print('G23', api.selectAndExecute('show', 'G23'))

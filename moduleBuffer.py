@@ -142,7 +142,7 @@ class moduleBuffer(Queue):
     def setPosts(self):
         self.setProfile(self.service)
         profile = self.getProfile()
-        logging.info("Profile %s" % profile)
+        logging.debug("Profile %s" % profile)
     
         for method in ['sent', 'pending']:
             if (profile.counts[method] > 0):
@@ -155,10 +155,57 @@ class moduleBuffer(Queue):
                 else:
                     self.posted = updates
 
+    def setSchedules(self):
+        """
+        [{'days': ['sun'], 'times': ['09:27', '10:40', '11:50', '12:57', '16:11', '17:06', '18:37', '19:13']}, {'days': ['mon'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}, {'days': ['tue'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}, {'days': ['wed'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}, {'days': ['thu'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}, {'days': ['fri'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}, {'days': ['sat'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}]
+        """
+        self.setProfile(self.service)
+        profile = self.getProfile()
+        logging.debug("Profile %s" % profile)
+    
+        profile.id = profile['id']
+        profile.profile_id = profile['service_id']
+        schedules = profile.schedules
+        if schedules:
+            self.schedules = schedules
+        else:
+            self.schedules = None
+        #print(self.schedules[0]['times'])
+        #print(len(self.schedules[0]['times']))
+
+    def addSchedules(self, times):
+        toPost={'days':[], 'times':[]}
+        myTimes = self.schedules[0]['times']
+        print(myTimes)
+        for time in times:
+            if time not in myTimes:
+                myTimes.append(time)
+        myTimes.sort()
+
+        for i, sched in enumerate(self.schedules): 
+            if i == 7: break
+            print(sched)
+            toPost['days'].append(sched['days'][0])
+        toPost['times'] = myTimes
+        self.getProfile().schedules = toPost
+
+    def delSchedules(self, times):
+        toPost={'days':[], 'times':[]}
+        myTimes = self.schedules[0]['times']
+        for time in myTimes:
+            if time not in times:
+                toPost['times'].append(time)
+        myTimes.sort()
+
+        for i, sched in enumerate(self.schedules): 
+            if i == 7: break
+            print(sched)
+            toPost['days'].append(sched['days'][0])
+        self.getProfile().schedules = toPost
+
     def addPosts(self, listPosts):
         linkAdded = ''
         logging.info("    Adding posts to %s" % self.service)
-        print(listPosts)
         for post in listPosts: 
             title = self.getPostTitle(post)
             link = self.getPostLink(post)
@@ -228,7 +275,6 @@ class moduleBuffer(Queue):
         return(None) 
     
     def getPostTitle(self, post):
-        logging.info(post)
         if post:
             if 'text' in post:
                 title = post['text']
@@ -361,6 +407,13 @@ def main():
     buf.setClient('http://fernand0-errbot.slack.com/', 
             ('linkedin', 'Fernando Tricas'))
     buf.setPosts()
+    buf.setSchedules()
+    buf.addSchedules(['12:34','19:31'])
+    buf.setSchedules()
+    print(buf.schedules)
+    buf.delSchedules(['12:34','19:31'])
+    print(buf.schedules)
+    sys.exit()
     print(buf.getPosts())
     print(buf.getPosts()[0])
     print(len(buf.getPosts()[0]))
