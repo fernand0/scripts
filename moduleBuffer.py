@@ -155,7 +155,13 @@ class moduleBuffer(Queue):
                 else:
                     self.posted = updates
 
-    def setSchedules(self):
+    def getHoursSchedules(self, command=None):
+        return self.schedules[0]['times']
+
+    def getSchedules(self, command=None):
+        return self.schedules
+
+    def setSchedules(self, command=None):
         """
         [{'days': ['sun'], 'times': ['09:27', '10:40', '11:50', '12:57', '16:11', '17:06', '18:37', '19:13']}, {'days': ['mon'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}, {'days': ['tue'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}, {'days': ['wed'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}, {'days': ['thu'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}, {'days': ['fri'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}, {'days': ['sat'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}]
         """
