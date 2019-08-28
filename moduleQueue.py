@@ -75,6 +75,7 @@ class Queue:
         (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(j)
 
         reply = ''
+        logging.info("title %s"%title)
         if title and link:
             reply = reply + title + ' ' + link
         elif link:

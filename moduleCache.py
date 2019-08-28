@@ -19,6 +19,7 @@ import sys
 import importlib
 importlib.reload(sys)
 #sys.setdefaultencoding("UTF-8")
+from crontab import CronTab
 
 from configMod import *
 from moduleQueue import *
@@ -46,6 +47,7 @@ class moduleCache(Queue):
     def setPosts(self):        
         fileNameQ = fileNamePath(self.url, 
                 (self.service, self.nick)) + ".queue"
+        logging.debug("File %s" % fileNameQ)
         try:
             with open(fileNameQ,'rb') as f: 
                 try: 
@@ -56,6 +58,71 @@ class moduleCache(Queue):
             listP = []
 
         self.posts = listP
+
+
+    def getHoursSchedules(self, command=None):
+        return self.schedules[0].hour.render()
+
+    def getSchedules(self, command=None):
+        return self.schedules
+
+    def setSchedules(self, command=None):
+        self.setProfile(self.service)
+        profile = self.getProfile()
+        logging.debug("Profile %s" % profile)
+    
+        profile.id = profile['id']
+        profile.profile_id = profile['service_id']
+        schedules = profile.schedules
+        if schedules:
+            self.schedules = schedules
+        else:
+            self.schedules = None
+        #print(self.schedules[0]['times'])
+        #print(len(self.schedules[0]['times']))
+
+    def setSchedules(self, command):
+        schedules = CronTab(user=True)
+        self.crontab = schedules
+        self.schedules = []
+        schedules = schedules.find_command(command)
+        for sched in schedules:
+            #print(sched.minute, sched.hour)
+            self.schedules.append(sched)
+
+    def addSchedules(self, times):
+       myTimes = self.schedules[0].hour
+       print("sched", self.schedules[0].render())
+       for time in times:
+           print(time) 
+           hour = time.split(':')[0]
+           if int(hour) not in myTimes:
+               myTimesS = str(myTimes)
+               print(myTimes)
+               myTimesS = myTimesS + ',' + str(hour)
+               self.schedules[0].hour.also.on(str(hour))
+           self.crontab.write()
+
+    def delSchedules(self, times): 
+        myTimes = self.schedules[0].hour 
+        timesI = []
+        for time in times:
+            timesI.append(int(time.split(':')[0]))
+        print("my",myTimes)
+        print("myI",timesI)
+
+        myNewTimes = []
+        for time in myTimes:
+            print("time",time)
+            if time not in timesI:
+                myNewTimes.append(time)
+                
+        print("myN",myNewTimes)
+        self.schedules[0].hour.clear()
+        for time in myNewTimes:
+            self.schedules[0].hour.also.on(str(time))
+        print(self.schedules[0].hour)
+        self.crontab.write()
 
     def addPosts(self, listPosts):
         link = ''
@@ -109,7 +176,6 @@ class moduleCache(Queue):
         return(None) 
     
     def getPostTitle(self, post):
-        logging.info(post)
         if post:
             title = post[0]
             return (title)
@@ -190,6 +256,21 @@ class moduleCache(Queue):
 
         logging.info("Deleted %s"% post[0])
         return("%s"% post[0])
+
+    def move(self, j, dest):
+        k = int(dest)
+        logging.info("Moving %d to %d"% (j, k))
+        post = self.posts[j]
+        if j > k:
+            logging.info("Moving %s"% post[0])
+            for i in range(j-1,k-1,-1):
+                self.posts[i+1] = self.posts[i]
+            self.posts[k] = post
+
+            self.updatePostsCache()
+            logging.info("Moved %s"% post[0])
+        return("%s"% post[0])
+
  
 def main():
     import moduleCache
@@ -199,6 +280,13 @@ def main():
     cache.setClient('http://fernand0-errbot.slack.com/', 
             ('twitter', 'fernand0'))
     cache.setPosts()
+    cache.setSchedules('rssToSocial')
+    print(cache.schedules)
+    cache.addSchedules(['9:00','20:15'])
+    print(cache.schedules)
+    cache.delSchedules(['9:00','20:15'])
+    sys.exit()
+
     print(cache.getPosts())
     print(cache.getPosts()[0])
     print(len(cache.getPosts()[0]))
@@ -210,7 +298,8 @@ def main():
     print(cache.selectAndExecute('show', '*2'))
     print(cache.selectAndExecute('show', 'TM3'))
     print(cache.selectAndExecute('show', 'TM6'))
-    print(cache.selectAndExecute('editl', 'T1 https://www.pagetable.com/?p=1152'))
+    print(cache.selectAndExecute('move', 'T5 0'))
+    #print(cache.selectAndExecute('editl', 'T1 https://www.pagetable.com/?p=1152'))
     #print(cache.selectAndExecute('delete', 'F7'))
     #print(cache.selectAndExecute('edit', 'T3'))
     #print(cache.selectAndExecute('edit', 'T0'))

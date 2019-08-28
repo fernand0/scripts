@@ -53,7 +53,7 @@ importlib.reload(sys)
 # sudo python setup.py install
 from colorama import Fore
 import buffpy
-from buffpy.models.update import Update
+from buffpy.models import Update
 from buffpy.managers.profiles import Profiles
 from buffpy.managers.updates import Updates
 
@@ -118,15 +118,23 @@ class moduleBuffer(Queue):
 
     def setProfile(self, service=""):
         logging.info("  Checking services...")
+
+        self.profile = None
         
         if (service == ""):
             logging.info("  All available in Buffer")
-            profiles = Profiles(api=self.client).all()
+            try: 
+                profiles = Profiles(api=self.client).all()
+                self.profile = profiles[0]
+            except:
+                logging.info("   Something went wrong")
         else:
             logging.info("  Profile %s" % service)
-            profiles = Profiles(api=self.client).filter(service=service)
-            
-        self.profile = profiles[0]
+            try: 
+                profiles = Profiles(api=self.client).filter(service=service)
+                self.profile = profiles[0]
+            except:
+                logging.info("   Something went wrong")
 
     def getProfile(self):
         return(self.profile)
@@ -138,12 +146,68 @@ class moduleBuffer(Queue):
     
         for method in ['sent', 'pending']:
             if (profile.counts[method] > 0):
+                profile.id = profile['id']
+                profile.profile_id = profile['service_id']
                 updates = getattr(profile.updates, method)
                 logging.debug("sent Profile %s" % updates)
                 if method == 'pending': 
                     self.posts = updates
                 else:
                     self.posted = updates
+
+    def getHoursSchedules(self, command=None):
+        return self.schedules[0]['times']
+
+    def getSchedules(self, command=None):
+        return self.schedules
+
+    def setSchedules(self, command=None):
+        """
+        [{'days': ['sun'], 'times': ['09:27', '10:40', '11:50', '12:57', '16:11', '17:06', '18:37', '19:13']}, {'days': ['mon'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}, {'days': ['tue'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}, {'days': ['wed'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}, {'days': ['thu'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}, {'days': ['fri'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}, {'days': ['sat'], 'times': ['09:27', '10:40', '11:50', '12:17', '16:11', '17:06', '18:37', '19:13']}]
+        """
+        self.setProfile(self.service)
+        profile = self.getProfile()
+        logging.debug("Profile %s" % profile)
+    
+        profile.id = profile['id']
+        profile.profile_id = profile['service_id']
+        schedules = profile.schedules
+        if schedules:
+            self.schedules = schedules
+        else:
+            self.schedules = None
+        #print(self.schedules[0]['times'])
+        #print(len(self.schedules[0]['times']))
+
+    def addSchedules(self, times):
+        toPost={'days':[], 'times':[]}
+        myTimes = self.schedules[0]['times']
+        print(myTimes)
+        for time in times:
+            if time not in myTimes:
+                myTimes.append(time)
+        myTimes.sort()
+
+        for i, sched in enumerate(self.schedules): 
+            if i == 7: break
+            print(sched)
+            toPost['days'].append(sched['days'][0])
+        toPost['times'] = myTimes
+        self.getProfile().schedules = toPost
+
+    def delSchedules(self, times):
+        toPost={'days':[], 'times':[]}
+        myTimes = self.schedules[0]['times']
+        for time in myTimes:
+            if time not in times:
+                toPost['times'].append(time)
+        myTimes.sort()
+
+        for i, sched in enumerate(self.schedules): 
+            if i == 7: break
+            print(sched)
+            toPost['days'].append(sched['days'][0])
+        self.getProfile().schedules = toPost
 
     def addPosts(self, listPosts):
         linkAdded = ''
@@ -153,7 +217,7 @@ class moduleBuffer(Queue):
             link = self.getPostLink(post)
             textPost = title + " " + link
             logging.info("    Post: %s" % link)
-            entry = urllib.parse.quote(textPost)
+            entry = textPost #urllib.parse.quote(textPost)
             try:
                 #if post[3]: 
                 #    print(post[3])
@@ -202,182 +266,6 @@ class moduleBuffer(Queue):
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
-    #def deletePost(self, profiles, args):
-    #    api = self.buffer
-    #    logging.info("To Delete %s" % args)
-    #
-    #    update = None
-    #    for i in range(len(profiles)):
-    #        serviceName = profiles[i].formatted_service
-    #        if self.isForMe(serviceName, args):
-    #            j = int(args[-1])
-    #            update = Update(api=api, id=profiles[i].updates.pending[j].id)
-    #            logging.debug(update)
-    #            update.delete()
-    #
-    #    return(update)
-    #
-    #def copyPost(self, log, profiles, toCopy, toWhere):
-    #    api = self.buffer
-    #    logging.info(toCopy+' '+toWhere)
-    #
-    #    profCop = toCopy[0]
-    #    ii = int(toCopy[1])
-    #
-    #    j = 0
-    #    profWhe = ""
-    #    i = 0
-    #    while i < len(toWhere):
-    #        profWhe = profWhe + toWhere[i]
-    #        i = i + 1
-    #    
-    #    log.info(toCopy,"|",profCop, ii, profWhe)
-    #    for i in range(len(profiles)):
-    #        serviceName = profiles[i].formatted_service
-    #        print(serviceName)
-    #        log.info("ii: %s" %i)
-    #        updates = getattr(profiles[j].updates, 'pending')
-    #        update = updates[ii]
-    #        if ('media' in update): 
-    #            if ('expanded_link' in update.media):
-    #                link = update.media.expanded_link
-    #            else:
-    #                link = update.media.link
-    #        else:
-    #            link = ""
-    #        print(update.text, link)
-    #       
-    #        if (serviceName[0] in profCop):
-    #            for j in range(len(profiles)): 
-    #                serviceName = profiles[j].formatted_service 
-    #                if (serviceName[0] in profWhe):
-    #                    profiles[j].updates.new(urllib.parse.quote(update.text + " " + link).encode('utf-8'))
-    #
-    #def movePost(self, log, profiles, toMove, toWhere):
-    #    # Moving posts, we identify the profile by the first letter. We can use
-    #    # several letters and if we put a '*' we'll move the posts in all the
-    #    # social networks
-    #    api = self.buffer
-    #    i = 0
-    #    profMov = ""
-    #    while toMove[i].isalpha():
-    #        profMov = profMov + toMove[i]
-    #        i = i + 1
-    #
-    #    for i in range(len(profiles)):
-    #        serviceName = profiles[i].formatted_service
-    #        log.info("ii: %s" %i)
-    #        if (serviceName[0] in profMov) or toMove[0]=='*':
-    #            listIds = []
-    #            for j in range(len(profiles[i].updates.pending)):
-    #                # counts seems to be not ok
-    #                listIds.append(profiles[i].updates.pending[j]['id'])
-    #
-    #            logging.info("to Move %s to %s" % (toMove, toWhere))
-    #            j = int(toMove[-1])
-    #            logging.info("i %d j %d"  % (i,j))
-    #            logging.info("Profiles[i]--> %s <--"  % profiles)
-    #            logging.info("Profiles[i]--> %s <---"  % profiles[i].updates.pending[j])
-    #            k = int(toWhere[-1])
-    #            idUpdate = listIds.pop(j)
-    #            listIds.insert(k, idUpdate)
-    #
-    #            update = Update(api=api, id=profiles[i].updates.pending[j].id)
-    #            profiles[i].updates.reorder(listIds)
-    #
-    #def listSentPosts(self, service=""):
-    #    api = self.buffer
-    #    profiles = self.getProfiles(service)
-    #
-    #    someSent = False
-    #    outputStr = ([],[])
-    #    for i in range(len(profiles)):
-    #        serviceName = profiles[i].formatted_service
-    #        logging.debug("Service %d %s" % (i,serviceName))
-    #        if (profiles[i].counts['sent'] > 0):
-    #            someSent = True
-    #            logging.debug(" Service %s" % serviceName)
-    #            logging.debug("There are: %d" % profiles[i].counts['sent'])
-    #            logging.debug(profiles[i].updates.sent)
-    #            due_time=""
-    #            for j in range(min(8,profiles[i].counts['sent'])):
-    #                updatesSent = profiles[i].updates.sent[j]
-    #                update = Update(api=api, id= updatesSent.id)
-    #                if (due_time == ""):
-    #                    due_time=update.due_time # Not used here
-    #                    outputStr[0].append("*%s*" % serviceName)
-    #                    outputStr[1].append("")
-    #                logging.debug("Service %s" % updatesSent)
-    #                selectionStr = "" #"%d%d) " % (i,j)
-    #                if ('media' in updatesSent): 
-    #                    try:
-    #                        lineTxt = "%s %s %s" % (selectionStr, 
-    #                                updatesSent.text, updatesSent.media.expanded_link)
-    #                    except:
-    #                        lineTxt = "%s %s %s" % (selectionStr,
-    #                                updatesSent.text, updatesSent.media.link)
-    #                else:
-    #                    lineTxt = "%s %s" % (selectionStr,updatesSent.text)
-    #                logging.info(lineTxt)
-    #                outputStr[0].append("%s" % lineTxt)
-    #                outputStr[1].append(" (%d clicks)" % updatesSent['statistics']['clicks'])
-    #        else:
-    #            logging.debug("No")
-    #    
-    #    if someSent:
-    #        return (outputStr, profiles)
-    #    else:
-    #        logging.info("No sent posts")
-    #        return someSent
-    #
-    #
-    #def listPendingPosts(self, service=""):
-    #    api = self.buffer
-    #    profiles = self.getProfiles(service)
-    #    
-    #    somePending = False
-    #    outputStr = [] 
-    #    for i in range(len(profiles)):
-    #        serviceName = profiles[i].formatted_service
-    #        logging.debug("Service %d %s" % (i,serviceName))
-    #        if (profiles[i].counts['pending'] > 0):
-    #            somePending = True
-    #            logging.info("Service %s" % serviceName)
-    #            logging.debug("There are: %d" % profiles[i].counts['pending'])
-    #            logging.debug(profiles[i].updates.pending)
-    #            due_time=""
-    #            for j in range(profiles[i].counts['pending']):
-    #                updatesPending = profiles[i].updates.pending[j]
-    #                update = Update(api=api, id=updatesPending.id)
-    #                if (due_time == ""):
-    #                    due_time=update.due_time
-    #                    outputStr.append("*%s* ( %s )" % (serviceName, due_time))
-    #
-    #                logging.debug("Service %s" % updatesPending)
-    #                selectionStr = "%d%d) " % (i,j)
-    #                if ('media' in updatesPending): 
-    #                    try:
-    #                        lineTxt = "%s %s %s" % (selectionStr,
-    #                                updatesPending.text, updatesPending.media.expanded_link)
-    #                    except:
-    #                        lineTxt = "%s %s %s" % (selectionStr,
-    #                                updatesPending.text, updatesPending.media.link)
-    #                else:
-    #                    lineTxt = "%s %s" % (selectionStr,updatesPending.text)
-    #                logging.info(lineTxt)
-    #                outputStr.append(lineTxt)
-    #                logging.debug("-- %s" % (update))
-    #                logging.debug("-- %s" % (dir(update)))
-    #        else:
-    #            logging.debug("Service %d %s" % (i, serviceName))
-    #            logging.debug("No")
-    #    
-    #    if somePending:
-    #        return (outputStr, profiles)
-    #    else:
-    #        logging.info("No pending posts")
-    #        return somePending
-
     def getTitle(self, i):
         if i < len(self.getPosts()): 
             post = self.getPosts()[i]
@@ -393,7 +281,6 @@ class moduleBuffer(Queue):
         return(None) 
     
     def getPostTitle(self, post):
-        logging.info(post)
         if post:
             if 'text' in post:
                 title = post['text']
@@ -428,7 +315,7 @@ class moduleBuffer(Queue):
         logging.info("servicename %s" %self.service)
         from buffpy.models.update import Update
         i=0
-        update = Update(api=self.client, id=profile.updates.pending[j].id) 
+        update = Update(api=self.client, id=profile.updates.pending[j]['id']) 
         title = thePost[0]
         # media = {'original': newLink } 
         #update = update.edit(media={})
@@ -459,7 +346,7 @@ class moduleBuffer(Queue):
         logging.info("servicename %s" %self.service)
         from buffpy.models.update import Update
         i=0
-        update = Update(api=self.client, id=profile.updates.pending[j].id) 
+        update = Update(api=self.client, id=profile.updates.pending[j]['id']) 
         print(update)
         import urllib.parse
         update = update.edit(text=urllib.parse.quote(newTitle))
@@ -476,7 +363,7 @@ class moduleBuffer(Queue):
         post = self.obtainPostData(j)
         logging.info("Publishing %s"% post[0])
         profile = self.getProfile() 
-        update = Update(api=self.client, id=profile.updates.pending[j].id) 
+        update = Update(api=self.client, id=profile.updates.pending[j]['id']) 
         res = update.publish()
         logging.info("Update before return %s"% res)
         if res:
@@ -493,11 +380,30 @@ class moduleBuffer(Queue):
         logging.info("Deleting %s"% post[0])
         profile = self.getProfile()
         from buffpy.models.update import Update
-        update = Update(api=self.client, id=profile.updates.pending[j].id) 
+        update = Update(api=self.client, id=profile.updates.pending[j]['id']) 
         update = update.delete()
 
         logging.info("Update before return %s"% update)
         return(update)
+
+    def move(self, j, dest):
+        k = int(dest)
+        logging.info("Moving %d to %d"% (j, k))
+        listPostIds = []
+        for post in self.getPosts():
+            listPostIds.append(post['id'])
+        idPost = listPostIds[j]
+        if j > k:
+            logging.info("Moving %s"% idPost)
+            for i in range(j-1,k-1,-1):
+                listPostIds[i+1] = listPostIds[i]
+            listPostIds[k] = idPost
+        profile = self.getProfile()
+
+        res = profile.updates.reorder(listPostIds)
+
+        return(res)
+
  
 def main():
 
@@ -507,6 +413,13 @@ def main():
     buf.setClient('http://fernand0-errbot.slack.com/', 
             ('linkedin', 'Fernando Tricas'))
     buf.setPosts()
+    buf.setSchedules()
+    buf.addSchedules(['12:34','19:31'])
+    buf.setSchedules()
+    print(buf.schedules)
+    buf.delSchedules(['12:34','19:31'])
+    print(buf.schedules)
+    sys.exit()
     print(buf.getPosts())
     print(buf.getPosts()[0])
     print(len(buf.getPosts()[0]))
@@ -529,10 +442,12 @@ def main():
     print('L3', buf.selectAndExecute('show', 'L3'))
     print('TL2', buf.selectAndExecute('show', 'TL2'))
     print('*4', buf.selectAndExecute('show', '*4'))
-    print('edit L3', buf.selectAndExecute('editl', 'L3 http://www.danilat.com/weblog/2019/06/10/kpis-equipos-desarrollo-software'))
+    print('L4', buf.selectAndExecute('move', 'L9 0'))
+    sys.exit()
+    print('L0', buf.selectAndExecute('publish', 'L0'))
+    #print('edit L3', buf.selectAndExecute('editl', 'L3 http://www.danilat.com/weblog/2019/06/10/kpis-equipos-desarrollo-software'))
     #print('edit L2', buf.selectAndExecute('edit', 'L2'+' '+'El tren del tambor.'))
     #print('pub L0', buf.selectAndExecute('publish','L0'))
-    sys.exit()
     print('delete linkedin', buf.selectAndExecute('delete', 'L1'))
     print("-> PostsP",postsP)
     posts.update(postsP)
