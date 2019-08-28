@@ -124,7 +124,7 @@ def mailFolder(account, accountData, logging, res):
                 FOLDER = ""
                 data = None
             elif (header == 'status'):
-                (typ, data) = M.search(None, '(UNSEEN)')
+                (typ, data) = M.search(None, '(ALL)')
             else:
                 data = ''
                 try:
@@ -405,11 +405,15 @@ def selectAllMessages(folder, M):
     msgs = ""
     #print("folder",folder)
     M.select(folder)
-    data = M.sort('ARRIVAL', 'UTF-8', 'ALL')
-    if (data[0] == 'OK'):
+    try: 
+        data = M.sort('ARRIVAL', 'UTF-8', 'ALL')
+    except:
+        data = M.search(None,'ALL')
+    if data and (data[0] == 'OK'):
         messages = data[1][0].decode("utf-8").split(' ')
-
-    return ",".join(messages)
+        return ",".join(messages)
+    else:
+        return None
 
 def selectMessageSubject(folder, M, sbj, sens=0, partial=False):
     msg_number =""
@@ -611,24 +615,29 @@ def printMessage(M, msg, rows = 24, columns = 80, headers = ['From', 'To', 'Subj
 
 
 def createFolder(M, name, folder, search=True):
+    exclude = ['Trash']
     if search:
         print("We can select a folder where our new folder will be created")
         folder = selectFolder(M, folder)
         print(folder)
     #folder  = nameFolder(folder)
-    if (folder[-1] == '"'):
-       folder = folder[:-1]+'/'+name+'"'
+    if folder: 
+        if (folder[-1] == '"'): 
+            folder = folder[:-1]+'/'+name+'"' 
+        else: 
+            if (' ' in name): 
+                folder = '"' + folder+'/'+name + '"' 
+            else: 
+                folder = folder+'/'+name 
     else:
-       if (' ' in name):
-          folder = '"' + folder+'/'+name + '"'
-       else:
-          folder = folder+'/'+name
-    (typ, create_response) = M.create(folder)
-    if typ == "OK":
-        print("Created "+folder+ " ")
-    else:
-        print("Error creating "+folder+ " ")
-        print(typ, create_response)
+        folder = name
+    if folder not in exclude:
+        (typ, create_response) = M.create(folder)
+        if typ == "OK":
+            print("Created "+folder+ " ")
+        else:
+            print("Error creating "+folder+ " ")
+            print(typ, create_response)
 
     return(folder)
 
@@ -871,7 +880,7 @@ def moveSent(M):
     if msgs:
         moveMails(M,  msgs, 'INBOX')
 
-def copyMailsRemote(M, msgs, account, folder=None):
+def copyMailsRemote(M, msgs, account, folder=None, delete=False):
 
     # We start at the end because we can have accounts where the user includes
     # an @ (there can be two): user@host@mailhost
@@ -907,28 +916,32 @@ def copyMailsRemote(M, msgs, account, folder=None):
             folder = 'INBOX'
             MD.select('INBOX')
         else:
+            iFolder = createFolder(MD,folder,'', False) 
             MD.select(folder)
     
         i = 0
-        for msgId in msgs.split(','): #[:25]:
+        for msgId in msgs.split(','): #[40000:]: #[:25]:
+            print(msgId)
             #print('.', end='')
             logging.info("Message %s" % msgId)
-            typ, data = M.fetch(msgId, '(RFC822)')
-            M.store(msgId, "-FLAGS", "\\Seen")
-            
-            if (typ == 'OK'): 
-                message = data[0][1]
-                logging.debug("Message %s", message)
 
-                flags = '' 
+            typ, data = M.fetch(msgId, '(FLAGS RFC822)')
+            flagsM = data[0][0]
+            print("flags",flagsM)
+            if not (b'Deleted' in flagsM):
+                M.store(msgId, "-FLAGS", "\\Seen")
+                
+                if (typ == 'OK'): 
+                    message = data[0][1]
+                    logging.debug("Message %s", message)
+
+                    flags = '' 
         
-                msg = email.message_from_bytes(message);
-                msgDate = email.utils.parsedate(msg['Date'])
-                
-                res = MD.append(folder,flags, msgDate, message)
-                
-                if res[0] == 'OK':
-                    M.store(msgId, "+FLAGS", "\\Seen")
+                    msg = email.message_from_bytes(message);
+                    res = MD.append(folder,flags, None, message)
+                    
+                    if res[0] == 'OK':
+                        M.store(msgId, "+FLAGS", "\\Seen")
             i = i + 1
         MD.close()
         MD.logout()
@@ -937,21 +950,32 @@ def copyMailsRemote(M, msgs, account, folder=None):
         service.API(acc)    
 
         i = 0
+        lenM = len(msgs.split(','))
         for msgId in msgs.split(','): #[:25]:
             #print('.', end='')
-            logging.info("Message %s" % msgId)
-            typ, data = M.fetch(msgId, '(RFC822)')
+            logging.info("Message %d %s" % (i, msgId))
+            print("Message %d %s (%d)" % (i, msgId, lenM))
+            typ, data = M.fetch(msgId, '(FLAGS RFC822)')
+            flagsM = data[0][0]
             M.store(msgId, "-FLAGS", "\\Seen")
             
             if (typ == 'OK'): 
-                message = data[0][1]
-                logging.debug("Message %s", message)
+                print("flagsM %s" % flagsM)
+                if not (b'Deleted' in flagsM):
 
-                rep = service.copyMessage(message, folder)
-                logging.info("Reply %s" %rep)
-                if rep != "Fail!":
-                    M.store(msgId, "+FLAGS", "\\Seen")
-                time.sleep(1)
+                    message = data[0][1]
+                    logging.debug("Message %s", message)
+
+                    rep = service.copyMessage(message, folder)
+                    logging.info("Reply %s" %rep)
+                    if rep != "Fail!":
+                        M.store(msgId, "+FLAGS", "\\Seen")
+                        flag = '\\Deleted'
+                        M.store(msgId, '+FLAGS', flag)
+                    time.sleep(0.1)
+            i = i + 1
+            if i%1000 == 0:
+                time.sleep(5)
 
 
     # We are returning a different code from 'OK' because we do not want to

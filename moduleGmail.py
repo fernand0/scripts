@@ -209,7 +209,8 @@ class moduleGmail(Content,Queue):
         results = self.getLabelList() 
         labelId = None
         for label in results: 
-            if label['name'] == name: 
+            if (label['name'].lower() == name.lower()) or (label['name'].lower() == name.lower().replace('-',' ')): 
+                print(label)
                 labelId = label['id'] 
                 break
     
@@ -422,19 +423,42 @@ class moduleGmail(Content,Queue):
     #    return None
 
     def copyMessage(self,  message, labels =''):
+        notAllowedLabels=['DRAFTS', 'SENT']
         api = self.getClient()
         labelIdName = 'importedd'
-        labelId = self.getLabelId(labelIdName)
+        try: 
+            labelId = self.getLabelId(labelIdName) 
+        except:
+            labelId = self.getLabelId('old-'+labelIdName) 
         if not labelId:
-            labelId = self.createLabel(labelIdName)
+            try: 
+                labelId = self.createLabel(labelIdName)
+            except:
+                labelId = self.createLabel('old-'+labelIdName)
         labelIds = [labelId]
         labelIdsNames = [labelIdName]
         if labels:
             for label in labels: 
+                if label.startswith('"'):
+                    label = label[1:]
+                if label.endswith('"'):
+                    label = label[:-1]
+                if label.upper() in notAllowedLabels:
+                    label = 'old-'+label
                 print("label %s"%label)
-                labelId = self.getLabelId(label)
-                if not labelId: 
-                    labelId = self.createLabel(label)
+                try: 
+                    print("aquí")
+                    labelId = self.getLabelId(label)
+                    print("aquí",labelId)
+                except:
+                    print("except")
+                    labelId = self.getLabelId('old-'+label)
+                    print("except")
+                if not labelId :  
+                    try: 
+                        labelId = self.createLabel(label)
+                    except:
+                        labelId = self.createLabel('old-'+label)
                 labelIds.append(labelId)
                 labelIdsNames.append(label)
 
