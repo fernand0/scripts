@@ -51,9 +51,25 @@ class moduleMedium(Content):
     def setPosts(self):
         logging.info("  Setting posts")
         self.posts = []
-        #posts = self.tc.getUpdates()
+        # Publications
+        #user = self.user
+        #user_id = user['id']
+        #path = "/v1/users/%s/publications" % user_id
+        ##https://api.medium.com/v1/users/{{userId}}/publications
 
-        print(self.posts)
+        #posts = self.tc._request("GET",path)
+
+        # Medium provides a RSS Feed in the format:
+        # https://medium.com/feed/@user
+        import moduleRss
+        content = moduleRss.moduleRss()
+        rssFeed='https://medium.com/feed/@{}'.format(self.user['username'])
+        #print(rssFeed)
+        content.setRssFeed(rssFeed)
+        content.setPosts()
+        for post in content.getPosts():
+            self.posts.append(post)
+        #print(self.posts)
 
     def publishPost(self, post, link, comment):
         logging.info("    Publishing in Medium...")
@@ -78,6 +94,10 @@ class moduleMedium(Content):
             return(res)
         except:
             return(self.report('Medium', post, link, sys.exc_info()))
+
+    def getPostTitle(self, post):
+        if 'title' in post:
+            return(post['title'].replace('\n', ' '))
 
 def main():
     import moduleMedium

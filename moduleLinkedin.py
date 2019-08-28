@@ -120,6 +120,9 @@ class moduleLinkedin(Content):
         except:        
             return(self.report('LinkedIn', post, link, sys.exc_info()))
 
+    def getPostTitle(self, post):
+        return post
+
 
 def main():
 

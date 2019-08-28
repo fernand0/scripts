@@ -39,10 +39,8 @@ class moduleMastodon(Content):
         logging.info("  Setting posts")
         self.posts = []
         posts = self.getClient().timeline_home()
-
-        #print(posts)
-        #for post in posts:
-        #    print("@%s: %s" % (post['account']['username'],post['content']))
+        for toot in  posts:
+            self.posts.append(toot)
 
     def publishPost(self, post, link, comment):
         logging.debug("    Publishing in Mastodon...")
@@ -63,6 +61,10 @@ class moduleMastodon(Content):
             return res
         except:        
             return(self.report('Mastodon', post, link, sys.exc_info()))
+
+    def getPostTitle(self, post):
+        if 'content' in post:
+            return(post['content'].replace('\n', ' '))
 
 def main():
     import moduleMastodon

@@ -66,7 +66,10 @@ class moduleTwitter(Content):
         logging.info("  Setting posts")
         self.posts = []
         #tweets = self.tc.statuses.home_timeline()
-        tweets = self.tc.statuses.user_timeline()
+        try: 
+            tweets = self.tc.statuses.user_timeline()
+        except:
+            tweets = []
 
         for tweet in tweets:
             self.posts.append(tweet)
@@ -103,6 +106,11 @@ class moduleTwitter(Content):
 
         except:        
             return(self.report('Twitter', post, link, sys.exc_info()))
+
+    def getPostTitle(self, post):
+        if 'text' in post:
+            return(post['text'])
+
 
 def main():
 

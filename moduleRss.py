@@ -32,6 +32,9 @@ class moduleRss(Content):
     def setRssFeed(self, feed):
         self.rssFeed = feed
 
+    def setClient(self, feed):
+        self.rssFeed = feed
+
     def setPosts(self):
         logging.info("  Setting posts")
         if self.rssFeed.find('http')>=0: 

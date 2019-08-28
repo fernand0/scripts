@@ -78,7 +78,8 @@ class moduleFacebook(Content):
         posts = self.page.get_connections(self.pageId, connection_name='posts') 
 
         for post in posts['data']:
-            self.posts.append(post)
+            if 'message' in post:
+                self.posts.append(post)
 
         outputData = {}
         serviceName = 'Facebook'
@@ -87,8 +88,7 @@ class moduleFacebook(Content):
             (page, idPost) = post['id'].split('_')
             url = 'https://facebook.com/' + page + '/posts/' + idPost
             outputData[serviceName]['sent'].append((post['message'], url, 
-                    '',     
-                    post['created_time'], '','','','',''))
+                    '', post['created_time'], '','','','',''))
 
         self.postsFormatted = outputData
 
@@ -113,6 +113,10 @@ class moduleFacebook(Content):
                 return(res)
         except:        
             return(self.report('Facebook', post, link, sys.exc_info()))
+
+    def getPostTitle(self, post):
+        if 'message' in post:
+            return(post['message'].replace('\n', ' '))
 
 def main():
 

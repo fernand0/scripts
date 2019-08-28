@@ -76,6 +76,9 @@ class moduleTelegram(Content):
         if links:
             bot.sendMessage('@'+channel, links, parse_mode='HTML') 
 
+    def getPostTitle(self, post):
+        return(post)
+
 
 def main():
     import moduleTelegram
