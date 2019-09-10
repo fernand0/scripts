@@ -1,0 +1,2 @@
+* Homogeneize modules
+  -setClient and other methods
