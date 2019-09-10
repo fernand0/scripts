@@ -18,16 +18,23 @@ from bs4 import BeautifulSoup
 from bs4 import Tag
 
 from moduleContent import *
+from moduleQueue import *
 
 
-class moduleSlack(Content):
+
+class moduleSlack(Content,Queue):
 
     def __init__(self):
         super().__init__()
+        self.service = None
         self.sc = None
         self.keys = []
 
+    def setClient(self, slackCredentials):
+        self.setSlackClient(slackCredentials)
+
     def setSlackClient(self, slackCredentials):
+        self.service = 'slack'
         config = configparser.ConfigParser()
         config.read(slackCredentials)
     
@@ -84,6 +91,10 @@ class moduleSlack(Content):
                 url=text[pos+1:-1]
             return(url) 
 
+    def isForMe(self, args):
+        return ((self.service[0].capitalize() in args.split()[0])
+               or (args[0] == '*'))
+
     def getId(self, i):
         post = self.getPosts()[i]
         return(post['ts'])
@@ -109,6 +120,27 @@ class moduleSlack(Content):
             if channel['name_normalized'] == name:
                 return(channel['id'])
         return(None)
+
+    def extractDataMessage(self, i):
+        logging.info("Service %s"% self.service)
+        (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment) = (None, None, None, None, None, None, None, None, None, None) 
+
+        if i < len(self.getPosts()):
+            theTitle = self.getTitle[0]
+            theLink = self.getLink[1]
+
+            theLinks = None
+            content = None
+            theContent = None
+            firstLink = theLink
+            theImage = None
+            theSummary = None
+
+            theSummaryLinks = None
+            comment = None
+
+        return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
+
 
     def obtainPostData(self, i, debug=False):
         if not self.posts:

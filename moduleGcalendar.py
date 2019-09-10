@@ -150,6 +150,8 @@ def main():
     calendar.setClient('ACC0')
     calendar.setCalendarList()
     print(calendar.getCalendarList())
+    print(calendar.getCalendarList()[10])
+    sys.exit()
     calendar.setActive('dpi6ce608h8j09ocolamshl8kk@group.calendar.google.com')
     sys.exit()
     calendar.setPosts()

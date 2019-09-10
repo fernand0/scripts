@@ -384,7 +384,7 @@ class moduleBuffer(Queue):
         update = update.delete()
 
         logging.info("Update before return %s"% update)
-        return(update)
+        return(update['message'])
 
     def move(self, j, dest):
         k = int(dest)
