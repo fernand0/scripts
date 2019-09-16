@@ -20,7 +20,7 @@ import moduleCache
 from configMod import *
 from moduleContent import *
 
-class moduleRss(Content):
+class moduleRss(Content,Queue):
 
     def __init__(self):
         super().__init__()

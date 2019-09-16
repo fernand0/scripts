@@ -30,12 +30,14 @@ class moduleSlack(Content,Queue):
         self.sc = None
         self.keys = []
 
-    def setClient(self, slackCredentials):
+    def setClient(self, slackCredentials=None):
         self.setSlackClient(slackCredentials)
 
     def setSlackClient(self, slackCredentials):
         self.service = 'slack'
         config = configparser.ConfigParser()
+        if not slackCredentials: 
+            slackCredentials = CONFIGDIR + '/.rssSlack'
         config.read(slackCredentials)
     
         slack_token = config["Slack"].get('api-key')
