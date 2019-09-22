@@ -33,7 +33,12 @@ class moduleCache(Queue):
         #self.url = url
         #self.socialNetwork = (socialNetwork, nick)
 
-    def setClient(self, url, socialNetwork):
+    def setClient(self, url, socialNetwork = None):
+        if not socialNetwork:
+            socialNetwork = url[1]
+            url = url[0]
+            logging.info("url %s" % url)
+            logging.info("sN %s" % str(socialNetwork))
         self.url = url
         self.service = socialNetwork[0]
         self.nick = socialNetwork[1]
@@ -139,6 +144,8 @@ class moduleCache(Queue):
             pickle.dump(self.posts, f)
         logging.debug("Writing in %s" % fileNameQ)
 
+        return 'Ok'
+
     def extractDataMessage(self, i):
         logging.info("Service %s"% self.service)
         (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment) = (None, None, None, None, None, None, None, None, None, None) 
@@ -188,6 +195,7 @@ class moduleCache(Queue):
         return(None)
 
     def isForMe(self, args):
+        logging.info("isForMe %s" % str(self.service))
         return ((self.service[0].capitalize() in args.split()[0])
                or (args[0] == '*'))
 

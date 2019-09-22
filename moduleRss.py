@@ -19,11 +19,13 @@ import moduleCache
 
 from configMod import *
 from moduleContent import *
+from moduleQueue import *
 
 class moduleRss(Content,Queue):
 
     def __init__(self):
         super().__init__()
+        self.service = None
         self.rssFeed = ''
  
     def getRssFeed(self):
@@ -34,6 +36,7 @@ class moduleRss(Content,Queue):
 
     def setClient(self, feed):
         self.rssFeed = feed
+        self.service = 'RSS'
 
     def setPosts(self):
         logging.info("  Setting posts")
@@ -159,6 +162,12 @@ class moduleRss(Content,Queue):
 
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
+
+    def isForMe(self, args):
+        logging.info("isForMe %s" % str(self.service))
+        return ((self.service[0].capitalize() in args.split()[0])
+               or (args[0] == '*'))
+
 
 
 def main():

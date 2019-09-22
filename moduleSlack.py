@@ -16,6 +16,7 @@ import click
 import requests
 from bs4 import BeautifulSoup
 from bs4 import Tag
+import moduleTumblr
 
 from moduleContent import *
 from moduleQueue import *
@@ -46,7 +47,21 @@ class moduleSlack(Content,Queue):
             self.sc = SlackClient(slack_token)
         except:
             self.sc = slack.WebClient(token=slack_token)
- 
+
+        config = configparser.ConfigParser()
+        config.read(CONFIGDIR + '/.rssBlogs')
+        section = "Blog7"
+
+        url = config.get(section, "url")
+        self.setUrl(url)
+        self.setSocialNetworks(config, section)
+        if ('buffer' in config.options(section)): 
+            self.setBufferapp(config.get(section, "buffer"))
+
+        if ('cache' in config.options(section)): 
+            self.setProgram(config.get(section, "cache"))
+
+
     def getSlackClient(self):
         return self.sc
  
@@ -97,6 +112,56 @@ class moduleSlack(Content,Queue):
         return ((self.service[0].capitalize() in args.split()[0])
                or (args[0] == '*'))
 
+    def publish(self, j):
+        logging.info("Publishing %d"% j)
+        post = self.obtainPostData(j)
+        logging.info("Publishing %s"% post[0])
+        update = ''
+        title = self.getTitle(j)
+        url = self.getLink(j)
+        logging.info("Title: %s" % str(title))
+        logging.info("Url: %s" % str(url))
+        if self.getBuffer():            
+            for profile in self.getSocialNetworks():
+                if profile[0] in self.getBufferapp():
+                    lenMax = self.len(profile)
+                    logging.info("   getBuffer %s" % profile)
+                    socialNetwork = (profile,self.getSocialNetworks()[profile])
+                    listPosts = []
+                    listPosts.append((title, url))
+                    update = update + self.buffer[socialNetwork].addPosts(listPosts)
+                    update = update + '\n'
+
+        if self.getProgram():
+            for profile in self.getSocialNetworks():
+                if profile[0] in self.getProgram():
+                    lenMax = self.len(profile)
+                    socialNetwork = (profile,self.getSocialNetworks()[profile])
+
+                    listP = self.cache[socialNetwork].getPosts()
+                    listPsts = self.obtainPostData(j)
+                    listP = listP + [listPsts]
+                    self.cache[socialNetwork].posts = listP
+                    update = update + self.cache[socialNetwork].updatePostsCache()
+                    update = update + '\n'
+        t = moduleTumblr.moduleTumblr()
+        t.setClient('fernand0')
+        # We need to publish it in the Tumblr blog since we won't publish it by
+        # usuarl means (it is deleted from queue).
+        update = update + t.publishPost(title, url, '')['display_text']
+        # Res: {'id': 187879917068, 'state': 'queued', 'display_text': 'Added to queue.'}
+
+
+        theChannel = self.getChanId("links")  
+        res = self.deletePost(self.getId(j), theChannel)
+        loggin.info("Res: %s" % str(res))
+        update = update + res
+ 
+        logging.info("Publishing title: %s" % title)
+        logging.info("Update before return %s"% update)
+        return(update)
+ 
+
     def getId(self, i):
         post = self.getPosts()[i]
         return(post['ts'])
@@ -142,7 +207,6 @@ class moduleSlack(Content,Queue):
             comment = None
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
-
 
     def obtainPostData(self, i, debug=False):
         if not self.posts:
@@ -388,7 +452,7 @@ def main():
         # usuarl means (it is deleted from queue).
         t.publishPost(title, url, '')
 
-    site.deletePost(site.getId(elem), theChannel)
+    site.deletePost(site.getId(j), theChannel)
     #print(outputData['Slack']['pending'][elem][8])
 
 if __name__ == '__main__':

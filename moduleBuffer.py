@@ -78,7 +78,12 @@ class moduleBuffer(Queue):
         #self.url = url
         #self.socialNetwork = (socialNetwork, nick)
 
-    def setClient(self, url, socialNetwork):
+    def setClient(self, url, socialNetwork = None):
+        if not socialNetwork:
+            socialNetwork = url[1]
+            url = url[0]
+            logging.info("url %s" % url)
+            logging.info("sN %s" % str(socialNetwork))
         config = configparser.ConfigParser()
         logging.debug("Config...%s" % CONFIGDIR)
         config.read(CONFIGDIR + '/.rssBuffer')
@@ -305,6 +310,7 @@ class moduleBuffer(Queue):
 
     def isForMe(self, args):
         profile = self.getProfile()
+        logging.info("isForMe %s" % str(profile['service']))
         return (profile['service'][0].capitalize() in args) or ('*' in args) 
 
     def editl(self, j, newLink=''):
