@@ -6,10 +6,6 @@ import configparser
 import os
 import logging
 from bs4 import Tag
-import moduleCache
-# https://github.com/fernand0/scripts/blob/master/moduleCache.py
-import moduleBuffer
-# https://github.com/fernand0/scripts/blob/master/moduleBuffer.py
 
 from configMod import *
 
@@ -99,7 +95,9 @@ class Content:
     def getBuffer(self):
         return(self.buffer)
 
-    def setBuffer(self):
+    def setBuffer(self): 
+        import moduleBuffer 
+        # https://github.com/fernand0/scripts/blob/master/moduleBuffer.py
         self.buffer = {}
         for service in self.getSocialNetworks():
             if service[0] in self.getBufferapp():
@@ -119,7 +117,9 @@ class Content:
     def getCache(self):
         return(self.cache)
 
-    def setCache(self):
+    def setCache(self): 
+        import moduleCache 
+        # https://github.com/fernand0/scripts/blob/master/moduleCache.py
         self.cache = {}
         for service in self.getSocialNetworks():
             if self.getProgram():
