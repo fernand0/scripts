@@ -173,11 +173,11 @@ def main():
             blog.setSocialNetworks(config, section)
 
 
-            if ('bufferapp' in config.options(section)): 
-                blog.setBufferapp(config.get(section, "bufferapp")) 
+            if ('buffer' in config.options(section)): 
+                blog.setBufferapp(config.get(section, "buffer")) 
 
-            if ('program' in config.options(section)): 
-                blog.setProgram(config.get(section, "program"))
+            if ('cache' in config.options(section)): 
+                blog.setProgram(config.get(section, "cache"))
 
             logging.info(" Looking for pending posts") 
             print("   Looking for pending posts ... " )
@@ -253,6 +253,7 @@ def main():
                         hours = blog.getTime() 
                         if (hours and (((time.time() - lastTime) - round(float(hours)*60*60)) < 0)): 
                             logging.info("  Not publishing because time restriction") 
+                            print("     Not publishing because time restriction (Last time: %s)"% time.ctime(lastTime)) 
                         else:
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
                             logging.info("  Publishing directly\n") 

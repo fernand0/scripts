@@ -205,15 +205,15 @@ def main():
             rssFeed = config.get(section, "rssFeed")
             print(rssFeed) 
             blog.setRssFeed(rssFeed)
-        optFields = ["linksToAvoid", "time", "bufferapp"]
+        optFields = ["linksToAvoid", "time", "buffer"]
         if ("linksToAvoid" in config.options(section)):
             blog.setLinksToAvoid(config.get(section, "linksToAvoid"))
         if ("time" in config.options(section)):
             blog.setTime(config.get(section, "time"))
-        if ("bufferapp" in config.options(section)):
-            blog.setBufferapp(config.get(section, "bufferapp"))
-        if ("program" in config.options(section)):
-            blog.setProgram(config.get(section, "program"))
+        if ("buffer" in config.options(section)):
+            blog.setBufferapp(config.get(section, "buffer"))
+        if ("cache" in config.options(section)):
+            blog.setProgram(config.get(section, "cache"))
 
         blog.setSocialNetworks(config, section)
 

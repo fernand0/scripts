@@ -41,7 +41,7 @@ class moduleGmail(Content,Queue):
         # Back compatibility
         self.setClient(Acc)
 
-    def setClient(self, url, Acc):
+    def setClient(self, Acc):
         # based on get_credentials from 
         # Code from
         # https://developers.google.com/gmail/api/v1/reference/users/messages/list

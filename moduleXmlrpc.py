@@ -404,15 +404,15 @@ def main():
         blog = moduleXmlrpc.moduleXmlrpc()
         url = config.get(section, "url")
         blog.setUrl(url)
-        optFields = ["linksToAvoid", "time", "bufferapp"]
+        optFields = ["linksToAvoid", "time", "buffer"]
         if ("linksToAvoid" in config.options(section)):
             blog.setLinksToAvoid(config.get(section, "linksToAvoid"))
         if ("time" in config.options(section)):
             blog.setTime(config.get(section, "time"))
-        if ("bufferapp" in config.options(section)):
-            blog.setBufferapp(config.get(section, "bufferapp"))
-        if ("program" in config.options(section)):
-            blog.setBufferapp(config.get(section, "program"))
+        if ("buffer" in config.options(section)):
+            blog.setBufferapp(config.get(section, "buffer"))
+        if ("cache" in config.options(section)):
+            blog.setBufferapp(config.get(section, "cache"))
         if ("xmlrpc" in config.options(section)):
             blog.setXmlRpc()
 

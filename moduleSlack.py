@@ -154,7 +154,7 @@ class moduleSlack(Content,Queue):
 
         theChannel = self.getChanId("links")  
         res = self.deletePost(self.getId(j), theChannel)
-        loggin.info("Res: %s" % str(res))
+        logging.info("Res: %s" % str(res))
         update = update + res
  
         logging.info("Publishing title: %s" % title)
@@ -374,11 +374,11 @@ def main():
 
     site.setSocialNetworks(config, section)
 
-    if ('bufferapp' in config.options(section)): 
-        site.setBufferapp(config.get(section, "bufferapp"))
+    if ('buffer' in config.options(section)): 
+        site.setBufferapp(config.get(section, "buffer"))
 
-    if ('program' in config.options(section)): 
-        site.setProgram(config.get(section, "program"))
+    if ('cache' in config.options(section)): 
+        site.setProgram(config.get(section, "cache"))
 
     theChannel = site.getChanId("links")  
 
