@@ -172,6 +172,15 @@ class moduleSlack(Content,Queue):
     def setKeys(self, keys):
         self.keys = keys
 
+    def delete(self, j, theChannel=None): 
+        logging.info("Deleting id %s" % j)
+        if not theChannel: 
+            theChannel = self.getChanId("links")  
+        idPost = self.getId(j)
+        result = self.sc.api_call("chat.delete", channel=theChannel, ts=idPost)
+        logging.info(result)
+        return(result['ok'])
+
     def deletePost(self, idPost, theChannel): 
         #theChannel or the name of the channel?
         logging.info("Deleting id %s" % idPost)
