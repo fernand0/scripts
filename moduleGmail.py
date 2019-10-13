@@ -36,6 +36,7 @@ class moduleGmail(Content,Queue):
         Queue().__init__()
         self.service = None
         self.nick = None
+        self.id = None
 
     def API(self, Acc):
         # Back compatibility
@@ -59,12 +60,15 @@ class moduleGmail(Content,Queue):
         if type(Acc) == str: 
             self.nick = config.get(Acc,'user') #+'@'+config.get(Acc,'server')
             self.server = config.get(Acc,'server')
-            self.name = 'GMail' + Acc[3:]
+            import hashlib
+            self.name = 'GMail' + Acc[3:]# + '_' + hashlib.md5(self.nick.encode()+self.server.encode()).hexdigest()
         else:
             pos = Acc[1].rfind('@') 
             self.server = Acc[1][pos+1:] 
             self.nick   = Acc[1][:pos]
             self.name = 'GMail_{}'.format(Acc[0]) 
+        self.id = '{} {}@{}'.format(self.name[-1], self.nick, self.server)
+        logging.debug("Id %s" % self.id)
 
         fileStore = self.confName((self.server, self.nick))
     
@@ -556,9 +560,12 @@ def main():
 
     # instantiate the api object 
 
-    api = moduleGmail.moduleGmail()
-    api.setClient('ACC1')
-    api.setPosts()
+    for acc in ['ACC0', 'ACC1', 'ACC2']:
+        api = moduleGmail.moduleGmail()
+        api.setClient(acc)
+        api.setPosts()
+        print(api.name)
+    sys.exit()
     print(api.getPosts())
     print(api.getPosts()[0])
     print(len(api.getPosts()[0]))

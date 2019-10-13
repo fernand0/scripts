@@ -184,6 +184,7 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
         print(" [d] Publishing in: %s at %s" % (socialNetwork[0].capitalize(), 
             time.asctime()))
 
+        result = None
         if (profile == 'twitter') or (profile == 'facebook') or (profile == 'mastodon'): 
             # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
             import importlib
@@ -196,13 +197,15 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
                 if result[:4]=='Fail':
                     link=''
                 else: 
+                    result = 'OK'
                     print(" [d] Published: %s - %s" % (title, result))
         else: 
             publishMethod = globals()['publish'+ profile.capitalize()]#()(self, ))
             publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
 
-        blog.cache[socialNetwork].posts = listP
-        blog.cache[socialNetwork].updatePostsCache()
+        if result == 'OK':
+            blog.cache[socialNetwork].posts = listP
+            blog.cache[socialNetwork].updatePostsCache()
            
         if j+1 < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))
