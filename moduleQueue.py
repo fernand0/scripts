@@ -57,7 +57,7 @@ class Queue:
         else: 
             argsIni = args
         reply = ""
-        if self.isForMe(argsIni):
+        if True: #self.isForMe(argsIni):
             logging.info("Service %s", self.service)
             j = int(argsIni[-1]) 
             cmd = getattr(self, command)

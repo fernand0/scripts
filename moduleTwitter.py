@@ -96,6 +96,7 @@ class moduleTwitter(Content):
         res = None
         try:
             logging.info("     Publishing: %s" % post)
+            post = post[:(240 - (len(link) + 1))]
             res = self.tc.statuses.update(status=post+" " + link)
 
             if res: 

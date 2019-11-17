@@ -108,9 +108,9 @@ class moduleSlack(Content,Queue):
                 url=text[pos+1:-1]
             return(url) 
 
-    def isForMe(self, args):
-        return ((self.service[0].capitalize() in args.split()[0])
-               or (args[0] == '*'))
+    #def isForMe(self, args):
+    #    return ((self.service[0].capitalize() in args.split()[0])
+    #           or (args[0] == '*'))
 
     def publish(self, j):
         logging.info("Publishing %d"% j)
@@ -155,7 +155,7 @@ class moduleSlack(Content,Queue):
         theChannel = self.getChanId("links")  
         res = self.deletePost(self.getId(j), theChannel)
         logging.info("Res: %s" % str(res))
-        update = update + res
+        update = update + str(res['ok'])
  
         logging.info("Publishing title: %s" % title)
         logging.info("Update before return %s"% update)

@@ -63,6 +63,9 @@ class moduleGmail(Content,Queue):
             import hashlib
             self.name = 'GMail' + Acc[3:]# + '_' + hashlib.md5(self.nick.encode()+self.server.encode()).hexdigest()
         else:
+            logging.info("Acc %s" % str(Acc))
+            #self.server = Acc[1][1][1]#[pos+1:] 
+            #self.nick   = Acc[1][1][0]#[:pos]
             pos = Acc[1].rfind('@') 
             self.server = Acc[1][pos+1:] 
             self.nick   = Acc[1][:pos]
@@ -266,15 +269,15 @@ class moduleGmail(Content,Queue):
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
-    def isForMe(self, args):
-        serviceName = self.name
-        lookAt = []
-        logging.info("Args %s" % args)
-        logging.info("Name %s" % serviceName)
-        if (serviceName[0] in args) or ('*' in args): 
-            if serviceName[0] + serviceName[-1] in args[:-1]:
-                lookAt.append(serviceName)
-        return lookAt
+    #def isForMe(self, args):
+    #    serviceName = self.name
+    #    lookAt = []
+    #    logging.info("Args %s" % args)
+    #    logging.info("Name %s" % serviceName)
+    #    if (serviceName[0] in args) or ('*' in args): 
+    #        if serviceName[0] + serviceName[-1] in args[:-1]:
+    #            lookAt.append(serviceName)
+    #    return lookAt
 
     def editl(self, j, newTitle):
         return('Not implemented!')
@@ -354,95 +357,6 @@ class moduleGmail(Content,Queue):
  
         return("Deleted %s"% title)
  
-    #def showPost(self, pp, posts, args):
-    #    logging.info("To publish %s" % args)
-    #
-    #    update = ""
-    #    serviceName = self.name
-
-    #    title = None
-    #    if self.isForMe(args):
-    #        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
-    #
-    #        if title: 
-    #            if link: 
-    #                return(title+link)
-    #            else:
-    #                return(title)
-    #    return(None)
-    #
-    #def publishPost(self, args):
-    #    logging.info("To publish %s" % args)
-    #
-    #    update = ""
-    #    serviceName = self.name
-    #    title = None
-
-    #    if self.isForMe(args):
-    #        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
-    #        logging.info("Ttitle %s" % title)
-    #        if title:
-    #            publishMethod = getattr(moduleSocial, 
-    #                    'publishMail')
- 
-    #            logging.debug(title, link, summary, summaryHtml, summaryLinks, image, content , links )
-    #            logging.info(title, link, content , links )
-    #            logging.info(publishMethod)
-    #            logging.info("com %s" % comment)
-    #            update = publishMethod(self, title, link, summary, summaryHtml, summaryLinks, image, content, comment)
-    #            if update:
-    #                if 'text' in update: 
-    #                    update = update['text'] 
-   
-    #            return(update)
-
-    #    return(None)
-    #
-    #def deletePost(self, cache, pp, posts, args):
-    #    api = self.getClient()
-    #    logging.info("To delete %s" % args)
-    #
-    #    update = ""
-    #    serviceName = self.name
-    #    logging.info("In %s" % serviceName)
-    #    title = None
-    #    if self.isForMe(args):
-    #        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
-
-    #        if title or comment:
-    #            #What happens if the title is empty?
-    #            idPost = comment
-
-    #            update = api.users().drafts().delete(userId='me', id=idPost).execute()
-    #            return(update)
-
-    #    return(None)
-
-    #def editPost(self, pp, posts, args, newTitle):
-    #    api = self.getClient()
-    #    logging.info("To edit %s" % args)
-    #    logging.info("New title %s", newTitle)
-
-    #    update = ""
-    #    serviceName = self.name
-    #    if self.isForMe(args):
-    #        (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content, links, comment) = self.obtainPostData(int(args[-1]))
-    #        # Should we avoid two readings?
-    #        #message = summaryLinks 
-    #        message = api.users().drafts().get(userId="me", 
-    #               format="raw", id=comment).execute()['message']
-    #        theMsg = email.message_from_bytes(base64.urlsafe_b64decode(message['raw']))
-    #        self.setHeaderEmail(theMsg, 'subject', newTitle)
-    #        message['raw'] = theMsg.as_bytes()
-    #        message['raw'] = base64.urlsafe_b64encode(message['raw']).decode()
-
-    #        update = api.users().drafts().update(userId='me', 
-    #                body={'message':message},id=comment).execute()
-
-    #        return(newTitle)
-
-    #    return None
-
     def copyMessage(self,  message, labels =''):
         notAllowedLabels=['DRAFTS', 'SENT']
         api = self.getClient()

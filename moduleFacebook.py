@@ -102,7 +102,8 @@ class moduleFacebook(Content):
         res = None
         try:
             logging.info("     Publishing: %s" % post)
-            res = self.page.put_object(self.pageId, "feed", message=post, link=link)
+            res = self.page.put_object('me', "feed", message=post, link=link)
+            #res = self.page.put_object(self.fc.get_object('me')['id'], "feed", message=post, link=link)
             if res:
                 logging.debug("Res: %s" % res)
                 if 'id' in res:
@@ -125,16 +126,29 @@ def main():
     fc = moduleFacebook.moduleFacebook()
 
     fc.setClient('Enlaces de fernand0')
+    print(fc.user)
+    print(fc.fc.get_object(id='me'))
+    sys.exit()
     fc.setPage()
 
     for page in fc.pages['data']:
-        print(page['name'])
+        print(page['name'], page)
+        if page['name'] == 'F.T.G.':
+            idPage = page['id']
+            tokenPage = page['access_token']
+
+    link= "https://graph.facebook.com/v5.0/%s?fields=instagram_business_account&access_token={%s}"%(idPage,tokenPage)
+    print(link)
+    sys.exit()
+
 
     fc.setPosts()
-    for post in fc.getPostsFormatted()['Facebook']['sent']:
-        print("%s: %s" %(post[0], post[1]))
+    posts = fc.getPosts()
+    for post in posts:
+        print(post)
+        #print("%s: %s" %(post[0], post[1]))
 
-    fc.publishPost("Prueba")
+    #fc.publishPost("Prueba")
 
 if __name__ == '__main__':
     main()

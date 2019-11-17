@@ -42,6 +42,7 @@ class moduleInstagram(Content):
             try: 
                 api = InstagramAPI(username, password) 
                 api.login()  # login
+                logging.info("     Logging OK")
             except:
                 logging.warning("Instagram authentication failed!")
                 logging.warning("Unexpected error:", sys.exc_info()[0])
@@ -70,11 +71,15 @@ class moduleInstagram(Content):
         for ig in igs:
             self.posts.append(ig)
 
-    def publishPost(self, post, link, comment):
-        logging.debug("     Publishing in Instagram...")
+    def publishPost(self, post, link, image):
+        logging.info("     Publishing in Instagram...")
+        comment = self.resizeImage(image)
         res = self.ic.uploadPhoto(comment, caption=post)
-        #print(res)
-        #print(self.ic.LastJson)
+        logging.info("     Published in Instagram... res %s" % res)
+        #if not res:
+        #    logging.info("     Failed in Instagram...")
+        #    return('Fail!')
+        logging.info("     Published in Instagram...")
         self.setPosts()
         mediaId = self.getPosts()[0]['caption']['media_id']
         if link:
@@ -89,8 +94,8 @@ class moduleInstagram(Content):
             else:
                 self.ic.comment(mediaId, 'Original: %s'% link)
 
-        return(self.getPosts()[0]['code'])
-
+        return(self.getPosts()[0]['code']) 
+        
     def resizeImage(self, imgUrl):
         response = requests.get(imgUrl, stream=True)
 
@@ -120,7 +125,10 @@ def main():
 
     ig.setClient('a_veces_una_foto')
 
-    url = 'https://avecesunafoto.wordpress.com/2017/07/16/wikimedia/'
+    url = 'https://avecesunafoto.wordpress.com/2017/07/09/tocando/'
+    url = 'https://avecesunafoto.wordpress.com/2017/07/09/canelon-de-longaniza/'
+    url = 'https://avecesunafoto.wordpress.com/2017/07/09/ternasco/'
+    url = 'https://avecesunafoto.wordpress.com/2017/07/17/codos/'
     # lin rel='next'
     # soup.findAll('link', {'rel': 'next'})
     import requests
@@ -134,9 +142,7 @@ def main():
         if pos > 0:
             imgUrl = imgUrl[:pos]
         if imgUrl: 
-            fileName = ig.resizeImage(imgUrl)
-
-            print(ig.publishPost(title, url, fileName))
+            print(ig.publishPost(title, url, imgUrl))
 
     print("Setting posts")
     ig.setPosts()

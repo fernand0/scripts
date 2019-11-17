@@ -308,10 +308,10 @@ class moduleBuffer(Queue):
             return (link)
         return(None)
 
-    def isForMe(self, args):
-        profile = self.getProfile()
-        logging.info("isForMe %s" % str(profile['service']))
-        return (profile['service'][0].capitalize() in args) or ('*' in args) 
+    #def isForMe(self, args):
+    #    profile = self.getProfile()
+    #    logging.info("isForMe %s" % str(profile['service']))
+    #    return (profile['service'][0].capitalize() in args) or ('*' in args) 
 
     def editl(self, j, newLink=''):
         logging.info("New link %s", newLink)

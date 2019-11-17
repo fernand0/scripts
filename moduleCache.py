@@ -194,10 +194,10 @@ class moduleCache(Queue):
             return (link)
         return(None)
 
-    def isForMe(self, args):
-        logging.info("isForMe %s" % str(self.service))
-        return ((self.service[0].capitalize() in args.split()[0])
-               or (args[0] == '*'))
+    #def isForMe(self, args):
+    #    logging.info("isForMe %s" % str(self.service))
+    #    return ((self.service[0].capitalize() in args.split()[0])
+    #           or (args[0] == '*'))
 
     def editl(self, j, newLink=''):
         logging.info("New link %s", newLink)

@@ -274,17 +274,23 @@ def main():
                                 api = cls()
                                 api.setClient(nick)
                                 result = api.publishPost(title, link, comment)
-                                #print(result)
+                                print(result)
                                 if isinstance(result, str):
                                     if result[:4]=='Fail':
                                         link=''
                                         logging.info("Posting failed")
                             elif profile == 'instagram':
-                                import moduleInstagram
-                                api = moduleInstagram.moduleInstagram()
+                                import importlib
+                                mod = importlib.import_module('module'+serviceName) 
+                                cls = getattr(mod, 'module'+serviceName)
+                                api = cls()
                                 api.setClient(nick)
-                                comment = api.resizeImage(image)
-                                api.publishPost(title, link, comment)
+                                #comment = api.resizeImage(image)
+                                result = api.publishPost(title, link, image)
+                                if isinstance(result, str):
+                                    if result[:4]=='Fail':
+                                        link=''
+                                        logging.info("Posting failed")
                             else:
                                 logging.info("Still moduleSocial!")
                                 publishMethod = getattr(moduleSocial, 

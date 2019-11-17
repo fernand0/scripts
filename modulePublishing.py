@@ -14,11 +14,11 @@ class Publisher:
         self.content = None
 
         
-    def isForMe(self, args):
-        serviceName =  self.content.socialNetwork[0].capitalize()
-        if (serviceName[0] in args) or ('*' in args): 
-           return True
-        return False
+    #def isForMe(self, args):
+    #    serviceName =  self.content.socialNetwork[0].capitalize()
+    #    if (serviceName[0] in args) or ('*' in args): 
+    #       return True
+    #    return False
     
     def showPost(self, args):
         logging.info("To show %s" % args)

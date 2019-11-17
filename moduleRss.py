@@ -36,7 +36,7 @@ class moduleRss(Content,Queue):
 
     def setClient(self, feed):
         self.rssFeed = feed
-        self.service = 'RSS'
+        self.service = 'Rss'
 
     def setPosts(self):
         logging.info("  Setting posts")
@@ -163,10 +163,14 @@ class moduleRss(Content,Queue):
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
-    def isForMe(self, args):
-        logging.info("isForMe %s" % str(self.service))
-        return ((self.service[0].capitalize() in args.split()[0])
-               or (args[0] == '*'))
+    #def isForMe(self, args):
+    #    logging.info("isForMe %s" % str(self.service))
+    #    serviceName = self.service
+    #    lookAt = []
+    #    if (serviceName[0] in args) or ('*' in args): 
+    #        if serviceName[0] + serviceName[-1] in args[:-1]:
+    #            lookAt.append(serviceName)
+    #    return lookAt
 
 
 
