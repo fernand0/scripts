@@ -3,12 +3,8 @@
 import configparser
 import pickle
 import os
-import moduleSocial
-import moduleBuffer
-import moduleCache
 import urllib
 import logging
-from slackclient import SlackClient
 import sys
 import click
 import requests
@@ -16,8 +12,6 @@ from bs4 import BeautifulSoup
 from bs4 import Tag
 
 from tumblpy import Tumblpy
-from twitter import *
-from twitter import *
 
 from configMod import *
 from moduleContent import *

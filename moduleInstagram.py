@@ -75,26 +75,29 @@ class moduleInstagram(Content):
         logging.info("     Publishing in Instagram...")
         comment = self.resizeImage(image)
         res = self.ic.uploadPhoto(comment, caption=post)
-        logging.info("     Published in Instagram... res %s" % res)
-        #if not res:
-        #    logging.info("     Failed in Instagram...")
-        #    return('Fail!')
-        logging.info("     Published in Instagram...")
         self.setPosts()
-        mediaId = self.getPosts()[0]['caption']['media_id']
-        if link:
-            # We will publish the link as first comment
-            path = urllib.parse.urlparse(link)[2].split('/')
-            if (link.find('wordpress') > 0) and (len(path)>3):
-                # This should not be here (too specific)
-                yy = path[1]
-                mm = path[2]
-                dd = path[3]
-                self.ic.comment(mediaId, 'Original: %s [%s-%s-%s]'% (link,yy,mm,dd))
-            else:
-                self.ic.comment(mediaId, 'Original: %s'% link)
+        title = self.getPosts()[0]['caption']['text']
+        print("Title %s" % title)
+        print("caption %s" % post)
+        if title == post:
+            mediaId = self.getPosts()[0]['caption']['media_id']
+            if link:
+                # We will publish the link as first comment
+                path = urllib.parse.urlparse(link)[2].split('/')
+                if (link.find('wordpress') > 0) and (len(path)>3):
+                    # This should not be here (too specific)
+                    yy = path[1]
+                    mm = path[2]
+                    dd = path[3]
+                    self.ic.comment(mediaId, 'Original: %s [%s-%s-%s]'% (link,yy,mm,dd))
+                else:
+                    self.ic.comment(mediaId, 'Original: %s'% link)
+            logging.info("     Published in Instagram...")
 
-        return(self.getPosts()[0]['code']) 
+            return(self.getPosts()[0]['code']) 
+        else:
+            logging.info("     Not published in Instagram...")
+            return('Fail')
         
     def resizeImage(self, imgUrl):
         response = requests.get(imgUrl, stream=True)
@@ -129,6 +132,7 @@ def main():
     url = 'https://avecesunafoto.wordpress.com/2017/07/09/canelon-de-longaniza/'
     url = 'https://avecesunafoto.wordpress.com/2017/07/09/ternasco/'
     url = 'https://avecesunafoto.wordpress.com/2017/07/17/codos/'
+    url = 'https://avecesunafoto.wordpress.com/2017/07/19/maria-fernandez-guajardo-consejos-practicos-de-una-feminista-zaragozana-en-el-silicon-valley/'
     # lin rel='next'
     # soup.findAll('link', {'rel': 'next'})
     import requests
@@ -142,7 +146,8 @@ def main():
         if pos > 0:
             imgUrl = imgUrl[:pos]
         if imgUrl: 
-            print(ig.publishPost(title, url, imgUrl))
+            res = ig.publishPost(title, url, imgUrl)
+            print(res)
 
     print("Setting posts")
     ig.setPosts()
@@ -152,6 +157,7 @@ def main():
         print("Image: %s" % igP['image_versions2']['candidates'][0]['url'])
         print("Likes: %d" % igP['like_count'])
 
+    print(res)
     return("https://instagram.com/p/%s" % igP['code'])
 
 
