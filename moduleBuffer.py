@@ -256,7 +256,7 @@ class moduleBuffer(Queue):
             if ('expanded_link' in messageRaw['media']):
                 theLink = messageRaw['media']['expanded_link']
             else:
-                theLlink = messageRaw['media']['link']
+                theLink = messageRaw['media']['link']
             if ('description' in messageRaw['media']): 
                 content = messageRaw['media']['description']
 
@@ -302,7 +302,10 @@ class moduleBuffer(Queue):
     def getPostLink(self, post):
         if post:
             if 'media' in post: 
-                link = post['media']['expanded_link']
+                if ('expanded_link' in post['media']): 
+                    link = post['media']['expanded_link'] 
+                else: 
+                    link = post['media']['link']
             else:
                 link = post[1]
             return (link)

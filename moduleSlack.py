@@ -8,7 +8,7 @@ import logging
 from pdfrw import PdfReader
 try: 
     from slackclient import SlackClient
-except:
+except: 
     import slack
 
 import sys
@@ -41,12 +41,13 @@ class moduleSlack(Content,Queue):
             slackCredentials = CONFIGDIR + '/.rssSlack'
         config.read(slackCredentials)
     
-        slack_token = config["Slack"].get('api-key')
+        self.slack_token = config["Slack"].get('user-oauth-token')
+        self.user_slack_token = config["Slack"].get('oauth-token')
         
         try: 
-            self.sc = SlackClient(slack_token)
+            self.sc = SlackClient(self.slack_token)
         except:
-            self.sc = slack.WebClient(token=slack_token)
+            self.sc = slack.WebClient(token=self.slack_token)
 
         config = configparser.ConfigParser()
         config.read(CONFIGDIR + '/.rssBlogs')
@@ -69,7 +70,9 @@ class moduleSlack(Content,Queue):
         logging.info("  Setting posts")
         self.posts = []
         theChannel = self.getChanId(channel)
+        self.sc.token = self.user_slack_token        
         history = self.sc.api_call( "channels.history", count=1000, channel=theChannel)
+        self.sc.token = self.slack_token        
         if 'messages' in history:
             self.posts = history['messages']
         else:
@@ -380,6 +383,8 @@ def main():
     theChannel = site.getChanId(CHANNEL)  
 
     site.setPosts('links')
+    site.setPosts('tavern-of-the-bots')
+    print(site.getPosts())
 
     site.setSocialNetworks(config, section)
 

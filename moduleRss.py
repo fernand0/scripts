@@ -10,7 +10,6 @@ import requests
 import feedparser
 import pickle
 import logging
-from slackclient import SlackClient
 from bs4 import BeautifulSoup
 from bs4 import Tag
 from pdfrw import PdfReader

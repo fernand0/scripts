@@ -74,29 +74,33 @@ class moduleInstagram(Content):
     def publishPost(self, post, link, image):
         logging.info("     Publishing in Instagram...")
         comment = self.resizeImage(image)
-        res = self.ic.uploadPhoto(comment, caption=post)
-        self.setPosts()
-        title = self.getPosts()[0]['caption']['text']
-        print("Title %s" % title)
-        print("caption %s" % post)
-        if title == post:
-            mediaId = self.getPosts()[0]['caption']['media_id']
-            if link:
-                # We will publish the link as first comment
-                path = urllib.parse.urlparse(link)[2].split('/')
-                if (link.find('wordpress') > 0) and (len(path)>3):
-                    # This should not be here (too specific)
-                    yy = path[1]
-                    mm = path[2]
-                    dd = path[3]
-                    self.ic.comment(mediaId, 'Original: %s [%s-%s-%s]'% (link,yy,mm,dd))
-                else:
-                    self.ic.comment(mediaId, 'Original: %s'% link)
-            logging.info("     Published in Instagram...")
+        try: 
+            res = self.ic.uploadPhoto(comment, caption=post)
+            self.setPosts()
+            title = self.getPosts()[0]['caption']['text']
+            print("Title %s" % title)
+            print("caption %s" % post)
+            if title == post:
+                mediaId = self.getPosts()[0]['caption']['media_id']
+                if link:
+                    # We will publish the link as first comment
+                    path = urllib.parse.urlparse(link)[2].split('/')
+                    if (link.find('wordpress') > 0) and (len(path)>3):
+                        # This should not be here (too specific)
+                        yy = path[1]
+                        mm = path[2]
+                        dd = path[3]
+                        self.ic.comment(mediaId, 'Original: %s [%s-%s-%s]'% (link,yy,mm,dd))
+                    else:
+                        self.ic.comment(mediaId, 'Original: %s'% link)
+                logging.info("     Published in Instagram...")
 
-            return(self.getPosts()[0]['code']) 
-        else:
-            logging.info("     Not published in Instagram...")
+                return(self.getPosts()[0]['code']) 
+            else:
+                logging.info("     Not published in Instagram...")
+                return('Fail')
+        except:
+            logging.info("     Not published in Instagram. Exception ...")
             return('Fail')
         
     def resizeImage(self, imgUrl):

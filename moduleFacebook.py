@@ -8,7 +8,6 @@ import moduleBuffer
 import moduleCache
 import urllib
 import logging
-from slackclient import SlackClient
 import sys
 import click
 import requests
