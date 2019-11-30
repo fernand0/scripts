@@ -180,7 +180,9 @@ class moduleSlack(Content,Queue):
         if not theChannel: 
             theChannel = self.getChanId("links")  
         idPost = self.getId(j)
+        self.sc.token = self.user_slack_token        
         result = self.sc.api_call("chat.delete", channel=theChannel, ts=idPost)
+        self.sc.token = self.slack_token        
         logging.info(result)
         return(result['ok'])
 

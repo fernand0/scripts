@@ -104,7 +104,6 @@ import telepot
 # git clone https://github.com/vtemian/buffpy.git
 # cd buffpy
 # sudo python setup.py install
-#import buffpy
 #from buffpy.managers.profiles import Profiles
 #from buffpy.managers.updates import Update
 #from medium import Client
