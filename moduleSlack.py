@@ -5,7 +5,6 @@ import pickle
 import os
 import urllib
 import logging
-from pdfrw import PdfReader
 try: 
     from slackclient import SlackClient
 except: 
@@ -16,7 +15,6 @@ import click
 import requests
 from bs4 import BeautifulSoup
 from bs4 import Tag
-import moduleTumblr
 
 from moduleContent import *
 from moduleQueue import *
