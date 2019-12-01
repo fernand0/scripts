@@ -22,7 +22,6 @@ from moduleContent import *
 from moduleQueue import *
 
 
-
 class moduleSlack(Content,Queue):
 
     def __init__(self):
@@ -190,7 +189,9 @@ class moduleSlack(Content,Queue):
         #theChannel or the name of the channel?
         logging.info("Deleting id %s" % idPost)
             
+        self.sc.token = self.user_slack_token        
         result = self.sc.api_call("chat.delete", channel=theChannel, ts=idPost)
+        self.sc.token = self.slack_token        
     
         logging.info(result)
         return(result)
