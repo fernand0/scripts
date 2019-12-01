@@ -40,8 +40,8 @@ class moduleSlack(Content,Queue):
             slackCredentials = CONFIGDIR + '/.rssSlack'
         config.read(slackCredentials)
     
-        self.slack_token = config["Slack"].get('user-oauth-token')
-        self.user_slack_token = config["Slack"].get('oauth-token')
+        self.slack_token = config["Slack"].get('oauth-token')
+        self.user_slack_token = config["Slack"].get('user-oauth-token')
         
         try: 
             self.sc = SlackClient(self.slack_token)
@@ -69,9 +69,7 @@ class moduleSlack(Content,Queue):
         logging.info("  Setting posts")
         self.posts = []
         theChannel = self.getChanId(channel)
-        self.sc.token = self.user_slack_token        
         history = self.sc.api_call( "channels.history", count=1000, channel=theChannel)
-        self.sc.token = self.slack_token        
         if 'messages' in history:
             self.posts = history['messages']
         else:
@@ -187,17 +185,19 @@ class moduleSlack(Content,Queue):
 
     def deletePost(self, idPost, theChannel): 
         #theChannel or the name of the channel?
-        logging.info("Deleting id %s" % idPost)
+        logging.info("Deleting id %s from %s" % (idPost, theChannel))
             
-        self.sc.token = self.user_slack_token        
         result = self.sc.api_call("chat.delete", channel=theChannel, ts=idPost)
-        self.sc.token = self.slack_token        
     
         logging.info(result)
         return(result)
     
     def getChanId(self, name):
+        logging.info("getChanId %s"% self.service)
+
+        self.sc.token = self.user_slack_token        
         chanList = self.sc.api_call("channels.list")['channels']
+        self.sc.token = self.slack_token        
         for channel in chanList:
             if channel['name_normalized'] == name:
                 return(channel['id'])
@@ -386,10 +386,15 @@ def main():
     site.setSlackClient(SLACKCREDENTIALS)
 
     theChannel = site.getChanId(CHANNEL)  
+    print("the Channel %s" % theChannel)
 
     site.setPosts('links')
     site.setPosts('tavern-of-the-bots')
     print(site.getPosts())
+    rep = site.publishPost('tavern-of-the-bots', 'hello')
+    wait = input('Delete %s?' % rep)
+    site.deletePost(rep['ts'], theChannel)
+    sys.exit()
 
     site.setSocialNetworks(config, section)
 
