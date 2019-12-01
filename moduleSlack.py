@@ -333,8 +333,10 @@ class moduleSlack(Content,Queue):
         theChan = self.getChanId(chan)
         logging.info("Publishing %s" % msg)
         try:
+            self.sc.token = self.user_slack_token        
             result = self.sc.api_call("chat.postMessage", 
                 channel = theChan, text = msg)
+            self.sc.token = self.slack_token        
         except:
             result = self.sc.chat_postMessage(channel=theChan, 
                     text=msg)
