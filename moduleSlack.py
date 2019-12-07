@@ -11,6 +11,7 @@ except:
     import slack
 
 import sys
+import time
 import click
 import requests
 from bs4 import BeautifulSoup
@@ -346,7 +347,7 @@ class moduleSlack(Content,Queue):
         if not self.posts:
             self.setPosts('tavern-of-the-bots')
         msgs = {}
-        for msg in self.getPosts():
+        for msg in reversed(self.getPosts()):
             if msg['text'].find('Hello')>=0: 
                 posN = msg['text'].find('Name:')+6
                 posFN = msg['text'].find('"',posN)
@@ -358,10 +359,12 @@ class moduleSlack(Content,Queue):
                 command = msg['text'][posC+1:posC+2]
                 #print("IP %s %s" % (ip,name))
                 if name not in msgs:
-                    msgs[name] = (ip, command)
-        theBots = ""
+                    theTime = "%d-%d-%d"%time.localtime(float(msg['ts']))[:3]
+                    msgs[name] = (ip, command, theTime)
+        theBots = [] 
         for name in msgs:
-            theBots = theBots + "[%s] %16s %s\n"%(msgs[name][1], msgs[name][0], name)
+            a, b, c = msgs[name]
+            theBots.append("{2} [{1}] {0} {3}".format(a,b,c,name))
         return(theBots)
 
 
@@ -389,6 +392,9 @@ def main():
     site.setPosts('links')
     site.setPosts('tavern-of-the-bots')
     print(site.getPosts())
+    print(site.getBots())
+    print(site.sc.api_call('channels.list'))
+    sys.exit()
     rep = site.publishPost('tavern-of-the-bots', 'hello')
     wait = input('Delete %s?' % rep)
     site.deletePost(rep['ts'], theChannel)
