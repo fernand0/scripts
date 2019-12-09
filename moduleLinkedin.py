@@ -84,7 +84,7 @@ class moduleLinkedin(Content):
 
     def publishPost(self, post, link, comment):
 
-        res = self.ln.submit_share(comment=comment, title=postC,description=None,
+        res = self.ln.submit_share(comment=comment, title=post,description=None,
                 submitted_url=link, submitted_image_url=None, 
                 urn=self.URN, visibility_code='anyone')
 
@@ -178,7 +178,6 @@ def main():
     #ln.authorize()
 
     print(ln.ln.get_profile())
-    print(dir(ln.ln))
     print(ln.publishPost("Probando á é í ó ú — ",'',''))
     sys.exit()
 
