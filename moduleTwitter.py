@@ -111,6 +111,19 @@ class moduleTwitter(Content):
         if 'text' in post:
             return(post['text'])
 
+    def search(self, text):
+        logging.debug("     Searching in Twitter...")
+        try:
+            res = self.tc.search.tweets(q=text)
+
+            if res: 
+                logging.debug("Res: %s" % res)
+                return(res)
+        except:        
+            return(self.report('Twitter', text, sys.exc_info()))
+
+
+
 
 def main():
 
@@ -121,6 +134,11 @@ def main():
     tw.setClient('fernand0')
 
     tw.setPosts()
+    res = tw.search('url:fernand0')
+    for tt in res['statuses']: 
+        print(tt)
+        print('- @{0} {1} https://twitter.com/{0}/status/{2}'.format(tt['user']['name'], tt['text'], tt['id_str']))
+    sys.exit()
     #for tweet in tw.getPosts():
     #    print(tweet)
     #    #print("@%s: %s" %(tweet[2], tweet[0]))

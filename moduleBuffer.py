@@ -183,14 +183,25 @@ class moduleBuffer(Queue):
             self.schedules = None
         #print(self.schedules[0]['times'])
         #print(len(self.schedules[0]['times']))
+    
+    def isValidTime(self, time): 
+        result = False
+        if len(time) <= 5: 
+            if time.find(':'): 
+                for num in time.split(':'): 
+                    if not num.isdigit():
+                        result = False
+                result =  True
+        return result
 
     def addSchedules(self, times):
         toPost={'days':[], 'times':[]}
         myTimes = self.schedules[0]['times']
-        print(myTimes)
+        logging.debug(myTimes)
         for time in times:
-            if time not in myTimes:
-                myTimes.append(time)
+            if self.isValidTime(time): 
+                if time not in myTimes: 
+                    myTimes.append(time)
         myTimes.sort()
 
         for i, sched in enumerate(self.schedules): 

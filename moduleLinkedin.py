@@ -8,6 +8,10 @@ import sys
 import requests
 
 from html.parser import HTMLParser
+from linkedin_v2 import linkedin
+import oauth2 as oauth
+
+
 
 from configMod import *
 from moduleContent import *
@@ -21,23 +25,56 @@ class moduleLinkedin(Content):
 
     def setClient(self, linkedinAC=""):
         logging.info("    Connecting Linkedin")
-        try:
+        if True:
             config = configparser.ConfigParser()
             config.read(CONFIGDIR + '/.rssLinkedin')
 
             self.user = linkedinAC    
 
-            #self.CONSUMER_KEY = config.get("Linkedin", "CONSUMER_KEY") 
-            #self.CONSUMER_SECRET = config.get("Linkedin", "CONSUMER_SECRET") 
+            self.CONSUMER_KEY = config.get("Linkedin", "CONSUMER_KEY") 
+            self.CONSUMER_SECRET = config.get("Linkedin", "CONSUMER_SECRET") 
+            self.ACCESS_TOKEN = config.get("Linkedin", "ACCESS_TOKEN") 
+            self.ln = linkedin.LinkedInApplication(token=self.ACCESS_TOKEN)
             #self.USER_TOKEN = config.get("Linkedin", "USER_TOKEN") 
             #self.USER_SECRET = config.get("Linkedin", "USER_SECRET") 
             #self.RETURN_URL = config.get("Linkedin", "RETURN_URL")
-            self.ACCESS_TOKEN = config.get("Linkedin", "ACCESS_TOKEN")
-            self.URN = config.get("Linkedin", "URN")
-        except:
+            #self.ACCESS_TOKEN = config.get("Linkedin", "ACCESS_TOKEN")
+            #self.URN = config.get("Linkedin", "URN")
+
+        else:
             logging.warning("Account not configured")
 
+    def authorize(self):
+        if True:
+            config = configparser.ConfigParser()
+            config.read(CONFIGDIR + '/.rssLinkedin')
+            self.CONSUMER_KEY = config.get("Linkedin", "CONSUMER_KEY") 
+            self.CONSUMER_SECRET = config.get("Linkedin", "CONSUMER_SECRET") 
+
+            import requests
+            payload = {'response_type':'code',
+                    'client_id': self.CONSUMER_KEY,
+                    'client_secret': self.CONSUMER_SECRET,
+                    'redirect_uri': 'http://localhost:8080/code',
+                    'state':'33313134',
+                    'scope': 'r_liteprofile r_emailaddress w_member_social' }
+            import urllib.parse
+            print('https://www.linkedin.com/oauth/v2/authorization?'
+                    + urllib.parse.urlencode(payload))
+
+            access_token = input("Copy and paste the url in a browser and write here the access token ")
+
+            url = 'https://www.linkedin.com/oauth/v2/accessToken'
+            payload = {'grant_type':'authorization_code',
+                    'code':access_token,
+                    'redirect_uri':'http://localhost:8080/code',
+                    'client_id': self.CONSUMER_KEY,
+                    'client_secret': self.CONSUMER_SECRET}
+            res = requests.post(url, data=payload)
+            print(res.text)
+            sys.exit()
  
+
     def getClient(self):
         return None
  
@@ -46,6 +83,12 @@ class moduleLinkedin(Content):
         self.posts = []
 
     def publishPost(self, post, link, comment):
+        res = self.ln.submit_share(comment=comment, title=post,description=None,
+                submitted_url=link, submitted_image_url=None, 
+                visibility_code='anyone')
+
+        return res
+
         # Based on https://github.com/gutsytechster/linkedin-post
         access_token = self.ACCESS_TOKEN
         urn = self.URN
@@ -131,8 +174,16 @@ def main():
     ln = moduleLinkedin.moduleLinkedin()
 
     ln.setClient('fernand0')
+    #ln.authorize()
 
+    print(ln.ln.get_profile())
+    print(dir(ln.ln))
     print(ln.publishPost("Probando á é í ó ú — ",'',''))
+    sys.exit()
+
+    import time
+    time.sleep(10)
+    sys.exit()
     print(ln.publishPost("El mundo es Imperfecto",'http://elmundoesimperfecto.com/',''))
 
 if __name__ == '__main__':
