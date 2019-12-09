@@ -39,7 +39,7 @@ class moduleLinkedin(Content):
             #self.USER_SECRET = config.get("Linkedin", "USER_SECRET") 
             #self.RETURN_URL = config.get("Linkedin", "RETURN_URL")
             #self.ACCESS_TOKEN = config.get("Linkedin", "ACCESS_TOKEN")
-            #self.URN = config.get("Linkedin", "URN")
+            self.URN = config.get("Linkedin", "URN")
 
         else:
             logging.warning("Account not configured")
@@ -83,9 +83,10 @@ class moduleLinkedin(Content):
         self.posts = []
 
     def publishPost(self, post, link, comment):
-        res = self.ln.submit_share(comment=comment, title=post,description=None,
+
+        res = self.ln.submit_share(comment=comment, title=postC,description=None,
                 submitted_url=link, submitted_image_url=None, 
-                visibility_code='anyone')
+                urn=self.URN, visibility_code='anyone')
 
         return res
 
