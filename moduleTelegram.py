@@ -31,6 +31,7 @@ class moduleTelegram(Content):
             bot = None
 
         self.tc = bot
+        self.user = meMySelf
         self.channel = channel
 
     def getClient(self):
@@ -39,9 +40,7 @@ class moduleTelegram(Content):
     def setPosts(self):
         logging.info("  Setting posts")
         self.posts = []
-        posts = self.tc.getUpdates()
-
-        print(posts)
+        self.posts = self.tc.getUpdates(allowed_updates='message')
 
     def publishPost(self, post, link, comment):
         logging.info("    Publishing in Telegram...")
@@ -77,38 +76,34 @@ class moduleTelegram(Content):
             bot.sendMessage('@'+channel, links, parse_mode='HTML') 
 
     def getPostTitle(self, post):
-        return(post)
+        if 'channel_post' in post:
+            if 'text' in post['channel_post']:
+                return(post['channel_post']['text'])
+            else:
+                return ''
+        else:
+            return ''
 
 
 def main():
     import moduleTelegram
 
-    config = configparser.ConfigParser()
-    config.read(CONFIGDIR + '/.rssBlogs')
-
-    section = 'Blog2'
-    url = config.get(section, "url")
-    rssFeed = config.get(section, "rssFeed")
-    logging.info(" Blog RSS: %s"% rssFeed)
-    import moduleRss
-    blog = moduleRss.moduleRss()
-    # It does not preserve case
-    blog.setRssFeed(rssFeed)
-    blog.setUrl(url)
-    blog.setPosts()
-    post = blog.obtainPostData(1)
-
     tel = moduleTelegram.moduleTelegram()
 
     tel.setClient('testFernand0')
 
+    print("Testing posts")
     tel.setPosts()
-    title = post[0]
-    link = post[1]
-    content = post[7]
-    links = post[8]
-    tel.publishPost(title,link,content + '\n\n' + links)
+    for post in tel.getPosts():
+        print(post)
 
+    print("Testing title and link")
+
+    for post in tel.getPosts():
+        print(post)
+        title = tel.getPostTitle(post)
+        link = tel.getPostLink(post)
+        print("Title: {}\nLink: {}\n".format(title,link))
 
 if __name__ == '__main__':
     main()
