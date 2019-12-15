@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
-import configparser
-import pickle
-import os
-import urllib
-import logging
-import sys
 import click
+import configparser
+import logging
+import os
+import pickle
 import requests
+import sys
+import urllib
+
 from bs4 import BeautifulSoup
 from bs4 import Tag
 
@@ -111,6 +112,13 @@ class moduleTwitter(Content):
         else:
             return ''
 
+    def getPostLink(self, post):
+        if 'id_str' in post:
+            return('https://twitter.com/{}/status/{}'.format(self.user, post['id_str']))
+        else:
+            return ''
+
+
     def search(self, text):
         logging.debug("     Searching in Twitter...")
         try:
@@ -132,16 +140,26 @@ def main():
 
     tw.setClient('fernand0')
 
+    print("Testing posts")
     tw.setPosts()
-    print(tw.getPosts())
+    for tweet in tw.getPosts():
+        print(tweet)
+        #print("@%s: %s" %(tweet[2], tweet[0]))
+
+    print("Testing title and link")
+    
+    for post in tw.getPosts():
+        print(post)
+        title = tw.getPostTitle(post)
+        link = tw.getPostLink(post)
+        print("Title: {}\nLink: {}\n".format(title,link))
+
     res = tw.search('url:fernand0')
+
     for tt in res['statuses']: 
         print(tt)
         print('- @{0} {1} https://twitter.com/{0}/status/{2}'.format(tt['user']['name'], tt['text'], tt['id_str']))
     sys.exit()
-    #for tweet in tw.getPosts():
-    #    print(tweet)
-    #    #print("@%s: %s" %(tweet[2], tweet[0]))
 
     tw.publishPost("Inscripciones 2019 | Congreso Web", "http://congresoweb.es/cw19/inscripciones/", '')
 
