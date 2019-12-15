@@ -1,20 +1,19 @@
 #!/usr/bin/env python
 
-import configparser
-import pickle
-import os
-import moduleSocial
-import moduleBuffer
-import moduleCache
-import urllib
-import logging
-import sys
 import click
+import configparser
+import logging
+import os
+import pickle
 import requests
+import sys
+import urllib
+
 from bs4 import BeautifulSoup
 from bs4 import Tag
 
 import facebook
+
 from html.parser import HTMLParser
 
 from configMod import *
