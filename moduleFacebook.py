@@ -116,6 +116,15 @@ class moduleFacebook(Content):
     def getPostTitle(self, post):
         if 'message' in post:
             return(post['message'].replace('\n', ' '))
+        else:
+            return ''
+
+    def getPostLink(self, post):
+        if 'id' in post:
+            user, idPost = post['id'].split('_')
+            return('https://facebook.com/{}/posts/{}'.format(user, idPost))
+        else:
+            return ''
 
 def main():
 
@@ -126,17 +135,25 @@ def main():
     fc.setClient('Enlaces de fernand0')
     print(fc.user)
     print(fc.fc.get_object(id='me'))
-    sys.exit()
-    fc.setPage()
 
+    print("Listing pages")
     for page in fc.pages['data']:
         print(page['name'], page)
-        if page['name'] == 'F.T.G.':
-            idPage = page['id']
-            tokenPage = page['access_token']
 
-    link= "https://graph.facebook.com/v5.0/%s?fields=instagram_business_account&access_token={%s}"%(idPage,tokenPage)
-    print(link)
+    fc.setPosts()
+    for post in fc.getPosts():
+        print(post)
+        #print("@%s: %s" %(tweet[2], tweet[0]))
+
+    print("Testing title and link")
+    
+    for post in fc.getPosts():
+        print(post)
+        title = fc.getPostTitle(post)
+        link = fc.getPostLink(post)
+        print("Title: {}\nLink: {}\n".format(title,link))
+
+ 
     sys.exit()
 
 
