@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
 import configparser
-import pickle
-import os
 import logging
-import sys
+import os
+import pickle
 import requests
+import sys
 
 from html.parser import HTMLParser
 from linkedin_v2 import linkedin
+
 import oauth2 as oauth
 
 
