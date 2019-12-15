@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 
-import configparser
-import mastodon
 import os
 import sys
 
+import configparser
+
 from html.parser import HTMLParser
+
+import mastodon
+#pip install Mastodon.py
+
 from configMod import *
 from moduleContent import *
 
@@ -18,13 +22,13 @@ class moduleMastodon(Content):
 
     def setClient(self, user):
         logging.info("     Connecting Mastodon")
-        if True:
+        try:
             maCli = mastodon.Mastodon( 
-               access_token = CONFIGDIR + '.'+'pytooter_usercred.secret', 
+               access_token = CONFIGDIR + '/.rssMastodon', 
                api_base_url = 'https://mastodon.social'
             )
 
-        else: 
+        except: 
             logging.warning("Mastodon authentication failed!") 
             logging.warning("Unexpected error:", sys.exc_info()[0])
 
@@ -38,7 +42,8 @@ class moduleMastodon(Content):
     def setPosts(self):
         logging.info("  Setting posts")
         self.posts = []
-        posts = self.getClient().timeline_home()
+        #posts = self.getClient().timeline_home()
+        posts = self.getClient().account_statuses(self.ma.me())
         for toot in  posts:
             self.posts.append(toot)
 
@@ -63,16 +68,37 @@ class moduleMastodon(Content):
             return(self.report('Mastodon', post, link, sys.exc_info()))
 
     def getPostTitle(self, post):
+        if 'card' in post and post['card']:
+            if 'title' in post['card']:
+                return(post['card']['title'])
         if 'content' in post:
             return(post['content'].replace('\n', ' '))
+
+    def getPostLink(self, post):
+        if 'uri' in post:
+            return(post['uri'])
+        else:
+            return ''
 
 def main():
     import moduleMastodon
 
     mastodon = moduleMastodon.moduleMastodon()
     mastodon.setClient('fernand0')
+    print("Testing posts")
     mastodon.setPosts()
-    mastodon.publishPost("I'll publish several links each day about technology, social internet, security, ... as in", 'https://twitter.com/fernand0', '')
+    for post in mastodon.getPosts():
+        print(post)
+
+    print("Testing title and link")
+
+    for post in mastodon.getPosts():
+        title = mastodon.getPostTitle(post)
+        link = mastodon.getPostLink(post)
+        print("Title: {}\nLink: {}\n".format(title,link))
+
+
+    #mastodon.publishPost("I'll publish several links each day about technology, social internet, security, ... as in", 'https://twitter.com/fernand0', '')
 
 
 if __name__ == '__main__':
