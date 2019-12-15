@@ -248,3 +248,8 @@ class Content:
         #print("----Unexpected error: %s"% data[2]) 
 
 
+    def getPostTitle(self, post):
+        return str(post)
+    
+    def getPostLink(self, post):
+        return ''

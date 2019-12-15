@@ -35,7 +35,6 @@ import random
 import threading
 import feedparser
 import facebook
-from linkedin import linkedin
 from twitter import *
 from medium import Client
 from html.parser import HTMLParser

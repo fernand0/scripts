@@ -110,6 +110,8 @@ class moduleTwitter(Content):
     def getPostTitle(self, post):
         if 'text' in post:
             return(post['text'])
+        else:
+            return ''
 
     def search(self, text):
         logging.debug("     Searching in Twitter...")
