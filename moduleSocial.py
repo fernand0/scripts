@@ -87,7 +87,7 @@ from bs4 import NavigableString
 from bs4 import Tag
 from bs4 import Doctype
 from html.parser import HTMLParser
-import facebook
+#import facebook
 import urllib
 import time
 #from linkedin import linkedin
@@ -98,7 +98,7 @@ import time
 #https://github.com/sixohsix/twitter/tree
 from html.parser import HTMLParser
 import pickle 
-import telepot
+#import telepot
 # sudo pip install buffpy version does not work
 # Better use:
 # git clone https://github.com/vtemian/buffpy.git
@@ -110,8 +110,6 @@ import telepot
 #from pocket import Pocket, PocketException
 import moduleCache
 # https://github.com/fernand0/scripts/blob/master/moduleCache.py
-import moduleBuffer
-# https://github.com/fernand0/scripts/blob/master/moduleBuffer.py
 
 from configMod import *
 

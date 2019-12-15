@@ -3,9 +3,6 @@
 import configparser
 import pickle
 import os
-import moduleSocial
-import moduleBuffer
-import moduleCache
 import urllib
 import logging
 import sys
@@ -15,9 +12,10 @@ from bs4 import BeautifulSoup
 from bs4 import Tag
 
 from twitter import *
+# pip install twitter
 #https://pypi.python.org/pypi/twitter
-#http://mike.verdone.ca/twitter/
 #https://github.com/sixohsix/twitter/tree
+#http://mike.verdone.ca/twitter/
 from html.parser import HTMLParser
 
 from configMod import *
@@ -124,7 +122,6 @@ class moduleTwitter(Content):
 
 
 
-
 def main():
 
     import moduleTwitter
@@ -134,6 +131,7 @@ def main():
     tw.setClient('fernand0')
 
     tw.setPosts()
+    print(tw.getPosts())
     res = tw.search('url:fernand0')
     for tt in res['statuses']: 
         print(tt)
