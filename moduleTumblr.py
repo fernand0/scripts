@@ -1,17 +1,19 @@
 #!/usr/bin/env python
 
-import configparser
-import pickle
-import os
-import urllib
-import logging
-import sys
 import click
+import configparser
+import logging
+import os
+import pickle
 import requests
+import sys
+import urllib
+
 from bs4 import BeautifulSoup
 from bs4 import Tag
 
 from tumblpy import Tumblpy
+# pip install python-tumblpy
 
 from configMod import *
 from moduleContent import *
