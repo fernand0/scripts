@@ -342,6 +342,7 @@ class moduleSlack(Content,Queue):
             result = self.sc.chat_postMessage(channel=theChan, 
                     text=msg)
         logging.info(result)
+        logging.info("End publishing %s" % msg)
         return(result)
 
     def getBots(self):
@@ -358,7 +359,6 @@ class moduleSlack(Content,Queue):
                 name = msg['text'][posN:posFN]
                 ip = msg['text'][posI:posFI]
                 command = msg['text'][posC+1:posC+2]
-                #print("IP %s %s" % (ip,name))
                 if name not in msgs:
                     theTime = "%d-%d-%d"%time.localtime(float(msg['ts']))[:3]
                     msgs[name] = (ip, command, theTime)
