@@ -21,16 +21,19 @@ from html.parser import HTMLParser
 
 from configMod import *
 from moduleContent import *
+from moduleQueue import *
 
-class moduleTwitter(Content):
+class moduleTwitter(Content,Queue):
 
     def __init__(self):
         super().__init__()
         self.user = None
         self.tc = None
+        self.service = None
 
     def setClient(self, twitterAC):
         logging.info("     Connecting Twitter")
+        self.service = 'Twitter'
         try:
             config = configparser.ConfigParser()
             config.read(CONFIGDIR + '/.rssTwitter')

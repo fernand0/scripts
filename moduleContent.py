@@ -126,7 +126,8 @@ class Content:
                 if service[0] in self.getProgram():
                     nick = self.getSocialNetworks()[service]
                     cache = moduleCache.moduleCache() 
-                    cache.setClient(self.url, (service, nick))
+                    param = (self.url, (service, nick))
+                    cache.setClient(param)
                     cache.setPosts()
                     self.cache[(service, nick)] = cache
 

@@ -12,16 +12,19 @@ import mastodon
 
 from configMod import *
 from moduleContent import *
+from moduleQueue import *
 
 
-class moduleMastodon(Content):
+class moduleMastodon(Content,Queue):
 
 
     def __init__(self):
         super().__init__()
+        self.service = None
 
     def setClient(self, user):
         logging.info("     Connecting Mastodon")
+        self.service = 'Mastodon'
         try:
             maCli = mastodon.Mastodon( 
                access_token = CONFIGDIR + '/.rssMastodon', 
@@ -43,7 +46,7 @@ class moduleMastodon(Content):
         logging.info("  Setting posts")
         self.posts = []
         #posts = self.getClient().timeline_home()
-        posts = self.getClient().account_statuses(self.ma.me())
+        posts = self.getClient().account_statuses(self.getClient().me())
         for toot in  posts:
             self.posts.append(toot)
 
@@ -87,6 +90,7 @@ def main():
     mastodon.setClient('fernand0')
     print("Testing posts")
     mastodon.setPosts()
+    print(mastodon.getClient().me())
     for post in mastodon.getPosts():
         print(post)
 

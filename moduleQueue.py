@@ -42,6 +42,16 @@ class Queue:
             newTitle = oldTitle
         return(newTitle)
 
+    def extractDataMessage(self, i):
+        if i < len(self.getPosts()):
+            post = self.getPosts()[i]
+            logging.info("Post: %s"% post)
+            theTitle = self.getPostTitle(post)
+            theLink = self.getPostLink(post)
+        else:
+            theTitle = None
+            theLink = None
+        return (theTitle, theLink, None, None, None, None, None, None, None, None)
 
     def obtainPostData(self, i, debug=False):
         return (self.extractDataMessage(i))

@@ -33,12 +33,9 @@ class moduleCache(Queue):
         #self.url = url
         #self.socialNetwork = (socialNetwork, nick)
 
-    def setClient(self, url, socialNetwork = None):
-        if not socialNetwork:
-            socialNetwork = url[1]
-            url = url[0]
-            logging.info("url %s" % url)
-            logging.info("sN %s" % str(socialNetwork))
+    def setClient(self, param):
+        url = param[0]
+        socialNetwork = param[1]
         self.url = url
         self.service = socialNetwork[0]
         self.nick = socialNetwork[1]

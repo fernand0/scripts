@@ -34,6 +34,7 @@ class moduleRss(Content,Queue):
         self.rssFeed = feed
 
     def setClient(self, feed):
+        logging.info("Feed %s" % feed)
         self.rssFeed = feed
         self.service = 'Rss'
 
@@ -43,15 +44,8 @@ class moduleRss(Content,Queue):
             urlRss = self.getRssFeed()
         else: 
             urlRss = self.url+self.getRssFeed()
-        logging.debug(urlRss)
+        logging.info("Rss: %s" % urlRss)
         self.posts = feedparser.parse(urlRss).entries
-
-        #outputData = {}
-        #serviceName = 'Rss'
-        #outputData[serviceName] = {'sent': [], 'pending': []}
-        #for i in range(len(self.getPosts())):
-        #    outputData[serviceName]['pending'].append(self.obtainPostData(i))
-        #self.postsFormatted = outputData
  
     def getPostTitle(self, post):
         if 'title' in post:

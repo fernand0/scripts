@@ -30,7 +30,7 @@ class moduleSlack(Content,Queue):
         self.sc = None
         self.keys = []
 
-    def setClient(self, slackCredentials=None):
+    def setClient(self, slackCredentials):
         self.setSlackClient(slackCredentials)
 
     def setSlackClient(self, slackCredentials):

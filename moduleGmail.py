@@ -58,8 +58,14 @@ class moduleGmail(Content,Queue):
         
         self.service = 'gmail'
         if type(Acc) == str: 
-            self.nick = config.get(Acc,'user') #+'@'+config.get(Acc,'server')
-            self.server = config.get(Acc,'server')
+            if Acc.find('@'): 
+                pos = Acc.rfind('@') 
+                self.server = Acc[pos+1:] 
+                self.nick   = Acc[:pos] 
+                self.name = 'GMail_{}'.format(Acc[0]) 
+            else: 
+                self.nick = config.get(Acc,'user') #+'@'+config.get(Acc,'server') 
+                self.server = config.get(Acc,'server')
             import hashlib
             self.name = 'GMail' + Acc[3:]# + '_' + hashlib.md5(self.nick.encode()+self.server.encode()).hexdigest()
         else:

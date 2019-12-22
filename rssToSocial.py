@@ -82,14 +82,14 @@ def test():
     recentPosts = {}
 
     for section in config.sections():
-        rssFeed = config.get(section, "rssFeed")
+        rssFeed = config.get(section, "rss")
         feed.append(feedparser.parse(rssFeed))
         lastPost = feed[-1].entries[0]
         print('%s) %s %s (%s)' % (str(i), section,
-                                  config.get(section, "rssFeed"),
+                                  config.get(section, "rss"),
                                   time.strftime('%Y-%m-%d %H:%M:%SZ',
                                   lastPost['published_parsed'])))
-        lastLink = checkLastLink(self.url, config.get(section, "rssFeed"))
+        lastLink = checkLastLink(self.url, config.get(section, "rss"))
         print(lastLink)
         sys.exit()
         lenCmp = min(len(lastLink),len(lastPost['link']))
@@ -149,8 +149,8 @@ def main():
         logging.info("Section: %s"% section)
         url = config.get(section, "url")
         print("Section: %s %s"% (section, url))
-        if ("rssfeed" in config.options(section)):
-            rssFeed = config.get(section, "rssFeed")
+        if ("rss" in config.options(section)):
+            rssFeed = config.get(section, "rss")
             logging.info(" Blog RSS: %s"% rssFeed)
             blog = moduleRss.moduleRss()
             # It does not preserve case

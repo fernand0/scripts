@@ -18,16 +18,19 @@ from html.parser import HTMLParser
 
 from configMod import *
 from moduleContent import *
+from moduleQueue import *
 
-class moduleFacebook(Content):
+class moduleFacebook(Content,Queue):
 
     def __init__(self):
         super().__init__()
         self.user = None
         self.fc = None
+        self.service = None
 
     def setClient(self, facebookAC='me'):
         logging.info("     Connecting Facebook")
+        self.service = 'Facebook'
         try:
             config = configparser.ConfigParser()
             config.read(CONFIGDIR + '/.rssFacebook')
