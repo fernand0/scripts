@@ -75,7 +75,7 @@ class Queue:
             if argsCont:
                 reply = reply + cmd(j, argsCont)
             else: 
-                reply = reply + cmd(j)
+                reply = reply + str(cmd(j))
         else:
             logging.info("Not for me")
         logging.info("Reply: %s"%reply)
