@@ -189,11 +189,11 @@ class moduleSlack(Content,Queue):
             
         result = self.sc.api_call("chat.delete", channel=theChannel, ts=idPost)
     
-        logging.info(result)
+        logging.debug(result)
         return(result)
     
     def getChanId(self, name):
-        logging.info("getChanId %s"% self.service)
+        logging.debug("getChanId %s"% self.service)
 
         self.sc.token = self.user_slack_token        
         chanList = self.sc.api_call("channels.list")['channels']
@@ -349,7 +349,7 @@ class moduleSlack(Content,Queue):
         if not self.posts:
             self.setPosts('tavern-of-the-bots')
         msgs = {}
-        for msg in reversed(self.getPosts()):
+        for msg in self.getPosts():
             if msg['text'].find('Hello')>=0: 
                 posN = msg['text'].find('Name:')+6
                 posFN = msg['text'].find('"',posN)

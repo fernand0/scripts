@@ -8,14 +8,17 @@ from medium import Client
 
 from configMod import *
 from moduleContent import *
+from moduleQueue import *
 
-class moduleMedium(Content):
+class moduleMedium(Content,Queue):
 
     def __init__(self):
         super().__init__()
+        self.service = None
 
     def setClient(self, channel):
         logging.info("     Connecting Medium")
+        self.service = 'Medium'
         try:
             config = configparser.ConfigParser() 
             config.read(CONFIGDIR + '/.rssMedium') 
@@ -51,16 +54,7 @@ class moduleMedium(Content):
     def setPosts(self):
         logging.info("  Setting posts")
         self.posts = []
-        # Publications
-        #user = self.user
-        #user_id = user['id']
-        #path = "/v1/users/%s/publications" % user_id
-        ##https://api.medium.com/v1/users/{{userId}}/publications
 
-        #posts = self.tc._request("GET",path)
-
-        # Medium provides a RSS Feed in the format:
-        # https://medium.com/feed/@user
         import moduleRss
         content = moduleRss.moduleRss()
         rssFeed='https://medium.com/feed/@{}'.format(self.user['username'])
@@ -69,7 +63,6 @@ class moduleMedium(Content):
         content.setPosts()
         for post in content.getPosts():
             self.posts.append(post)
-        #print(self.posts)
 
     def publishPost(self, post, link, comment):
         logging.info("    Publishing in Medium...")
@@ -98,6 +91,9 @@ class moduleMedium(Content):
     def getPostTitle(self, post):
         if 'title' in post:
             return(post['title'].replace('\n', ' '))
+
+    def getPostLink(self, post):
+        return(post['link'])
 
 def main():
     import moduleMedium

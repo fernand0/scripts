@@ -35,6 +35,10 @@ class moduleXmlrpc():
          self.keys = []
          #self.logger = logging.getLogger(__name__)
  
+    def setClient(self, nick): 
+        self.user = nick
+        self.setXmlRpc()
+        
     def getUrl(self):
         return(self.url)
 
@@ -100,11 +104,21 @@ class moduleXmlrpc():
                 self.setId(blogId)
                 self.setName(blogName)
 
+    def getPosts(self):
+        return(self.posts)
+
     def getPostsXmlRpc(self):
         return(self.postsXmlRpc)
+
+    def setPosts(self):
+        self.setPostsXmlRpc()
+        self.posts = self.postsXmlRpc
  
     def setPostsXmlRpc(self):
+        logging.info("xml %s" % self.xmlrpc)
+        logging.info("xml %s" % self.Id)
         if self.xmlrpc and self.Id:
+            logging.info("Yes")
             self.postsXmlRpc = self.xmlrpc[0].blogger.getRecentPosts('', self.Id, 
                     self.xmlrpc[1], self.xmlrpc[2], 10)
 
