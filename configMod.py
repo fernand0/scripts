@@ -31,7 +31,11 @@ def getLastLink(fileName):
 
 def checkLastLink(url, socialNetwork=()):
     # Redundant with moduleCache
-    fileNameL = fileNamePath(url, socialNetwork)+".last"
+    if not socialNetwork: 
+        fileNameL = (DATADIR  + '/' 
+               + urllib.parse.urlparse(url).netloc + ".last")
+    else:
+        fileNameL = fileNamePath(url, socialNetwork)+".last"
     logging.debug("Checking last link: %s" % fileNameL)
     (linkLast, timeLast) = getLastLink(fileNameL)
     return(linkLast, timeLast)
