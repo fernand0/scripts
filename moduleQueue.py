@@ -64,20 +64,30 @@ class Queue:
         if pos > 0: 
             argsIni = args[:pos]
             argsCont = args[pos+1:]
+            logging.info("Args {} {}".format(argsIni, argsCont))
         else: 
             argsIni = args
+            logging.info("Args {}".format(argsIni))
+
+        pos = argsIni.find('*')
+        if pos == 0: 
+            """ If the first character of the argument is a '*' the following
+            ones are the number. But we are supposing that they start at the
+            third character, so we move the string one character to the right
+            """
+            argsIni=' {}'.format(argsIni)
+
         reply = ""
-        if True: #self.isForMe(argsIni):
-            logging.info("Service %s", self.service)
-            j = int(argsIni[-1]) 
-            cmd = getattr(self, command)
-            logging.info("Command %s %d"% (command, j))
-            if argsCont:
-                reply = reply + cmd(j, argsCont)
-            else: 
-                reply = reply + str(cmd(j))
-        else:
-            logging.info("Not for me")
+
+        logging.info("Service %s", self.service)
+        j = int(argsIni[2:]) 
+        cmd = getattr(self, command)
+        logging.info("Command %s %d"% (command, j))
+        if argsCont:
+            reply = reply + cmd(j, argsCont)
+        else: 
+            reply = reply + str(cmd(j))
+
         logging.info("Reply: %s"%reply)
         return(reply)
 
