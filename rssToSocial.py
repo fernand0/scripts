@@ -27,6 +27,8 @@ import moduleBuffer
 # https://github.com/fernand0/scripts/blob/master/moduleBuffer.py
 import moduleSlack
 # https://github.com/fernand0/scripts/blob/master/moduleSlack.py
+import moduleForum
+# https://github.com/fernand0/scripts/blob/master/moduleForum.py
 
 import configparser
 import os
@@ -159,6 +161,11 @@ def main():
             logging.info(" Blog Slack: %s"% url)
             blog = moduleSlack.moduleSlack()
             blog.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
+        elif 'forum' in config.options(section):
+            forum = config.get(section,'forum')
+            logging.info(" Forum: {}".format(forum))
+            blog = moduleForum.moduleForum()
+            blog.setClient(forum)
         blog.setUrl(url)
         blog.setPosts()
 

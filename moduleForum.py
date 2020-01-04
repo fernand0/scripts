@@ -17,6 +17,7 @@ class moduleForum(Content,Queue):
         self.selector = None
         self.idSeparator = None
         self.service = None
+        self.max = 15
 
     def setClient(self, forumData):
         """
@@ -106,14 +107,14 @@ class moduleForum(Content,Queue):
         listId = sorted(set(listId))
         self.posts = []
         self.lastId = listId[-1]
-        for i in listId:
+        for i in listId[-self.max:]:
             self.posts.append(posts[i])
 
         lastLink, lastTime = checkLastLink(self.url)
         pos = self.getLinkPosition(lastLink)
         if pos < len(self.posts) - 1:
             for i, post in enumerate(self.posts[pos:]):
-                self.posts[pos+i][0] = '* {}'.format(self.posts[pos+i][0])
+                self.posts[pos+i][0] = '> {}'.format(self.posts[pos+i][0])
         
     def getPosts(self):
         return self.posts
