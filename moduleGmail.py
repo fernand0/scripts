@@ -32,6 +32,7 @@ from moduleQueue import *
 class moduleGmail(Content,Queue):
 
     def __init__(self):
+        super().__init__()
         Content().__init__()
         Queue().__init__()
         self.service = None

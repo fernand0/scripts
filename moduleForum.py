@@ -1,6 +1,7 @@
 
 from bs4 import BeautifulSoup
 import configparser
+import logging
 import requests
 import time
 
@@ -67,13 +68,13 @@ class moduleForum(Content,Queue):
         selector = self.selector
         idSeparator = self.idSeparator
 
-        print("-----------------------------")
-        print(url)
-        print("-----------------------------")
+        logging.info("-----------------------------")
+        logging.info(url)
+        logging.info("-----------------------------")
         
         forums = self.getLinks(url, 0)
         
-        print(" Reading in ....")
+        logging.info(" Reading in ....")
         listId = []
         posts = {}
         for i, forum in enumerate(forums): 
@@ -85,7 +86,7 @@ class moduleForum(Content,Queue):
                 link = url+forum.get('href') 
                 if 'sid' in link:
                     link = link.split('&sid')[0]
-                print("  - {} {}".format(text, link))
+                logging.info("  - {} {}".format(text, link))
                 links = self.getLinks(link, 1)
                 for j, post in enumerate(links): 
                     #print("Info: %s"%str(post))
