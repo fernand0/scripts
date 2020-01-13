@@ -29,6 +29,8 @@ import moduleSlack
 # https://github.com/fernand0/scripts/blob/master/moduleSlack.py
 import moduleForum
 # https://github.com/fernand0/scripts/blob/master/moduleForum.py
+import moduleGmail
+# https://github.com/fernand0/scripts/blob/master/moduleGmail.py
 
 import configparser
 import os
@@ -166,6 +168,11 @@ def main():
             logging.info(" Forum: {}".format(forum))
             blog = moduleForum.moduleForum()
             blog.setClient(forum)
+        elif 'gmail' in config.options(section):
+            mail = config.get(section,'gmail')
+            logging.info(" Gmail: {}".format(mail))
+            blog = moduleGmail.moduleGmail()
+            blog.setClient(('gmail',mail))
         blog.setUrl(url)
         blog.setPosts()
 
@@ -248,11 +255,16 @@ def main():
 
                 if blog.getProgram() and (profile[0] in blog.getProgram()):
                     print("   Delayed")
-                    link = blog.cache[socialNetwork].addPosts(listPosts)
+                    hours = blog.getTime() 
+                    if (hours and (((time.time() - lastTime) - round(float(hours)*60*60)) < 0)): 
+                        logging.info("  Not publishing because time restriction") 
+                        print("     Not publishing because time restriction (Last time: %s)"% time.ctime(lastTime)) 
+                    else:
+                        link = blog.cache[socialNetwork].addPosts(listPosts)
 
-                    time.sleep(1)
-                    timeSlots = 55*60 # One hour
-                    delayedBlogs.append((blog, socialNetwork, 1, timeSlots)) 
+                        time.sleep(1)
+                        timeSlots = 55*60 # One hour
+                        delayedBlogs.append((blog, socialNetwork, 1, timeSlots)) 
 
                 if not (blog.getBufferapp() or blog.getProgram()):
                     if (i > 0):
@@ -282,7 +294,10 @@ def main():
                                 result = api.publishPost(title, link, comment)
                                 print(result)
                                 if isinstance(result, str):
+                                    logging.info("Result %s"%str(result))
                                     if result[:4]=='Fail':
+                                        if result.find('duplicate')>=0:
+                                            duplicate = True
                                         link=''
                                         logging.info("Posting failed")
                             elif profile == 'instagram':
@@ -335,6 +350,7 @@ def main():
                 dataBlog = delayedPosts[future]
                 try:
                     res = future.result()
+                    print("Res: %s"% str(res))
                 except Exception as exc:
                     print('%r generated an exception: %s' % (str(dataBlog), exc))
                 #else:

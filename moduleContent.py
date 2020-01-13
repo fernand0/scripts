@@ -246,7 +246,7 @@ class Content:
         print("Post %s %s" % (post,link)) 
         print("Unexpected error: %s"% data[0]) 
         print("Unexpected error: %s"% data[1]) 
-        return("Fail! %s" % data[0])
+        return("Fail! %s" % data[1])
         #print("----Unexpected error: %s"% data[2]) 
 
 
