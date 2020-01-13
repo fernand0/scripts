@@ -238,9 +238,9 @@ def main():
                     link = ""
                     for j in range(num, 0, -1):
                         logging.debug("j, i %d - %d"% (j,i))
+                        i = i - 1
                         if (i < 0):
                             break
-                        i = i - 1
                         post = blog.obtainPostData(i, False)
                         listPosts.append(post)
                         print("      Scheduling post %s" % post[0])
