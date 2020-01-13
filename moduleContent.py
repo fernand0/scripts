@@ -153,6 +153,7 @@ class Content:
             else:
                 return(0)
 
+
     def getLinkPosition(self, link):
         i = 0
         posts = self.getPosts()

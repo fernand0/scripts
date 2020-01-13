@@ -81,7 +81,17 @@ class moduleLinkedin(Content):
  
     def setPosts(self):
         logging.info("  Setting posts")
-        self.posts = []
+        urn = self.URN
+        author = f"urn:li:person:{urn}"        
+        url = 'https://api.linkedin.com/v2/originalArticles'#.format('{8822}')        
+        print(url)
+        access_token = self.ln.authentication.token.access_token
+        headers = {'X-Restli-Protocol-Version': '2.0.0',
+           'Content-Type': 'application/json',
+           'Authorization': f'Bearer {access_token}'}
+
+        res = requests.get(url,headers=headers,data={'q':author})
+        self.posts = res
 
     def publishPost(self, post, link, comment):
 
@@ -176,10 +186,15 @@ def main():
     ln = moduleLinkedin.moduleLinkedin()
 
     ln.setClient('fernand0')
-    #ln.authorize()
 
     print(ln.ln.get_profile())
-    print(ln.publishPost("Probando á é í ó ú — ",'',''))
+
+    print("Testing posts")
+    ln.setPosts()
+    for post in ln.getPosts():
+        print(post)
+
+    #print(ln.publishPost("Probando á é í ó ú — ",'',''))
     sys.exit()
 
     import time
