@@ -89,6 +89,7 @@ from bs4 import Doctype
 from html.parser import HTMLParser
 #import facebook
 import urllib
+import urllib.parse
 import time
 #from linkedin import linkedin
 #from tumblpy import Tumblpy
@@ -163,8 +164,11 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
 
         element, listP = nextPost(blog,socialNetwork)
 
-        logger.info("    %s: Waiting ... %.2f minutes" % (socialNetwork[0].capitalize(), tSleep/60))
-        logger.info("    %s: Waiting" % (blog.getUrl()))
+        logger.info("    %s (%s): Waiting ... %.2f minutes" % 
+                (urllib.parse.urlparse(blog.getUrl()).netloc.split('.')[0],
+                    socialNetwork[0].capitalize(), 
+                    tSleep/60))
+        #logger.info("    %s: Waiting" % (blog.getUrl()))
         logger.info("     I'll publish %s" % element[0])
         print(" [d] Profile %s: waiting... %.2f minutes" 
                 % (socialNetwork[0], tSleep/60))
@@ -208,8 +212,10 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
         if j+1 < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))
             time.sleep(tSleep2) 
-        logger.info("    Finished in: %s" % socialNetwork[0].capitalize())
-        logger.info("    %s: Finished" % (blog.getUrl()))
+        logger.info("    %s (%s): Finished" % 
+                (urllib.parse.urlparse(blog.getUrl()).netloc.split('.')[0],
+                    socialNetwork[0].capitalize()))
+        #logger.info("    %s: Finished" % (blog.getUrl()))
         print(" [d] Finished in: %s at %s" % (socialNetwork[0].capitalize(), 
             time.asctime()))
 
