@@ -259,6 +259,7 @@ def main():
                     if (hours and (((time.time() - lastTime) - round(float(hours)*60*60)) < 0)): 
                         logging.info("  Not publishing because time restriction") 
                         print("     Not publishing because time restriction (Last time: %s)"% time.ctime(lastTime)) 
+                        link = None
                     else:
                         link = blog.cache[socialNetwork].addPosts(listPosts)
 
