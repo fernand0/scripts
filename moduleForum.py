@@ -116,6 +116,7 @@ class moduleForum(Content,Queue):
         if pos < len(self.posts) - 1:
             for i, post in enumerate(self.posts[pos:]):
                 self.posts[pos+i][0] = '> {}'.format(self.posts[pos+i][0])
+            self.posts = self.posts[pos:]
         
     def getPosts(self):
         return self.posts
@@ -142,6 +143,7 @@ def main():
                 print('   {}'.format(post[0]))
                 print('   {}'.format(post[1]))
             updateLastLink(forum.url, forum.getPosts()[-1][1])
+        print(forum.getPosts())
 
 
 if __name__ == '__main__':
