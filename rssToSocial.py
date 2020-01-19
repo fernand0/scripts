@@ -260,7 +260,8 @@ def main():
                                 break
                             post = blog.obtainPostData(i, False)
                             listPosts.append(post)
-                            print("      Scheduling post %s" % post[0])
+                            print("      Scheduling...")
+                            print("       Post %s" % post[0])
                             print("       Link %s" % post[1])
                             logging.info("    Scheduling post %s" % post[0])
 
