@@ -44,7 +44,7 @@ class moduleRss(Content,Queue):
             urlRss = self.getRssFeed()
         else: 
             urlRss = self.url+self.getRssFeed()
-        logging.info("Rss: %s" % urlRss)
+        logging.debug("Rss: %s" % urlRss)
         self.posts = feedparser.parse(urlRss).entries
  
     def getPostTitle(self, post):

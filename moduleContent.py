@@ -161,7 +161,7 @@ class Content:
             if not link:
                 logging.debug(self.getPosts())
                 return(len(self.getPosts()))
-            for entry in self.getPosts():
+            for entry in posts:
                 linkS = link
                 if isinstance(link, bytes):
                     linkS = linkS.decode()

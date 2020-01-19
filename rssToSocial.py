@@ -155,14 +155,14 @@ def main():
         print("Section: %s %s"% (section, url))
         if ("rss" in config.options(section)):
             rssFeed = config.get(section, "rss")
-            logging.info(" Blog RSS: %s"% rssFeed)
+            logging.info(" Blog RSS: {}".format(rssFeed))
             blog = moduleRss.moduleRss()
             # It does not preserve case
             blog.setRssFeed(rssFeed)
         elif url.find('slack')>0:
-            logging.info(" Blog Slack: %s"% url)
+            logging.info(" Blog Slack: {}".format(url))
             blog = moduleSlack.moduleSlack()
-            blog.setSlackClient(os.path.expanduser('~/.mySocial/config/.rssSlack'))
+            blog.setSlackClient(os.path.expanduser(CONFIGDIR+'/.rssSlack'))
         elif 'forum' in config.options(section):
             forum = config.get(section,'forum')
             logging.info(" Forum: {}".format(forum))
@@ -174,7 +174,6 @@ def main():
             blog = moduleGmail.moduleGmail()
             blog.setClient(('gmail',mail))
         blog.setUrl(url)
-        blog.setPosts()
 
         if section.find(checkBlog) >= 0:
             # If checkBlog is empty it will add all of them
@@ -185,19 +184,25 @@ def main():
 
             blog.setSocialNetworks(config, section)
 
-
             if ('buffer' in config.options(section)): 
                 blog.setBufferapp(config.get(section, "buffer")) 
 
             if ('cache' in config.options(section)): 
                 blog.setProgram(config.get(section, "cache"))
 
-            logging.info(" Looking for pending posts") 
-            print("   Looking for pending posts ... " )
 
             bufferMax = 9
 
-            for profile in blog.getSocialNetworks():
+            socialNetworks = blog.getSocialNetworks()
+            if socialNetworks:
+                logging.info(" Looking for pending posts") 
+                print("   Looking for pending posts ... " )
+                blog.setPosts()
+            else:
+                logging.info(" No social networks configured") 
+                print("   No social networks configured ... " )
+
+            for profile in socialNetworks:
                 lenMax = 9
                 link= ""
 
@@ -211,69 +216,69 @@ def main():
                             and (profile[0] in blog.getProgram()))): 
                     lenMax = blog.len(profile)
 
-                logging.info("  Service %s Lenmax %d" % (profile, lenMax))
+                logging.info("  Service %s" % profile)
+                print("  Service %s" % profile)
+                logging.debug("  Service %s Lenmax %d" % (profile, lenMax))
 
                 num = bufferMax - lenMax
 
-                listPosts = []
-                if (num > 0) or not (blog.getBufferapp() or blog.getProgram()):
-                    lastLink, lastTime = checkLastLink(url, socialNetwork)
-                    i = blog.getLinkPosition(lastLink)
-
-                    logging.info("   Profile %s"% profile)
-                    print("    Profile %s"% profile)
-                    logging.info("    Last link %s %s %d"% 
+                lastLink, lastTime = checkLastLink(url, socialNetwork)
+                i = blog.getLinkPosition(lastLink)
+                if i == 0:
+                    hours = None
+                    logging.info("    No new posts")
+                    print("    No new posts")
+                    hours = blog.getTime() 
+                    if isinstance(lastLink, bytes): 
+                        lastLink = lastLink.decode()
+                    logging.info("    %s Last link %s Pos: %d"% 
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
                                 time.localtime(lastTime)), lastLink, i))
-                    print("     Last link %s" %
+                    print("     %s Last link %s" %
                             (time.strftime('%Y-%m-%d %H:%M:%S', 
-                                time.localtime(lastTime))))
-                    if isinstance(lastLink, bytes): 
-                        print("      %s"% lastLink.decode())
-                    else:
-                        print("      %s"% lastLink)
+                                time.localtime(lastTime)), lastLink))
                     logging.debug("bufferMax - lenMax = num %d %d %d"%
                             (bufferMax, lenMax, num)) 
 
-                    link = ""
-                    for j in range(num, 0, -1):
-                        logging.debug("j, i %d - %d"% (j,i))
-                        i = i - 1
-                        if (i < 0):
-                            break
-                        post = blog.obtainPostData(i, False)
-                        listPosts.append(post)
-                        print("      Scheduling post %s" % post[0])
-                        logging.info("    Scheduling post %s" % post[0])
 
-                    if listPosts:
-                        link = listPosts[len(listPosts) - 1][1]
-                        logging.debug("link -> %s"% link)
+                if (hours and (((time.time() - lastTime) - round(float(hours)*60*60)) < 0)): 
+                    logging.info("  Not publishing because time restriction") 
+                    print("     Not publishing because time restriction (Last time: %s)"% time.ctime(lastTime)) 
+                else:
+                    listPosts = []
+                    if ((num > 0) and (blog.getBufferapp() or blog.getProgram())
+                            or not (blog.getBufferapp() or blog.getProgram())):
+                        #lastLink, lastTime = checkLastLink(url, socialNetwork)
 
-                if blog.getBufferapp() and (profile[0] in blog.getBufferapp()): 
-                    link = blog.buffer[socialNetwork].addPosts(listPosts)
+                        logging.debug("   Profile %s"% profile)
+                        #print("    Profile %s"% profile)
+                        link = ""
+                        for j in range(num, 0, -1):
+                            logging.debug("j, i %d - %d"% (j,i))
+                            i = i - 1
+                            if (i < 0):
+                                break
+                            post = blog.obtainPostData(i, False)
+                            listPosts.append(post)
+                            print("      Scheduling post %s" % post[0])
+                            print("       Link %s" % post[1])
+                            logging.info("    Scheduling post %s" % post[0])
 
-                if blog.getProgram() and (profile[0] in blog.getProgram()):
-                    print("   Delayed")
-                    hours = blog.getTime() 
-                    if (hours and (((time.time() - lastTime) - round(float(hours)*60*60)) < 0)): 
-                        logging.info("  Not publishing because time restriction") 
-                        print("     Not publishing because time restriction (Last time: %s)"% time.ctime(lastTime)) 
-                        link = None
-                    else:
+                    if (blog.getBufferapp() 
+                            and (profile[0] in blog.getBufferapp())): 
+                        link = blog.buffer[socialNetwork].addPosts(listPosts)
+
+                    if (blog.getProgram() 
+                            and (profile[0] in blog.getProgram())):
+                        print("   Delayed")
                         link = blog.cache[socialNetwork].addPosts(listPosts)
 
                         time.sleep(1)
                         timeSlots = 55*60 # One hour
-                        delayedBlogs.append((blog, socialNetwork, 1, timeSlots)) 
+                        delayedBlogs.append((blog, socialNetwork, 1, timeSlots))
 
-                if not (blog.getBufferapp() or blog.getProgram()):
-                    if (i > 0):
-                        hours = blog.getTime() 
-                        if (hours and (((time.time() - lastTime) - round(float(hours)*60*60)) < 0)): 
-                            logging.info("  Not publishing because time restriction") 
-                            print("     Not publishing because time restriction (Last time: %s)"% time.ctime(lastTime)) 
-                        else:
+                    if not (blog.getBufferapp() or blog.getProgram()):
+                        if (i > 0):
                             (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
                             logging.info("  Publishing directly\n") 
                             serviceName = profile.capitalize()
@@ -318,15 +323,14 @@ def main():
                                 publishMethod = getattr(moduleSocial, 
                                     'publish'+ serviceName)
                                 result = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
-
-                if link:
-                     logging.info("  Updating link %s %s" % 
-                             (profile, link))
-                     updateLastLink(blog.url, link, socialNetwork) 
-                     #       if result != "Fail!":
-                     logging.debug("listPosts: %s"% listPosts)
-                else:
-                     logging.info("No link")
+                    if link:
+                         logging.info("    Updating link %s %s" % 
+                                 (profile, link))
+                         updateLastLink(blog.url, link, socialNetwork) 
+                         #       if result != "Fail!":
+                         logging.debug("listPosts: %s"% listPosts)
+                    #else:
+                    #     logging.info("No link")
 
             time.sleep(2)
         else:

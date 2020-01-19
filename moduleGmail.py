@@ -70,7 +70,7 @@ class moduleGmail(Content,Queue):
             import hashlib
             self.name = 'GMail' + Acc[3:]# + '_' + hashlib.md5(self.nick.encode()+self.server.encode()).hexdigest()
         else:
-            logging.info("Acc %s" % str(Acc))
+            logging.debug("Acc %s" % str(Acc))
             #self.server = Acc[1][1][1]#[pos+1:] 
             #self.nick   = Acc[1][1][0]#[:pos]
             pos = Acc[1].rfind('@') 
