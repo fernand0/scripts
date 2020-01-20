@@ -84,7 +84,7 @@ class Queue:
         cmd = getattr(self, command)
         logging.info("Command %s %d"% (command, j))
         if argsCont:
-            reply = reply + cmd(j, argsCont)
+            reply = reply + str(cmd(j, argsCont))
         else: 
             reply = reply + str(cmd(j))
 
