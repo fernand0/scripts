@@ -225,20 +225,19 @@ def main():
                 lastLink, lastTime = checkLastLink(url, socialNetwork)
                 i = blog.getLinkPosition(lastLink)
                 if i == 0:
-                    hours = None
                     logging.info("    No new posts")
                     print("    No new posts")
-                    hours = blog.getTime() 
-                    if isinstance(lastLink, bytes): 
-                        lastLink = lastLink.decode()
-                    logging.info("    %s Last link %s Pos: %d"% 
-                            (time.strftime('%Y-%m-%d %H:%M:%S', 
-                                time.localtime(lastTime)), lastLink, i))
-                    print("     %s Last link %s" %
-                            (time.strftime('%Y-%m-%d %H:%M:%S', 
-                                time.localtime(lastTime)), lastLink))
-                    logging.debug("bufferMax - lenMax = num %d %d %d"%
-                            (bufferMax, lenMax, num)) 
+                hours = blog.getTime() 
+                if isinstance(lastLink, bytes): 
+                    lastLink = lastLink.decode()
+                logging.info("    %s Last link %s Pos: %d"% 
+                        (time.strftime('%Y-%m-%d %H:%M:%S', 
+                            time.localtime(lastTime)), lastLink, i))
+                print("     %s Last link %s" %
+                        (time.strftime('%Y-%m-%d %H:%M:%S', 
+                            time.localtime(lastTime)), lastLink))
+                logging.debug("bufferMax - lenMax = num %d %d %d"%
+                        (bufferMax, lenMax, num)) 
 
 
                 if (hours and (((time.time() - lastTime) - round(float(hours)*60*60)) < 0)): 
