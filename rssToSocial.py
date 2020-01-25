@@ -247,10 +247,8 @@ def main():
                     listPosts = []
                     if ((num > 0) and (blog.getBufferapp() or blog.getProgram())
                             or not (blog.getBufferapp() or blog.getProgram())):
-                        #lastLink, lastTime = checkLastLink(url, socialNetwork)
 
                         logging.debug("   Profile %s"% profile)
-                        #print("    Profile %s"% profile)
                         link = ""
                         for j in range(num, 0, -1):
                             logging.debug("j, i %d - %d"% (j,i))
@@ -266,6 +264,7 @@ def main():
 
                     if (blog.getBufferapp() 
                             and (profile[0] in blog.getBufferapp())): 
+                        print("   Buffered")
                         link = blog.buffer[socialNetwork].addPosts(listPosts)
 
                     if (blog.getProgram() 
@@ -278,59 +277,14 @@ def main():
                         delayedBlogs.append((blog, socialNetwork, 1, timeSlots))
 
                     if not (blog.getBufferapp() or blog.getProgram()):
-                        if (i > 0):
-                            (title, link, firstLink, image, summary, summaryHtml, summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False))
-                            logging.info("  Publishing directly\n") 
-                            serviceName = profile.capitalize()
+                        link = moduleSocial.publishDirect(blog, 
+                                socialNetwork, i)
 
-                            print("   Publishing in %s %s" % (serviceName, title))
-                            if (profile == 'telegram') or (profile == 'facebook'):
-                                comment = summaryLinks
-                            if (profile == 'twitter') or (profile == 'mastodon') or (profile == 'linkedin'):
-                                comment = ''
-                            if (profile == 'medium'):
-                                comment = summaryHtml
-                            if (profile == 'twitter') or (profile == 'facebook') or (profile=='telegram') or (profile=='mastodon') or (profile=='linkedin') or (profile == 'pocket') or (profile == 'medium'): 
-                                # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
-                                import importlib
-                                mod = importlib.import_module('module'+serviceName) 
-                                cls = getattr(mod, 'module'+serviceName)
-                                api = cls()
-                                api.setClient(nick)
-                                result = api.publishPost(title, link, comment)
-                                print(result)
-                                if isinstance(result, str):
-                                    logging.info("Result %s"%str(result))
-                                    if result[:4]=='Fail':
-                                        if result.find('duplicate')>=0:
-                                            duplicate = True
-                                        link=''
-                                        logging.info("Posting failed")
-                            elif profile == 'instagram':
-                                import importlib
-                                mod = importlib.import_module('module'+serviceName) 
-                                cls = getattr(mod, 'module'+serviceName)
-                                api = cls()
-                                api.setClient(nick)
-                                #comment = api.resizeImage(image)
-                                result = api.publishPost(title, link, image)
-                                if isinstance(result, str):
-                                    if result[:4]=='Fail':
-                                        link=''
-                                        logging.info("Posting failed")
-                            else:
-                                logging.info("Still moduleSocial!")
-                                publishMethod = getattr(moduleSocial, 
-                                    'publish'+ serviceName)
-                                result = publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)
                     if link:
                          logging.info("    Updating link %s %s" % 
                                  (profile, link))
                          updateLastLink(blog.url, link, socialNetwork) 
-                         #       if result != "Fail!":
                          logging.debug("listPosts: %s"% listPosts)
-                    #else:
-                    #     logging.info("No link")
 
             time.sleep(2)
         else:

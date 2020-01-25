@@ -77,46 +77,14 @@
 #access_token:
 #
 
-import configparser
-import os
-import sys
-import random
 import logging
-from bs4 import BeautifulSoup
-from bs4 import NavigableString
-from bs4 import Tag
-from bs4 import Doctype
-from html.parser import HTMLParser
-#import facebook
-import urllib
-import urllib.parse
+import random
+import sys
 import time
-#from linkedin import linkedin
-#from tumblpy import Tumblpy
-#from twitter import *
-#https://pypi.python.org/pypi/twitter
-#http://mike.verdone.ca/twitter/
-#https://github.com/sixohsix/twitter/tree
-from html.parser import HTMLParser
-import pickle 
-#import telepot
-# sudo pip install buffpy version does not work
-# Better use:
-# git clone https://github.com/vtemian/buffpy.git
-# cd buffpy
-# sudo python setup.py install
-#from buffpy.managers.profiles import Profiles
-#from buffpy.managers.updates import Update
-#from medium import Client
-#from pocket import Pocket, PocketException
-import moduleCache
-# https://github.com/fernand0/scripts/blob/master/moduleCache.py
 
 from configMod import *
 
 logger = logging.getLogger(__name__)
-
-
 
 def nextPost(blog, socialNetwork):
     #cacheName = 'Cache_'+socialNetwork[0]+'_'+socialNetwork[1]
@@ -134,6 +102,42 @@ def nextPost(blog, socialNetwork):
         sys.exit()
 
     return(element,listP)
+
+def publishDirect(blog, socialNetwork, i): 
+    link = None
+    if (i > 0): 
+        profile = socialNetwork[0]
+        nick = socialNetwork[1]
+        (title, link, firstLink, image, summary, summaryHtml, 
+                summaryLinks, content , links, comment) = (blog.obtainPostData(i - 1, False)) 
+        logging.info("  Publishing directly\n") 
+        serviceName = profile.capitalize() 
+        print("   Publishing in %s %s" % (serviceName, title))
+        if profile in ['telegram', 'facebook']:
+            comment = summaryLinks
+        elif profile == 'medium': 
+            comment = summaryHtml
+        else:
+            comment = ''
+
+        if (profile in ['twitter', 'facebook', 'telegram', 'mastodon', 
+            'linkedin', 'pocket', 'medium', 'instagram']): 
+            # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically 
+            import importlib 
+            mod = importlib.import_module('module'+serviceName) 
+            cls = getattr(mod, 'module'+serviceName) 
+            api = cls() 
+            api.setClient(nick) 
+            result = api.publishPost(title, link, comment) 
+            print(result) 
+            if isinstance(result, str): 
+                logging.info("Result %s"%str(result)) 
+                if result[:4]=='Fail': 
+                    if result.find('duplicate')>=0: 
+                        duplicate = True 
+                        link='' 
+                        logging.info("Posting failed") 
+    return link
 
 def publishDelay(blog, socialNetwork, numPosts, timeSlots): 
     # We allow the rest of the Blogs to start
@@ -262,34 +266,4 @@ if __name__ == "__main__":
     if listPosts:
         moduleSocial.publishDelayTwitter(blog, listPosts ,'fernand0Test', timeSlots)
 
-    #twitter = blog.getSocialNetworks()['twitter']
-    #moduleSocial.publishTelegram(telegram, title, link, summary, summaryHtml, summaryLinks, image)
-    #moduleSocial.publishMedium(medium, title, link, summary, summaryHtml, summaryLinks, image)
 
-    res = publishTwitter("fernand0Test","Hola ahora devuelve la URL, después de un pequeño fallo", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "", "")
-    #print("Published! Text: ", res['text'], " Url: https://twitter.com/fernand0Test/status/%s"%res['id_str'])
-    #res = publishFacebook("Hola caracola", "https://github.com/fernand0/scripts/blob/master/moduleSocial.py", "", "", "me")
-    #print("Published! Text: %s Url: https://facebook.com/fernando.tricas/posts/%s"% (res[0], res[1]['id'][res[1]['id'].find('_')+1:]))
-    #publishLinkedin("Hola caracola", "", "", "")
-
-#def publishMail(channel, title, link, summary, summaryHtml, summaryLinks, image, content = "", links = ""):
-#    # publishLinkedin("Prueba", "http://fernand0.blogalia.com/", "bla bla bla", "https://scontent-mad1-1.xx.fbcdn.net/v/t1.0-1/31694_125680874118651_1644400_n.jpg")
-#    logger.info("Publishing in Gmail... ") 
-#    logger.info("--%s, %s, %s, %s, %s, %s, %s, %s, %s" % (channel, title, link, summary, summaryHtml, summaryLinks, image, content , links))
-#    if True:
-#        application = channel.service
-#        #presentation = 'Publicado! ' + title 
-#        logger.info("Publishing in Gmail: %s" % title)
-#        logger.info("Publishing in Gmail: %s" % content)
-#        logger.info("Publishing in Gmail: %s" % links)
-#        message = application.users().drafts().send(userId='me', body={ 'id': links}).execute()
-#
-#    else:
-#        logger.warning("Gmail posting failed!")
-#        logger.warning("Unexpected error:", sys.exc_info()[0])
-#        return("Fail!")
-
-
-#def searchTwitter(search, twitter): 
-#    t = connectTwitter(twitter)
-#    return(t.search.tweets(q=search)['statuses'])
