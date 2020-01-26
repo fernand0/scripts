@@ -187,7 +187,7 @@ class moduleCache(Queue):
 
     def getPostLink(self, post):
         if post:
-            link = post[0]
+            link = post[1]
             return (link)
         return(None)
 
@@ -282,9 +282,12 @@ def main():
     import moduleSlack
 
     cache = moduleCache.moduleCache()
-    cache.setClient('http://fernand0-errbot.slack.com/', 
-            ('twitter', 'fernand0'))
+    cache.setClient(('http://fernand0-errbot.slack.com/', 
+            ('twitter', 'fernand0')))
     cache.setPosts()
+    print(cache.getPostTitle(cache.getPosts()[0]))
+    print(cache.getPostLink(cache.getPosts()[0]))
+    sys.exit()
     cache.setSchedules('rssToSocial')
     print(cache.schedules)
     cache.addSchedules(['9:00','20:15'])

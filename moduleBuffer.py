@@ -433,6 +433,10 @@ def main():
     buf.setClient('http://fernand0-errbot.slack.com/', 
             ('linkedin', 'Fernando Tricas'))
     buf.setPosts()
+    print(buf.getPosts())
+    print(buf.getPostTitle(buf.getPosts()[0]))
+    print(buf.getPostLink(buf.getPosts()[0]))
+    sys.exit()
     buf.setSchedules()
     buf.addSchedules(['12:34','19:31'])
     buf.setSchedules()
