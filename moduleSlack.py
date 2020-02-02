@@ -31,6 +31,7 @@ class moduleSlack(Content,Queue):
         self.keys = []
 
     def setClient(self, slackCredentials):
+        # https://api.slack.com/authentication/basics
         self.setSlackClient(slackCredentials)
 
     def setSlackClient(self, slackCredentials):
@@ -368,6 +369,19 @@ class moduleSlack(Content,Queue):
             theBots.append("{2} [{1}] {0} {3}".format(a,b,c,name))
         return(theBots)
 
+    def search(self, channel, text):
+        logging.debug("     Searching in Slack...")
+        try: 
+            theChannel = self.getChanId(channel)
+            res = self.sc.api_call("search.messages",channel=theChannel, query=text)
+
+            if res: 
+                logging.debug("Res: %s" % res)
+                return(res)
+        except:        
+            return(self.report('Slack', text, sys.exc_info()))
+
+
 
 def main():
     CHANNEL = 'tavern-of-the-bots' 
@@ -389,6 +403,10 @@ def main():
 
     theChannel = site.getChanId(CHANNEL)  
     print("the Channel %s" % theChannel)
+    res=site.search('links', 'https://www.pine64.org/2020/01/24/setting-the-record-straight-pinephone-misconceptions/a')
+    print("res",res)
+    print("res",res['messages']['total'])
+    sys.exit()
 
     site.setPosts('links')
     site.setPosts('tavern-of-the-bots')

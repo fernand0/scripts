@@ -122,10 +122,15 @@ class moduleForum(Content,Queue):
             self.posts.append(posts[i])
 
         lastLink, lastTime = checkLastLink(self.url)
+        for i, post in enumerate(self.posts):
+            print("{}) {}".format(i, post))
+        print(lastLink)
         pos = self.getLinkPosition(lastLink)
+        print(pos)
         if pos < len(self.posts) - 1:
             for i, post in enumerate(self.posts[pos:]):
-                self.posts[pos+i][0] = '> {}'.format(self.posts[pos+i][0])
+                self.posts[pos+i][0] = '> {}\n{}'.format(self.posts[pos+i][0],
+                        self.posts[pos+i][1])
             self.posts = self.posts[pos:]
         
     def getPosts(self):
@@ -141,7 +146,7 @@ def main():
     forums = ['http://foro.infojardin.com/', 'https://cactiguide.com/forum/']
     for forumData in forums: 
         forum = moduleForum() 
-        forum.setClient('http://foro.infojardin.com/') 
+        forum.setClient('https://www.cactuseros.com/foro/index.php') 
         forum.setPosts()
         lastLink, lastTime = checkLastLink(forum.url)
         pos = forum.getLinkPosition(lastLink)
