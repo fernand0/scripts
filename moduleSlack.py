@@ -67,7 +67,7 @@ class moduleSlack(Content,Queue):
         return self.sc
  
     def setPosts(self, channel='links'):
-        logging.info("  Setting posts")
+        logging.info(" Setting posts")
         self.posts = []
         theChannel = self.getChanId(channel)
         history = self.sc.api_call( "channels.history", count=1000, channel=theChannel)
@@ -342,7 +342,7 @@ class moduleSlack(Content,Queue):
         except:
             result = self.sc.chat_postMessage(channel=theChan, 
                     text=msg)
-        logging.info(result)
+        logging.info(result['ok'])
         logging.info("End publishing %s" % msg)
         return(result)
 
