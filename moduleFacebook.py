@@ -79,6 +79,12 @@ class moduleFacebook(Content,Queue):
         posts = self.page.get_connections(self.pageId, connection_name='posts') 
 
         for post in posts['data']:
+            print("-->",post)
+            postt = self.page.get_connections(post['id'], connection_name='attachments') 
+            if postt['data']: 
+                print(postt['data'][0])
+                if 'url' in postt['data'][0]:
+                    print(urllib.parse.unquote(postt['data'][0]['url']).split('=')[1])#.split('&')[0])
             if 'message' in post:
                 self.posts.append(post)
 

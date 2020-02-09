@@ -81,9 +81,14 @@ class moduleTwitter(Content,Queue):
         for post in self.getPosts():
             #print(post)
             url = 'https://twitter.com/' + post['user']['screen_name'] + '/status/' + str(post['id'])
+            if 'urls' in post:
+                link = post['urls'][0]['expanded_url']
+            else:
+                link = ''
+
             outputData[serviceName]['sent'].append((post['text'], url, 
                     post['user']['screen_name'],     
-                    post['created_at'], '','','','',''))
+                    post['created_at'], link,'','','',''))
 
         self.postsFormatted = outputData
 
@@ -121,6 +126,12 @@ class moduleTwitter(Content,Queue):
         else:
             return ''
 
+    def getPostUrl(self, post):
+        print(post)
+        if (('urls' in post['entities']) and (post['entities']['urls'])):
+            return(post['entities']['urls'][0]['expanded_url'])
+        else:
+            return ''
 
     def search(self, text):
         logging.debug("     Searching in Twitter...")
@@ -155,7 +166,8 @@ def main():
         print(post)
         title = tw.getPostTitle(post)
         link = tw.getPostLink(post)
-        print("Title: {}\nLink: {}\n".format(title,link))
+        url = tw.getPostUrl(post)
+        print("Title: {}\nLink: {}\nUrl:{}\n".format(title,link,url))
 
     res = tw.search('url:fernand0')
 

@@ -80,7 +80,10 @@ class Queue:
         reply = ""
 
         logging.info("Service %s", self.service)
-        j = int(argsIni[2:]) 
+        if len(argsIni) > 2:
+            j = int(argsIni[2:]) 
+        else:
+            j = -1
         cmd = getattr(self, command)
         logging.info("Command %s %d"% (command, j))
         if argsCont:

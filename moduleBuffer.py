@@ -150,7 +150,9 @@ class moduleBuffer(Queue):
         logging.debug("Profile %s" % profile)
     
         for method in ['sent', 'pending']:
-            if profile and (profile.counts[method] > 0):
+            if (profile 
+                    and ('counts' in profile) 
+                    and (profile.counts[method] > 0)):
                 profile.id = profile['id']
                 profile.profile_id = profile['service_id']
                 updates = getattr(profile.updates, method)
