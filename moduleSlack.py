@@ -139,6 +139,7 @@ class moduleSlack(Content,Queue):
                     lenMax = self.len(profile)
                     socialNetwork = (profile,self.getSocialNetworks()[profile])
 
+                    listP = self.cache[socialNetwork].setPosts()
                     listP = self.cache[socialNetwork].getPosts()
                     listPsts = self.obtainPostData(j)
                     listP = listP + [listPsts]
