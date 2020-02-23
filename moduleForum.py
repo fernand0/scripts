@@ -96,6 +96,7 @@ class moduleForum(Content,Queue):
         listId = []
         posts = {}
         for i, forum in enumerate(forums): 
+            print("forum %s"%forum)
             if forum.name != 'a': 
                 # It is inside some other tag
                 forum = forum.contents[0]
@@ -115,23 +116,24 @@ class moduleForum(Content,Queue):
         
                 time.sleep(1)
         
-        listId = sorted(set(listId))
         self.posts = []
-        self.lastId = listId[-1]
-        for i in listId[-self.max:]:
-            self.posts.append(posts[i])
+        if listId:
+            listId = sorted(set(listId))
+            self.lastId = listId[-1]
+            for i in listId[-self.max:]:
+                self.posts.append(posts[i])
 
-        lastLink, lastTime = checkLastLink(self.url)
-        for i, post in enumerate(self.posts):
-            print("{}) {}".format(i, post))
-        print(lastLink)
-        pos = self.getLinkPosition(lastLink)
-        print(pos)
-        if pos < len(self.posts) - 1:
-            for i, post in enumerate(self.posts[pos:]):
-                self.posts[pos+i][0] = '> {}\n{}'.format(self.posts[pos+i][0],
-                        self.posts[pos+i][1])
-            self.posts = self.posts[pos:]
+            lastLink, lastTime = checkLastLink(self.url)
+            for i, post in enumerate(self.posts):
+                print("{}) {}".format(i, post))
+            print(lastLink)
+            pos = self.getLinkPosition(lastLink)
+            print(pos)
+            if pos < len(self.posts) - 1:
+                for i, post in enumerate(self.posts[pos:]):
+                    self.posts[pos+i][0] = '> {}\n{}'.format(self.posts[pos+i][0],
+                            self.posts[pos+i][1])
+                self.posts = self.posts[pos:]
         
     def getPosts(self):
         return self.posts
@@ -143,10 +145,10 @@ class moduleForum(Content,Queue):
         return post[1]
 
 def main(): 
-    forums = ['http://foro.infojardin.com/', 'https://cactiguide.com/forum/']
+    forums = ['http://foro.infojardin.com/', 'https://cactiguide.com/forum/','https://www.cactuseros.com/foro/index.php']
     for forumData in forums: 
         forum = moduleForum() 
-        forum.setClient('https://www.cactuseros.com/foro/index.php') 
+        forum.setClient('https://www.floravascular.com/foro/') 
         forum.setPosts()
         lastLink, lastTime = checkLastLink(forum.url)
         pos = forum.getLinkPosition(lastLink)
