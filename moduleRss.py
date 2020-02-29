@@ -113,6 +113,13 @@ class moduleRss(Content,Queue):
                # tumblr at the beggining of the anchor text
                theTitle = theTitle[pos - lenProt + 1:]
 
+        code = soup.find_all('code')
+        for cod in code: 
+            cod.string = cod.string.replace('<','&lt;')
+            cod.string = cod.string.replace('>','&gt;')
+            cod = cod.string
+
+
         theSummary = soup.get_text()
         if self.getLinksToAvoid():
             (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())

@@ -3,6 +3,7 @@
 import configparser
 import os
 import telepot
+import sys
 
 from configMod import *
 from moduleContent import *
@@ -66,7 +67,12 @@ class moduleTelegram(Content):
         logging.info("text to "+ textToPublish)
         logging.info("text to 2"+ textToPublish2)
 
-        bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
+        try:
+            logging.info("     Publishing: %s" % textToPublish)
+            bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
+        except:
+            return(self.report('Telegram', textToPublish, link, sys.exc_info()))
+
         if textToPublish2:
             try:
                 bot.sendMessage('@'+channel, textToPublish2[:4090], parse_mode='HTML') 
