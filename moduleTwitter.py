@@ -39,8 +39,14 @@ class moduleTwitter(Content,Queue):
             config.read(CONFIGDIR + '/.rssTwitter')
 
             self.user = twitterAC
-            CONSUMER_KEY = config.get("appKeys", "CONSUMER_KEY")
-            CONSUMER_SECRET = config.get("appKeys", "CONSUMER_SECRET")
+            try: 
+                CONSUMER_KEY = config.get(twitterAC, "CONSUMER_KEY")
+            except: 
+                CONSUMER_KEY = config.get("appKeys", "CONSUMER_KEY")
+            try: 
+                CONSUMER_SECRET = config.get(twitterAC, "CONSUMER_SECRET")
+            except: 
+                CONSUMER_SECRET = config.get("appKeys", "CONSUMER_SECRET")
             TOKEN_KEY = config.get(twitterAC, "TOKEN_KEY")
             TOKEN_SECRET = config.get(twitterAC, "TOKEN_SECRET")
 
@@ -94,9 +100,8 @@ class moduleTwitter(Content,Queue):
 
     def publishPost(self, post, link='', comment=''):
         logging.debug("     Publishing in Twitter...")
-        if comment == None:
-            comment = ''
-        post = comment + " " + post
+        if comment != None: 
+            post = comment + " " + post
         h = HTMLParser()
         post = h.unescape(post)
         res = None
@@ -109,9 +114,10 @@ class moduleTwitter(Content,Queue):
                 logging.debug("Res: %s" % res)
                 urlTw = "https://twitter.com/%s/status/%s" % (self.user, res['id'])
                 logging.info("     Link: %s" % urlTw)
-                return(urlTw)
+                return(post +'\n'+urlTw)
 
         except:        
+            logging.info("Fail!")
             return(self.report('Twitter', post, link, sys.exc_info()))
 
     def getPostTitle(self, post):

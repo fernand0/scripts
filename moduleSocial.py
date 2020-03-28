@@ -137,6 +137,9 @@ def publishDirect(blog, socialNetwork, i):
                         duplicate = True 
                         link='' 
                         logging.info("Posting failed") 
+                elif result.find('Bad Request')>=0: 
+                        link='' 
+                        logging.info("Posting failed") 
     return link
 
 def publishDelay(blog, socialNetwork, numPosts, timeSlots): 
@@ -178,13 +181,14 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
             cls = getattr(mod, 'module'+profile.capitalize())
             api = cls()
             api.setClient(nick)
+            title = title + '\n'+ summary[:120]
             result = api.publishPost(title, link, comment)
             if isinstance(result, str):
                 if result[:4]=='Fail':
                     link=''
                 else: 
+                    print(" [d] Published: %s - %s" % (result, 'OK'))
                     result = 'OK'
-                    print(" [d] Published: %s - %s" % (title, result))
         else: 
             publishMethod = globals()['publish'+ profile.capitalize()]#()(self, ))
             publishMethod(nick, title, link, summary, summaryHtml, summaryLinks, image, content, links)

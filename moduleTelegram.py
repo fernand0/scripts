@@ -64,11 +64,10 @@ class moduleTelegram(Content):
             textToPublish = text[:4080] + ' ...'
             textToPublish2 = '... '+ text[4081:]
 
-        logging.info("text to "+ textToPublish)
-        logging.info("text to 2"+ textToPublish2)
+        logging.info("Publishing (text to )"+ textToPublish)
+        logging.info("Publishing (text to 2)"+ textToPublish2)
 
         try:
-            logging.info("     Publishing: %s" % textToPublish)
             bot.sendMessage('@'+channel, textToPublish, parse_mode='HTML') 
         except:
             return(self.report('Telegram', textToPublish, link, sys.exc_info()))
