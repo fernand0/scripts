@@ -54,41 +54,45 @@ class moduleGmail(Content,Queue):
         self.url = SCOPES
         api = {}
     
-        config = configparser.ConfigParser() 
-        config.read(CONFIGDIR + '/.oauthG.cfg')
-        
-        self.service = 'gmail'
-        if type(Acc) == str: 
-            if Acc.find('@'): 
-                pos = Acc.rfind('@') 
-                self.server = Acc[pos+1:] 
-                self.nick   = Acc[:pos] 
+        try:
+            config = configparser.ConfigParser() 
+            config.read(CONFIGDIR + '/.oauthG.cfg')
+            
+            self.service = 'gmail'
+            if type(Acc) == str: 
+                if Acc.find('@'): 
+                    pos = Acc.rfind('@') 
+                    self.server = Acc[pos+1:] 
+                    self.nick   = Acc[:pos] 
+                    self.name = 'GMail_{}'.format(Acc[0]) 
+                else: 
+                    self.nick = config.get(Acc,'user') #+'@'+config.get(Acc,'server') 
+                    self.server = config.get(Acc,'server')
+                import hashlib
+                self.name = 'GMail' + Acc[3:]# + '_' + hashlib.md5(self.nick.encode()+self.server.encode()).hexdigest()
+            else:
+                logging.debug("Acc %s" % str(Acc))
+                #self.server = Acc[1][1][1]#[pos+1:] 
+                #self.nick   = Acc[1][1][0]#[:pos]
+                pos = Acc[1].rfind('@') 
+                self.server = Acc[1][pos+1:] 
+                self.nick   = Acc[1][:pos]
                 self.name = 'GMail_{}'.format(Acc[0]) 
-            else: 
-                self.nick = config.get(Acc,'user') #+'@'+config.get(Acc,'server') 
-                self.server = config.get(Acc,'server')
-            import hashlib
-            self.name = 'GMail' + Acc[3:]# + '_' + hashlib.md5(self.nick.encode()+self.server.encode()).hexdigest()
-        else:
-            logging.debug("Acc %s" % str(Acc))
-            #self.server = Acc[1][1][1]#[pos+1:] 
-            #self.nick   = Acc[1][1][0]#[:pos]
-            pos = Acc[1].rfind('@') 
-            self.server = Acc[1][pos+1:] 
-            self.nick   = Acc[1][:pos]
-            self.name = 'GMail_{}'.format(Acc[0]) 
-        self.id = '{} {}@{}'.format(self.name[-1], self.nick, self.server)
-        logging.debug("Id %s" % self.id)
+            self.id = '{} {}@{}'.format(self.name[-1], self.nick, self.server)
+            logging.debug("Id %s" % self.id)
 
-        fileStore = self.confName((self.server, self.nick))
+            fileStore = self.confName((self.server, self.nick))
     
-        logging.debug("Filestore %s"% fileStore)
-        store = file.Storage(fileStore)
-        credentials = store.get()
-        
-        service = build('gmail', 'v1', http=credentials.authorize(Http()))
+            logging.debug("Filestore %s"% fileStore)
+            store = file.Storage(fileStore)
+            credentials = store.get()
+            
+            service = build('gmail', 'v1', http=credentials.authorize(Http()))
     
-        self.client = service
+            self.client = service
+        except:
+            logging.warning("Config file does not exists")
+            logging.warning("Unexpected error:", sys.exc_info()[0])
 
     def getClient(self):
         return(self.client)

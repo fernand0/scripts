@@ -229,22 +229,23 @@ class moduleBuffer(Queue):
 
     def addPosts(self, listPosts):
         linkAdded = ''
+        link=''
         logging.info("    Adding posts to %s" % self.service)
         for post in listPosts: 
             title = self.getPostTitle(post)
             link = self.getPostLink(post)
+            if self.service == 'instagram':
+                img = self.getPostImg(post)
             textPost = title + " " + link
-            logging.info("    Post: %s" % link)
+            logging.info("    Post: %s" % textPost)
             entry = textPost #urllib.parse.quote(textPost)
-            try:
-                #if post[3]: 
-                #    print(post[3])
-                #    entry = urllib.parse.quote(post[0])
-                #    self.getProfile().updates.new(entry, 
-                #            media={'photo':post[3]})
-                #else: 
-                self.getProfile().updates.new(entry)
-            except: 
+            if True:
+                if img: 
+                    myMedia = {'photo':img}
+                    self.getProfile().updates.new(entry, shorten=False, media=myMedia)
+                else:
+                    self.getProfile().updates.new(entry)
+            else: 
                 logging.warning("Buffer posting failed!") 
                 logging.warning("Entry: %s"% entry) 
                 logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
@@ -323,6 +324,10 @@ class moduleBuffer(Queue):
                 link = post[1]
             return (link)
         return(None)
+
+    def getPostImg(self, post):
+        img = post[3]
+        return(img)
 
     #def isForMe(self, args):
     #    profile = self.getProfile()
@@ -434,8 +439,12 @@ def main():
     buf = moduleBuffer.moduleBuffer()
     buf.setClient('http://fernand0-errbot.slack.com/', 
             ('linkedin', 'Fernando Tricas'))
+    buf.setClient('http://avecesunafoto.wordpress.com/', 
+            ('instagram', 'a-veces-una-foto'))
     buf.setPosts()
+
     print(buf.getPosts())
+    sys.exit()
     print(buf.getPostTitle(buf.getPosts()[0]))
     print(buf.getPostLink(buf.getPosts()[0]))
     sys.exit()

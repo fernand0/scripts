@@ -31,6 +31,8 @@ import moduleForum
 # https://github.com/fernand0/scripts/blob/master/moduleForum.py
 import moduleGmail
 # https://github.com/fernand0/scripts/blob/master/moduleGmail.py
+import moduleWordpress
+# https://github.com/fernand0/scripts/blob/master/moduleWordpress.py
 
 import configparser
 import os
@@ -173,6 +175,11 @@ def main():
             logging.info(" Gmail: {}".format(mail))
             blog = moduleGmail.moduleGmail()
             blog.setClient(('gmail',mail))
+        elif 'wordpress' in config.options(section):
+            wordpress = config.get(section,'wordpress')
+            logging.info(" Wordpress: {}".format(wordpress))
+            blog = moduleWordpress.moduleWordpress()
+            blog.setClient(wordpress)
         blog.setUrl(url)
 
         if section.find(checkBlog) >= 0:
@@ -186,6 +193,9 @@ def main():
 
             if ('buffer' in config.options(section)): 
                 blog.setBufferapp(config.get(section, "buffer")) 
+
+            if('max' in config.options(section)):
+                blog.setMax(config.get(section, "max")) 
 
             if ('cache' in config.options(section)): 
                 blog.setProgram(config.get(section, "cache"))
@@ -245,6 +255,9 @@ def main():
                     print("     Not publishing because time restriction (Last time: %s)"% time.ctime(lastTime)) 
                 else:
                     listPosts = []
+                    if 'max' in blog.__dir__():
+                        num = int(blog.getMax())
+
                     if ((num > 0) and (blog.getBufferapp() or blog.getProgram())
                             or not (blog.getBufferapp() or blog.getProgram())):
 
@@ -256,6 +269,7 @@ def main():
                             if (i < 0):
                                 break
                             post = blog.obtainPostData(i, False)
+                            # Image in 3
                             listPosts.append(post)
                             print("      Scheduling...")
                             print("       Post %s" % post[0])
