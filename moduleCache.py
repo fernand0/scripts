@@ -226,11 +226,11 @@ class moduleCache(Queue):
         logging.info("Inserting %s", text)
         print(j)
         print(text)
-        if j < 0:
-            textS = text.split(' http')
-            post = (textS[0], 'http'+textS[1], '','','','','','','','')
-            self.posts.append(post)
-            self.updatePostsCache()
+        # We do not use j, Maybe in the future.
+        textS = text.split(' http')
+        post = (textS[0], 'http'+textS[1], '','','','','','','','')
+        self.posts.append(post)
+        self.updatePostsCache()
 
     def publish(self, j):
         logging.info("Publishing %d"% j)
