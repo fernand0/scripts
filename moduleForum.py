@@ -96,6 +96,7 @@ class moduleForum(Content,Queue):
         listId = []
         posts = {}
         for i, forum in enumerate(forums): 
+            print("forum %s"%forum)
             if forum.name != 'a': 
                 # It is inside some other tag
                 forum = forum.contents[0]
@@ -115,7 +116,6 @@ class moduleForum(Content,Queue):
         
                 time.sleep(1)
         
-        listId = sorted(set(listId))
         self.posts = []
         self.lastId = listId[-1]
         for i in listId[-self.max:]:

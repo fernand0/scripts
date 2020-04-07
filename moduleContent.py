@@ -113,6 +113,12 @@ class Content:
     def setBufferapp(self, bufferapp):
         self.bufferapp = bufferapp
         self.setBuffer()
+    
+    def setMax(self, maxVal):
+        self.max = maxVal
+
+    def getMax(self):
+        return(self.max)
 
     def getCache(self):
         return(self.cache)
