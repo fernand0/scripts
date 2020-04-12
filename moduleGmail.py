@@ -104,6 +104,13 @@ class moduleGmail(Content,Queue):
         return(api.users().labels().create(userId='me', 
                 body=label_object).execute())
 
+    def updateLabel(self, label_id, labelName):
+        api = self.getClient()
+        label_object = {'messageListVisibility': 'show', 
+                'name': labelName, 'labelListVisibility': 'labelShow'}
+        return(api.users().labels().update(userId='me', id=label_id,
+                body=label_object).execute())
+
     def setLabels(self):
         api = self.getClient()
         response = api.users().labels().list(userId='me').execute()
@@ -117,6 +124,29 @@ class moduleGmail(Content,Queue):
         labels = (list(filter(lambda x: sel in x['name'] ,self.labels)))
         return (list(map(lambda x: x['id'], labels)))
 
+    def getLabelsEqIds(self, sel=''):
+        labels = (list(filter(lambda x: sel.upper() == x['name'].upper() ,self.labels)))
+        return (list(map(lambda x: x['id'], labels)))
+
+    def getListLabel(self, label):
+        api = self.getClient()
+        list_labels = [ label, ]
+        print(list_labels)
+        response = api.users().messages().list(userId='me',
+                                               labelIds=list_labels).execute()
+        return(response)
+
+    def modifyLabels(self, message, oldLabelId, labelId):
+        api = self.getClient()
+        list_labels = {'removeLabelIds': [oldLabelId, ], 
+                'addLabelIds': [labelId, ]}
+        print(list_labels)
+        print(message)
+        
+        message = api.users().messages().modify(userId='me', id=message['id'],
+                                                body=list_labels).execute()
+        return(message)
+        
     def getPosts(self):
         if not self.posts:
             self.setPosts()

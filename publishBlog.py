@@ -9,7 +9,7 @@ from configMod import *
 
 def archive(blogId, blogName, blogUrl, text, postId): 
     theTime = time.localtime(time.time())
-    path = os.path.join(os.path.expanduser('~') , 'Documents/bitacoras/archivo')
+    path = os.path.join(os.path.expanduser('~') , 'Documents/www/archivo')
     path = '%s/%s/%s'%(path,blogId,time.strftime("%Y/%m", theTime))
     if not os.path.isdir(path):
 	    os.makedirs(path)
