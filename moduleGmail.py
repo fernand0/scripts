@@ -5,6 +5,7 @@
 # stored as Drafts in a Gmail account
 
 import configparser, os
+import datetime
 import logging
 import importlib
 import sys
@@ -60,7 +61,7 @@ class moduleGmail(Content,Queue):
             
             self.service = 'gmail'
             if type(Acc) == str: 
-                if Acc.find('@'): 
+                if Acc.find('@') >= 0: 
                     pos = Acc.rfind('@') 
                     self.server = Acc[pos+1:] 
                     self.nick   = Acc[:pos] 
@@ -181,7 +182,7 @@ class moduleGmail(Content,Queue):
                    message['list'] = post
                    message['meta'] = ''
                    message['raw'] = raw
-                   self.posts.insert(0, message)
+                   self.posts.insert(0, message) 
 
     def confName(self, acc):
         theName = os.path.expanduser(CONFIGDIR + '/' + '.' 
@@ -237,9 +238,20 @@ class moduleGmail(Content,Queue):
             return (title)
         return(None)
 
+    def getPostDate(self, post):
+        logging.debug(post)
+        if post:
+            date = int(self.getHeader(post,'internalDate'))/1000
+            date = '{}'.format(datetime.datetime.fromtimestamp(date)) # Bad!
+            return (date)
+        return(None)
+
     def getHeader(self, message, header = 'Subject'):
         if 'meta' in message:
             message = message['meta']
+        for head in message: 
+            if head.capitalize() == header.capitalize(): 
+                return(message[head])
         for head in message['payload']['headers']: 
             if head['name'].capitalize() == header.capitalize(): 
                 return(head['value'])
@@ -301,7 +313,9 @@ class moduleGmail(Content,Queue):
         theLinks = None
         content = None
         theContent = None
-        firstLink = theLink
+        #date = int(self.getHeader(message, 'internalDate'))/1000
+        #firstLink = '{}'.format(datetime.datetime.fromtimestamp(date)) # Bad!
+        firstlink = None
         theImage = None
         theSummary = snippet
 
@@ -519,7 +533,6 @@ def main():
         api = moduleGmail.moduleGmail()
         api.setClient(acc)
         api.setPosts()
-        print(api.name)
     sys.exit()
     print(api.getPosts())
     print(api.getPosts()[0])

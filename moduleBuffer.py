@@ -66,8 +66,9 @@ from buffpy.managers.updates import Updates
 
 from configMod import *
 from moduleQueue import *
+from moduleContent import *
 
-class moduleBuffer(Queue):
+class moduleBuffer(Content,Queue):
 
     def __init__(self): #, url, socialNetwork, nick):
         super().__init__()
@@ -103,23 +104,6 @@ class moduleBuffer(Queue):
         self.url = url
         self.service = socialNetwork[0]
         self.nick = socialNetwork[1]
-
-    #def setBuffer(self):
-    #    config = configparser.ConfigParser()
-    #    logging.debug("Config...%s" % CONFIGDIR)
-    #    config.read(CONFIGDIR + '/.rssBuffer')
-    #
-    #    clientId = config.get("appKeys", "client_id")
-    #    clientSecret = config.get("appKeys", "client_secret")
-    #    redirectUrl = config.get("appKeys", "redirect_uri")
-    #    accessToken = config.get("appKeys", "access_token")
-    #    
-    #    # instantiate the api object 
-    #    api = buffpy.api.API(client_id=clientId,
-    #              client_secret=clientSecret,
-    #              access_token=accessToken)
-    #
-    #    self.api = api
 
     def setProfile(self, service=""):
         logging.info("  Checking services...")
@@ -236,18 +220,22 @@ class moduleBuffer(Queue):
             link = self.getPostLink(post)
             if self.service == 'instagram':
                 img = self.getPostImg(post)
+                #Crop the image and leave it on some server
+                imgN = resizeImage(img)
+                img = imgN
+            else:
+                img = ''
             textPost = title + " " + link
             logging.info("    Post: %s" % textPost)
             entry = textPost #urllib.parse.quote(textPost)
-            if True:
+            try:
                 if img: 
-                    myMedia = {'photo':img}
+                    myMedia = {'photo':img}#,'description':title}
                     self.getProfile().updates.new(entry, shorten=False, media=myMedia)
                 else:
                     self.getProfile().updates.new(entry)
-            else: 
+            except: 
                 logging.warning("Buffer posting failed!") 
-                logging.warning("Entry: %s"% entry) 
                 logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
                 logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
                 link = ''

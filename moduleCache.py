@@ -23,8 +23,9 @@ from crontab import CronTab
 
 from configMod import *
 from moduleQueue import *
+from moduleContent import *
 
-class moduleCache(Queue):
+class moduleCache(Content,Queue):
     
     def __init__(self):
         super().__init__()

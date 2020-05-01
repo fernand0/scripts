@@ -44,20 +44,18 @@ class moduleWordpress(Content,Queue):
     def setPosts(self): 
         logging.info("  Setting posts")
         self.posts = []
-        #tweets = self.tc.statuses.home_timeline()
-        if True: 
+        try: 
             posts = requests.get(self.api_base + 
                     self.api_posts.format(self.my_site)+'?number=100', 
                     headers = self.headers).json()['posts']
-            # Too much posts?
-            posts2 = requests.get(self.api_base + 
-                    self.api_posts.format(self.my_site)+'?number=100&page=2', 
-                    headers = self.headers).json()['posts']
+            self.posts = posts
+            # More posts
+            #posts2 = requests.get(self.api_base + 
+            #        self.api_posts.format(self.my_site)+'?number=100&page=2', 
+            #        headers = self.headers).json()['posts']
+        except:
+            return(self.report('Wordpress API', '' , '', sys.exc_info()))
 
-        else:
-            posts = []
-
-        self.posts = posts+posts2
 
     def getTitle(self, i):        
         post = self.getPosts()[i]
@@ -109,7 +107,6 @@ class moduleWordpress(Content,Queue):
         else:
             theSummary = content
         theSummaryLinks = content
-        print(post)
         if 'attachments' in post:
             theImage=''
             for key in post['attachments']:
@@ -141,11 +138,6 @@ class moduleWordpress(Content,Queue):
         
         theContent = ""
         theSummaryLinks = ""
-        #if self.getLinksToAvoid():
-        #    (theContent, theSummaryLinks) = self.extractLinks(soup, self.getLinkstoavoid())
-        #else:
-        #    (theContent, theSummaryLinks) = self.extractLinks(soup, "") 
-            
 
         logging.debug("=========")
         logging.debug("Results: ")
@@ -174,18 +166,20 @@ def main():
     wp.setClient('avecesunafoto')
     print("Testing posts")
     wp.setPosts()
-    for post in wp.getPosts():
-        print("p",post)
+    print(wp.getPosts())
+    for i, post in enumerate(wp.getPosts()):
+        print("p",i, ") ", post)
         #print("@%s: %s" %(tweet[2], tweet[0]))
 
+    print(wp.getLinkPosition('https://avecesunafoto.wordpress.com/2020/01/31/guiso/'))
+    sys.exit()
     print("Testing title and link")
     
-    for post in wp.getPosts():
-        print(post)
+    for i, post in enumerate(wp.getPosts()):
         title = wp.getPostTitle(post)
         link = wp.getPostLink(post)
         #url = tw.getPostUrl(post)
-        print("Title: {}\nLink: {}\nUrl:{}\n".format(title,link,link))
+        print("{}) Title: {}\nLink: {}\nUrl:{}\n".format(i,title,link,link))
 
 
     print("Testing obtainPostData")

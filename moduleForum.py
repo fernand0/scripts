@@ -96,7 +96,7 @@ class moduleForum(Content,Queue):
         listId = []
         posts = {}
         for i, forum in enumerate(forums): 
-            print("forum %s"%forum)
+            #print("forum %s"%forum)
             if forum.name != 'a': 
                 # It is inside some other tag
                 forum = forum.contents[0]
@@ -118,16 +118,17 @@ class moduleForum(Content,Queue):
         
         self.posts = []
         self.lastId = listId[-1]
+        listId.sort()
         for i in listId[-self.max:]:
             self.posts.append(posts[i])
 
         lastLink, lastTime = checkLastLink(self.url)
-        for i, post in enumerate(self.posts):
-            print("{}) {}".format(i, post))
-        print(lastLink)
+        #for i, post in enumerate(self.posts):
+        #    print("{}) {}".format(i, post))
+        #print(lastLink)
         pos = self.getLinkPosition(lastLink)
         #print(self.posts[pos][1])
-        print('>>>',pos, len(self.posts))
+        #print('>>>',pos, len(self.posts))
         if (pos  == len(self.posts)):# and (str(lastLink) != self.posts[pos][1]):
             print('si')
             pos = 0
@@ -150,8 +151,7 @@ def main():
     forums = ['https://www.cactuseros.com/foro/index.php', 'http://foro.infojardin.com/', 'https://cactiguide.com/forum/']
     for forumData in forums: 
         forum = moduleForum() 
-        forum.setClient('http://foro.infojardin.com/') 
-        forum.setClient('https://www.cactuseros.com/foro/index.php')
+        forum.setClient(forumData) 
         forum.setPosts()
         lastLink, lastTime = checkLastLink(forum.url)
         pos = forum.getLinkPosition(lastLink)
