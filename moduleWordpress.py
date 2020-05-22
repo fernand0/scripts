@@ -107,12 +107,19 @@ class moduleWordpress(Content,Queue):
         else:
             theSummary = content
         theSummaryLinks = content
-        if 'attachments' in post:
-            theImage=''
+        theImage=''
+        if 'content' in post:
+            soupImg = BeautifulSoup(post['content'], 'lxml')
+            imgs = soupImg.find_all('img')
+            theImage = imgs[0].get('data-large-file').split('?')[0]
+            sys.exit()
+        elif 'attachments' in post:
             for key in post['attachments']:
+                print(post['attachments'])
                 if 'URL' in post['attachments'][key]:
                     theImage = post['attachments'][key]['URL']
         else:
+            print("Fail image")
             logging.info("Fail image")
             logging.debug("Fail image %s", post)
             theImage = ''
@@ -171,7 +178,11 @@ def main():
         print("p",i, ") ", post)
         #print("@%s: %s" %(tweet[2], tweet[0]))
 
-    print(wp.getLinkPosition('https://avecesunafoto.wordpress.com/2020/01/31/guiso/'))
+    pos = wp.getLinkPosition('https://avecesunafoto.wordpress.com/2020/03/10/gamoncillo/')
+    pos = wp.getLinkPosition('https://avecesunafoto.wordpress.com/2020/03/11/puerto-2/')
+    print(pos)
+    print(wp.getPosts()[pos])
+    title = wp.obtainPostData(pos)
     sys.exit()
     print("Testing title and link")
     
