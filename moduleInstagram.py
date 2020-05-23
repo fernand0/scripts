@@ -16,8 +16,6 @@ import keyring
 import keyrings
 import urllib.parse
 import requests
-import shutil
-from PIL import Image
 
 class moduleInstagram(Content):
 
@@ -73,7 +71,8 @@ class moduleInstagram(Content):
 
     def publishPost(self, post, link, image):
         logging.info("     Publishing in Instagram...")
-        comment = self.resizeImage(image)
+        comment = resizeImage(image)
+        # resizeImage provided by configMod.py
         try: 
             res = self.ic.uploadPhoto(comment, caption=post)
             self.setPosts()
@@ -103,26 +102,6 @@ class moduleInstagram(Content):
             logging.info("     Not published in Instagram. Exception ...")
             return('Fail')
         
-    def resizeImage(self, imgUrl):
-        response = requests.get(imgUrl, stream=True)
-
-        fileName = '/tmp/'+urllib.parse.urlparse(response.url)[2].split('/')[-1]
-        with open(fileName,'wb') as f: 
-            shutil.copyfileobj(response.raw, f)
-
-        im = Image.open(fileName)
-        size = im.size
-    
-        if size[0] < size[1]: 
-           dif = size[1]-size[0]
-           box = (0, dif/2 , size[0], dif/2+size[0])
-        else:
-           dif = size[0]-size[1]
-           box = (dif/2, 0 , dif/2 + size[1], size[1])
-        region = im.crop(box)
-        region.save(fileName+'_croped.jpg')
-        return(fileName+'_croped.jpg')
-
 
 def main():
 

@@ -23,8 +23,9 @@ from crontab import CronTab
 
 from configMod import *
 from moduleQueue import *
+from moduleContent import *
 
-class moduleCache(Queue):
+class moduleCache(Content,Queue):
     
     def __init__(self):
         super().__init__()
@@ -187,7 +188,7 @@ class moduleCache(Queue):
 
     def getPostLink(self, post):
         if post:
-            link = post[0]
+            link = post[1]
             return (link)
         return(None)
 
@@ -221,6 +222,16 @@ class moduleCache(Queue):
         self.updatePostsCache()
         update = "Changed "+oldTitle+" with "+newTitle
         return(update)
+
+    def insert(self, j, text):
+        logging.info("Inserting %s", text)
+        print(j)
+        print(text)
+        # We do not use j, Maybe in the future.
+        textS = text.split(' http')
+        post = (textS[0], 'http'+textS[1], '','','','','','','','')
+        self.posts.append(post)
+        self.updatePostsCache()
 
     def publish(self, j):
         logging.info("Publishing %d"% j)
@@ -275,16 +286,23 @@ class moduleCache(Queue):
             self.updatePostsCache()
             logging.info("Moved %s"% post[0])
         return("%s"% post[0])
-
  
 def main():
     import moduleCache
     import moduleSlack
 
     cache = moduleCache.moduleCache()
-    cache.setClient('http://fernand0-errbot.slack.com/', 
-            ('twitter', 'fernand0'))
+    cache.setClient(('http://fernand0-errbot.slack.com/', 
+            ('twitter', 'fernand0')))
     cache.setPosts()
+    print(cache.getPostTitle(cache.getPosts()[0]))
+    print(cache.getPostLink(cache.getPosts()[0]))
+    print(cache.selectAndExecute('insert', 'A2 Do You Really Have a Right to be “Forgotten”? - Assorted Stuff https://www.assortedstuff.com/do-you-really-have-a-right-to-be-forgotten/'))
+    print(cache.getPostTitle(cache.getPosts()[9]))
+    print(cache.getPostLink(cache.getPosts()[9]))
+    cache.setPosts()
+    print(cache.getPostTitle(cache.getPosts()[9]))
+    sys.exit()
     cache.setSchedules('rssToSocial')
     print(cache.schedules)
     cache.addSchedules(['9:00','20:15'])

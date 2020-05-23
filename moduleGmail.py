@@ -5,6 +5,7 @@
 # stored as Drafts in a Gmail account
 
 import configparser, os
+import datetime
 import logging
 import importlib
 import sys
@@ -54,41 +55,45 @@ class moduleGmail(Content,Queue):
         self.url = SCOPES
         api = {}
     
-        config = configparser.ConfigParser() 
-        config.read(CONFIGDIR + '/.oauthG.cfg')
-        
-        self.service = 'gmail'
-        if type(Acc) == str: 
-            if Acc.find('@'): 
-                pos = Acc.rfind('@') 
-                self.server = Acc[pos+1:] 
-                self.nick   = Acc[:pos] 
+        try:
+            config = configparser.ConfigParser() 
+            config.read(CONFIGDIR + '/.oauthG.cfg')
+            
+            self.service = 'gmail'
+            if type(Acc) == str: 
+                if Acc.find('@') >= 0: 
+                    pos = Acc.rfind('@') 
+                    self.server = Acc[pos+1:] 
+                    self.nick   = Acc[:pos] 
+                    self.name = 'GMail_{}'.format(Acc[0]) 
+                else: 
+                    self.nick = config.get(Acc,'user') #+'@'+config.get(Acc,'server') 
+                    self.server = config.get(Acc,'server')
+                import hashlib
+                self.name = 'GMail' + Acc[3:]# + '_' + hashlib.md5(self.nick.encode()+self.server.encode()).hexdigest()
+            else:
+                logging.debug("Acc %s" % str(Acc))
+                #self.server = Acc[1][1][1]#[pos+1:] 
+                #self.nick   = Acc[1][1][0]#[:pos]
+                pos = Acc[1].rfind('@') 
+                self.server = Acc[1][pos+1:] 
+                self.nick   = Acc[1][:pos]
                 self.name = 'GMail_{}'.format(Acc[0]) 
-            else: 
-                self.nick = config.get(Acc,'user') #+'@'+config.get(Acc,'server') 
-                self.server = config.get(Acc,'server')
-            import hashlib
-            self.name = 'GMail' + Acc[3:]# + '_' + hashlib.md5(self.nick.encode()+self.server.encode()).hexdigest()
-        else:
-            logging.info("Acc %s" % str(Acc))
-            #self.server = Acc[1][1][1]#[pos+1:] 
-            #self.nick   = Acc[1][1][0]#[:pos]
-            pos = Acc[1].rfind('@') 
-            self.server = Acc[1][pos+1:] 
-            self.nick   = Acc[1][:pos]
-            self.name = 'GMail_{}'.format(Acc[0]) 
-        self.id = '{} {}@{}'.format(self.name[-1], self.nick, self.server)
-        logging.debug("Id %s" % self.id)
+            self.id = '{} {}@{}'.format(self.name[-1], self.nick, self.server)
+            logging.debug("Id %s" % self.id)
 
-        fileStore = self.confName((self.server, self.nick))
+            fileStore = self.confName((self.server, self.nick))
     
-        logging.debug("Filestore %s"% fileStore)
-        store = file.Storage(fileStore)
-        credentials = store.get()
-        
-        service = build('gmail', 'v1', http=credentials.authorize(Http()))
+            logging.debug("Filestore %s"% fileStore)
+            store = file.Storage(fileStore)
+            credentials = store.get()
+            
+            service = build('gmail', 'v1', http=credentials.authorize(Http()))
     
-        self.client = service
+            self.client = service
+        except:
+            logging.warning("Config file does not exists")
+            logging.warning("Unexpected error:", sys.exc_info()[0])
 
     def getClient(self):
         return(self.client)
@@ -98,6 +103,13 @@ class moduleGmail(Content,Queue):
         label_object = {'messageListVisibility': 'show', 
                 'name': labelName, 'labelListVisibility': 'labelShow'}
         return(api.users().labels().create(userId='me', 
+                body=label_object).execute())
+
+    def updateLabel(self, label_id, labelName):
+        api = self.getClient()
+        label_object = {'messageListVisibility': 'show', 
+                'name': labelName, 'labelListVisibility': 'labelShow'}
+        return(api.users().labels().update(userId='me', id=label_id,
                 body=label_object).execute())
 
     def setLabels(self):
@@ -113,6 +125,29 @@ class moduleGmail(Content,Queue):
         labels = (list(filter(lambda x: sel in x['name'] ,self.labels)))
         return (list(map(lambda x: x['id'], labels)))
 
+    def getLabelsEqIds(self, sel=''):
+        labels = (list(filter(lambda x: sel.upper() == x['name'].upper() ,self.labels)))
+        return (list(map(lambda x: x['id'], labels)))
+
+    def getListLabel(self, label):
+        api = self.getClient()
+        list_labels = [ label, ]
+        print(list_labels)
+        response = api.users().messages().list(userId='me',
+                                               labelIds=list_labels).execute()
+        return(response)
+
+    def modifyLabels(self, message, oldLabelId, labelId):
+        api = self.getClient()
+        list_labels = {'removeLabelIds': [oldLabelId, ], 
+                'addLabelIds': [labelId, ]}
+        print(list_labels)
+        print(message)
+        
+        message = api.users().messages().modify(userId='me', id=message['id'],
+                                                body=list_labels).execute()
+        return(message)
+        
     def getPosts(self):
         if not self.posts:
             self.setPosts()
@@ -147,7 +182,7 @@ class moduleGmail(Content,Queue):
                    message['list'] = post
                    message['meta'] = ''
                    message['raw'] = raw
-                   self.posts.insert(0, message)
+                   self.posts.insert(0, message) 
 
     def confName(self, acc):
         theName = os.path.expanduser(CONFIGDIR + '/' + '.' 
@@ -203,9 +238,20 @@ class moduleGmail(Content,Queue):
             return (title)
         return(None)
 
+    def getPostDate(self, post):
+        logging.debug(post)
+        if post:
+            date = int(self.getHeader(post,'internalDate'))/1000
+            date = '{}'.format(datetime.datetime.fromtimestamp(date)) # Bad!
+            return (date)
+        return(None)
+
     def getHeader(self, message, header = 'Subject'):
         if 'meta' in message:
             message = message['meta']
+        for head in message: 
+            if head.capitalize() == header.capitalize(): 
+                return(message[head])
         for head in message['payload']['headers']: 
             if head['name'].capitalize() == header.capitalize(): 
                 return(head['value'])
@@ -267,7 +313,9 @@ class moduleGmail(Content,Queue):
         theLinks = None
         content = None
         theContent = None
-        firstLink = theLink
+        #date = int(self.getHeader(message, 'internalDate'))/1000
+        #firstLink = '{}'.format(datetime.datetime.fromtimestamp(date)) # Bad!
+        firstlink = None
         theImage = None
         theSummary = snippet
 
@@ -485,7 +533,6 @@ def main():
         api = moduleGmail.moduleGmail()
         api.setClient(acc)
         api.setPosts()
-        print(api.name)
     sys.exit()
     print(api.getPosts())
     print(api.getPosts()[0])

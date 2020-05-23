@@ -80,13 +80,20 @@ class Queue:
         reply = ""
 
         logging.info("Service %s", self.service)
-        j = int(argsIni[2:]) 
+        if len(argsIni) > 2:
+            j = int(argsIni[2:]) 
+        else:
+            j = -1
         cmd = getattr(self, command)
-        logging.info("Command %s %d"% (command, j))
-        if argsCont:
-            reply = reply + cmd(j, argsCont)
-        else: 
-            reply = reply + str(cmd(j))
+        if (j>=0):
+            logging.info("Command %s %d"% (command, j))
+            if argsCont:
+                reply = reply + str(cmd(j, argsCont))
+            else: 
+                reply = reply + str(cmd(j))
+        else:
+            logging.info("Missing argument %s %d"% (command, j))
+            reply = "Missing argument"
 
         logging.info("Reply: %s"%reply)
         return(reply)

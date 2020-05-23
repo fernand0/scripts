@@ -66,8 +66,9 @@ from buffpy.managers.updates import Updates
 
 from configMod import *
 from moduleQueue import *
+from moduleContent import *
 
-class moduleBuffer(Queue):
+class moduleBuffer(Content,Queue):
 
     def __init__(self): #, url, socialNetwork, nick):
         super().__init__()
@@ -104,23 +105,6 @@ class moduleBuffer(Queue):
         self.service = socialNetwork[0]
         self.nick = socialNetwork[1]
 
-    #def setBuffer(self):
-    #    config = configparser.ConfigParser()
-    #    logging.debug("Config...%s" % CONFIGDIR)
-    #    config.read(CONFIGDIR + '/.rssBuffer')
-    #
-    #    clientId = config.get("appKeys", "client_id")
-    #    clientSecret = config.get("appKeys", "client_secret")
-    #    redirectUrl = config.get("appKeys", "redirect_uri")
-    #    accessToken = config.get("appKeys", "access_token")
-    #    
-    #    # instantiate the api object 
-    #    api = buffpy.api.API(client_id=clientId,
-    #              client_secret=clientSecret,
-    #              access_token=accessToken)
-    #
-    #    self.api = api
-
     def setProfile(self, service=""):
         logging.info("  Checking services...")
 
@@ -150,7 +134,9 @@ class moduleBuffer(Queue):
         logging.debug("Profile %s" % profile)
     
         for method in ['sent', 'pending']:
-            if (profile.counts[method] > 0):
+            if (profile 
+                    and ('counts' in profile) 
+                    and (profile.counts[method] > 0)):
                 profile.id = profile['id']
                 profile.profile_id = profile['service_id']
                 updates = getattr(profile.updates, method)
@@ -227,24 +213,29 @@ class moduleBuffer(Queue):
 
     def addPosts(self, listPosts):
         linkAdded = ''
+        link=''
         logging.info("    Adding posts to %s" % self.service)
         for post in listPosts: 
             title = self.getPostTitle(post)
             link = self.getPostLink(post)
+            if self.service == 'instagram':
+                img = self.getPostImg(post)
+                #Crop the image and leave it on some server
+                imgN = resizeImage(img)
+                img = imgN
+            else:
+                img = ''
             textPost = title + " " + link
-            logging.info("    Post: %s" % link)
+            logging.info("    Post: %s" % textPost)
             entry = textPost #urllib.parse.quote(textPost)
             try:
-                #if post[3]: 
-                #    print(post[3])
-                #    entry = urllib.parse.quote(post[0])
-                #    self.getProfile().updates.new(entry, 
-                #            media={'photo':post[3]})
-                #else: 
-                self.getProfile().updates.new(entry)
+                if img: 
+                    myMedia = {'photo':img}#,'description':title}
+                    self.getProfile().updates.new(entry, shorten=False, media=myMedia)
+                else:
+                    self.getProfile().updates.new(entry)
             except: 
                 logging.warning("Buffer posting failed!") 
-                logging.warning("Entry: %s"% entry) 
                 logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 
                 logging.warning("Unexpected error: %s"% sys.exc_info()[1]) 
                 link = ''
@@ -321,6 +312,10 @@ class moduleBuffer(Queue):
                 link = post[1]
             return (link)
         return(None)
+
+    def getPostImg(self, post):
+        img = post[3]
+        return(img)
 
     #def isForMe(self, args):
     #    profile = self.getProfile()
@@ -432,7 +427,15 @@ def main():
     buf = moduleBuffer.moduleBuffer()
     buf.setClient('http://fernand0-errbot.slack.com/', 
             ('linkedin', 'Fernando Tricas'))
+    buf.setClient('http://avecesunafoto.wordpress.com/', 
+            ('instagram', 'a-veces-una-foto'))
     buf.setPosts()
+
+    print(buf.getPosts())
+    sys.exit()
+    print(buf.getPostTitle(buf.getPosts()[0]))
+    print(buf.getPostLink(buf.getPosts()[0]))
+    sys.exit()
     buf.setSchedules()
     buf.addSchedules(['12:34','19:31'])
     buf.setSchedules()

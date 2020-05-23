@@ -1,13 +1,21 @@
 #!/usr/bin/env python
 import logging
 import os
+import requests
+import shutil
 import urllib
+from PIL import Image
 
 HOME = os.path.expanduser("~")
 LOGDIR = HOME + "/usr/var/log"
 APPDIR = HOME + "/.mySocial"
 CONFIGDIR = APPDIR + "/config"
 DATADIR = APPDIR + "/data"
+TMPDIR = "/tmp"
+WWWDIR = "/var/www/html/img/"
+WWWADDRESS = 'https://elmundoesimperfecto.com/img/'
+NAMEIMG = 'instagram.jpg'
+
 
 def fileNamePath(url, socialNetwork):
     theName = os.path.expanduser(DATADIR + '/' 
@@ -49,5 +57,28 @@ def updateLastLink(url, link, socialNetwork=()):
 
     with open(fileName, "w") as f: 
         f.write(link)
+
+def resizeImage(imgUrl):
+    response = requests.get(imgUrl, stream=True)
+
+    fileName = '{}/{}'.format(TMPDIR,
+            urllib.parse.urlparse(response.url)[2].split('/')[-1])
+    with open(fileName,'wb') as f: 
+        shutil.copyfileobj(response.raw, f)
+
+    im = Image.open(fileName)
+    size = im.size
+
+    if size[0] < size[1]: 
+       dif = size[1]-size[0]
+       box = (0, dif/2 , size[0], dif/2+size[0])
+    else:
+       dif = size[0]-size[1]
+       box = (dif/2, 0 , dif/2 + size[1], size[1])
+    region = im.crop(box)
+    fileNameOutput = WWWDIR + NAMEIMG
+    region.save(fileNameOutput)
+    address = '{}{}'.format(WWWADDRESS,NAMEIMG)
+    return(address)
 
 

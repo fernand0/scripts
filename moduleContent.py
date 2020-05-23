@@ -113,6 +113,12 @@ class Content:
     def setBufferapp(self, bufferapp):
         self.bufferapp = bufferapp
         self.setBuffer()
+    
+    def setMax(self, maxVal):
+        self.max = maxVal
+
+    def getMax(self):
+        return(self.max)
 
     def getCache(self):
         return(self.cache)
@@ -153,16 +159,21 @@ class Content:
             else:
                 return(0)
 
+    def getPostByLink(self, link):
+        pos = self.getLinkPosition(link)
+        if pos >= 0:
+            return(self.getPosts()[pos])
+        else: 
+            return (None)
 
     def getLinkPosition(self, link):
-        i = 0
         posts = self.getPosts()
         pos = len(posts) 
         if posts:
             if not link:
                 logging.debug(self.getPosts())
                 return(len(self.getPosts()))
-            for entry in self.getPosts():
+            for i, entry in enumerate(posts):
                 linkS = link
                 if isinstance(link, bytes):
                     linkS = linkS.decode()
@@ -173,9 +184,9 @@ class Content:
                     # When there are duplicates (there shouldn't be) it returns
                     # the last one
                     pos = i
-                i = i + 1
             return(pos)
-        return(i)
+        else:
+            return -1
 
     def datePost(self, pos):
         print(self.getPosts())
@@ -253,5 +264,8 @@ class Content:
     def getPostTitle(self, post):
         return str(post)
     
+    def getPostDate(self, post):
+        return None
+
     def getPostLink(self, post):
         return ''

@@ -39,8 +39,14 @@ class moduleTwitter(Content,Queue):
             config.read(CONFIGDIR + '/.rssTwitter')
 
             self.user = twitterAC
-            CONSUMER_KEY = config.get("appKeys", "CONSUMER_KEY")
-            CONSUMER_SECRET = config.get("appKeys", "CONSUMER_SECRET")
+            try: 
+                CONSUMER_KEY = config.get(twitterAC, "CONSUMER_KEY")
+            except: 
+                CONSUMER_KEY = config.get("appKeys", "CONSUMER_KEY")
+            try: 
+                CONSUMER_SECRET = config.get(twitterAC, "CONSUMER_SECRET")
+            except: 
+                CONSUMER_SECRET = config.get("appKeys", "CONSUMER_SECRET")
             TOKEN_KEY = config.get(twitterAC, "TOKEN_KEY")
             TOKEN_SECRET = config.get(twitterAC, "TOKEN_SECRET")
 
@@ -81,17 +87,21 @@ class moduleTwitter(Content,Queue):
         for post in self.getPosts():
             #print(post)
             url = 'https://twitter.com/' + post['user']['screen_name'] + '/status/' + str(post['id'])
+            if 'urls' in post:
+                link = post['urls'][0]['expanded_url']
+            else:
+                link = ''
+
             outputData[serviceName]['sent'].append((post['text'], url, 
                     post['user']['screen_name'],     
-                    post['created_at'], '','','','',''))
+                    post['created_at'], link,'','','',''))
 
         self.postsFormatted = outputData
 
     def publishPost(self, post, link='', comment=''):
         logging.debug("     Publishing in Twitter...")
-        if comment == None:
-            comment = ''
-        post = comment + " " + post
+        if comment != None: 
+            post = comment + " " + post
         h = HTMLParser()
         post = h.unescape(post)
         res = None
@@ -104,9 +114,10 @@ class moduleTwitter(Content,Queue):
                 logging.debug("Res: %s" % res)
                 urlTw = "https://twitter.com/%s/status/%s" % (self.user, res['id'])
                 logging.info("     Link: %s" % urlTw)
-                return(urlTw)
+                return(post +'\n'+urlTw)
 
         except:        
+            logging.info("Fail!")
             return(self.report('Twitter', post, link, sys.exc_info()))
 
     def getPostTitle(self, post):
@@ -121,6 +132,12 @@ class moduleTwitter(Content,Queue):
         else:
             return ''
 
+    def getPostUrl(self, post):
+        print(post)
+        if (('urls' in post['entities']) and (post['entities']['urls'])):
+            return(post['entities']['urls'][0]['expanded_url'])
+        else:
+            return ''
 
     def search(self, text):
         logging.debug("     Searching in Twitter...")
@@ -155,7 +172,8 @@ def main():
         print(post)
         title = tw.getPostTitle(post)
         link = tw.getPostLink(post)
-        print("Title: {}\nLink: {}\n".format(title,link))
+        url = tw.getPostUrl(post)
+        print("Title: {}\nLink: {}\nUrl:{}\n".format(title,link,url))
 
     res = tw.search('url:fernand0')
 

@@ -61,61 +61,82 @@ class moduleForum(Content,Queue):
     
     def getClient(self):
         return self
-    
+
+    def extractLink(self, data): 
+        url = self.url
+        logging.info("Url: %s"%url)
+        if 'index.php' in url: 
+           link = url[:-9]+data.get('href') 
+        else: 
+            link = url+'/'+data.get('href') 
+        if 'sid' in link: 
+            link = link.split('&sid')[0]
+        logging.info("Link: %s"%link)
+        return link
+
+    def extractId(self, link):
+        pos = link.rfind(self.idSeparator)
+        if not link[-1].isdigit(): 
+            idPost = int(link[pos+1:-1]) 
+        else: 
+            idPost = int(link[pos+1:])
+        #print("Id: {}".format(idPost))
+        return idPost
+
+
     def setPosts(self): 
         url = self.url
         selected = self.selected
         selector = self.selector
         idSeparator = self.idSeparator
 
-        logging.info("-----------------------------")
-        logging.info(url)
-        logging.info("-----------------------------")
-        
         forums = self.getLinks(url, 0)
         
-        logging.info(" Reading in ....")
+        logging.info(" Reading in .... %s"%self.url)
         listId = []
         posts = {}
         for i, forum in enumerate(forums): 
+            #print("forum %s"%forum)
             if forum.name != 'a': 
                 # It is inside some other tag
                 forum = forum.contents[0]
-            text = forum.text 
-            if text in selected:
-                link = url+forum.get('href') 
-                if 'sid' in link:
-                    link = link.split('&sid')[0]
-                logging.info("  - {} {}".format(text, link))
+            text = forum.text
+            if text in self.selected:
+                link = self.extractLink(forum)
+                logging.debug("  - {} {}".format(text, link))
                 links = self.getLinks(link, 1)
                 for j, post in enumerate(links): 
-                    #print("Info: %s"%str(post))
-                    textF = post.text 
-                    linkF = url+post.get('href') 
-                    if 'sid' in linkF:
-                        linkF = linkF.split('&sid')[0]
-                    posF = linkF.rfind(idSeparator)
-                    if not linkF[-1].isdigit(): 
-                        idPost = int(linkF[posF+1:-1])
-                    else:
-                        idPost = int(linkF[posF+1:])
-                    #print("Id: {}".format(idPost))
-                    listId.append(idPost)
-                    posts[idPost] = [textF, linkF]
+                    logging.debug("Post %s"%(post))
+                    linkF = self.extractLink(post)
+                    if linkF:
+                        idPost = self.extractId(linkF)
+                        listId.append(idPost)
+                        textF = post.text
+                        posts[idPost] = [textF, linkF]
         
                 time.sleep(1)
         
-        listId = sorted(set(listId))
         self.posts = []
         self.lastId = listId[-1]
+        listId.sort()
         for i in listId[-self.max:]:
             self.posts.append(posts[i])
 
         lastLink, lastTime = checkLastLink(self.url)
+        #for i, post in enumerate(self.posts):
+        #    print("{}) {}".format(i, post))
+        #print(lastLink)
         pos = self.getLinkPosition(lastLink)
+        #print(self.posts[pos][1])
+        #print('>>>',pos, len(self.posts))
+        if (pos  == len(self.posts)):# and (str(lastLink) != self.posts[pos][1]):
+            print('si')
+            pos = 0
         if pos < len(self.posts) - 1:
             for i, post in enumerate(self.posts[pos:]):
-                self.posts[pos+i][0] = '> {}'.format(self.posts[pos+i][0])
+                self.posts[pos+i][0] = '> {}\n{}'.format(self.posts[pos+i][0],
+                        self.posts[pos+i][1])
+            self.posts = self.posts[pos:]
         
     def getPosts(self):
         return self.posts
@@ -127,10 +148,10 @@ class moduleForum(Content,Queue):
         return post[1]
 
 def main(): 
-    forums = ['http://foro.infojardin.com/', 'https://cactiguide.com/forum/']
+    forums = ['https://www.cactuseros.com/foro/index.php', 'http://foro.infojardin.com/', 'https://cactiguide.com/forum/']
     for forumData in forums: 
         forum = moduleForum() 
-        forum.setClient('http://foro.infojardin.com/') 
+        forum.setClient(forumData) 
         forum.setPosts()
         lastLink, lastTime = checkLastLink(forum.url)
         pos = forum.getLinkPosition(lastLink)
@@ -141,7 +162,8 @@ def main():
             for post in forum.getPosts()[pos:]:
                 print('   {}'.format(post[0]))
                 print('   {}'.format(post[1]))
-            updateLastLink(forum.url, forum.getPosts()[-1][1])
+            #updateLastLink(forum.url, forum.getPosts()[-1][1])
+        print(forum.getPosts())
 
 
 if __name__ == '__main__':
