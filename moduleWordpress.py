@@ -107,12 +107,14 @@ class moduleWordpress(Content,Queue):
         else:
             theSummary = content
         theSummaryLinks = content
-        theImage=''
+        theImage=[]
         if 'content' in post:
             soupImg = BeautifulSoup(post['content'], 'lxml')
             imgs = soupImg.find_all('img')
-            theImage = imgs[0].get('data-large-file').split('?')[0]
-            sys.exit()
+            for i in imgs: 
+                theImage.append(i.get('data-large-file').split('?')[0])
+            #if not isinstance(theImage, str):
+            #    theImage = theImage[0]
         elif 'attachments' in post:
             for key in post['attachments']:
                 print(post['attachments'])
@@ -173,13 +175,20 @@ def main():
     wp.setClient('avecesunafoto')
     print("Testing posts")
     wp.setPosts()
-    print(wp.getPosts())
+    #print(wp.getPosts())
+    pos = wp.getLinkPosition('https://avecesunafoto.wordpress.com/2020/03/10/gamoncillo/')
+    img = wp.obtainPostData(pos)
+    print(img[3])
+    print(len(img[3]))
+    #for i in img[3]:
+        #resizeImage(i)
+        #input('next?')
+
+    sys.exit()
     for i, post in enumerate(wp.getPosts()):
         print("p",i, ") ", post)
         #print("@%s: %s" %(tweet[2], tweet[0]))
 
-    pos = wp.getLinkPosition('https://avecesunafoto.wordpress.com/2020/03/10/gamoncillo/')
-    pos = wp.getLinkPosition('https://avecesunafoto.wordpress.com/2020/03/11/puerto-2/')
     print(pos)
     print(wp.getPosts()[pos])
     title = wp.obtainPostData(pos)

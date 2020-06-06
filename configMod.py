@@ -77,7 +77,11 @@ def resizeImage(imgUrl):
        box = (dif/2, 0 , dif/2 + size[1], size[1])
     region = im.crop(box)
     fileNameOutput = WWWDIR + NAMEIMG
-    region.save(fileNameOutput)
+    try: 
+        region.save(fileNameOutput)
+    except: 
+        fileNameOutput = '/tmp/' + NAMEIMG
+        region.save(fileNameOutput)
     address = '{}{}'.format(WWWADDRESS,NAMEIMG)
     return(address)
 

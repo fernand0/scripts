@@ -270,7 +270,13 @@ def main():
                                 break
                             post = blog.obtainPostData(i, False)
                             # Image in 3
-                            listPosts.append(post)
+                            if isinstance(post[3], list):
+                                for imgL in post[3]:
+                                    myPost = post.copy()
+                                    mypost[3] = imgL
+                                    listPosts.append(myPost)
+                            else:
+                                listPosts.append(post)
                             print("      Scheduling...")
                             print("       Post %s" % post[0])
                             print("       Link %s" % post[1])
