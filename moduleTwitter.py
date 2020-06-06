@@ -12,6 +12,7 @@ import urllib
 from bs4 import BeautifulSoup
 from bs4 import Tag
 
+import twitter
 from twitter import *
 # pip install twitter
 #https://pypi.python.org/pypi/twitter
@@ -111,11 +112,15 @@ class moduleTwitter(Content,Queue):
             res = self.tc.statuses.update(status=post+" " + link)
 
             if res: 
-                logging.debug("Res: %s" % res)
+                logging.info("Res: %s" % res)
                 urlTw = "https://twitter.com/%s/status/%s" % (self.user, res['id'])
                 logging.info("     Link: %s" % urlTw)
                 return(post +'\n'+urlTw)
 
+        except twitter.api.TwitterHTTPError as twittererror:        
+            for error in twittererror.response_data.get("errors", []): 
+                logging.info("      Error code: %s" % error.get("code", None))
+            return(self.report('Twitter', post, link, sys.exc_info()))
         except:        
             logging.info("Fail!")
             return(self.report('Twitter', post, link, sys.exc_info()))
