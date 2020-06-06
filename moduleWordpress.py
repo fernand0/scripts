@@ -53,6 +53,8 @@ class moduleWordpress(Content,Queue):
             #posts2 = requests.get(self.api_base + 
             #        self.api_posts.format(self.my_site)+'?number=100&page=2', 
             #        headers = self.headers).json()['posts']
+        except KeyError:
+            return(self.report('Wordpress API expired', '' , '', sys.exc_info()))
         except:
             return(self.report('Wordpress API', '' , '', sys.exc_info()))
 
@@ -112,7 +114,6 @@ class moduleWordpress(Content,Queue):
             soupImg = BeautifulSoup(post['content'], 'lxml')
             imgs = soupImg.find_all('img')
             theImage = imgs[0].get('data-large-file').split('?')[0]
-            sys.exit()
         elif 'attachments' in post:
             for key in post['attachments']:
                 print(post['attachments'])

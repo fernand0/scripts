@@ -59,6 +59,7 @@ def updateLastLink(url, link, socialNetwork=()):
         f.write(link)
 
 def resizeImage(imgUrl):
+    print(imgUrl)
     response = requests.get(imgUrl, stream=True)
 
     fileName = '{}/{}'.format(TMPDIR,
