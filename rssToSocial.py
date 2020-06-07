@@ -272,9 +272,9 @@ def main():
                             # Image in 3
                             if isinstance(post[3], list):
                                 for imgL in post[3]:
-                                    myPost = post.copy()
-                                    mypost[3] = imgL
-                                    listPosts.append(myPost)
+                                    myPost = list(post)
+                                    myPost[3] = imgL
+                                    listPosts.append(tuple(myPost))
                             else:
                                 listPosts.append(post)
                             print("      Scheduling...")
