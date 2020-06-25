@@ -112,7 +112,7 @@ class moduleTwitter(Content,Queue):
             res = self.tc.statuses.update(status=post+" " + link)
 
             if res: 
-                logging.info("Res: %s" % res)
+                logging.debug("Res: %s" % res)
                 urlTw = "https://twitter.com/%s/status/%s" % (self.user, res['id'])
                 logging.info("     Link: %s" % urlTw)
                 return(post +'\n'+urlTw)
