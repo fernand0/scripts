@@ -45,6 +45,7 @@ class moduleWordpress(Content,Queue):
         logging.info("  Setting posts")
         self.posts = []
         try: 
+            print(self.api_base + self.api_posts.format(self.my_site))
             posts = requests.get(self.api_base + 
                     self.api_posts.format(self.my_site)+'?number=100', 
                     headers = self.headers).json()['posts']
@@ -58,6 +59,41 @@ class moduleWordpress(Content,Queue):
         except:
             return(self.report('Wordpress API', '' , '', sys.exc_info()))
 
+    def publishPost(self, post, link='', comment=''):
+        logging.debug("     Publishing in Wordpress...")
+        if comment != None: 
+            title = comment 
+        res = None
+        if True:
+            logging.info("     Publishing: %s" % post)
+            print('vamos')
+            payload = {"title":title,"content_raw":post,"status":'draft'}
+            self.api_base2 = 'https://avecesunafoto.wordpress.com/?rest_route=/wp/v2/posts'
+            self.api_base2 = 'https://public-api.wordpress.com/wp/v2/'
+            payload = {"title":title,"content":post,"status":'publish'}
+            print(self.api_base + self.api_posts.format(self.my_site))
+            print(payload)
+            lalala = requests.post(self.api_base2 
+                    + self.api_posts.format(self.my_site), 
+                    headers = self.headers,
+                    data = payload)
+            print(lalala)
+            print(lalala.content)
+
+
+            if res: 
+                logging.info("Res: %s" % res)
+                urlTw = "https://twitter.com/%s/status/%s" % (self.user, res['id'])
+                logging.info("     Link: %s" % urlTw)
+                #return(post +'\n'+urlTw)
+
+        #except twitter.api.TwitterHTTPError as twittererror:        
+        #    for error in twittererror.response_data.get("errors", []): 
+        #        logging.info("      Error code: %s" % error.get("code", None))
+        #    return(self.report('Twitter', post, link, sys.exc_info()))
+        else:        
+            logging.info("Fail!")
+            return(self.report('Twitter', post, link, sys.exc_info()))
 
     def getTitle(self, i):        
         post = self.getPosts()[i]
@@ -84,7 +120,7 @@ class moduleWordpress(Content,Queue):
             self.setPosts()
 
         posts = self.getPosts()
-        if not posts:
+        if not posts or (i>=len(posts)):
             return (None, None, None, None, None, None, None, None, None, None)
 
         post = posts[i]
@@ -177,14 +213,34 @@ def main():
     wp.setClient('avecesunafoto')
     print("Testing posts")
     wp.setPosts()
-    #print(wp.getPosts())
-    pos = wp.getLinkPosition('https://avecesunafoto.wordpress.com/2020/03/10/gamoncillo/')
-    img = wp.obtainPostData(pos)
-    print(img[3])
-    print(len(img[3]))
-    #for i in img[3]:
-        #resizeImage(i)
-        #input('next?')
+    for i,post in enumerate(wp.getPosts()):
+        print("{}) {} {}".format(i, wp.getPostTitle(post), 
+            wp.getPostLink(post)))
+
+    sel = input('Select one ')
+    pos =  int(sel)
+    post = wp.getPosts()[pos]
+    print("{}) {} {}".format(pos, wp.getPostTitle(post), 
+            wp.getPostLink(post)))
+    sys.exit()
+
+
+    #pos = wp.getLinkPosition('https://avecesunafoto.wordpress.com/2020/03/10/gamoncillo/')
+    #img = wp.obtainPostData(pos)
+    #print(img)
+    #if img[3]:
+    #    print(img[3])
+    #    print(len(img[3]))
+    ##for i in img[3]:
+    #    #resizeImage(i)
+    #    #input('next?')
+
+    print("Testing posting")
+    print(title, post)
+
+    sys.exit()
+    wp.publishPost(post, '', title)
+
 
     sys.exit()
     for i, post in enumerate(wp.getPosts()):

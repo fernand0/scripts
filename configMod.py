@@ -27,7 +27,7 @@ def fileNamePath(url, socialNetwork):
 def getLastLink(fileName):        
     try: 
         with open(fileName, "rb") as f: 
-            linkLast = f.read().rstrip()  # Last published
+            linkLast = f.readlines()  # Last published
     except:
         # File does not exist, we need to create it.
         with open(fileName, "wb") as f:
@@ -35,7 +35,10 @@ def getLastLink(fileName):
                     % fileName) 
             linkLast = ''  
             # None published, or non-existent file
-    return(linkLast, os.path.getmtime(fileName))
+    if len(linkLast) == 1: 
+        return(linkLast[0], os.path.getmtime(fileName))
+    else:
+        return(linkLast, os.path.getmtime(fileName))
 
 def checkLastLink(url, socialNetwork=()):
     # Redundant with moduleCache
@@ -54,6 +57,9 @@ def updateLastLink(url, link, socialNetwork=()):
                + urllib.parse.urlparse(url).netloc + ".last")
     else: 
         fileName = fileNamePath(url, socialNetwork) + ".last"
+
+    if isinstance(link, list):
+        b'\n'.join(link)
 
     with open(fileName, "w") as f: 
         f.write(link)
