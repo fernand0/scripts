@@ -64,7 +64,7 @@ def main():
     #print(compResponse)
     from jinja2 import Environment, FileSystemLoader
     env = Environment( 
-            loader=FileSystemLoader(searchpath=".")) 
+            loader=FileSystemLoader(searchpath="/home/ftricas/usr/src/scripts/")) 
     template = env.get_template('buffer.html')
     response = ''
     for rep in compResponse:
