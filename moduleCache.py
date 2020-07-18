@@ -48,6 +48,7 @@ class moduleCache(Content,Queue):
         return(self.service)
 
     def setPosts(self):        
+        logging.debug("Service %s Nick %s" % (self.service, self.nick))
         fileNameQ = fileNamePath(self.url, 
                 (self.service, self.nick)) + ".queue"
         logging.debug("File %s" % fileNameQ)
@@ -61,7 +62,6 @@ class moduleCache(Content,Queue):
             listP = []
 
         self.posts = listP
-
 
     def getHoursSchedules(self, command=None):
         return self.schedules[0].hour.render()

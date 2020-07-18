@@ -61,8 +61,9 @@ class moduleWordpress(Content,Queue):
 
     def publishPost(self, post, link='', comment=''):
         logging.debug("     Publishing in Wordpress...")
-        if comment != None: 
-            title = comment 
+        title = post
+        #if comment != None: 
+        #    title = comment 
         res = None
         if True:
             logging.info("     Publishing: %s" % post)
@@ -70,7 +71,7 @@ class moduleWordpress(Content,Queue):
             payload = {"title":title,"content_raw":post,"status":'draft'}
             self.api_base2 = 'https://avecesunafoto.wordpress.com/?rest_route=/wp/v2/posts'
             self.api_base2 = 'https://public-api.wordpress.com/wp/v2/'
-            payload = {"title":title,"content":post,"status":'publish'}
+            payload = {"title":title,"content":comment,"status":'publish'}
             print(self.api_base + self.api_posts.format(self.my_site))
             print(payload)
             lalala = requests.post(self.api_base2 
@@ -94,6 +95,7 @@ class moduleWordpress(Content,Queue):
         else:        
             logging.info("Fail!")
             return(self.report('Twitter', post, link, sys.exc_info()))
+        return 'OK'
 
     def getTitle(self, i):        
         post = self.getPosts()[i]

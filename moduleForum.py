@@ -41,7 +41,10 @@ class moduleForum(Content,Queue):
             config = configparser.ConfigParser()
             config.read(CONFIGDIR + '/.rssForums') 
             
-            self.url = forumData 
+            if isinstance(forumData, str):
+                self.url = forumData 
+            else:
+                self.url = forumData[0]
             self.selected = config.get(self.url,'forums').split('\n') 
             self.selector = config.get(self.url,'selector').split('\n')
             self.idSeparator = config.get(self.url,'idSeparator')

@@ -408,6 +408,18 @@ def main():
     res=site.search('links', 'https://www.pine64.org/2020/01/24/setting-the-record-straight-pinephone-misconceptions/a')
     print("res",res)
     print("res",res['messages']['total'])
+    site.setSocialNetworks(config, section)
+    print(site.getSocialNetworks())
+    site.setPosts()
+    for service in site.getSocialNetworks():
+        socialNetwork = (service, site.getSocialNetworks()[service])
+        
+        linkLast, lastTime = checkLastLink(site.getUrl(), socialNetwork)
+        print("linkLast {} {}".format(socialNetwork, linkLast))
+        i = site.getLinkPosition(linkLast)
+        print(i)
+        print(site.getNumPostsData(1,i))
+ 
     sys.exit()
 
     site.setPosts('links')

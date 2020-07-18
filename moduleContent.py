@@ -47,8 +47,8 @@ class Content:
         return(self.api)
 
     def setSocialNetworks(self, config, section):
-        socialNetworksOpt = ['twitter', 'facebook', 'telegram', 
-                'medium', 'linkedin','pocket', 'mastodon','instagram'] 
+        socialNetworksOpt = ['twitter', 'facebook', 'telegram', 'wordpress', 
+                'medium', 'linkedin','pocket', 'mastodon','instagram', 'imgur'] 
         for option in config.options(section):
             if (option in socialNetworksOpt):
                 nick = config.get(section, option)
@@ -70,7 +70,40 @@ class Content:
 
     def getPosts(self):
         return(self.posts)
- 
+
+    def getNumPostsData(self, num, i): 
+        listPosts = []
+        for j in range(num, 0, -1): 
+            logging.debug("j, i %d - %d"% (j,i))
+            i = i - 1
+            if (i < 0):
+                break
+            post = self.obtainPostData(i, False)
+            if isinstance(post[3], list):
+                for imgL in post[3]:
+                    myPost = list(post)
+                    myPost[3] = imgL
+                    listPosts.append(tuple(myPost))
+            else:
+                listPosts.append(post)
+            print("      Scheduling...")
+            print("       Post %s" % post[0])
+            print("       Link %s" % post[1])
+            logging.info("    Scheduling post %s" % post[0])
+        return(listPosts)
+
+    def getDrafts(self):
+        return self.drafts
+
+    def setPostsType(self, postsType):
+        self.postsType = postsType
+
+    def getPostsType(self):
+        if hasattr(self, 'postsType'): 
+            return self.postsType 
+        else:
+            return 'posts' 
+
     def setPosts(self):
         pass 
 
@@ -128,8 +161,13 @@ class Content:
         # https://github.com/fernand0/scripts/blob/master/moduleCache.py
         self.cache = {}
         for service in self.getSocialNetworks():
-            if self.getProgram():
-                if service[0] in self.getProgram():
+            if ((self.getProgram() 
+                    and isinstance(self.getProgram(), list) 
+                    and service in self.getProgram()) or 
+                (self.getProgram() 
+                    and isinstance(self.getProgram(), str) 
+                    and (service[0] in self.getProgram()))): 
+
                     nick = self.getSocialNetworks()[service]
                     cache = moduleCache.moduleCache() 
                     param = (self.url, (service, nick))
@@ -141,8 +179,16 @@ class Content:
         return(self.program)
  
     def setProgram(self, program):
+        if (len(program)>3) or program.find('\n')>0:
+            program = program.split('\n')
         self.program = program
         self.setCache()
+
+    def setBufMax(self, bufMax):
+        self.bufMax = bufMax
+
+    def getBufMax(self):
+        return(self.bufMax)
 
     def len(self, profile):
         service = profile
@@ -167,7 +213,11 @@ class Content:
             return (None)
 
     def getLinkPosition(self, link):
-        posts = self.getPosts()
+        if hasattr(self, 'getPostsType'):
+            if self.getPostsType() == 'drafts':
+                posts = self.getDrafts()
+            else:
+                posts = self.getPosts()
         pos = len(posts) 
         if posts:
             if not link:

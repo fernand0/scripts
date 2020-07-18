@@ -8,6 +8,7 @@ from moduleContent import *
 from moduleQueue import *
 from configMod import *
 from imgUrl import *
+# Publication pending
 
 class moduleImgur(Content,Queue):
 
@@ -15,7 +16,10 @@ class moduleImgur(Content,Queue):
         super().__init__()
 
     def setClient(self, idName):
-        self.name = idName
+        if isinstance(idName, str): 
+            self.name = idName
+        else:
+            self.name = idName[1][1]
 
         try:
             config = configparser.ConfigParser()
@@ -27,12 +31,12 @@ class moduleImgur(Content,Queue):
                 self.access_token=config.get(self.name, 'access_token') 
                 self.refresh_token=config.get(self.name, 'refresh_token')
 
-                self.client = ImgurClient(self.client_id, self.client_secret, 
-                    self.access_token, self.refresh_token)
+                self.client = ImgurClient(self.client_id, 
+                            self.client_secret, self.access_token, 
+                            self.refresh_token)
             else:
                 logging.warning("Some problem with configuration file!")
                 self.client = None
-
         except:
             logging.warning("User not configured!")
             logging.warning("Unexpected error:", sys.exc_info()[0])
@@ -44,28 +48,28 @@ class moduleImgur(Content,Queue):
 
     def setPosts(self): 
         self.posts = []
+        self.drafts = []
         client = self.getClient()
         if client:
             for i,album in enumerate(client.get_account_albums(self.name)):
                 import time
-                logging.info(i,album.title, time.ctime(album.datetime))
+                logging.info("{} {}".format(i, album.title))
+                logging.info(time.ctime(album.datetime))
                 logging.info(album.layout)
                 text = ""
-                self.posts.append(album)
-                if not album.in_gallery: 
-                    text = ">"
-                    self.posts[-1].title = "> {}".format(self.posts[-1].title)
-                import time
-                text = "{} {} {}".format(text, time.ctime(album.datetime), 
-                        self.getPostTitle(album))
-                logging.debug(text)
+                if album.in_gallery: 
+                    self.posts.insert(0,album)
+                    #text = ">"
+                    #self.posts[-1].title = "> {}".format(self.posts[-1].title)
+                else:
+                    self.drafts.insert(0,album)
+                #import time
+                #text = "{} {} {}".format(text, time.ctime(album.datetime), 
+                #        self.getPostTitle(album))
+                #logging.debug(text)
         else:
             logging.warning('No client configured!')
                     
-                
-    def getPosts(self):
-        return self.posts
-
     def getPostTitle(self, post):
         return post[0]
 
@@ -77,6 +81,69 @@ class moduleImgur(Content,Queue):
 
     def getPostLink(self,post):
         return post.link
+
+    def getLinkPosition(self, lastLink): 
+        if hasattr(self, 'getPostsType'): 
+            if self.getPostsType() == 'drafts': 
+                posts = self.drafts 
+            else: 
+                posts = self.posts
+
+            for i, post in enumerate(posts):
+                if not (post.link in lastLink):
+                    return(i+1)
+        return -1
+
+    def extractDataMessage(self, i):
+        if hasattr(self, 'getPostsType'):
+            if self.getPostsType() == 'drafts':
+                posts = self.getDrafts()
+            else:
+                posts = self.getPosts()
+        if i < len(posts):
+            post = posts[i]
+            logging.info("Post: %s"% post)
+            theTitle = self.getPostTitle(post)
+            theLink = self.getPostLink(post)
+        else:
+            theTitle = None
+            theLink = None
+        res = downloadUrl(self.getPostLink(post))
+        print(res)
+        text = '' 
+        for iimg in res: 
+            text = '{}\n<p><a href="{}"><img class="alignnone size-full wp-image-3306" src="{}" alt="" width="776" height="1035" /></a></p>'.format(text,iimg[0],iimg[1])
+
+
+        return (theTitle, theLink, None, None, None, None, None, None, None, text)
+
+
+
+    def publishPost(self, post, link='', comment=''):
+        logging.debug("     Publishing in Imgur...")
+        #if comment != None: 
+        #    post = comment + " " + post
+        try:
+            logging.info("     Publishing: %s" % post) 
+            print(post)
+            print(link)
+            # Very dirty, we need to work on this. Sometimes we need identifiers
+            idPost = link.split('/')[-1]
+            #idPost = self.posts[j].id 
+            api = self.getClient() 
+            try: 
+                res = api.share_on_imgur(idPost, post, terms=0)            
+                logging.info("Res: %s" % res) 
+                if res: 
+                    return('OK') 
+            except:
+                return("Fail")
+        except:
+            return("Fail")
+        
+
+        return('OK')
+
 
     def publish(self, j):
         logging.info("Publishing %d"% j)                
@@ -111,54 +178,97 @@ class moduleImgur(Content,Queue):
 
 def main(): 
 
+    config = configparser.ConfigParser()
+    config.read(CONFIGDIR + '/.rssBlogs')
+    section="Blog20"
     img = moduleImgur()
+    img.setUrl('https://imgur.com/user/ftricas') 
     img.setClient('ftricas') 
     img.setPosts()
+    print("----")
+    for post in img.getPosts():
+        print(img.getPostTitle(post))
+    print("----")
+    for post in img.getDrafts():
+        print(img.getPostTitle(post))
+    print("----")
+    sys.exit()
+    img.setSocialNetworks(config, section)
+    print(img.getSocialNetworks())
+    for service in img.getSocialNetworks():
+        socialNetwork = (service, img.getSocialNetworks()[service])
+        
+        linkLast, lastTime = checkLastLink(img.getUrl(), socialNetwork)
+        print("linkLast {} {}".format(socialNetwork, linkLast))
+        i = img.getLinkPosition(linkLast)
+        print(i)
+        print(img.getNumPostsData(2,i))
+ 
+    sys.exit()
+    txt = ''
+    fileName = fileNamePath(img.url)
+    urls = getLastLink(fileName)
+    thePost=None
     for i, post in enumerate(img.getPosts()):
         print("{}) {} {}".format(i, img.getPostTitle(post), 
             img.getPostLink(post)))
-        print(img.getPosts()[i])
+        #print(img.getPosts()[i])
+        if not img.getPostTitle(post).startswith('>'):
+            if not (img.getPostLink(post).encode() in urls[0]):
+                print("--->",img.getPostTitle(post))
+                thePost = post
 
-    sel = input('Select one ')
 
-    pos =  int(sel)
-    res = downloadUrl(img.getPostLink(img.getPosts()[pos]))
+    if thePost:
+        res = downloadUrl(img.getPostLink(thePost))
 
-    print()
-    print(res)
+        print()
+        print(res)
+        sys.exit()
 
-    sel = input('Publish? (p/w) ') 
 
-    if sel == 'p':
-        print('pubishing! {}'.format(res [0][2]))
-        print(img.publish(pos))
-    elif sel == 'w':
+        #sel = input('Publish? (p/w) ') 
+
+        #if sel == 'p':
+        #    print('pubishing! {}'.format(res [0][2]))
+        #    print(img.publish(pos))
+        #elif sel == 'w':
         print('Wordpressing! {}'.format(res [0][2]))
         import moduleWordpress 
         wp = moduleWordpress.moduleWordpress() 
         wp.setClient('avecesunafoto') 
         title = res [0][2]
         text = '' 
-        for img in res: 
-            text = '{}\n<p><a href="{}"><img class="alignnone size-full wp-image-3306" src="{}" alt="" width="776" height="1035" /></a></p>'.format(text,img[0],img[1])
+        for iimg in res: 
+            text = '{}\n<p><a href="{}"><img class="alignnone size-full wp-image-3306" src="{}" alt="" width="776" height="1035" /></a></p>'.format(text,iimg[0],iimg[1])
 
         print('----') 
         print(title) 
         print(text) 
 
+        theUrls = [img.getPostLink(thePost).encode(), ] + urls[0]
         wp.publishPost(text, '', title)
 
-    text = ''
-    for img in res:
-        text = '{}\n<p><a href="{}"><img class="alignnone size-full wp-image-3306" src="{}" alt="" width="776" height="1035" /></a></p>'.format(text,img[0],img[1])
+        updateLastLink(img.url, theUrls)
+        #elif sel == 's':
+        #    import pprint
+        #    pprint.pprint(img.getPosts()[pos])
+        #    pprint.pprint(img.getPosts()[pos].views)
+        #    pprint.pprint(time.ctime(img.getPosts()[pos].datetime))
+        #    pprint.pprint(img.getPosts()[pos].section)
+        #    #pprint.pprint(dir(img.getPosts()[pos]))
 
-    print("---")
-    print(text)
+        text = ''
+        for img in res:
+            text = '{}\n<p><a href="{}"><img class="alignnone size-full wp-image-3306" src="{}" alt="" width="776" height="1035" /></a></p>'.format(text,img[0],img[1])
+
+        print("---")
+        print(text)
 
 
 
-    #print(img.publish(0))
-    #img.delete(8)
+        #print(img.publish(0))
+        #img.delete(8)
 
 if __name__ == '__main__':
     main()

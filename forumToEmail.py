@@ -15,6 +15,7 @@ def main():
     
     thePosts = {}
 
+    numPosts = 0
     for i,forumData in enumerate(config.sections()): 
         name = (str(i), forumData)
         forum = moduleForum.moduleForum() 
@@ -27,11 +28,17 @@ def main():
         if pos == len(forum.getPosts()) - 1:
             posts.append(("No new posts!",'',''))
         else: 
+            numPosts = numPosts + 1
+            #print(pos)
+            #print(len(forum.getPosts()))
             for post in forum.getPosts()[pos:]:
+                #print(post)
                 title = post[0].split('\n')[0]
                 link  = post[1]
                 posts.append((title, link, ''))
+            updateLastLink(forum.url,link)
         thePosts[name] = posts
+        continue
 
     compResponse = []
     for socialNetwork in thePosts.keys():
@@ -73,11 +80,12 @@ def main():
                         'updates': rep[2]})
 
  
-    import moduleSmtp
-    smtpServer = moduleSmtp.moduleSmtp()
+    if numPosts > 0:
+        import moduleSmtp
+        smtpServer = moduleSmtp.moduleSmtp()
 
-    smtpServer.setClient('fernand0')
-    smtpServer.publishPost(response, 'Forums {}'.format(time.asctime()), 'fernand0@elmundoesimperfecto.com')
+        smtpServer.setClient('fernand0')
+        smtpServer.publishPost(response, 'Forums {}'.format(time.asctime()), 'fernand0@elmundoesimperfecto.com')
 
 if __name__ == '__main__':
     main()

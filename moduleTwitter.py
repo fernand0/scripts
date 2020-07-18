@@ -36,10 +36,15 @@ class moduleTwitter(Content,Queue):
         logging.info("     Connecting Twitter")
         self.service = 'Twitter'
         try:
+            logging.info("     Twitter Acc %s"%str(twitterAC))
             config = configparser.ConfigParser()
             config.read(CONFIGDIR + '/.rssTwitter')
 
-            self.user = twitterAC
+            if isinstance(twitterAC, str): 
+                self.user = twitterAC
+            else:
+                self.user = twitterAC[1][1]
+            logging.info("     Twitter User %s"%str(self.user))
             try: 
                 CONSUMER_KEY = config.get(twitterAC, "CONSUMER_KEY")
             except: 

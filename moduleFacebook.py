@@ -29,13 +29,16 @@ class moduleFacebook(Content,Queue):
         self.service = None
 
     def setClient(self, facebookAC='me'):
-        logging.info("     Connecting Facebook")
+        logging.info("     Connecting Facebook %s"%str(facebookAC))
         self.service = 'Facebook'
         try:
             config = configparser.ConfigParser()
             config.read(CONFIGDIR + '/.rssFacebook')
 
+            if isinstance(facebookAC, tuple): 
+                facebookAC = facebookAC[1][1]
             self.user = facebookAC
+            logging.info("     Connecting Facebook %s"%str(self.user))
             try:
                 oauth_access_token = config.get("Facebook", "oauth_access_token")
                 graph = facebook.GraphAPI(oauth_access_token, version='3.0') 
@@ -57,7 +60,7 @@ class moduleFacebook(Content,Queue):
 
         if (facebookAC != 'me'): 
             for i in range(len(pages['data'])): 
-                logging.debug("%s %s"% (pages['data'][i]['name'], facebookAC)) 
+                logging.debug("Selecting %s %s"% (pages['data'][i]['name'], facebookAC)) 
                 if (pages['data'][i]['name'] == facebookAC): 
                     logging.info("     Writing in... %s"% pages['data'][i]['name']) 
                     graph2 = facebook.GraphAPI(pages['data'][i]['access_token']) 
@@ -81,10 +84,10 @@ class moduleFacebook(Content,Queue):
         for post in posts['data']:
             print("-->",post)
             postt = self.page.get_connections(post['id'], connection_name='attachments') 
-            if postt['data']: 
-                print(postt['data'][0])
-                if 'url' in postt['data'][0]:
-                    print(urllib.parse.unquote(postt['data'][0]['url']).split('=')[1])#.split('&')[0])
+            #if postt['data']: 
+            #    print(postt['data'][0])
+            #    if 'url' in postt['data'][0]:
+            #        print(urllib.parse.unquote(postt['data'][0]['url']).split('=')[1])#.split('&')[0])
             if 'message' in post:
                 self.posts.append(post)
 

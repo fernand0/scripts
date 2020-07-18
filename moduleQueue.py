@@ -43,8 +43,13 @@ class Queue:
         return(newTitle)
 
     def extractDataMessage(self, i):
-        if i < len(self.getPosts()):
-            post = self.getPosts()[i]
+        if hasattr(self, 'getPostsType'):
+            if self.getPostsType() == 'drafts':
+                posts = self.getDrafts()
+            else:
+                posts = self.getPosts()
+        if i < len(posts):
+            post = posts[i]
             logging.info("Post: %s"% post)
             theTitle = self.getPostTitle(post)
             theLink = self.getPostLink(post)

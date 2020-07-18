@@ -17,8 +17,12 @@ WWWADDRESS = 'https://elmundoesimperfecto.com/img/'
 NAMEIMG = 'instagram.jpg'
 
 
-def fileNamePath(url, socialNetwork):
-    theName = os.path.expanduser(DATADIR + '/' 
+def fileNamePath(url, socialNetwork=()):
+    if not socialNetwork: 
+        theName = (DATADIR  + '/' 
+               + urllib.parse.urlparse(url).netloc + ".last")
+    else: 
+        theName = os.path.expanduser(DATADIR + '/' 
                     + urllib.parse.urlparse(url).netloc 
                     + '_' 
                     + socialNetwork[0] + '_' + socialNetwork[1])
@@ -27,7 +31,7 @@ def fileNamePath(url, socialNetwork):
 def getLastLink(fileName):        
     try: 
         with open(fileName, "rb") as f: 
-            linkLast = f.readlines()  # Last published
+            linkLast = f.read().decode().split()  # Last published
     except:
         # File does not exist, we need to create it.
         with open(fileName, "wb") as f:
@@ -58,11 +62,13 @@ def updateLastLink(url, link, socialNetwork=()):
     else: 
         fileName = fileNamePath(url, socialNetwork) + ".last"
 
-    if isinstance(link, list):
-        b'\n'.join(link)
-
     with open(fileName, "w") as f: 
-        f.write(link)
+        if isinstance(link, bytes): 
+            f.write(link.decode())
+        elif isinstance(link, str): 
+            f.write(link)
+        else:
+            f.write(link[0])
 
 def resizeImage(imgUrl):
     print(imgUrl)

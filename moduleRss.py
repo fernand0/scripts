@@ -34,8 +34,11 @@ class moduleRss(Content,Queue):
         self.rssFeed = feed
 
     def setClient(self, feed):
-        logging.info("Feed %s" % feed)
-        self.rssFeed = feed
+        logging.info("Feed %s" % str(feed))
+        if isinstance(feed, tuple):
+            self.rssFeed = feed[0]+feed[1][1]
+        else:
+            self.rssFeed = feed
         self.service = 'Rss'
 
     def setPosts(self):
@@ -57,7 +60,7 @@ class moduleRss(Content,Queue):
 
     def getTitle(self, i):
         post = self.getPosts()[i]
-        return(self.getPostLink(post))
+        return(self.getPostTitle(post))
 
     def getPostLink(self, post):
         return(post['link'])
@@ -203,8 +206,8 @@ def main():
         url = config.get(section, "url")
         print("Url: %s"% url)
         blog.setUrl(url)
-        if 'rssfeed' in config.options(section): 
-            rssFeed = config.get(section, "rssFeed")
+        if 'rss' in config.options(section): 
+            rssFeed = config.get(section, "rss")
             print(rssFeed) 
             blog.setRssFeed(rssFeed)
         optFields = ["linksToAvoid", "time", "buffer"]
@@ -238,12 +241,16 @@ def main():
                 print(blog.getLink(i))
                 print(blog.getPostTitle(post))
                 print(blog.getPostLink(post))
+        else:
+            print("No posts")
 
         for service in blog.getSocialNetworks():
             socialNetwork = (service, blog.getSocialNetworks()[service])
             
-            linkLast = checkLastLink(blog.getUrl(), socialNetwork)
-            print(blog.getUrl()+blog.getRssFeed(),blog.getLinkPosition(linkLast))
+            linkLast, lastTime = checkLastLink(blog.getUrl(), socialNetwork)
+            print("linkLast {} {}".format(socialNetwork, linkLast))
+            print(blog.getUrl()+blog.getRssFeed(),
+                    blog.getLinkPosition(linkLast))
         #if blog.getPosts(): 
         #    print("description ->", blog.getPosts()[5]['description'])
         #for post in blog.getPosts():

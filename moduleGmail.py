@@ -45,6 +45,7 @@ class moduleGmail(Content,Queue):
         self.setClient(Acc)
 
     def setClient(self, Acc):
+        logging.info("     Connecting GMail %s"%str(Acc))
         # based on get_credentials from 
         # Code from
         # https://developers.google.com/gmail/api/v1/reference/users/messages/list

@@ -151,7 +151,7 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
 
         element, listP = nextPost(blog,socialNetwork)
 
-        logger.info("    %s (%s): Waiting ... %.2f minutes" % 
+        logger.info("    %s -> %s: Waiting ... %.2f minutes" % 
                 (urllib.parse.urlparse(blog.getUrl()).netloc.split('.')[0],
                     socialNetwork[0].capitalize(), 
                     tSleep/60))
@@ -174,14 +174,15 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
             time.asctime()))
 
         result = None
-        if (profile == 'twitter') or (profile == 'facebook') or (profile == 'mastodon'): 
+        if profile in ['twitter', 'facebook', 'mastodon', 'imgur', 'wordpress']: 
             # https://stackoverflow.com/questions/41678073/import-class-from-module-dynamically
             import importlib
             mod = importlib.import_module('module'+profile.capitalize()) 
             cls = getattr(mod, 'module'+profile.capitalize())
             api = cls()
             api.setClient(nick)
-            title = title + '\n'+ summary[:120]
+            if summary:
+                title = title + '\n'+ summary[:120]
             result = api.publishPost(title, link, comment)
             if isinstance(result, str):
                 if result[:4]=='Fail':
@@ -200,7 +201,7 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
         if j+1 < numPosts:
             logger.info("Time: %s Waiting ... %.2f minutes to schedule next post in %s" % (time.asctime(), tSleep2/60, socialNetwork[0]))
             time.sleep(tSleep2) 
-        logger.info("    %s (%s): Finished" % 
+        logger.info("    %s -> %s: Finished" % 
                 (urllib.parse.urlparse(blog.getUrl()).netloc.split('.')[0],
                     socialNetwork[0].capitalize()))
         #logger.info("    %s: Finished" % (blog.getUrl()))
