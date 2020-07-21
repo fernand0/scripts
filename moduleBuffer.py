@@ -338,18 +338,17 @@ class moduleBuffer(Content,Queue):
         self.delete(j)
         #update = update.edit(text=title+' '+newLink, media={})
         textPost = title + " " + newLink
-        entry = urllib.parse.quote(textPost)
+        entry = textPost #urllib.parse.quote(textPost)
         update = self.getProfile().updates.new(entry)
         print(update)
-        return('Updated!  %s' % update)
+        #return('Updated!  %s' % update)
 
         title = oldTitle
         update = "Changed "+title+" with "+newTitle
 
         logging.info("Res update %s" % update)
 
-        return(update)
-
+        return('Updated!  %s' % update)
 
     def edit(self, j, newTitle=''):
         logging.info("New title %s", newTitle)
