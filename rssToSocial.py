@@ -265,7 +265,7 @@ def main():
                     logging.info("    No new posts")
                     print("    No new posts")
                 hours = blog.getTime() 
-                if isinstance(lastLink, tuple):
+                if lastLink and isinstance(lastLink, list):
                     myLastLink = lastLink[0]
                 else:
                     myLastLink = lastLink

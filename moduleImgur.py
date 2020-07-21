@@ -53,20 +53,13 @@ class moduleImgur(Content,Queue):
         if client:
             for i,album in enumerate(client.get_account_albums(self.name)):
                 import time
-                logging.info("{} {}".format(i, album.title))
-                logging.info(time.ctime(album.datetime))
-                logging.info(album.layout)
+                logging.debug("{} {} {}".format(time.ctime(album.datetime),
+                    i, album.title))
                 text = ""
                 if album.in_gallery: 
                     self.posts.insert(0,album)
-                    #text = ">"
-                    #self.posts[-1].title = "> {}".format(self.posts[-1].title)
                 else:
                     self.drafts.insert(0,album)
-                #import time
-                #text = "{} {} {}".format(text, time.ctime(album.datetime), 
-                #        self.getPostTitle(album))
-                #logging.debug(text)
         else:
             logging.warning('No client configured!')
                     
