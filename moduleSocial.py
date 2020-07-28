@@ -81,6 +81,7 @@ import logging
 import random
 import sys
 import time
+import pickle
 
 from configMod import *
 
@@ -128,12 +129,20 @@ def publishDirect(blog, socialNetwork, i):
             cls = getattr(mod, 'module'+serviceName) 
             api = cls() 
             api.setClient(nick) 
+            if profile in ['facebook']: 
+                url = link
+                apiurl = "http://tinyurl.com/api-create.php?url=" 
+                tinyurl = urllib.request.urlopen(apiurl + url).read() 
+                link = tinyurl.decode("utf-8")
+            print(link)
             result = api.publishPost(title, link, comment) 
             print(result) 
             if isinstance(result, str): 
                 logging.info("Result %s"%str(result)) 
                 if result[:4]=='Fail': 
-                    if result.find('duplicate')>=0: 
+                    logging.debug("Fail detected %s"%str(result)) 
+                    if ((result.find('duplicate')>=0) or 
+                            (result.find('abusive')>=0)): 
                         duplicate = True 
                         link='' 
                         logging.info("Posting failed") 
@@ -159,6 +168,10 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
         logger.info("     I'll publish %s" % element[0])
         print(" [d] Profile %s: waiting... %.2f minutes" 
                 % (socialNetwork[0], tSleep/60))
+        tNow = time.time()
+        with open(fileNamePath(blog.getUrl(), 
+            socialNetwork)+'.timeNext','wb') as f:
+            pickle.dump((tNow,tSleep), f)
         time.sleep(tSleep) 
 
         # Things can have changed during the waiting
@@ -181,8 +194,8 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
             cls = getattr(mod, 'module'+profile.capitalize())
             api = cls()
             api.setClient(nick)
-            if summary:
-                title = title + '\n'+ summary[:120]
+            #if summary:
+            #    title = title + '\n'+ summary[:120]
             result = api.publishPost(title, link, comment)
             if isinstance(result, str):
                 if result[:4]=='Fail':

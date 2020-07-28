@@ -98,6 +98,7 @@ class moduleLinkedin(Content):
         res = self.ln.submit_share(comment=comment, title=post,description=None,
                 submitted_url=link, submitted_image_url=None, 
                 urn=self.URN, visibility_code='anyone')
+        logging.info("    Reply %s"%str(res))
 
         return res
 

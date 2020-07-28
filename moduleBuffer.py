@@ -304,10 +304,13 @@ class moduleBuffer(Content,Queue):
     def getPostLink(self, post):
         if post:
             if 'media' in post: 
+                logging.debug("media %s"%str(post['media']))
                 if ('expanded_link' in post['media']): 
                     link = post['media']['expanded_link'] 
-                else: 
+                elif 'link' in post['media']:
                     link = post['media']['link']
+                else:
+                    link = ''
             else:
                 link = post[1]
             return (link)

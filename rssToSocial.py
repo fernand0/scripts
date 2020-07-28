@@ -314,7 +314,8 @@ def main():
 
                     if not (blog.getBufferapp() or blog.getProgram()):
                         link = moduleSocial.publishDirect(blog, 
-                                socialNetwork, i)
+                                socialNetwork, i) 
+                        logging.info("  Link reply %s"%str(link)) 
 
                     if link:
                          logging.info("    Updating link %s %s" % 

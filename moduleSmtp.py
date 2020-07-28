@@ -45,12 +45,12 @@ class moduleSmtp(Content):
     def getClient(self):
         return self.server
  
-    def publishPost(self, post, subject, toaddr):
+    def publishPost(self, post, subject, toaddr, fromaddr='fernand0@elmundoesimperfecto.com'):
         logging.info("     Publishing in SMTP")
         if True: 
             msg = MIMEText(post,'html')
             msg['Subject'] = subject
-            res = self.server.sendmail('ftricas@gmail.com', toaddr, msg.as_string())
+            res = self.server.sendmail(fromaddr, toaddr, msg.as_string())
         else:
             logging.info("     Not published in SMTP. Exception ...")
             return('Fail')

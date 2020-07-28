@@ -38,7 +38,7 @@ class moduleFacebook(Content,Queue):
             if isinstance(facebookAC, tuple): 
                 facebookAC = facebookAC[1][1]
             self.user = facebookAC
-            logging.info("     Connecting Facebook %s"%str(self.user))
+            logging.debug("     Connecting Facebook %s"%str(self.user))
             try:
                 oauth_access_token = config.get("Facebook", "oauth_access_token")
                 graph = facebook.GraphAPI(oauth_access_token, version='3.0') 
@@ -144,7 +144,7 @@ def main():
 
     fc = moduleFacebook.moduleFacebook()
 
-    fc.setClient('Enlaces de fernand0')
+    fc.setClient('Reflexiones e Irreflexiones')
     print(fc.user)
     print(fc.fc.get_object(id='me'))
 
@@ -156,6 +156,7 @@ def main():
     for post in fc.getPosts():
         print(post)
         #print("@%s: %s" %(tweet[2], tweet[0]))
+    sys.exit()
 
     print("Testing title and link")
     
