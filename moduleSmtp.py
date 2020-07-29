@@ -50,6 +50,7 @@ class moduleSmtp(Content):
         if True: 
             msg = MIMEText(post,'html')
             msg['Subject'] = subject
+            msg['From'] = fromaddr
             res = self.server.sendmail(fromaddr, toaddr, msg.as_string())
         else:
             logging.info("     Not published in SMTP. Exception ...")

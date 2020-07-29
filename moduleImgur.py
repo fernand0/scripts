@@ -52,7 +52,6 @@ class moduleImgur(Content,Queue):
         client = self.getClient()
         if client:
             for i,album in enumerate(client.get_account_albums(self.name)):
-                import time
                 logging.debug("{} {} {}".format(time.ctime(album.datetime),
                     i, album.title))
                 text = ""

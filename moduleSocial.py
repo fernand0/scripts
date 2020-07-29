@@ -134,9 +134,9 @@ def publishDirect(blog, socialNetwork, i):
                 apiurl = "http://tinyurl.com/api-create.php?url=" 
                 tinyurl = urllib.request.urlopen(apiurl + url).read() 
                 link = tinyurl.decode("utf-8")
-            print(link)
+            #print(link)
             result = api.publishPost(title, link, comment) 
-            print(result) 
+            logging.debug(result) 
             if isinstance(result, str): 
                 logging.info("Result %s"%str(result)) 
                 if result[:4]=='Fail': 
