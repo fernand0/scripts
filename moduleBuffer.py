@@ -257,8 +257,10 @@ class moduleBuffer(Content,Queue):
         if 'media' in messageRaw:
             if ('expanded_link' in messageRaw['media']):
                 theLink = messageRaw['media']['expanded_link']
-            else:
+            elif 'link' in messageRaw['media']:
                 theLink = messageRaw['media']['link']
+            else:
+                theLink = ''
             if ('description' in messageRaw['media']): 
                 content = messageRaw['media']['description']
 
