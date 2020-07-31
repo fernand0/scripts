@@ -183,16 +183,29 @@ class moduleImgur(Content,Queue):
             urlImg = 'https://i.imgur.com/{}.jpg'.format(img['hash'])
             if 'description' in img:
                 titleImg = img['description']
+                if titleImg:
+                    description = titleImg.split('#')
+                    description, tags = description[0], description[1:]
+                    print("tags before", tags)
+                    aTags= []
+                    while tags: 
+                        aTag = tags.pop().strip()
+                        aTags.append(aTag) 
+                    tags = aTags
+                    print("tags after", tags)
+                else:
+                    description = ""
+                    tags = []
             else:
-                titleImg = img['description']
-            res.append((urlImg,title, titleImg))
+                titleImg = ""
+            res.append((urlImg,title, description, tags))
         return res
 
 def main(): 
 
     config = configparser.ConfigParser()
     config.read(CONFIGDIR + '/.rssBlogs')
-    sections=["Blog20", "Blog21"]
+    sections=["Blog21"]
     for section in sections:
         img = moduleImgur()
         img.setUrl('https://imgur.com/user/ftricas') 
@@ -205,15 +218,29 @@ def main():
         for i, post in enumerate(img.getPosts()):
             print(img.getPostTitle(post))
             print(img.getImagesCode(i))
-        sys.exit()
         print("---- Drafts ----")
         for post in img.getDrafts():
             print(img.getPostTitle(post))
-        print("----")
+        print("----.")
         time.sleep(2)
-    sys.exit()
     img.setSocialNetworks(config, section)
     print(img.getSocialNetworks())
+    service='wordpress'
+    socialNetwork = (service, img.getSocialNetworks()[service])
+    post = img.getImages(len(img.getPosts())-1)[0]
+    postWP = img.getImagesCode(len(img.getPosts())-1)
+    title = img.getPostTitle(img.getPosts()[-2])
+    print(post)
+    print (title, postWP)
+
+    # Testing Wordpress publishing
+    import moduleWordpress
+    wp = moduleWordpress.moduleWordpress()
+    wp.setClient('avecesunafoto')
+
+    wp.publishPost(title, '', postWP, tags=post[-1])
+ 
+    sys.exit()
     for service in img.getSocialNetworks():
         socialNetwork = (service, img.getSocialNetworks()[service])
         

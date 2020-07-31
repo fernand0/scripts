@@ -353,8 +353,13 @@ class Content:
         url = self.getPostLink(self.getPosts()[i]) 
         text = ""
         for iimg in res: 
-            description = iimg[2].split('#')
-            description, tags = description[0], '#'+'#'.join(description[1:])
+            print(iimg)
+            if iimg[2]:
+                description = iimg[2].split('#')
+                description, tags = description[0], '#'+'#'.join(description[1:])
+            else:
+                description = ""
+                tags=""
             text = '{}\n<p><a href="{}"><img class="alignnone size-full wp-image-3306" src="{}" alt="{} {}" data-tags="{}" width="776" height="1035" /></a></p>'.format(text,url, iimg[0],iimg[1], description, tags)
         return(text)
 

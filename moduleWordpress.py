@@ -19,6 +19,7 @@ class moduleWordpress(Content,Queue):
         self.api_base='https://public-api.wordpress.com/rest/v1/'
         self.api_user='me'
         self.api_posts='sites/{}/posts'
+        self.api_tags='sites/{}/tags'
         self.api_posts_search='?search={}'
 
     def setClient(self, user):
@@ -59,42 +60,70 @@ class moduleWordpress(Content,Queue):
         except:
             return(self.report('Wordpress API', '' , '', sys.exc_info()))
 
-    def publishPost(self, post, link='', comment=''):
+    def checkTags(self, tags):
+        self.api_base2 = 'https://public-api.wordpress.com/wp/v2/'
+        self.api_base2 = 'https://avecesunafoto.wordpress.com/?rest_route=/wp/v2/sites/avecesunafoto.wordpress.com/tags'
+        self.api_base2 = 'https://public-api.wordpress.com/rest/v1.1/sites/avecesunafoto.wordpress.com/tags'
+        idTags = []
+        for tag in tags: 
+            payload = {"name":tag}
+            # I'm trying to create, if not possible, they exist
+            res = requests.post(self.api_base 
+                    + self.api_tags.format(self.my_site)+'/new', 
+                    headers = self.headers,
+                    data = payload)
+            reply = json.loads(res.text)
+            if 'ID' in reply:
+                idTags.append(reply['ID'])
+            else:
+                res = requests.get(self.api_base + self.api_tags.format(self.my_site)) 
+                result = json.loads(res.text)
+                for ttag in result['tags']:
+                    if ttag['name'] == tag:
+                        idTags.append(ttag['ID'])
+                        
+        return(idTags)
+
+    def publishPost(self, post, link='', comment='', tags=[]):
         logging.debug("     Publishing in Wordpress...")
         title = post
         #if comment != None: 
         #    title = comment 
         res = None
-        if True:
+        try:
+            print("     Publishing: %s" % post)
             logging.info("     Publishing: %s" % post)
-            print('vamos')
-            payload = {"title":title,"content_raw":post,"status":'draft'}
             self.api_base2 = 'https://avecesunafoto.wordpress.com/?rest_route=/wp/v2/posts'
             self.api_base2 = 'https://public-api.wordpress.com/wp/v2/'
-            payload = {"title":title,"content":comment,"status":'publish'}
-            print(self.api_base + self.api_posts.format(self.my_site))
-            print(payload)
-            lalala = requests.post(self.api_base2 
+            # The tags must be checked/added previously
+            idTags = self.checkTags(tags)
+            print(idTags)
+            payload = {"title":title,"content":comment,"status":'draft', 
+                    'tags':idTags}
+            print("payload", payload)
+            res = requests.post(self.api_base2 
                     + self.api_posts.format(self.my_site), 
                     headers = self.headers,
                     data = payload)
-            print(lalala)
-            print(lalala.content)
+            print(res)
+            print(res.text)
 
 
             if res: 
                 logging.info("Res: %s" % res)
-                urlTw = "https://twitter.com/%s/status/%s" % (self.user, res['id'])
-                logging.info("     Link: %s" % urlTw)
+                #urlTw = "https://twitter.com/%s/status/%s" % (self.user, res['id'])
+                #logging.info("     Link: %s" % urlTw)
                 #return(post +'\n'+urlTw)
 
         #except twitter.api.TwitterHTTPError as twittererror:        
         #    for error in twittererror.response_data.get("errors", []): 
         #        logging.info("      Error code: %s" % error.get("code", None))
         #    return(self.report('Twitter', post, link, sys.exc_info()))
-        else:        
+        except:        
+            print("Fail")
+            print(self.report('Wordpress', post, link, sys.exc_info()))
             logging.info("Fail!")
-            return(self.report('Twitter', post, link, sys.exc_info()))
+            return(self.report('Wordpress', post, link, sys.exc_info()))
         return 'OK'
 
     def getTitle(self, i):        
@@ -206,16 +235,6 @@ class moduleWordpress(Content,Queue):
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
-    def extractImages(self, soup):
-        res = []
-        foto = soup.find_all('meta', property="og:image")
-        for image in foto:
-            img = image['content']
-            title = soup.find_all("meta",  property="og:title")[0]['content']
-            alt = ''
-            res.append((img,title,alt))
-        return(res)
-
 
 def main():
 
@@ -226,9 +245,8 @@ def main():
     print("Testing posts")
     wp.setPosts()
     for i,post in enumerate(wp.getPosts()):
-        print("{}) {} {} {}".format(i, wp.getPostTitle(post), 
-            wp.getPostLink(post), str(wp.getImages(i))))
-    sys.exit()
+        print("{}) {} {}".format(i, wp.getPostTitle(post), 
+            wp.getPostLink(post)))
 
     sel = input('Select one ')
     pos =  int(sel)
