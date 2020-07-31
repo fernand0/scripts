@@ -94,13 +94,15 @@ class moduleWordpress(Content,Queue):
             print("     Publishing: %s" % post)
             logging.info("     Publishing: %s" % post)
             self.api_base2 = 'https://avecesunafoto.wordpress.com/?rest_route=/wp/v2/posts'
-            self.api_base2 = 'https://public-api.wordpress.com/wp/v2/'
             # The tags must be checked/added previously
             idTags = self.checkTags(tags)
+            print(idTags)
+            idTags = ','.join(str(v) for v in idTags)
             print(idTags)
             payload = {"title":title,"content":comment,"status":'draft', 
                     'tags':idTags}
             print("payload", payload)
+            self.api_base2 = 'https://public-api.wordpress.com/wp/v2/'
             res = requests.post(self.api_base2 
                     + self.api_posts.format(self.my_site), 
                     headers = self.headers,
