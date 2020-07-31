@@ -129,9 +129,11 @@ def main():
         if pos > 0:
             imgUrl = imgUrl[:pos]
         if imgUrl: 
-            res = ig.publishPost(title, url, imgUrl)
-            print(res)
+            print(imgUrl)
+            #res = ig.publishPost(title, url, imgUrl)
+            #print(res)
 
+    sys.exit()
     print("Setting posts")
     ig.setPosts()
     for igP in ig.getPosts():

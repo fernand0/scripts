@@ -1,4 +1,5 @@
 import configparser
+import json
 import logging
 import time
 
@@ -7,8 +8,6 @@ from imgurpython import ImgurClient
 from moduleContent import *
 from moduleQueue import *
 from configMod import *
-from imgUrl import *
-# Publication pending
 
 class moduleImgur(Content,Queue):
 
@@ -61,6 +60,8 @@ class moduleImgur(Content,Queue):
                     self.drafts.insert(0,album)
         else:
             logging.warning('No client configured!')
+        self.posts = self.posts[-20:]
+        # We set some limit
                     
     def getPostTitle(self, post):
         return post[0]
@@ -86,28 +87,30 @@ class moduleImgur(Content,Queue):
                     return(i+1)
         return -1
 
-    def extractDataMessage(self, i):
-        if hasattr(self, 'getPostsType'):
-            if self.getPostsType() == 'drafts':
-                posts = self.getDrafts()
-            else:
-                posts = self.getPosts()
-        if i < len(posts):
-            post = posts[i]
-            logging.info("Post: %s"% post)
-            theTitle = self.getPostTitle(post)
-            theLink = self.getPostLink(post)
-        else:
-            theTitle = None
-            theLink = None
-        res = downloadUrl(self.getPostLink(post))
-        print(res)
-        text = '' 
-        for iimg in res: 
-            text = '{}\n<p><a href="{}"><img class="alignnone size-full wp-image-3306" src="{}" alt="" width="776" height="1035" /></a></p>'.format(text,iimg[0],iimg[1])
+    #def extractDataMessage(self, i):
+    #    if hasattr(self, 'getPostsType'):
+    #        if self.getPostsType() == 'drafts':
+    #            posts = self.getDrafts()
+    #        else:
+    #            posts = self.getPosts()
+    #    if i < len(posts):
+    #        post = posts[i]
+    #        logging.info("Post: %s"% post)
+    #        theTitle = self.getPostTitle(post)
+    #        theLink = self.getPostLink(post)
+    #    else:
+    #        theTitle = None
+    #        theLink = None
+    #    res = downloadUrl(self.getPostLink(post))
+    #    #print(res)
+    #    text = '' 
+    #    for iimg in res: 
+    #        description = iimg[3].split('#')
+    #        description, tags = description[0], '#'+'#'.join(description[1:])
+    #        text = '{}\n<p><a href="{}"><img class="alignnone size-full wp-image-3306" src="{}" alt="{} {}" data-tags="{} width="776" height="1035" /></a></p>'.format(text,iimg[0],iimg[1], iimg[2], description, tags)
 
 
-        return (theTitle, theLink, None, None, None, None, None, None, None, text)
+    #    return (theTitle, theLink, None, None, None, None, None, None, None, text)
 
 
 
@@ -168,22 +171,46 @@ class moduleImgur(Content,Queue):
         logging.info("Deleted %s"% post[0])
         return("%s"% post[0])
 
+    def extractImages(self, soup):
+        res = []
+        script = soup.find_all('script')
+        pos = script[9].text.find('image')
+        pos = script[9].text.find('{',pos+1)
+        pos2 = script[9].text.find('\n',pos+1)
+        data = json.loads(script[9].text[pos:pos2-1])
+        title = data['title']
+        for img in data['album_images']['images']:
+            urlImg = 'https://i.imgur.com/{}.jpg'.format(img['hash'])
+            if 'description' in img:
+                titleImg = img['description']
+            else:
+                titleImg = img['description']
+            res.append((urlImg,title, titleImg))
+        return res
+
 def main(): 
 
     config = configparser.ConfigParser()
     config.read(CONFIGDIR + '/.rssBlogs')
-    section="Blog20"
-    img = moduleImgur()
-    img.setUrl('https://imgur.com/user/ftricas') 
-    img.setClient('ftricas') 
-    img.setPosts()
-    print("----")
-    for post in img.getPosts():
-        print(img.getPostTitle(post))
-    print("----")
-    for post in img.getDrafts():
-        print(img.getPostTitle(post))
-    print("----")
+    sections=["Blog20", "Blog21"]
+    for section in sections:
+        img = moduleImgur()
+        img.setUrl('https://imgur.com/user/ftricas') 
+        img.setClient('ftricas') 
+        if 'posts' in config.options(section):
+            img.setPostsType(config.get(section, 'posts'))
+        print(img.getPostsType())
+        img.setPosts()
+        print("---- Posts ----")
+        for i, post in enumerate(img.getPosts()):
+            print(img.getPostTitle(post))
+            print(img.getImagesCode(i))
+        sys.exit()
+        print("---- Drafts ----")
+        for post in img.getDrafts():
+            print(img.getPostTitle(post))
+        print("----")
+        time.sleep(2)
     sys.exit()
     img.setSocialNetworks(config, section)
     print(img.getSocialNetworks())

@@ -206,6 +206,16 @@ class moduleWordpress(Content,Queue):
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
+    def extractImages(self, soup):
+        res = []
+        foto = soup.find_all('meta', property="og:image")
+        for image in foto:
+            img = image['content']
+            title = soup.find_all("meta",  property="og:title")[0]['content']
+            alt = ''
+            res.append((img,title,alt))
+        return(res)
+
 
 def main():
 
@@ -216,8 +226,9 @@ def main():
     print("Testing posts")
     wp.setPosts()
     for i,post in enumerate(wp.getPosts()):
-        print("{}) {} {}".format(i, wp.getPostTitle(post), 
-            wp.getPostLink(post)))
+        print("{}) {} {} {}".format(i, wp.getPostTitle(post), 
+            wp.getPostLink(post), str(wp.getImages(i))))
+    sys.exit()
 
     sel = input('Select one ')
     pos =  int(sel)

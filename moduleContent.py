@@ -6,6 +6,8 @@ import configparser
 import os
 import logging
 from bs4 import Tag
+from urllib.request import urlopen
+from bs4 import BeautifulSoup
 
 from configMod import *
 
@@ -65,11 +67,18 @@ class Content:
     def addSocialNetwork(self, socialNetwork):
         self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
 
-    #def getPostsFormatted(self):
-    #    return(self.postsFormatted)
+    def getPublished(self):
+        return(self.posts)
 
     def getPosts(self):
-        return(self.posts)
+        if hasattr(self, 'getPostsType'): 
+            if self.getPostsType() == 'drafts':
+                posts = self.getDrafts()
+            else:
+                posts = self.getPublished() 
+        else:
+            posts = sefl.getPosts()
+        return(posts)
 
     def getNumPostsData(self, num, i): 
         listPosts = []
@@ -319,3 +328,34 @@ class Content:
 
     def getPostLink(self, post):
         return ''
+
+    def getImages(self, i):        
+        if hasattr(self, 'getPostsType'):
+            if self.getPostsType() == 'drafts':
+                posts = self.getDrafts()
+            else:
+                posts = self.getPosts()
+        theTitle = None
+        theLink = None
+        res = None
+        if i < len(posts):
+            post = posts[i]
+            logging.info("Post: %s"% post)
+            theTitle = self.getPostTitle(post)
+            theLink = self.getPostLink(post) 
+            page = urlopen(theLink).read() 
+            soup = BeautifulSoup(page,'lxml') 
+            res = self.extractImages(soup)
+        return(res)
+
+    def getImagesCode(self, i):        
+        res = self.getImages(i)
+        url = self.getPostLink(self.getPosts()[i]) 
+        text = ""
+        for iimg in res: 
+            description = iimg[2].split('#')
+            description, tags = description[0], '#'+'#'.join(description[1:])
+            text = '{}\n<p><a href="{}"><img class="alignnone size-full wp-image-3306" src="{}" alt="{} {}" data-tags="{}" width="776" height="1035" /></a></p>'.format(text,url, iimg[0],iimg[1], description, tags)
+        return(text)
+
+
