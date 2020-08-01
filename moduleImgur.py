@@ -186,13 +186,11 @@ class moduleImgur(Content,Queue):
                 if titleImg:
                     description = titleImg.split('#')
                     description, tags = description[0], description[1:]
-                    print("tags before", tags)
                     aTags= []
                     while tags: 
                         aTag = tags.pop().strip()
                         aTags.append(aTag) 
                     tags = aTags
-                    print("tags after", tags)
                 else:
                     description = ""
                     tags = []
@@ -205,7 +203,7 @@ def main():
 
     config = configparser.ConfigParser()
     config.read(CONFIGDIR + '/.rssBlogs')
-    sections=["Blog21"]
+    sections=["Blog20"]
     for section in sections:
         img = moduleImgur()
         img.setUrl('https://imgur.com/user/ftricas') 
@@ -217,23 +215,34 @@ def main():
         print("---- Posts ----")
         for i, post in enumerate(img.getPosts()):
             print(img.getPostTitle(post))
-            print(img.getImagesCode(i))
+            #print(img.getImagesCode(i))
         print("---- Drafts ----")
         for post in img.getDrafts():
             print(img.getPostTitle(post))
         print("----.")
         time.sleep(2)
+    pos=3
+    post = img.getImages(pos)
+    postWP = img.getImagesCode(pos)
+    title = img.getPostTitle(img.getPosts()[pos])
+    tags = img.getImagesTags(pos)
+    print("---post images ----")
+    print(post)
+    print("---title----")
+    print (title)
+    print("---postWP----")
+    print(postWP)
+    print("---tags----")
+    print(tags)
+    sys.exit()
+
+
+    # Testing Wordpress publishing
     img.setSocialNetworks(config, section)
     print(img.getSocialNetworks())
     service='wordpress'
     socialNetwork = (service, img.getSocialNetworks()[service])
-    post = img.getImages(len(img.getPosts())-1)[0]
-    postWP = img.getImagesCode(len(img.getPosts())-1)
-    title = img.getPostTitle(img.getPosts()[-2])
-    print(post)
-    print (title, postWP)
 
-    # Testing Wordpress publishing
     import moduleWordpress
     wp = moduleWordpress.moduleWordpress()
     wp.setClient('avecesunafoto')

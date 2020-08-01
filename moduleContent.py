@@ -348,19 +348,29 @@ class Content:
             res = self.extractImages(soup)
         return(res)
 
+    def getImagesTags(self, i):        
+        res = self.getImages(i)
+        tags = [] 
+        for iimg in res: 
+            for tag in iimg[3]:
+                if tag not in tags:
+                    tags.append(tag)
+
+        return tags
+
     def getImagesCode(self, i):        
         res = self.getImages(i)
         url = self.getPostLink(self.getPosts()[i]) 
         text = ""
         for iimg in res: 
-            print(iimg)
             if iimg[2]:
-                description = iimg[2].split('#')
-                description, tags = description[0], '#'+'#'.join(description[1:])
+                description = iimg[2]
             else:
                 description = ""
-                tags=""
-            text = '{}\n<p><a href="{}"><img class="alignnone size-full wp-image-3306" src="{}" alt="{} {}" data-tags="{}" width="776" height="1035" /></a></p>'.format(text,url, iimg[0],iimg[1], description, tags)
+            if description: 
+                text = '{}\n<p><h4>{}</h4></p><p><a href="{}"><img class="alignnone size-full wp-image-3306" src="{}" alt="{} {}" width="776" height="1035" /></a></p>'.format(text,description,url, iimg[0],iimg[1], description)
+            else: 
+                text = '{}\n<p><a href="{}"><img class="alignnone size-full wp-image-3306" src="{}" alt="{} {}" width="776" height="1035" /></a></p>'.format(text,url, iimg[0],iimg[1], description)
         return(text)
 
 
