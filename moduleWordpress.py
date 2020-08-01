@@ -65,21 +65,15 @@ class moduleWordpress(Content,Queue):
         #if comment != None: 
         #    title = comment 
         res = None
-        if True:
+        try:
             logging.info("     Publishing: %s" % post)
-            print('vamos')
-            payload = {"title":title,"content_raw":post,"status":'draft'}
             self.api_base2 = 'https://avecesunafoto.wordpress.com/?rest_route=/wp/v2/posts'
             self.api_base2 = 'https://public-api.wordpress.com/wp/v2/'
             payload = {"title":title,"content":comment,"status":'publish'}
-            print(self.api_base + self.api_posts.format(self.my_site))
-            print(payload)
-            lalala = requests.post(self.api_base2 
+            res = requests.post(self.api_base2 
                     + self.api_posts.format(self.my_site), 
                     headers = self.headers,
                     data = payload)
-            print(lalala)
-            print(lalala.content)
 
 
             if res: 
@@ -92,7 +86,7 @@ class moduleWordpress(Content,Queue):
         #    for error in twittererror.response_data.get("errors", []): 
         #        logging.info("      Error code: %s" % error.get("code", None))
         #    return(self.report('Twitter', post, link, sys.exc_info()))
-        else:        
+        except:        
             logging.info("Fail!")
             return(self.report('Twitter', post, link, sys.exc_info()))
         return 'OK'
