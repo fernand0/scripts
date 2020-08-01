@@ -194,9 +194,11 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
             cls = getattr(mod, 'module'+profile.capitalize())
             api = cls()
             api.setClient(nick)
-            #if summary:
-            #    title = title + '\n'+ summary[:120]
-            result = api.publishPost(title, link, comment)
+            if profile in ['wordpress']: 
+                result = api.publishPost(title, link, comment, tags=links)
+            else: 
+                result = api.publishPost(title, link, comment)
+
             if isinstance(result, str):
                 if result[:4]=='Fail':
                     link=''

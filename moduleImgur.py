@@ -87,30 +87,26 @@ class moduleImgur(Content,Queue):
                     return(i+1)
         return -1
 
-    #def extractDataMessage(self, i):
-    #    if hasattr(self, 'getPostsType'):
-    #        if self.getPostsType() == 'drafts':
-    #            posts = self.getDrafts()
-    #        else:
-    #            posts = self.getPosts()
-    #    if i < len(posts):
-    #        post = posts[i]
-    #        logging.info("Post: %s"% post)
-    #        theTitle = self.getPostTitle(post)
-    #        theLink = self.getPostLink(post)
-    #    else:
-    #        theTitle = None
-    #        theLink = None
-    #    res = downloadUrl(self.getPostLink(post))
-    #    #print(res)
-    #    text = '' 
-    #    for iimg in res: 
-    #        description = iimg[3].split('#')
-    #        description, tags = description[0], '#'+'#'.join(description[1:])
-    #        text = '{}\n<p><a href="{}"><img class="alignnone size-full wp-image-3306" src="{}" alt="{} {}" data-tags="{} width="776" height="1035" /></a></p>'.format(text,iimg[0],iimg[1], iimg[2], description, tags)
+    def extractDataMessage(self, i):
+        if hasattr(self, 'getPostsType'):
+            if self.getPostsType() == 'drafts':
+                posts = self.getDrafts()
+            else:
+                posts = self.getPosts()
+        if i < len(posts):
+            post = posts[i]
+            logging.info("Post: %s"% post)
+            theTitle = self.getPostTitle(post)
+            theLink = self.getPostLink(post)
+            thePost = self.getImagesCode(i)
+            theTags = self.getImagesTags(i)
+        else:
+            theTitle = None
+            theLink = None
+            thePost = None
+            theTags = None
 
-
-    #    return (theTitle, theLink, None, None, None, None, None, None, None, text)
+        return (theTitle, theLink, None, None, None, None, None, None, theTags, thePost)
 
 
 
