@@ -16,7 +16,9 @@ class moduleWordpress(Content,Queue):
         self.user = None
         self.wp = None
         self.service = None
+        self.tags = None
         self.api_base='https://public-api.wordpress.com/rest/v1/'
+        self.api_base2 = 'https://public-api.wordpress.com/wp/v2/'
         self.api_user='me'
         self.api_posts='sites/{}/posts'
         self.api_tags='sites/{}/tags'
@@ -42,7 +44,7 @@ class moduleWordpress(Content,Queue):
         self.headers = {'Authorization':'Bearer '+self.access_token}
         self.my_site="{}.wordpress.com".format(user)
 
-    def setPosts(self): 
+    def setPosts(self, morePosts=None): 
         logging.info("  Setting posts")
         self.posts = []
         try: 
@@ -51,20 +53,30 @@ class moduleWordpress(Content,Queue):
                     self.api_posts.format(self.my_site)+'?number=100', 
                     headers = self.headers).json()['posts']
             self.posts = posts
-            # More posts
-            #posts2 = requests.get(self.api_base + 
-            #        self.api_posts.format(self.my_site)+'?number=100&page=2', 
-            #        headers = self.headers).json()['posts']
+            if morePosts: 
+                posts2 = requests.get(self.api_base + 
+                    self.api_posts.format(self.my_site)+'?number=100&page=2', 
+                    headers = self.headers).json()['posts']
+                self.post.append(posts2)
         except KeyError:
             return(self.report('Wordpress API expired', '' , '', sys.exc_info()))
         except:
             return(self.report('Wordpress API', '' , '', sys.exc_info()))
 
+    def setTags(self): 
+        res = requests.get(self.api_base + self.api_tags.format(self.my_site)) 
+        if res.ok:
+            self.tags = json.loads(res.text)
+
+    def getTags(self): 
+        return self.tags
+
     def checkTags(self, tags):
-        self.api_base2 = 'https://public-api.wordpress.com/wp/v2/'
-        self.api_base2 = 'https://avecesunafoto.wordpress.com/?rest_route=/wp/v2/sites/avecesunafoto.wordpress.com/tags'
-        self.api_base2 = 'https://public-api.wordpress.com/rest/v1.1/sites/avecesunafoto.wordpress.com/tags'
         idTags = []
+        newTags = []
+        if not self.tags:
+            self.setTags()
+
         for tag in tags: 
             payload = {"name":tag}
             # I'm trying to create, if not possible, they exist
@@ -74,67 +86,48 @@ class moduleWordpress(Content,Queue):
                     data = payload)
             reply = json.loads(res.text)
             if 'ID' in reply:
+                newTags.append(tag)
                 idTags.append(reply['ID'])
             else:
-                res = requests.get(self.api_base + self.api_tags.format(self.my_site)) 
-                result = json.loads(res.text)
-                for ttag in result['tags']:
+                for ttag in self.tags['tags']:
                     if ttag['name'] == tag:
                         idTags.append(ttag['ID'])
+            if newTags:
+                # Update list of tags
+                self.setTags()
                         
         return(idTags)
 
     def publishPost(self, post, link='', comment='', tags=[]):
         logging.debug("     Publishing in Wordpress...")
         title = post
-        #if comment != None: 
-        #    title = comment 
         res = None
         try:
-            print("     Publishing: %s" % post)
             logging.info("     Publishing: %s" % post)
-            self.api_base2 = 'https://avecesunafoto.wordpress.com/?rest_route=/wp/v2/posts'
             # The tags must be checked/added previously
             idTags = self.checkTags(tags)
-            print(idTags)
+            # They must be in a comma separated string
             idTags = ','.join(str(v) for v in idTags)
-            print(idTags)
             payload = {"title":title,"content":comment,"status":'draft', 
                     'tags':idTags}
-            print("payload", payload)
-            self.api_base2 = 'https://public-api.wordpress.com/wp/v2/'
             res = requests.post(self.api_base2 
                     + self.api_posts.format(self.my_site), 
                     headers = self.headers,
                     data = payload)
-            print(res)
-            print(res.text)
-
-
-            if res: 
+            if res.ok: 
                 logging.info("Res: %s" % res)
-                #urlTw = "https://twitter.com/%s/status/%s" % (self.user, res['id'])
-                #logging.info("     Link: %s" % urlTw)
-                #return(post +'\n'+urlTw)
-
-        #except twitter.api.TwitterHTTPError as twittererror:        
-        #    for error in twittererror.response_data.get("errors", []): 
-        #        logging.info("      Error code: %s" % error.get("code", None))
-        #    return(self.report('Twitter', post, link, sys.exc_info()))
+                resJ = json.loads(res.text)
+                logging.debug("Res text: %s" % resJ)
+                logging.info("Res slug: %s" % resJ['generated_slug'])
+                return("{} - \n https://{}/{}".format(title,
+                    self.my_site,
+                    resJ['generated_slug']))
         except:        
-            print("Fail")
-            print(self.report('Wordpress', post, link, sys.exc_info()))
             logging.info("Fail!")
+            logging.info(self.report('Wordpress', post, link, sys.exc_info()))
             return(self.report('Wordpress', post, link, sys.exc_info()))
+
         return 'OK'
-
-    def getTitle(self, i):        
-        post = self.getPosts()[i]
-        return(self.getPostTitle(post))
-
-    def getLink(self, i):
-        post = self.getPosts()[i]
-        return(self.getPostLink(post))
 
     def getPostTitle(self, post):
         if 'title' in post:
@@ -148,107 +141,131 @@ class moduleWordpress(Content,Queue):
         else:
             return('')
 
+    def getPost(self, i):
+        posts = self.getPosts()
+        if i < len(posts): 
+            return(self.getPosts()[i])
+        else:
+            return None
+
+    def getTitle(self, i):        
+        post = self.getPost(i)
+        return(self.getPostTitle(post))
+
+    def getLink(self, i):
+        post = self.getPost(i)
+        return(self.getPostLink(post))
+
+    def extractImages(self, post): 
+        res = []
+
+        if 'content' in post:
+            soup = BeautifulSoup(post['content'], 'lxml') 
+            imgs = soup.find_all('img') 
+            for img in imgs: 
+                logging.debug(img)
+                if img.has_attr('src'): 
+                    res.append(img.get('src')) 
+                else: 
+                    res.append(img.get('data-large-file').split('?')[0])
+        elif 'attachments' in post:
+            for key in post['attachments']:
+                if 'URL' in post['attachments'][key]:
+                    res.append(post['attachments'][key]['URL'])
+        else:
+             logging.info("Fail image")
+             logging.debug("Fail image %s", post)
+             res = []
+        return res
+    
     def obtainPostData(self, i, debug=False):
         if not self.posts:
             self.setPosts()
 
-        posts = self.getPosts()
-        if not posts or (i>=len(posts)):
-            return (None, None, None, None, None, None, None, None, None, None)
-
-        post = posts[i]
-
-        theContent = ''
-        url = ''
-        firstLink = ''
-        logging.debug("i %d", i)
-        logging.debug("post %s", post)
-
-        theTitle = self.getTitle(i)
-        theLink = self.getLink(i)
-        print(theTitle)
-        print(theLink)
-        firstLink = theLink
-        if 'content' in post: 
-            content = post['content']
-        else:
-            content = theLink
-        if 'excerpt' in post: 
-            theSummary = post['excerpt']
-        else:
-            theSummary = content
-        theSummaryLinks = content
-        theImage=[]
-        if 'content' in post:
-            soupImg = BeautifulSoup(post['content'], 'lxml')
-            imgs = soupImg.find_all('img')
-            for i in imgs: 
-                theImage.append(i.get('data-large-file').split('?')[0])
-            #if not isinstance(theImage, str):
-            #    theImage = theImage[0]
-        elif 'attachments' in post:
-            for key in post['attachments']:
-                print(post['attachments'])
-                if 'URL' in post['attachments'][key]:
-                    theImage = post['attachments'][key]['URL']
-        else:
-            print("Fail image")
-            logging.info("Fail image")
-            logging.debug("Fail image %s", post)
-            theImage = ''
-
-        comment = ''
-
-        theSummaryLinks = ""
-
-        if not content.startswith('http'):
-            soup = BeautifulSoup(content, 'lxml')
-            link = soup.a
-            if link: 
-                firstLink = link.get('href')
-                if firstLink:
-                    if firstLink[0] != 'h': 
-                        firstLink = theLink
-
-        if not firstLink: 
-            firstLink = theLink
-
-        theLinks = theSummaryLinks
-        theSummaryLinks = theContent + theLinks
+        post = self.getPost(i)
         
-        theContent = ""
-        theSummaryLinks = ""
+        if post:
+            logging.debug("Post i: {}, {}".format(i,post))
 
-        logging.debug("=========")
-        logging.debug("Results: ")
-        logging.debug("=========")
-        logging.debug("Title:     ", theTitle)
-        logging.debug("Link:      ", theLink)
-        logging.debug("First Link:", firstLink)
-        logging.debug("Summary:   ", content[:200])
-        logging.debug("Sum links: ", theSummaryLinks)
-        logging.debug("the Links"  , theLinks)
-        logging.debug("Comment:   ", comment)
-        logging.debug("Image;     ", theImage)
-        logging.debug("Post       ", theTitle + " " + theLink)
-        logging.debug("==============================================")
-        logging.debug("")
+            theTitle = self.getTitle(i)
+            theLink = self.getLink(i)
+            firstLink = theLink
+            if 'content' in post: 
+                content = post['content']
+            else:
+                content = theLink
+            if 'excerpt' in post: 
+                theSummary = post['excerpt']
+            else:
+                theSummary = content
+            theSummaryLinks = content
+            theImage=self.getImages(i)
+
+            theContent=''
+            comment = ''
+            theSummaryLinks = ""
+
+            if not content.startswith('http'):
+                soup = BeautifulSoup(content, 'lxml')
+                link = soup.a
+                if link: 
+                    firstLink = link.get('href')
+                    if firstLink:
+                        if firstLink[0] != 'h': 
+                            firstLink = theLink
+
+            if not firstLink: 
+                firstLink = theLink
+
+            theLinks = theSummaryLinks
+            theSummaryLinks = theContent + theLinks
+            
+            theContent = ""
+            theSummaryLinks = ""
+
+            logging.debug("=========")
+            logging.debug("Results: ")
+            logging.debug("=========")
+            logging.debug("Title:     ", theTitle)
+            logging.debug("Link:      ", theLink)
+            logging.debug("First Link:", firstLink)
+            logging.debug("Summary:   ", content[:200])
+            logging.debug("Sum links: ", theSummaryLinks)
+            logging.debug("the Links"  , theLinks)
+            logging.debug("Comment:   ", comment)
+            logging.debug("Image;     ", theImage)
+            logging.debug("Post       ", theTitle + " " + theLink)
+            logging.debug("==============================================")
+            logging.debug("")
 
 
-        return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
-
+            return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
+        else:
+            logging.info("No post")
+            return (None, None, None, None, None, None, None, None, None, None)
 
 def main():
 
+    logging.basicConfig(stream=sys.stdout, 
+            level=logging.INFO, 
+            format='%(asctime)s %(message)s')
     import moduleWordpress
 
     wp = moduleWordpress.moduleWordpress()
     wp.setClient('avecesunafoto')
+
+    print("Testing tags")
+    wp.setTags()
+    print(wp.getTags())
+    #print(wp.checkTags(['test']))
+
     print("Testing posts")
     wp.setPosts()
     for i,post in enumerate(wp.getPosts()):
         print("{}) {} {}".format(i, wp.getPostTitle(post), 
             wp.getPostLink(post)))
+        print(wp.obtainPostData(i))
+
 
     sel = input('Select one ')
     pos =  int(sel)

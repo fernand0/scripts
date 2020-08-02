@@ -1,6 +1,7 @@
 import configparser
 import json
 import logging
+import sys
 import time
 
 from imgurpython import ImgurClient
@@ -167,7 +168,12 @@ class moduleImgur(Content,Queue):
         logging.info("Deleted %s"% post[0])
         return("%s"% post[0])
 
-    def extractImages(self, soup):
+    def extractImages(self, post):
+        theTitle = self.getPostTitle(post)
+        theLink = self.getPostLink(post) 
+        page = urlopen(theLink).read() 
+        soup = BeautifulSoup(page,'lxml') 
+
         res = []
         script = soup.find_all('script')
         pos = script[9].text.find('image')
@@ -197,9 +203,13 @@ class moduleImgur(Content,Queue):
 
 def main(): 
 
+    logging.basicConfig(stream=sys.stdout, 
+            level=logging.INFO, 
+            format='%(asctime)s %(message)s')
+
     config = configparser.ConfigParser()
     config.read(CONFIGDIR + '/.rssBlogs')
-    sections=["Blog20"]
+    sections=["Blog21"]
     for section in sections:
         img = moduleImgur()
         img.setUrl('https://imgur.com/user/ftricas') 
@@ -230,8 +240,6 @@ def main():
     print(postWP)
     print("---tags----")
     print(tags)
-    sys.exit()
-
 
     # Testing Wordpress publishing
     img.setSocialNetworks(config, section)
@@ -243,7 +251,8 @@ def main():
     wp = moduleWordpress.moduleWordpress()
     wp.setClient('avecesunafoto')
 
-    wp.publishPost(title, '', postWP, tags=post[-1])
+
+    print(wp.publishPost(title, '', postWP, tags=post[-1]))
  
     sys.exit()
     for service in img.getSocialNetworks():

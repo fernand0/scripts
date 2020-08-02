@@ -340,12 +340,8 @@ class Content:
         res = None
         if i < len(posts):
             post = posts[i]
-            logging.info("Post: %s"% post)
-            theTitle = self.getPostTitle(post)
-            theLink = self.getPostLink(post) 
-            page = urlopen(theLink).read() 
-            soup = BeautifulSoup(page,'lxml') 
-            res = self.extractImages(soup)
+            logging.debug("Post: %s"% post)
+            res = self.extractImages(post)
         return(res)
 
     def getImagesTags(self, i):        
