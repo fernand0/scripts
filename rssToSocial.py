@@ -286,12 +286,18 @@ def main():
                     if 'max' in blog.__dir__():
                         num = int(blog.getMax())
 
+                    print(num,i)
+                    i=len(blog.getPosts())-1
+                    print(num,i)
+
                     if ((num > 0) and (blog.getBufferapp() or blog.getProgram())
                             or not (blog.getBufferapp() or blog.getProgram())):
 
                         logging.debug("   Profile %s"% profile)
                         link = ""
                         listPosts = blog.getNumPostsData(num, i)
+                    print(listPosts)
+
 
                     if (blog.getBufferapp() 
                             and (profile[0] in blog.getBufferapp())): 

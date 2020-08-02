@@ -46,7 +46,7 @@ class moduleRss(Content,Queue):
         if self.rssFeed.find('http')>=0: 
             urlRss = self.getRssFeed()
         else: 
-            urlRss = self.url+self.getRssFeed()
+            urlRss = urllib.parse.urljoin(self.url,self.getRssFeed())
         logging.debug("Rss: %s" % urlRss)
         self.posts = feedparser.parse(urlRss).entries
  
