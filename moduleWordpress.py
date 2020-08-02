@@ -141,21 +141,6 @@ class moduleWordpress(Content,Queue):
         else:
             return('')
 
-    def getPost(self, i):
-        posts = self.getPosts()
-        if i < len(posts): 
-            return(self.getPosts()[i])
-        else:
-            return None
-
-    def getTitle(self, i):        
-        post = self.getPost(i)
-        return(self.getPostTitle(post))
-
-    def getLink(self, i):
-        post = self.getPost(i)
-        return(self.getPostLink(post))
-
     def extractImages(self, post): 
         res = []
 

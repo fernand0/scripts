@@ -80,6 +80,21 @@ class Content:
             posts = sefl.getPosts()
         return(posts)
 
+    def getPost(self, i):
+        posts = self.getPosts()
+        if i < len(posts): 
+            return(self.getPosts()[i])
+        else:
+            return None
+
+    def getTitle(self, i):        
+        post = self.getPost(i)
+        return(self.getPostTitle(post))
+
+    def getLink(self, i):
+        post = self.getPost(i)
+        return(self.getPostLink(post))
+
     def getNumPostsData(self, num, i): 
         listPosts = []
         for j in range(num, 0, -1): 

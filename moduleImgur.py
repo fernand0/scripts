@@ -65,28 +65,10 @@ class moduleImgur(Content,Queue):
         # We set some limit
                     
     def getPostTitle(self, post):
-        return post[0]
-
-    def getPostLink(self,post):
-        return post[1]
-
-    def getPostTitle(self, post):
         return post.title
 
     def getPostLink(self,post):
         return post.link
-
-    def getLinkPosition(self, lastLink): 
-        if hasattr(self, 'getPostsType'): 
-            if self.getPostsType() == 'drafts': 
-                posts = self.drafts 
-            else: 
-                posts = self.posts
-
-            for i, post in enumerate(posts):
-                if not (post.link in lastLink):
-                    return(i+1)
-        return -1
 
     def extractDataMessage(self, i):
         if hasattr(self, 'getPostsType'):
@@ -221,6 +203,7 @@ def main():
         print("---- Posts ----")
         for i, post in enumerate(img.getPosts()):
             print(img.getPostTitle(post))
+            print(img.getPostLink(post))
             #print(img.getImagesCode(i))
         print("---- Drafts ----")
         for post in img.getDrafts():

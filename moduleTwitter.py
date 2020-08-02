@@ -80,32 +80,29 @@ class moduleTwitter(Content,Queue):
         self.posts = []
         #tweets = self.tc.statuses.home_timeline()
         try: 
-            tweets = self.tc.statuses.user_timeline()
+            self.posts = self.tc.statuses.user_timeline()
         except:
-            tweets = []
+            self.posts = []
 
-        for tweet in tweets:
-            self.posts.append(tweet)
-
-        outputData = {}
+        #outputData = {}
         serviceName = 'Twitter'
-        outputData[serviceName] = {'sent': [], 'pending': []}
-        for post in self.getPosts():
-            #print(post)
-            url = 'https://twitter.com/' + post['user']['screen_name'] + '/status/' + str(post['id'])
-            if 'urls' in post:
-                link = post['urls'][0]['expanded_url']
-            else:
-                link = ''
+        #outputData[serviceName] = {'sent': [], 'pending': []}
+        #for post in self.getPosts():
+        #    #print(post)
+        #    url = 'https://twitter.com/' + post['user']['screen_name'] + '/status/' + str(post['id'])
+        #    if 'urls' in post:
+        #        link = post['urls'][0]['expanded_url']
+        #    else:
+        #        link = ''
 
-            outputData[serviceName]['sent'].append((post['text'], url, 
-                    post['user']['screen_name'],     
-                    post['created_at'], link,'','','',''))
+        #    outputData[serviceName]['sent'].append((post['text'], url, 
+        #            post['user']['screen_name'],     
+        #            post['created_at'], link,'','','',''))
 
-        self.postsFormatted = outputData
+        #self.postsFormatted = outputData
 
     def publishPost(self, post, link='', comment=''):
-        logging.debug("     Publishing in Twitter...")
+        logging.info("     Publishing in Twitter...")
         if comment != None: 
             post = comment + " " + post
         h = HTMLParser()
@@ -143,7 +140,7 @@ class moduleTwitter(Content,Queue):
             return ''
 
     def getPostUrl(self, post):
-        print(post)
+        logging.debug(post)
         if (('urls' in post['entities']) and (post['entities']['urls'])):
             return(post['entities']['urls'][0]['expanded_url'])
         else:
@@ -160,26 +157,26 @@ class moduleTwitter(Content,Queue):
         except:        
             return(self.report('Twitter', text, sys.exc_info()))
 
-
-
 def main():
 
-    import moduleTwitter
+    logging.basicConfig(stream=sys.stdout, 
+            level=logging.INFO, 
+            format='%(asctime)s %(message)s')
 
+    import moduleTwitter
     tw = moduleTwitter.moduleTwitter()
 
     tw.setClient('fernand0')
 
     print("Testing posts")
     tw.setPosts()
-    for tweet in tw.getPosts():
-        print(tweet)
+    for i, tweet in enumerate(tw.getPosts()):
+        print("{}) {}".format(i,tweet))
         #print("@%s: %s" %(tweet[2], tweet[0]))
 
     print("Testing title and link")
     
     for post in tw.getPosts():
-        print(post)
         title = tw.getPostTitle(post)
         link = tw.getPostLink(post)
         url = tw.getPostUrl(post)
