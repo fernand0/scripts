@@ -46,15 +46,15 @@ class moduleTwitter(Content,Queue):
                 self.user = twitterAC[1][1]
             logging.info("     Twitter User %s"%str(self.user))
             try: 
-                CONSUMER_KEY = config.get(twitterAC, "CONSUMER_KEY")
+                CONSUMER_KEY = config.get(self.user, "CONSUMER_KEY")
             except: 
                 CONSUMER_KEY = config.get("appKeys", "CONSUMER_KEY")
             try: 
-                CONSUMER_SECRET = config.get(twitterAC, "CONSUMER_SECRET")
+                CONSUMER_SECRET = config.get(self.user, "CONSUMER_SECRET")
             except: 
                 CONSUMER_SECRET = config.get("appKeys", "CONSUMER_SECRET")
-            TOKEN_KEY = config.get(twitterAC, "TOKEN_KEY")
-            TOKEN_SECRET = config.get(twitterAC, "TOKEN_SECRET")
+            TOKEN_KEY = config.get(self.user, "TOKEN_KEY")
+            TOKEN_SECRET = config.get(self.user, "TOKEN_SECRET")
 
             try:
                 authentication = OAuth(
@@ -68,6 +68,7 @@ class moduleTwitter(Content,Queue):
                 logging.warning("Unexpected error:", sys.exc_info()[0])
         except:
             logging.warning("Account not configured")
+            logging.warning("Unexpected error:", sys.exc_info()[0])
             t = None
 
         self.tc = t
