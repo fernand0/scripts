@@ -137,10 +137,16 @@ def main():
     parser.add_argument('checkBlog', default="",
             metavar='Blog', type=str, nargs='?',
                     help='you can select just a blog')
+    parser.add_argument('--simmulate', '-s',default=False,
+            action='store_true', help='simulate which posts would be added')
+    parser.add_argument('--noWait', '-n',default=False,
+            action='store_true', help='no wait for time restrictions')
     args = parser.parse_args()
 
     checkBlog = args.checkBlog
     timeSlots = args.timeSlots
+    simmulate = args.simmulate
+    nowait = args.noWait
 
     loggingLevel = logging.INFO
     logging.basicConfig(filename = LOGDIR + "/rssSocial_.log", 
@@ -286,7 +292,10 @@ def main():
                 logging.debug("bufferMax - lenMax = num %d %d %d"%
                         (bufferMax, lenMax, num)) 
 
-                if (hours and (((time.time() - lastTime) - round(float(hours)*60*60)) < 0)): 
+                if ((not nowait) and 
+                        (hours and 
+                            (((time.time() - lastTime) 
+                                - round(float(hours)*60*60)) < 0))): 
                     logging.info("  Not publishing because time restriction") 
                     print("     Not publishing because time restriction (Last time: %s)"% time.ctime(lastTime)) 
                 else:
@@ -301,6 +310,11 @@ def main():
                         logging.debug("   Profile %s"% profile)
                         link = ""
                         listPosts = blog.getNumPostsData(num, i)
+
+                    if simmulate:
+                        print(listPosts)
+                        sys.exit()
+
 
                     if (blog.getBufferapp() 
                             and (profile[0] in blog.getBufferapp())): 
