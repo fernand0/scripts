@@ -108,7 +108,7 @@ class moduleWordpress(Content,Queue):
             idTags = self.checkTags(tags)
             # They must be in a comma separated string
             idTags = ','.join(str(v) for v in idTags)
-            payload = {"title":title,"content":comment,"status":'draft', 
+            payload = {"title":title,"content":comment,"status":'publish',#'draft', 
                     'tags':idTags}
             res = requests.post(self.api_base2 
                     + self.api_posts.format(self.my_site), 

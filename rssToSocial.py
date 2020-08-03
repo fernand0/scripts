@@ -128,11 +128,19 @@ def main():
         
     isDebug = False
 
-    if len(sys.argv)>1:
-        print(sys.argv[1])
-        checkBlog = sys.argv[1]
-    else:
-        checkBlog = ""
+
+    import argparse
+    parser = argparse.ArgumentParser(description='Improving command line call',
+            allow_abbrev=True)
+    parser.add_argument('--timeSlots', '-t', default=55*60, # 55 minutes
+                    help='How many time slots we will have for publishing')
+    parser.add_argument('checkBlog', default="",
+            metavar='Blog', type=str, nargs='?',
+                    help='you can select just a blog')
+    args = parser.parse_args()
+
+    checkBlog = args.checkBlog
+    timeSlots = args.timeSlots
 
     loggingLevel = logging.INFO
     logging.basicConfig(filename = LOGDIR + "/rssSocial_.log", 
@@ -286,9 +294,6 @@ def main():
                     if 'max' in blog.__dir__():
                         num = int(blog.getMax())
 
-                    print(num,i)
-                    i=len(blog.getPosts())-1
-                    print(num,i)
 
                     if ((num > 0) and (blog.getBufferapp() or blog.getProgram())
                             or not (blog.getBufferapp() or blog.getProgram())):
@@ -296,8 +301,6 @@ def main():
                         logging.debug("   Profile %s"% profile)
                         link = ""
                         listPosts = blog.getNumPostsData(num, i)
-                    print(listPosts)
-
 
                     if (blog.getBufferapp() 
                             and (profile[0] in blog.getBufferapp())): 
@@ -314,7 +317,6 @@ def main():
                         link = blog.cache[socialNetwork].addPosts(listPosts)
 
                         time.sleep(1)
-                        timeSlots = 55*60 # One hour
                         print(link)
                         delayedBlogs.append((blog, socialNetwork, 1, timeSlots))
 

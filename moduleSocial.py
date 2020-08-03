@@ -134,13 +134,12 @@ def publishDirect(blog, socialNetwork, i):
                 pos2 = comment.find(' ',pos1+1)
                 pos3 = comment.find('\n',pos1+1)
                 pos2 = min(pos2, pos3)
-                print(comment)
+                logging.info(comment)
                 comment = "{}(Enlace censurado por Facebook){}".format(
                         comment[:pos1-1],
                         comment[pos2:])
 
-                print(comment)
-                sys.exit()
+                logging.info(comment)
                 #url = link
                 #apiurl = "http://tinyurl.com/api-create.php?url=" 
                 #tinyurl = urllib.request.urlopen(apiurl + url).read() 
