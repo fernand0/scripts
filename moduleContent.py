@@ -324,7 +324,7 @@ class Content:
 
     def report(self, profile, post, link, data): 
         logging.warning("%s posting failed!" % profile) 
-        logging.warning("Post %s %s" % (post,link)) 
+        logging.warning("Post %s %s" % (post[:80],link)) 
         logging.warning("Unexpected error: %s"% data[0]) 
         logging.warning("Unexpected error: %s"% data[1]) 
         print("%s posting failed!" % profile) 
