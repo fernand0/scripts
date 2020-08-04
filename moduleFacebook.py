@@ -138,6 +138,21 @@ class moduleFacebook(Content,Queue):
         else:
             return ''
 
+    def getPostImages(self,idPost):
+        res = []
+        print(self.fc)
+        post = self.fc.get_object('me',fields='id')
+        myId = post['id']
+        field='attachments'
+        post = self.fc.get_object('{}_{}'.format(myId,idPost),fields=field)
+        res.append(post['attachments']['data'][0]['media']['image']['src'])
+        subAttach = post['attachments']['data'][0]['subattachments']
+        for img in subAttach['data']:
+            res.append(img['media']['image']['src'])
+
+        return(res)
+
+
 
 def main():
 
@@ -145,9 +160,16 @@ def main():
 
     fc = moduleFacebook.moduleFacebook()
 
-    fc.setClient('Reflexiones e Irreflexiones')
+    fc.setClient('me')
     print(fc.user)
-    print(fc.fc.get_object(id='me'))
+    images = fc.getPostImages('10157835018558264')
+    print(images)
+    print(len(images))
+    images = fc.getPostImages('10157761305288264')
+    print(images)
+    print(len(images))
+    sys.exit()
+    print(fc.get_object(id='me'))
 
     print("Listing pages")
     for page in fc.pages['data']:
