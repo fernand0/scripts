@@ -320,6 +320,7 @@ class moduleBuffer(Content,Queue):
 
     def getPostImg(self, post):
         img = post[3]
+        if img.find('?')>0: img = img.split('?')[0]
         return(img)
 
     #def isForMe(self, args):
@@ -426,6 +427,9 @@ class moduleBuffer(Content,Queue):
  
 def main():
 
+    logging.basicConfig(stream=sys.stdout, 
+            level=logging.INFO, 
+            format='%(asctime)s %(message)s')
     import moduleBuffer
         
     buf = moduleBuffer.moduleBuffer()
@@ -434,9 +438,8 @@ def main():
     buf.setClient('http://avecesunafoto.wordpress.com/', 
             ('instagram', 'a-veces-una-foto'))
     buf.setPosts()
-
     print(buf.getPosts())
-    sys.exit()
+
     print(buf.getPostTitle(buf.getPosts()[0]))
     print(buf.getPostLink(buf.getPosts()[0]))
     sys.exit()
