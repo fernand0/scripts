@@ -328,7 +328,7 @@ class Content:
         logging.warning("Unexpected error: %s"% data[0]) 
         logging.warning("Unexpected error: %s"% data[1]) 
         print("%s posting failed!" % profile) 
-        print("Post %s %s" % (post,link)) 
+        print("Post %s %s" % (post[:80],link)) 
         print("Unexpected error: %s"% data[0]) 
         print("Unexpected error: %s"% data[1]) 
         return("Fail! %s" % data[1])
