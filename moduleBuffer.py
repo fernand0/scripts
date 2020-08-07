@@ -233,7 +233,9 @@ class moduleBuffer(Content,Queue):
                     myMedia = {'photo':img}#,'description':title}
                     self.getProfile().updates.new(entry, shorten=False, media=myMedia)
                 else:
-                    self.getProfile().updates.new(entry)
+                    myMedia = {'link':link}#,'description':title}
+                    entry = title
+                    self.getProfile().updates.new(entry, media=myMedia)
             except: 
                 logging.warning("Buffer posting failed!") 
                 logging.warning("Unexpected error: %s"% sys.exc_info()[0]) 

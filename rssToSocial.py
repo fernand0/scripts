@@ -139,14 +139,15 @@ def main():
                     help='you can select just a blog')
     parser.add_argument('--simmulate', '-s',default=False,
             action='store_true', help='simulate which posts would be added')
-    parser.add_argument('--noWait', '-n',default=False,
+    parser.add_argument('--noWait', '-n', default=False,
             action='store_true', help='no wait for time restrictions')
     args = parser.parse_args()
 
     checkBlog = args.checkBlog
-    timeSlots = args.timeSlots
+    timeSlots = int(args.timeSlots)
     simmulate = args.simmulate
     nowait = args.noWait
+
 
     loggingLevel = logging.INFO
     logging.basicConfig(filename = LOGDIR + "/rssSocial_.log", 

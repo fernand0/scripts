@@ -90,7 +90,12 @@ class moduleSlack(Content,Queue):
         else:
             text = post['text']
             if text.startswith('<'): 
-                title = post['text'][1:-1]
+                title = text.split('|')[1]
+                titleParts = title.split('>')
+                title = titleParts[0]
+                if ((len(titleParts)>1) and (titleParts[1].find('<') >= 0)):
+                    # There is a link
+                    title = title + titleParts[1].split('<')[0]
             else:
                 pos = text.find('<')
                 title=text[:pos]
@@ -101,7 +106,8 @@ class moduleSlack(Content,Queue):
             return(post['attachments'][0]['original_url'])
         else:
             text = post['text']
-            if text.startswith('<'): 
+            if ((text.startswith('<') and text.count('<')==1)): 
+                # The link is the only text
                 url = post['text'][1:-1]
             else:
                 # Some people include URLs in the title of the page
@@ -246,8 +252,8 @@ class moduleSlack(Content,Queue):
 
         theTitle = self.getTitle(i)
         theLink = self.getLink(i)
-        print(theTitle)
-        print(theLink)
+        logging.info(theTitle)
+        logging.info(theLink)
         if theLink.find('tumblr')>0:
             theTitle = post['text']
         firstLink = theLink
