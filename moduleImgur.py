@@ -99,8 +99,8 @@ class moduleImgur(Content,Queue):
         #    post = comment + " " + post
         try:
             logging.info("     Publishing: %s" % post) 
-            print(post)
-            print(link)
+            #print(post)
+            #print(link)
             # Very dirty, we need to work on this. Sometimes we need identifiers
             idPost = link.split('/')[-1]
             #idPost = self.posts[j].id 
@@ -110,13 +110,13 @@ class moduleImgur(Content,Queue):
                 logging.info("Res: %s" % res) 
                 if res: 
                     return('OK') 
-            except:
-                return("Fail")
+            except: 
+                logging.info(self.report('Facebook', post, link, sys.exc_info()))
+                return(self.report('Facebook', post, link, sys.exc_info()))
         except:
             return("Fail")
-        
 
-        return('OK')
+        return('Fail')
 
 
     def publish(self, j):

@@ -335,6 +335,7 @@ def main():
                         print(link)
                         delayedBlogs.append((blog, socialNetwork, 1, timeSlots))
 
+
                     if not (blog.getBufferapp() or blog.getProgram()):
                         link = moduleSocial.publishDirect(blog, 
                                 socialNetwork, i) 
