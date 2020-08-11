@@ -44,6 +44,7 @@ class moduleFacebook(Content,Queue):
                 graph = facebook.GraphAPI(oauth_access_token, version='3.0') 
                 self.fc = graph
                 self.setPage(facebookAC)
+
             except: 
                 logging.warning("Facebook authentication failed!") 
                 logging.warning("Unexpected error:", sys.exc_info()[0]) 
@@ -70,6 +71,9 @@ class moduleFacebook(Content,Queue):
                 else: 
                     # Publishing as me 
                     self.page = facebookAC 
+                    logging.info("Page: {}".format(self.page))
+                    print("Page: {}".format(self.page))
+
 
 
     def getClient(self):
@@ -161,7 +165,10 @@ def main():
     fc = moduleFacebook.moduleFacebook()
 
     fc.setClient('me')
+    fc.setPage('Enlaces de fernand0')
+    fc.publishPost("Prueba")
     print(fc.user)
+    sys.exit()
     images = fc.getPostImages('10157835018558264')
     print(images)
     print(len(images))
@@ -199,7 +206,6 @@ def main():
         print(post)
         #print("%s: %s" %(post[0], post[1]))
 
-    #fc.publishPost("Prueba")
 
 if __name__ == '__main__':
     main()

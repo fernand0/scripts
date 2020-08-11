@@ -112,6 +112,8 @@ class Queue:
             reply = ''
             logging.info("title %s"%title)
             if title and link:
+                if isinstance(link, tuple):
+                    link = '\n'.join(link)
                 reply = reply + title + ' ' + link
             elif link:
                 reply = reply +' '+link 

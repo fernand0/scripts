@@ -34,6 +34,7 @@ import moduleGmail
 import moduleWordpress
 # https://github.com/fernand0/scripts/blob/master/moduleImgur.py
 import moduleImgur
+import moduleImdb
 
 import configparser
 import os
@@ -205,6 +206,11 @@ def main():
             logging.info(" Wordpress: {}".format(wordpress))
             blog = moduleWordpress.moduleWordpress()
             blog.setClient(wordpress)
+        elif 'imdb' in config.options(section):
+            imdb = config.get(section,'imdb')
+            logging.info(" Imdb: {}".format(imdb))
+            blog = moduleImdb.moduleImdb()
+            blog.setClient((url,config.get(section,'channels').split(',')))
         blog.setUrl(url)
 
         if section.find(checkBlog) >= 0:
