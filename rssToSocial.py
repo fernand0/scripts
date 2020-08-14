@@ -210,7 +210,7 @@ def main():
             imdb = config.get(section,'imdb')
             logging.info(" Imdb: {}".format(imdb))
             blog = moduleImdb.moduleImdb()
-            blog.setClient((url,config.get(section,'channels').split(',')))
+            #blog.setClient((url,config.get(section,'channels').split(',')))
         blog.setUrl(url)
 
         if section.find(checkBlog) >= 0:

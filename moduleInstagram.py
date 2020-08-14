@@ -129,7 +129,7 @@ def main():
         if pos > 0:
             imgUrl = imgUrl[:pos]
         if imgUrl: 
-            print(imgUrl)
+            logging.debug(imgUrl)
             #res = ig.publishPost(title, url, imgUrl)
             #print(res)
 
