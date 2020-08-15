@@ -4,6 +4,7 @@ import requests
 import json
 import sys
 from bs4 import BeautifulSoup
+import urllib
 
 from configMod import *
 from moduleContent import *
@@ -17,6 +18,10 @@ class moduleWordpress(Content,Queue):
         self.wp = None
         self.service = None
         self.tags = None
+        self.oauth_base='https://public-api.wordpress.com/oauth2/authorize?'
+        #self.api_auth='authorize'
+        #self.api_token='token'
+        self.api_auth = 'client_id={}&redirect_uri={}&response_type=token&blog={}'
         self.api_base='https://public-api.wordpress.com/rest/v1/'
         self.api_base2 = 'https://public-api.wordpress.com/wp/v2/'
         self.api_user='me'
@@ -44,11 +49,39 @@ class moduleWordpress(Content,Queue):
         self.headers = {'Authorization':'Bearer '+self.access_token}
         self.my_site="{}.wordpress.com".format(user)
 
+    def authorize(self): 
+        # Firstly the data of the blog 
+        config = configparser.ConfigParser()
+        config.read(CONFIGDIR + '/.rssBlogs')
+        url = config.get('Blog8','url')
+        name = urllib.parse.urlparse(url).netloc.split('.')[0] 
+        # Second the authentication data of the blog
+        config = configparser.ConfigParser(interpolation=None) 
+        configWordpress = CONFIGDIR + '/.rssWordpress'
+        config.read(configWordpress)
+        redirect_uri= config.get(name,'redirect_uri')
+        client_id = config.get(name,'Client_ID')
+
+        param=self.api_auth.format(client_id, 
+                urllib.parse.quote(redirect_uri), url)
+        print("Paste this URL in your browser and allow the application: {}{}".format(self.oauth_base,
+            param)) 
+
+        resUrl =  input('Paste the resulting URL: ') 
+        splitUrl = urllib.parse.urlsplit(resUrl) 
+        result = urllib.parse.parse_qsl(splitUrl.fragment)
+        token = result[0][1]
+        config.set(name, 'access_token', token)
+        # Make a backup
+        shutil.copyfile(configWordpress, '{}.bak'.format(configWordpress))
+        with open(configWordpress, 'w') as configfile:
+            config.write(configfile)
+
     def setPosts(self, morePosts=None): 
         logging.info("  Setting posts")
         self.posts = []
         try: 
-            print(self.api_base + self.api_posts.format(self.my_site))
+            #print(self.api_base + self.api_posts.format(self.my_site))
             posts = requests.get(self.api_base + 
                     self.api_posts.format(self.my_site)+'?number=100', 
                     headers = self.headers).json()['posts']
@@ -62,6 +95,7 @@ class moduleWordpress(Content,Queue):
             return(self.report('Wordpress API expired', '' , '', sys.exc_info()))
         except:
             return(self.report('Wordpress API', '' , '', sys.exc_info()))
+        return('OK')
 
     def setTags(self): 
         res = requests.get(self.api_base + self.api_tags.format(self.my_site)) 
@@ -238,6 +272,10 @@ def main():
 
     wp = moduleWordpress.moduleWordpress()
     wp.setClient('avecesunafoto')
+    res = wp.setPosts()
+    if res[:4] == 'Fail':
+       wp.authorize()
+    sys.exit()
 
     print("Testing tags")
     wp.setTags()
