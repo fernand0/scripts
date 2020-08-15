@@ -526,11 +526,15 @@ class moduleGmail(Content,Queue):
     
 
 def main():
+    logging.basicConfig(stream=sys.stdout, 
+            level=logging.INFO, 
+            format='%(asctime)s %(message)s')
     import moduleGmail
 
     # instantiate the api object 
 
     for acc in ['ACC0', 'ACC1', 'ACC2']:
+        print("Account: {}".format(acc))
         api = moduleGmail.moduleGmail()
         api.setClient(acc)
         api.setPosts()
