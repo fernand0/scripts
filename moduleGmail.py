@@ -19,9 +19,9 @@ import googleapiclient
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-from googleapiclient import http
-from httplib2 import Http
-from oauth2client import file, client, tools
+#from googleapiclient import http
+#from httplib2 import Http
+#from oauth2client import file, client, tools
 
 import io
 
@@ -50,7 +50,7 @@ class moduleGmail(Content,Queue):
     def setClient(self, Acc):
         logging.info("     Connecting GMail %s"%str(Acc))
    
-        SCOPES = 'https://www.googleapis.com/auth/gmail.modify'
+        SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
         self.url = SCOPES
         api = {}
     
@@ -78,25 +78,29 @@ class moduleGmail(Content,Queue):
                 self.server = Acc[1][pos+1:] 
                 self.nick   = Acc[1][:pos]
                 self.name = 'GMail_{}'.format(Acc[0]) 
-            self.id = '{} {}@{}'.format(self.name[-1], self.nick, self.server)
-            logging.debug("Id %s" % self.id)
+        except:
+            logging.warning("Config file does not exists")
+            logging.warning("Unexpected error:", sys.exc_info()[0])
 
+        self.id = '{} {}@{}'.format(self.name[-1], self.nick, self.server)
+        logging.debug("Id %s" % self.id)
+
+        if True:
             creds = self.authorize()
             print("creds",creds)
             service = build('gmail', 'v1', credentials=creds)
-            
-    
             self.client = service
             print("sc",str(self.client))
-        except:
-            logging.warning("Config file does not exists")
+        else:
+            logging.warning("Problem with authorization")
             logging.warning("Unexpected error:", sys.exc_info()[0])
 
     def authorize(self):
         # based on Code from
         # https://github.com/gsuitedevs/python-samples/blob/aacc00657392a7119808b989167130b664be5c27/gmail/quickstart/quickstart.py
 
-        SCOPES = 'https://www.googleapis.com/auth/gmail.modify'
+        SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
+
         logging.info("Authorizing GMail")
         fileCredStore = self.confName((self.server, self.nick)) 
         fileTokenStore = self.confTokenName((self.server, self.nick)) 
@@ -109,8 +113,10 @@ class moduleGmail(Content,Queue):
                 creds.refresh(Request()) 
             else: 
                 flow = InstalledAppFlow.from_client_secrets_file( 
-                        fileCredStore, SCOPES) 
-                creds = flow.run_local_server(port=0)
+                        fileCredStore, SCOPES, 
+                        redirect_uri='urn:ietf:wg:oauth:2.0:oob')
+                creds = flow.run_console(authorization_prompt_message='Please visit this URL: {url}', 
+                        success_message='The auth flow is complete; you may close this window.')
         # Save the credentials for the next run
         with open(fileTokenStore, 'wb') as token:
             pickle.dump(creds, token)
