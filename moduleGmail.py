@@ -38,6 +38,7 @@ class moduleGmail(Content,Queue):
         self.service = None
         self.nick = None
         self.id = None
+        self.scopes = ['https://www.googleapis.com/auth/gmail.modify']
 
     def API(self, Acc):
         # Back compatibility
@@ -46,36 +47,30 @@ class moduleGmail(Content,Queue):
     def setClient(self, Acc):
         logging.info("     Connecting GMail %s"%str(Acc))
    
-        SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
-        self.url = SCOPES
+        SCOPES = self.scopes
         api = {}
     
         try:
-            config = configparser.ConfigParser() 
-            config.read(CONFIGDIR + '/.oauthG.cfg')
-            
             self.service = 'gmail'
             if type(Acc) == str: 
-                if Acc.find('@') >= 0: 
-                    pos = Acc.rfind('@') 
-                    self.server = Acc[pos+1:] 
-                    self.nick   = Acc[:pos] 
-                    self.name = 'GMail_{}'.format(Acc[0]) 
-                else: 
-                    self.nick = config.get(Acc,'user') 
-                    self.server = config.get(Acc,'server')
+                self.url = Acc
+                pos = Acc.rfind('@') 
+                self.server = Acc[pos+1:] 
+                self.nick   = Acc[:pos] 
+                self.name = 'GMail_{}'.format(Acc[0]) 
                 import hashlib
                 self.name = 'GMail' + Acc[3:]
             else:
                 if isinstance(Acc[1], tuple):
                     logging.debug("Acc %s" % str(Acc))
+                    self.url = Acc[0]
                     pos = Acc[0].rfind('@') 
                     self.server = Acc[0][pos+1:] 
                     self.nick   = Acc[0][:pos]
                     self.name = 'GMail_{}'.format(Acc[0]) 
                     self.setPostsType(Acc[1][2])
                 else:
-                    logging.debug("Acc %s" % str(Acc))
+                    logging.info("Acc %s" % str(Acc))
                     pos = Acc[1].rfind('@') 
                     self.server = Acc[1][pos+1:] 
                     self.nick   = Acc[1][:pos]
@@ -99,7 +94,7 @@ class moduleGmail(Content,Queue):
         # based on Code from
         # https://github.com/gsuitedevs/python-samples/blob/aacc00657392a7119808b989167130b664be5c27/gmail/quickstart/quickstart.py
 
-        SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
+        SCOPES = self.scopes
 
         logging.info("Authorizing GMail")
         fileCredStore = self.confName((self.server, self.nick)) 
@@ -180,7 +175,7 @@ class moduleGmail(Content,Queue):
                                                 body=list_labels).execute()
         return(message)
         
-    def setPosts(self, label='drafts', mode=''):
+    def setPosts(self, label=None, mode=''):
         logging.info("  Setting posts")
         api = self.getClient()
 
@@ -375,16 +370,6 @@ class moduleGmail(Content,Queue):
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
 
-    #def isForMe(self, args):
-    #    serviceName = self.name
-    #    lookAt = []
-    #    logging.info("Args %s" % args)
-    #    logging.info("Name %s" % serviceName)
-    #    if (serviceName[0] in args) or ('*' in args): 
-    #        if serviceName[0] + serviceName[-1] in args[:-1]:
-    #            lookAt.append(serviceName)
-    #    return lookAt
-
     def editl(self, j, newTitle):
         return('Not implemented!')
 
@@ -577,23 +562,33 @@ class moduleGmail(Content,Queue):
 
 def main():
     logging.basicConfig(stream=sys.stdout, 
-            level=logging.DEBUG, 
+            level=logging.INFO, 
             format='%(asctime)s %(message)s')
 
     import moduleGmail
 
     # instantiate the api object 
 
-    for acc in ['ACC2', 'ACC1', 'ACC0']:
+    config = configparser.ConfigParser() 
+    config.read(CONFIGDIR + '/.rssBlogs')
+
+    for acc in ['Blog13','Blog14','Blog15']:
         print("Account: {}".format(acc))
+        url = config.get(acc, 'url')
         api = moduleGmail.moduleGmail()
-        api.setClient(acc)
+        api.setClient(url)
         #if 'posts' in config.options(Acc):
         #    self.setPostType(config.get(Acc, 'posts'))
         print("Test setPosts")
         res = api.setPosts()
         print("Test getPosts")
         print(api.getPosts())
+        api.setPostsType('messages')
+        print("Test setPosts (posts)")
+        res = api.setPosts()
+        print("Test getPosts")
+        print(api.getPosts())
+
     sys.exit()
     print(api.getPosts())
     print(api.getPosts()[0])
