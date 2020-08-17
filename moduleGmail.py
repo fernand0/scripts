@@ -50,43 +50,39 @@ class moduleGmail(Content,Queue):
         SCOPES = self.scopes
         api = {}
     
-        try:
-            self.service = 'gmail'
-            if type(Acc) == str: 
-                self.url = Acc
-                pos = Acc.rfind('@') 
-                self.server = Acc[pos+1:] 
-                self.nick   = Acc[:pos] 
-                self.name = 'GMail_{}'.format(Acc[0]) 
-                import hashlib
-                self.name = 'GMail' + Acc[3:]
-            else:
-                if isinstance(Acc[1], tuple):
-                    logging.debug("Acc %s" % str(Acc))
-                    self.url = Acc[0]
-                    pos = Acc[0].rfind('@') 
-                    self.server = Acc[0][pos+1:] 
-                    self.nick   = Acc[0][:pos]
-                    self.name = 'GMail_{}'.format(Acc[0]) 
-                    self.setPostsType(Acc[1][2])
-                else:
-                    logging.info("Acc %s" % str(Acc))
-                    pos = Acc[1].rfind('@') 
-                    self.server = Acc[1][pos+1:] 
-                    self.nick   = Acc[1][:pos]
-                    self.name = 'GMail_{}'.format(Acc[0]) 
-        except:
-            logging.warning("Config file does not exists")
-            logging.warning("Unexpected error:", sys.exc_info()[0])
+        self.service = 'gmail'
+        if type(Acc) == str: 
+            self.url = Acc
+            pos = Acc.rfind('@') 
+            self.server = Acc[pos+1:] 
+            self.nick   = Acc[:pos] 
+            self.name = 'GMail_{}'.format(Acc[0]) 
+            import hashlib
+            self.name = 'GMail_{}'.format(Acc)
+        elif isinstance(Acc, tuple):
+            if (len(Acc) > 1) and isinstance(Acc[1], tuple):
+                logging.debug("Acc %s" % str(Acc))
+                self.url = Acc[0]
+                pos = Acc[0].rfind('@') 
+                self.server = Acc[0][pos+1:] 
+                self.nick   = Acc[0][:pos]
+                self.setPostsType(Acc[1][2])
+            elif len(Acc)>1:
+                logging.info("Acc %s" % str(Acc))
+                self.url = Acc[1]
+                pos = Acc[1].rfind('@') 
+                self.server = Acc[1][pos+1:] 
+                self.nick   = Acc[1][:pos]
+            self.name = 'GMail_{}'.format(Acc[0]) 
 
         self.id = '{} {}@{}'.format(self.name[-1], self.nick, self.server)
         logging.debug("Id %s" % self.id)
 
-        if True:
+        try:
             creds = self.authorize()
             service = build('gmail', 'v1', credentials=creds)
             self.client = service
-        else:
+        except:
             logging.warning("Problem with authorization")
             logging.warning("Unexpected error:", sys.exc_info()[0])
 
@@ -577,6 +573,8 @@ def main():
         url = config.get(acc, 'url')
         api = moduleGmail.moduleGmail()
         api.setClient(url)
+        print(api.name)
+        continue
         #if 'posts' in config.options(Acc):
         #    self.setPostType(config.get(Acc, 'posts'))
         print("Test setPosts")
