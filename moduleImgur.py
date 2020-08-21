@@ -101,7 +101,9 @@ class moduleImgur(Content,Queue):
         # Very dirty, we need to work on this. 
         # Sometimes we need identifiers
         idPost2 = link.split('/')[-1]
-        idPost = self.getPostId(pos)
+        idPost = self.getPostId(post)
+        print("id {} - {} - {}".format(idPost, idPost2, idPost==idPost2))
+        sys.exit()
         if idPost != idPost:
             logging.warning("idPost differ!")
             idPost = idPost2
@@ -152,6 +154,32 @@ class moduleImgur(Content,Queue):
     def extractImages(self, post):
         theTitle = self.getPostTitle(post)
         theLink = self.getPostLink(post) 
+        data = self.getClient().get_album_images(self.getPostId(post))
+
+        res = []
+        title = theTitle
+        for img in data:
+            urlImg = 'https://i.imgur.com/{}.jpg'.format(img.id)
+            titleImg = img.description
+            #print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(img.datetime)))
+            #print("n",img.name)
+            if titleImg:
+                description = titleImg.split('#')
+                description, tags = description[0], description[1:]
+                aTags= []
+                while tags: 
+                    aTag = tags.pop().strip()
+                    aTags.append(aTag) 
+                tags = aTags
+            else:
+                description = ""
+                tags = []
+            res.append((urlImg,title, description, tags))
+        return res
+
+    def extractImagesOld(self, post):
+        theTitle = self.getPostTitle(post)
+        theLink = self.getPostLink(post) 
         page = urlopen(theLink).read() 
         soup = BeautifulSoup(page,'lxml') 
 
@@ -161,6 +189,9 @@ class moduleImgur(Content,Queue):
         pos = script[9].text.find('{',pos+1)
         pos2 = script[9].text.find('\n',pos+1)
         data = json.loads(script[9].text[pos:pos2-1])
+        import pprint
+        pprint.pprint(data)
+        sys.exit()
         title = data['title']
         for img in data['album_images']['images']:
             urlImg = 'https://i.imgur.com/{}.jpg'.format(img['hash'])
@@ -205,6 +236,20 @@ def main():
             img.setPostsType(config.get(acc, 'posts'))
         print(img.getPostsType())
         img.setPosts()
+        print(dir(img.getPosts()[0].title))
+        #import inspect 
+        #print(inspect.getmembers('img'))
+        #img.publishPost(img.getPosts()[0],img.getPostLink(img.getPosts()[0]))
+        print(dir(img.getPosts()[0]))
+        for method in img.getPosts()[0].__dir__():
+            print(method)
+            #print(img.method())
+        print(img.getPosts()[0].datetime)
+        print(img.getClient().get_album_images(img.getPosts()[0].id))
+        print(img.getImages(0))
+
+
+        sys.exit()
         print("---- Posts ----")
         for i, post in enumerate(img.getPosts()):
             print(img.getPostTitle(post))
