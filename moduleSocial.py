@@ -209,6 +209,8 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
             else: 
                 result = api.publishPost(title, link, comment)
 
+            logger.info("    Publishing in: {}".format(result))
+
             if isinstance(result, str):
                 if result[:4]=='Fail':
                     link=''

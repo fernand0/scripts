@@ -213,7 +213,7 @@ def main():
             #blog.setClient((url,config.get(section,'channels').split(',')))
         blog.setUrl(url)
 
-        if section.find(checkBlog) >= 0:
+        if checkBlog.upper() == section.upper():
             # If checkBlog is empty it will add all of them
             if ("linksToAvoid" in config.options(section)):
                 blog.setLinksToAvoid(config.get(section, "linksToAvoid"))
