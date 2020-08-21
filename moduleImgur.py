@@ -70,6 +70,9 @@ class moduleImgur(Content,Queue):
     def getPostLink(self,post):
         return post.link
 
+    def getPostId(self,post):
+        return post.id
+
     def extractDataMessage(self, i):
         posts = self.getPosts()
         #if hasattr(self, 'getPostsType'):
@@ -201,6 +204,7 @@ def main():
         for i, post in enumerate(img.getPosts()):
             print(img.getPostTitle(post))
             print(img.getPostLink(post))
+            print(img.getPostId(post))
             print(img.obtainPostData(i))
             #print(img.getImagesCode(i))
         print("---- Drafts ----")
