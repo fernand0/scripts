@@ -31,9 +31,8 @@ class moduleImgur(Content,Queue):
                 self.access_token=config.get(self.name, 'access_token') 
                 self.refresh_token=config.get(self.name, 'refresh_token')
 
-                self.client = ImgurClient(self.client_id, 
-                            self.client_secret, self.access_token, 
-                            self.refresh_token)
+                self.client = ImgurClient(self.client_id, self.client_secret, 
+                        self.access_token, self.refresh_token)
             else:
                 logging.warning("Some problem with configuration file!")
                 self.client = None
@@ -51,9 +50,9 @@ class moduleImgur(Content,Queue):
         self.drafts = []
         client = self.getClient()
         if client:
-            for i,album in enumerate(client.get_account_albums(self.name)):
-                logging.debug("{} {} {}".format(time.ctime(album.datetime),
-                    i, album.title))
+            for album in client.get_account_albums(self.name):
+                logging.debug("{} {}".format(time.ctime(album.datetime),
+                    album.title))
                 text = ""
                 if album.in_gallery: 
                     self.posts.insert(0,album)
@@ -61,6 +60,7 @@ class moduleImgur(Content,Queue):
                     self.drafts.insert(0,album)
         else:
             logging.warning('No client configured!')
+        self.drafts = self.drafts[-20:]
         self.posts = self.posts[-20:]
         # We set some limit
                     
@@ -71,11 +71,12 @@ class moduleImgur(Content,Queue):
         return post.link
 
     def extractDataMessage(self, i):
-        if hasattr(self, 'getPostsType'):
-            if self.getPostsType() == 'drafts':
-                posts = self.getDrafts()
-            else:
-                posts = self.getPosts()
+        posts = self.getPosts()
+        #if hasattr(self, 'getPostsType'):
+        #    if self.getPostsType() == 'drafts':
+        #        posts = self.getDrafts()
+        #    else:
+        #        posts = self.getPosts()
         if i < len(posts):
             post = posts[i]
             logging.info("Post: %s"% post)
@@ -91,33 +92,24 @@ class moduleImgur(Content,Queue):
 
         return (theTitle, theLink, None, None, None, None, None, None, theTags, thePost)
 
-
-
     def publishPost(self, post, link='', comment=''):
-        logging.debug("     Publishing in Imgur...")
-        #if comment != None: 
-        #    post = comment + " " + post
-        try:
-            logging.info("     Publishing: %s" % post) 
-            #print(post)
-            #print(link)
-            # Very dirty, we need to work on this. Sometimes we need identifiers
-            idPost = link.split('/')[-1]
-            #idPost = self.posts[j].id 
-            api = self.getClient() 
-            try: 
-                res = api.share_on_imgur(idPost, post, terms=0)            
-                logging.info("Res: %s" % res) 
-                if res: 
-                    return('OK') 
-            except: 
-                logging.info(self.report('Facebook', post, link, sys.exc_info()))
-                return(self.report('Facebook', post, link, sys.exc_info()))
-        except:
-            return("Fail")
+        logging.info("     Publishing in Imgur...")
+        logging.info("     Publishing: %s" % post) 
+        # Very dirty, we need to work on this. 
+        # Sometimes we need identifiers
+        idPost = link.split('/')[-1]
+        #idPost = self.posts[j].id 
+        api = self.getClient() 
+        try: 
+            res = api.share_on_imgur(idPost, post, terms=0)            
+            logging.info("      Res: %s" % res) 
+            if res: 
+                return(OK) 
+        except: 
+            logging.info(self.report('Imgur', post, link, sys.exc_info()))
+            return(self.report('Imgur', post, link, sys.exc_info()))
 
-        return('Fail')
-
+        return(FAIL)
 
     def publish(self, j):
         logging.info("Publishing %d"% j)                
@@ -131,10 +123,9 @@ class moduleImgur(Content,Queue):
             logging.info("Res: %s" % res)
             return(res)
         except:
-            return("Fail")
+            return(FAIL)
 
         return("%s"% title)
-
 
     def delete(self,j):
         logging.info("Deleting %d"% j)
@@ -189,27 +180,37 @@ def main():
             level=logging.INFO, 
             format='%(asctime)s %(message)s')
 
+    import moduleImgur
+
     config = configparser.ConfigParser()
     config.read(CONFIGDIR + '/.rssBlogs')
-    sections=["Blog21"]
-    for section in sections:
-        img = moduleImgur()
-        img.setUrl('https://imgur.com/user/ftricas') 
-        img.setClient('ftricas') 
-        if 'posts' in config.options(section):
-            img.setPostsType(config.get(section, 'posts'))
+
+    accounts = ["Blog20", "Blog21"]
+    for acc in accounts:
+        print("Account: {}".format(acc))
+        img = moduleImgur.moduleImgur()
+        url = config.get(acc, 'url')
+        name = config.get(acc, 'imgur')
+        img.setClient(name)
+        img.setUrl(url)
+        if 'posts' in config.options(acc):
+            img.setPostsType(config.get(acc, 'posts'))
         print(img.getPostsType())
         img.setPosts()
         print("---- Posts ----")
         for i, post in enumerate(img.getPosts()):
             print(img.getPostTitle(post))
             print(img.getPostLink(post))
+            print(img.obtainPostData(i))
             #print(img.getImagesCode(i))
         print("---- Drafts ----")
-        for post in img.getDrafts():
+        for i, post in enumerate(img.getDrafts()):
             print(img.getPostTitle(post))
-        print("----.")
+            print(img.getPostLink(post))
+            print(img.obtainPostData(i))
+        print("----")
         time.sleep(2)
+    sys.exit()
     pos=3
     post = img.getImages(pos)
     postWP = img.getImagesCode(pos)

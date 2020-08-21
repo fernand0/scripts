@@ -568,13 +568,13 @@ def main():
     config = configparser.ConfigParser() 
     config.read(CONFIGDIR + '/.rssBlogs')
 
-    for acc in ['Blog13','Blog14','Blog15']:
+    accounts = ['Blog13','Blog14','Blog15']
+    for acc in accounts:
         print("Account: {}".format(acc))
         url = config.get(acc, 'url')
         api = moduleGmail.moduleGmail()
         api.setClient(url)
         print(api.name)
-        continue
         #if 'posts' in config.options(Acc):
         #    self.setPostType(config.get(Acc, 'posts'))
         print("Test setPosts")

@@ -16,6 +16,9 @@ WWWDIR = "/var/www/html/img/"
 WWWADDRESS = 'https://elmundoesimperfecto.com/img/'
 NAMEIMG = 'instagram.jpg'
 
+FAIL = 'Fail!'
+OK = 'OK'
+
 
 def fileNamePath(url, socialNetwork=()):
     if not socialNetwork: 
