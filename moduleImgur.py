@@ -236,7 +236,7 @@ def main():
             img.setPostsType(config.get(acc, 'posts'))
         print(img.getPostsType())
         img.setPosts()
-        print(dir(img.getPosts()[0].title))
+        print(img.getPosts())
         #import inspect 
         #print(inspect.getmembers('img'))
         #img.publishPost(img.getPosts()[0],img.getPostLink(img.getPosts()[0]))
@@ -245,11 +245,17 @@ def main():
             print(method)
             #print(img.method())
         print(img.getPosts()[0].datetime)
-        print(img.getClient().get_album_images(img.getPosts()[0].id))
-        print(img.getImages(0))
-
-
+        imgs = img.getClient().get_album_images(img.getPosts()[-1].id)
+        print("imgs",imgs)
+        for iimg in imgs:
+            print("id",iimg.id)
+            print("title",iimg.title)
+            print("descr",iimg.description)
+            print("name",iimg.name)
         sys.exit()
+        #print(img.getImages(0))
+
+
         print("---- Posts ----")
         for i, post in enumerate(img.getPosts()):
             print(img.getPostTitle(post))
