@@ -100,8 +100,13 @@ class moduleImgur(Content,Queue):
         logging.info("     Publishing: %s" % post) 
         # Very dirty, we need to work on this. 
         # Sometimes we need identifiers
-        idPost = link.split('/')[-1]
+        idPost2 = link.split('/')[-1]
+        idPost = self.getPostId(pos)
+        if idPost != idPost:
+            logging.warning("idPost differ!")
+            idPost = idPost2
         #idPost = self.posts[j].id 
+
         api = self.getClient() 
         try: 
             res = api.share_on_imgur(idPost, post, terms=0)            
