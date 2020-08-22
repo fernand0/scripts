@@ -126,14 +126,14 @@ class moduleImgur(Content,Queue):
         #idPost = self.posts[j].id 
 
         api = self.getClient() 
-        try: 
+        if True: 
             res = api.share_on_imgur(idPost, post, terms=0)            
             logging.info("      Res: %s" % res) 
             if res: 
                 return(OK) 
-        except: 
-            logging.info(self.report('Imgur', post, link, sys.exc_info()))
-            return(self.report('Imgur', post, link, sys.exc_info()))
+        else: 
+            logging.info(self.report('Imgur', post, idPost, sys.exc_info()))
+            return(self.report('Imgur', post, idPost, sys.exc_info()))
 
         return(FAIL)
 
