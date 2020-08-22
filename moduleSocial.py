@@ -207,6 +207,7 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
             if profile in ['wordpress']: 
                 result = api.publishPost(title, link, comment, tags=links)
             else: 
+                logger.info("tt {} {}".format(title, link))
                 result = api.publishPost(title, link, comment)
 
             logger.info("    Publishing in: {}".format(result))
