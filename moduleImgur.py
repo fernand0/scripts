@@ -85,6 +85,7 @@ class moduleImgur(Content,Queue):
             logging.info("Post: %s"% post)
             theTitle = self.getPostTitle(post)
             theLink = self.getPostLink(post)
+            theId = self.getPostId(post)
             thePost = self.getImagesCode(i)
             theTags = self.getImagesTags(i)
         else:
@@ -93,7 +94,7 @@ class moduleImgur(Content,Queue):
             thePost = None
             theTags = None
 
-        return (theTitle, theLink, None, None, None, None, None, None, theTags, thePost)
+        return (theTitle, theId, theLink, None, None, None, None, None, theTags, thePost)
 
     def sharePost(self, post):
         logging.info("     Sharing in Imgur...")
@@ -111,12 +112,12 @@ class moduleImgur(Content,Queue):
         return(FAIL)
 
        
-    def publishPost(self, post, link='', comment=''):
+    def publishPost(self, post, idPost, comment=''):
         logging.info("     Publishing in Imgur...")
         logging.info("     Publishing: %s" % post) 
         # Very dirty, we need to work on this. 
         # Sometimes we need identifiers
-        idPost = link.split('/')[-1]
+        #idPost = link
         #idPost = self.getPostId(post)
         #logging.info("     Publishing: {} {}".format(idPost2, idPost)) 
         #if idPost != idPost:
