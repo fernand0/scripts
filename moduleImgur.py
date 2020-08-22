@@ -95,6 +95,22 @@ class moduleImgur(Content,Queue):
 
         return (theTitle, theLink, None, None, None, None, None, None, theTags, thePost)
 
+    def sharePost(self, post):
+        logging.info("     Sharing in Imgur...")
+        idPost = self.getPostId(post)
+        title = self.getPostTitle(post)
+        try: 
+            res = api.share_on_imgur(idPost, post, terms=0)            
+            logging.info("      Res: %s" % res) 
+            if res: 
+                return(OK) 
+        except: 
+            logging.info(self.report('Imgur', title, idPost, sys.exc_info()))
+            return(self.report('Imgur', title, idPost, sys.exc_info()))
+
+        return(FAIL)
+
+       
     def publishPost(self, post, link='', comment=''):
         logging.info("     Publishing in Imgur...")
         logging.info("     Publishing: %s" % post) 
@@ -109,12 +125,12 @@ class moduleImgur(Content,Queue):
         #idPost = self.posts[j].id 
 
         api = self.getClient() 
-        if True: 
+        try: 
             res = api.share_on_imgur(idPost, post, terms=0)            
             logging.info("      Res: %s" % res) 
             if res: 
                 return(OK) 
-        else: 
+        except: 
             logging.info(self.report('Imgur', post, link, sys.exc_info()))
             return(self.report('Imgur', post, link, sys.exc_info()))
 

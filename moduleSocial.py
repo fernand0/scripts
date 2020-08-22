@@ -207,7 +207,11 @@ def publishDelay(blog, socialNetwork, numPosts, timeSlots):
             if profile in ['wordpress']: 
                 result = api.publishPost(title, link, comment, tags=links)
             else: 
-                result = api.publishPost(title, link, comment)
+                if hasattr(api, 'sharePosts'): 
+                    # Not working. We do not have the actual post
+                    result = api.sharePost(post)
+                else: 
+                    result = api.publishPost(title, link, comment)
 
             logger.info("    Publishing in: {}".format(result))
 
