@@ -75,11 +75,6 @@ class moduleImgur(Content,Queue):
 
     def extractDataMessage(self, i):
         posts = self.getPosts()
-        #if hasattr(self, 'getPostsType'):
-        #    if self.getPostsType() == 'drafts':
-        #        posts = self.getDrafts()
-        #    else:
-        #        posts = self.getPosts()
         if i < len(posts):
             post = posts[i]
             logging.info("Post: %s"% post)
@@ -95,21 +90,6 @@ class moduleImgur(Content,Queue):
             theTags = None
 
         return (theTitle, theId, theLink, None, None, None, None, None, theTags, thePost)
-
-    def sharePost(self, post):
-        logging.info("     Sharing in Imgur...")
-        idPost = self.getPostId(post)
-        title = self.getPostTitle(post)
-        try: 
-            res = api.share_on_imgur(idPost, post, terms=0)            
-            logging.info("      Res: %s" % res) 
-            if res: 
-                return(OK) 
-        except: 
-            logging.info(self.report('Imgur', title, idPost, sys.exc_info()))
-            return(self.report('Imgur', title, idPost, sys.exc_info()))
-
-        return(FAIL)
 
        
     def publishPost(self, post, idPost, comment=''):
