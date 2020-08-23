@@ -113,6 +113,8 @@ class Queue:
             logging.info("title %s"%title)
             if title and link:
                 reply = reply + title + ' ' + link
+            elif title and content:
+                reply = reply + title + ' ' + content
             elif link:
                 reply = reply +' '+link 
             elif title:

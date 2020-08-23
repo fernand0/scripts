@@ -6,21 +6,20 @@
 
 import configparser, os
 import datetime
-import logging
 import importlib
+import io
+import logging
+import pickle
 import sys
-#importlib.reload(sys)
-#sys.setdefaultencoding("UTF-8")
+
 import moduleSocial
 import moduleImap
 
 import googleapiclient
 from googleapiclient.discovery import build
-from googleapiclient import http
-from httplib2 import Http
-from oauth2client import file, client, tools
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
 
-import io
 
 import base64
 import email
@@ -39,6 +38,7 @@ class moduleGmail(Content,Queue):
         self.service = None
         self.nick = None
         self.id = None
+        self.scopes = ['https://www.googleapis.com/auth/gmail.modify']
 
     def API(self, Acc):
         # Back compatibility
@@ -46,55 +46,77 @@ class moduleGmail(Content,Queue):
 
     def setClient(self, Acc):
         logging.info("     Connecting GMail %s"%str(Acc))
-        # based on get_credentials from 
-        # Code from
-        # https://developers.google.com/gmail/api/v1/reference/users/messages/list
-        # and
-        # http://stackoverflow.com/questions/30742943/create-a-desktop-application-using-gmail-api
-    
-        SCOPES = 'https://www.googleapis.com/auth/gmail.modify'
-        self.url = SCOPES
+   
+        SCOPES = self.scopes
         api = {}
     
-        try:
-            config = configparser.ConfigParser() 
-            config.read(CONFIGDIR + '/.oauthG.cfg')
-            
-            self.service = 'gmail'
-            if type(Acc) == str: 
-                if Acc.find('@') >= 0: 
-                    pos = Acc.rfind('@') 
-                    self.server = Acc[pos+1:] 
-                    self.nick   = Acc[:pos] 
-                    self.name = 'GMail_{}'.format(Acc[0]) 
-                else: 
-                    self.nick = config.get(Acc,'user') #+'@'+config.get(Acc,'server') 
-                    self.server = config.get(Acc,'server')
-                import hashlib
-                self.name = 'GMail' + Acc[3:]# + '_' + hashlib.md5(self.nick.encode()+self.server.encode()).hexdigest()
-            else:
+        self.service = 'gmail'
+        if type(Acc) == str: 
+            self.url = Acc
+            pos = Acc.rfind('@') 
+            self.server = Acc[pos+1:] 
+            self.nick   = Acc[:pos] 
+            self.name = 'GMail_{}'.format(Acc[0]) 
+            import hashlib
+            self.name = 'GMail_{}'.format(Acc)
+        elif isinstance(Acc, tuple):
+            if (len(Acc) > 1) and isinstance(Acc[1], tuple):
                 logging.debug("Acc %s" % str(Acc))
-                #self.server = Acc[1][1][1]#[pos+1:] 
-                #self.nick   = Acc[1][1][0]#[:pos]
+                self.url = Acc[0]
+                pos = Acc[0].rfind('@') 
+                self.server = Acc[0][pos+1:] 
+                self.nick   = Acc[0][:pos]
+                self.setPostsType(Acc[1][2])
+            elif len(Acc)>1:
+                logging.info("Acc %s" % str(Acc))
+                self.url = Acc[1]
                 pos = Acc[1].rfind('@') 
                 self.server = Acc[1][pos+1:] 
                 self.nick   = Acc[1][:pos]
-                self.name = 'GMail_{}'.format(Acc[0]) 
-            self.id = '{} {}@{}'.format(self.name[-1], self.nick, self.server)
-            logging.debug("Id %s" % self.id)
+            self.name = 'GMail_{}'.format(Acc[0]) 
 
-            fileStore = self.confName((self.server, self.nick))
-    
-            logging.debug("Filestore %s"% fileStore)
-            store = file.Storage(fileStore)
-            credentials = store.get()
-            
-            service = build('gmail', 'v1', http=credentials.authorize(Http()))
-    
+        self.id = '{} {}@{}'.format(self.name[-1], self.nick, self.server)
+        logging.debug("Id %s" % self.id)
+
+        try:
+            creds = self.authorize()
+            service = build('gmail', 'v1', credentials=creds)
             self.client = service
         except:
-            logging.warning("Config file does not exists")
+            logging.warning("Problem with authorization")
             logging.warning("Unexpected error:", sys.exc_info()[0])
+
+    def authorize(self):
+        # based on Code from
+        # https://github.com/gsuitedevs/python-samples/blob/aacc00657392a7119808b989167130b664be5c27/gmail/quickstart/quickstart.py
+
+        SCOPES = self.scopes
+
+        logging.info("Authorizing GMail")
+        fileCredStore = self.confName((self.server, self.nick)) 
+        fileTokenStore = self.confTokenName((self.server, self.nick)) 
+        creds = None
+        if os.path.exists(fileTokenStore): 
+            with open(fileTokenStore, 'rb') as token: 
+                creds = pickle.load(token)
+        if not creds or not creds.valid: 
+            if creds and creds.expired and creds.refresh_token: 
+                logging.info("Needs to refresh token GMail")
+                creds.refresh(Request()) 
+            else: 
+                logging.info("Needs to re-authorize token GMail")
+                flow = InstalledAppFlow.from_client_secrets_file( 
+                        fileCredStore, SCOPES, 
+                        redirect_uri='urn:ietf:wg:oauth:2.0:oob')
+                creds = flow.run_console(authorization_prompt_message='Please visit this URL: {url}', 
+                        success_message='The auth flow is complete; you may close this window.')
+                # Save the credentials for the next run
+
+        with open(fileTokenStore, 'wb') as token:
+            pickle.dump(creds, token)
+
+        return(creds)
+
 
     def getClient(self):
         return(self.client)
@@ -149,22 +171,30 @@ class moduleGmail(Content,Queue):
                                                 body=list_labels).execute()
         return(message)
         
-    def getPosts(self):
-        if not self.posts:
-            self.setPosts()
-        return(self.posts)
-
-    def setPosts(self, label='drafts', mode=''):
+    def setPosts(self, label=None, mode=''):
         logging.info("  Setting posts")
         api = self.getClient()
 
         self.posts = []
-        if label == 'drafts':
-            typePosts = 'drafts'
-            posts = api.users().drafts().list(userId='me').execute()
-        else:
-            typePosts = 'messages'
-            posts = api.users().messages().list(userId='me',labelIds=label).execute()
+        self.drafts = []
+        try: 
+            if hasattr(self, 'getPostsType'): 
+                typePosts = self.getPostsType()
+                logging.info("  Setting posts type {}".format(typePosts))
+            elif label == 'drafts': 
+                typePosts = 'drafts' 
+            else: 
+                typePosts = 'messages' 
+            if typePosts == 'drafts':
+                posts = api.users().drafts().list(userId='me').execute() 
+            else:
+                posts = api.users().messages().list(userId='me',labelIds=label).execute()
+        #except client.HttpAccessTokenRefreshError: 
+        #    return "Fail"
+        except: 
+            logging.warning("GMail failed!") 
+            logging.warning("Unexpected error:", sys.exc_info()[0]) 
+            return("Fail")
 
         logging.debug("--setPosts %s" % posts)
 
@@ -176,19 +206,30 @@ class moduleGmail(Content,Queue):
                    message = {}
                    message['list'] = post
                    message['meta'] = meta
-                   self.posts.insert(0, message)
                else:
                    raw = self.getMessageRaw(post['id'],typePosts)
                    message = {}
                    message['list'] = post
                    message['meta'] = ''
                    message['raw'] = raw
+
+               if typePosts == 'drafts': 
+                   self.drafts.insert(0, message) 
+               else: 
                    self.posts.insert(0, message) 
+        logging.info("drafts {}".format(str(self.drafts)))
+        return "OK"
 
     def confName(self, acc):
         theName = os.path.expanduser(CONFIGDIR + '/' + '.' 
                 + acc[0]+ '_' 
                 + acc[1]+ '.json')
+        return(theName)
+    
+    def confTokenName(self, acc): 
+        theName = os.path.expanduser(CONFIGDIR + '/' + '.' 
+                + acc[0]+ '_' 
+                + acc[1]+ '.pickle')
         return(theName)
     
     def getMessage(self, id): 
@@ -324,16 +365,6 @@ class moduleGmail(Content,Queue):
         comment = self.getPostId(message) 
 
         return (theTitle, theLink, firstLink, theImage, theSummary, content, theSummaryLinks, theContent, theLinks, comment)
-
-    #def isForMe(self, args):
-    #    serviceName = self.name
-    #    lookAt = []
-    #    logging.info("Args %s" % args)
-    #    logging.info("Name %s" % serviceName)
-    #    if (serviceName[0] in args) or ('*' in args): 
-    #        if serviceName[0] + serviceName[-1] in args[:-1]:
-    #            lookAt.append(serviceName)
-    #    return lookAt
 
     def editl(self, j, newTitle):
         return('Not implemented!')
@@ -526,14 +557,36 @@ class moduleGmail(Content,Queue):
     
 
 def main():
+    logging.basicConfig(stream=sys.stdout, 
+            level=logging.INFO, 
+            format='%(asctime)s %(message)s')
+
     import moduleGmail
 
     # instantiate the api object 
 
-    for acc in ['ACC0', 'ACC1', 'ACC2']:
+    config = configparser.ConfigParser() 
+    config.read(CONFIGDIR + '/.rssBlogs')
+
+    accounts = ['Blog13','Blog14','Blog15']
+    for acc in accounts:
+        print("Account: {}".format(acc))
+        url = config.get(acc, 'url')
         api = moduleGmail.moduleGmail()
-        api.setClient(acc)
-        api.setPosts()
+        api.setClient(url)
+        print(api.name)
+        #if 'posts' in config.options(Acc):
+        #    self.setPostType(config.get(Acc, 'posts'))
+        print("Test setPosts")
+        res = api.setPosts()
+        print("Test getPosts")
+        print(api.getPosts())
+        api.setPostsType('messages')
+        print("Test setPosts (posts)")
+        res = api.setPosts()
+        print("Test getPosts")
+        print(api.getPosts())
+
     sys.exit()
     print(api.getPosts())
     print(api.getPosts()[0])

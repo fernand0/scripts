@@ -6,6 +6,8 @@ import configparser
 import os
 import logging
 from bs4 import Tag
+from urllib.request import urlopen
+from bs4 import BeautifulSoup
 
 from configMod import *
 
@@ -65,11 +67,33 @@ class Content:
     def addSocialNetwork(self, socialNetwork):
         self.socialNetworks[socialNetwork[0]] = socialNetwork[1]
 
-    #def getPostsFormatted(self):
-    #    return(self.postsFormatted)
+    def getPublished(self):
+        return(self.posts)
 
     def getPosts(self):
-        return(self.posts)
+        if hasattr(self, 'getPostsType'): 
+            if self.getPostsType() == 'drafts':
+                posts = self.getDrafts()
+            else:
+                posts = self.getPublished() 
+        else:
+            posts = sefl.getPosts()
+        return(posts)
+
+    def getPost(self, i):
+        posts = self.getPosts()
+        if i < len(posts): 
+            return(self.getPosts()[i])
+        else:
+            return None
+
+    def getTitle(self, i):        
+        post = self.getPost(i)
+        return(self.getPostTitle(post))
+
+    def getLink(self, i):
+        post = self.getPost(i)
+        return(self.getPostLink(post))
 
     def getNumPostsData(self, num, i): 
         listPosts = []
@@ -300,11 +324,11 @@ class Content:
 
     def report(self, profile, post, link, data): 
         logging.warning("%s posting failed!" % profile) 
-        logging.warning("Post %s %s" % (post,link)) 
+        logging.warning("Post %s %s" % (post[:80],link)) 
         logging.warning("Unexpected error: %s"% data[0]) 
         logging.warning("Unexpected error: %s"% data[1]) 
         print("%s posting failed!" % profile) 
-        print("Post %s %s" % (post,link)) 
+        print("Post %s %s" % (post[:80],link)) 
         print("Unexpected error: %s"% data[0]) 
         print("Unexpected error: %s"% data[1]) 
         return("Fail! %s" % data[1])
@@ -319,3 +343,45 @@ class Content:
 
     def getPostLink(self, post):
         return ''
+
+    def getImages(self, i):        
+        if hasattr(self, 'getPostsType'):
+            if self.getPostsType() == 'drafts':
+                posts = self.getDrafts()
+            else:
+                posts = self.getPosts()
+        theTitle = None
+        theLink = None
+        res = None
+        if i < len(posts):
+            post = posts[i]
+            logging.debug("Post: %s"% post)
+            res = self.extractImages(post)
+        return(res)
+
+    def getImagesTags(self, i):        
+        res = self.getImages(i)
+        tags = [] 
+        for iimg in res: 
+            for tag in iimg[3]:
+                if tag not in tags:
+                    tags.append(tag)
+
+        return tags
+
+    def getImagesCode(self, i):        
+        res = self.getImages(i)
+        url = self.getPostLink(self.getPosts()[i]) 
+        text = ""
+        for iimg in res: 
+            if iimg[2]:
+                description = iimg[2]
+            else:
+                description = ""
+            if description: 
+                text = '{}\n<p><h4>{}</h4></p><p><a href="{}"><img class="alignnone size-full wp-image-3306" src="{}" alt="{} {}" width="776" height="1035" /></a></p>'.format(text,description,url, iimg[0],iimg[1], description)
+            else: 
+                text = '{}\n<p><a href="{}"><img class="alignnone size-full wp-image-3306" src="{}" alt="{} {}" width="776" height="1035" /></a></p>'.format(text,url, iimg[0],iimg[1], description)
+        return(text)
+
+

@@ -54,6 +54,7 @@ class moduleTelegram(Content):
         from html.parser import HTMLParser
         h = HTMLParser()
         title = h.unescape(title)
+        content = content.replace('<','&lt;')
         text = '<a href="'+link+'">'+title+ "</a>\n" + content + '\n\n' + links
         textToPublish2 = ""
         if len(text) < 4090:

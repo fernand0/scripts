@@ -34,6 +34,7 @@ import moduleGmail
 import moduleWordpress
 # https://github.com/fernand0/scripts/blob/master/moduleImgur.py
 import moduleImgur
+import moduleImdb
 
 import configparser
 import os
@@ -128,11 +129,26 @@ def main():
         
     isDebug = False
 
-    if len(sys.argv)>1:
-        print(sys.argv[1])
-        checkBlog = sys.argv[1]
-    else:
-        checkBlog = ""
+
+    import argparse
+    parser = argparse.ArgumentParser(description='Improving command line call',
+            allow_abbrev=True)
+    parser.add_argument('--timeSlots', '-t', default=55*60, # 55 minutes
+                    help='How many time slots we will have for publishing')
+    parser.add_argument('checkBlog', default="",
+            metavar='Blog', type=str, nargs='?',
+                    help='you can select just a blog')
+    parser.add_argument('--simmulate', '-s',default=False,
+            action='store_true', help='simulate which posts would be added')
+    parser.add_argument('--noWait', '-n', default=False,
+            action='store_true', help='no wait for time restrictions')
+    args = parser.parse_args()
+
+    checkBlog = args.checkBlog
+    timeSlots = int(args.timeSlots)
+    simmulate = args.simmulate
+    nowait = args.noWait
+
 
     loggingLevel = logging.INFO
     logging.basicConfig(filename = LOGDIR + "/rssSocial_.log", 
@@ -190,9 +206,14 @@ def main():
             logging.info(" Wordpress: {}".format(wordpress))
             blog = moduleWordpress.moduleWordpress()
             blog.setClient(wordpress)
+        elif 'imdb' in config.options(section):
+            imdb = config.get(section,'imdb')
+            logging.info(" Imdb: {}".format(imdb))
+            blog = moduleImdb.moduleImdb()
+            #blog.setClient((url,config.get(section,'channels').split(',')))
         blog.setUrl(url)
 
-        if section.find(checkBlog) >= 0:
+        if (not checkBlog) or (checkBlog.upper() == section.upper()):
             # If checkBlog is empty it will add all of them
             if ("linksToAvoid" in config.options(section)):
                 blog.setLinksToAvoid(config.get(section, "linksToAvoid"))
@@ -278,7 +299,10 @@ def main():
                 logging.debug("bufferMax - lenMax = num %d %d %d"%
                         (bufferMax, lenMax, num)) 
 
-                if (hours and (((time.time() - lastTime) - round(float(hours)*60*60)) < 0)): 
+                if ((not nowait) and 
+                        (hours and 
+                            (((time.time() - lastTime) 
+                                - round(float(hours)*60*60)) < 0))): 
                     logging.info("  Not publishing because time restriction") 
                     print("     Not publishing because time restriction (Last time: %s)"% time.ctime(lastTime)) 
                 else:
@@ -286,12 +310,18 @@ def main():
                     if 'max' in blog.__dir__():
                         num = int(blog.getMax())
 
+
                     if ((num > 0) and (blog.getBufferapp() or blog.getProgram())
                             or not (blog.getBufferapp() or blog.getProgram())):
 
                         logging.debug("   Profile %s"% profile)
                         link = ""
                         listPosts = blog.getNumPostsData(num, i)
+
+                    if simmulate:
+                        print(listPosts)
+                        sys.exit()
+
 
                     if (blog.getBufferapp() 
                             and (profile[0] in blog.getBufferapp())): 
@@ -308,9 +338,9 @@ def main():
                         link = blog.cache[socialNetwork].addPosts(listPosts)
 
                         time.sleep(1)
-                        timeSlots = 55*60 # One hour
                         print(link)
                         delayedBlogs.append((blog, socialNetwork, 1, timeSlots))
+
 
                     if not (blog.getBufferapp() or blog.getProgram()):
                         link = moduleSocial.publishDirect(blog, 

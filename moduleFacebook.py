@@ -44,6 +44,7 @@ class moduleFacebook(Content,Queue):
                 graph = facebook.GraphAPI(oauth_access_token, version='3.0') 
                 self.fc = graph
                 self.setPage(facebookAC)
+
             except: 
                 logging.warning("Facebook authentication failed!") 
                 logging.warning("Unexpected error:", sys.exc_info()[0]) 
@@ -70,7 +71,7 @@ class moduleFacebook(Content,Queue):
                 else: 
                     # Publishing as me 
                     self.page = facebookAC 
-
+                    logging.info("Page: {}".format(self.page))
 
     def getClient(self):
         return self.fc
@@ -112,16 +113,19 @@ class moduleFacebook(Content,Queue):
         res = None
         try:
             logging.info("     Publishing: %s" % post)
-            res = self.page.put_object('me', "feed", message=post, link=link)
-            #res = self.page.put_object(self.fc.get_object('me')['id'], "feed", message=post, link=link)
-            if res:
-                logging.debug("Res: %s" % res)
-                if 'id' in res:
-                    urlFb = 'https://www.facebook.com/%s' % res['id']
-                    logging.info("     Link: %s" % urlFb)
-                    return(urlFb)
+            if (not isinstance(self.page, str)):
+                res = self.page.put_object('me', "feed", message=post, link=link)
+                #res = self.page.put_object(self.fc.get_object('me')['id'], "feed", message=post, link=link)
+                if res:
+                    logging.debug("Res: %s" % res)
+                    if 'id' in res:
+                        urlFb = 'https://www.facebook.com/%s' % res['id']
+                        logging.info("     Link: %s" % urlFb)
+                        return(urlFb)
 
-                return(res)
+                    return(res)
+            else:
+                return("Fail")
         except:        
             return(self.report('Facebook', post, link, sys.exc_info()))
 
@@ -138,15 +142,41 @@ class moduleFacebook(Content,Queue):
         else:
             return ''
 
+    def getPostImages(self,idPost):
+        res = []
+        print(self.fc)
+        post = self.fc.get_object('me',fields='id')
+        myId = post['id']
+        field='attachments'
+        post = self.fc.get_object('{}_{}'.format(myId,idPost),fields=field)
+        res.append(post['attachments']['data'][0]['media']['image']['src'])
+        subAttach = post['attachments']['data'][0]['subattachments']
+        for img in subAttach['data']:
+            res.append(img['media']['image']['src'])
+
+        return(res)
+
+
+
 def main():
 
     import moduleFacebook
 
     fc = moduleFacebook.moduleFacebook()
 
-    fc.setClient('Reflexiones e Irreflexiones')
+    fc.setClient('me')
+    fc.setPage('Enlaces de fernand0')
+    fc.publishPost("Prueba")
     print(fc.user)
-    print(fc.fc.get_object(id='me'))
+    sys.exit()
+    images = fc.getPostImages('10157835018558264')
+    print(images)
+    print(len(images))
+    images = fc.getPostImages('10157761305288264')
+    print(images)
+    print(len(images))
+    sys.exit()
+    print(fc.get_object(id='me'))
 
     print("Listing pages")
     for page in fc.pages['data']:
@@ -176,7 +206,6 @@ def main():
         print(post)
         #print("%s: %s" %(post[0], post[1]))
 
-    #fc.publishPost("Prueba")
 
 if __name__ == '__main__':
     main()
