@@ -93,18 +93,9 @@ class moduleImgur(Content,Queue):
 
        
     def publishPost(self, post, idPost, comment=''):
+        # This method publishes (as public post) some gallery that is in draft
+        # mode
         logging.info("     Publishing in Imgur...")
-        logging.info("     Publishing: %s" % post) 
-        # Very dirty, we need to work on this. 
-        # Sometimes we need identifiers
-        #idPost = link
-        #idPost = self.getPostId(post)
-        #logging.info("     Publishing: {} {}".format(idPost2, idPost)) 
-        #if idPost != idPost:
-        #    logging.warning("idPost differ!")
-        #    idPost = idPost2
-        #idPost = self.posts[j].id 
-
         api = self.getClient() 
         if True: 
             res = api.share_on_imgur(idPost, post, terms=0)            
@@ -122,6 +113,7 @@ class moduleImgur(Content,Queue):
         logging.info("servicename %s" %self.service)
         idPost = self.posts[j].id
         title = self.getPostTitle(self.posts[j])
+        idPost = self.getPostId(self.posts[j])
         
         api = self.getClient()
         try:
