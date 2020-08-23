@@ -75,11 +75,6 @@ class moduleImgur(Content,Queue):
 
     def extractDataMessage(self, i):
         posts = self.getPosts()
-        #if hasattr(self, 'getPostsType'):
-        #    if self.getPostsType() == 'drafts':
-        #        posts = self.getDrafts()
-        #    else:
-        #        posts = self.getPosts()
         if i < len(posts):
             post = posts[i]
             logging.info("Post: %s"% post)
@@ -96,35 +91,11 @@ class moduleImgur(Content,Queue):
 
         return (theTitle, theId, theLink, None, None, None, None, None, theTags, thePost)
 
-    def sharePost(self, post):
-        logging.info("     Sharing in Imgur...")
-        idPost = self.getPostId(post)
-        title = self.getPostTitle(post)
-        try: 
-            res = api.share_on_imgur(idPost, post, terms=0)            
-            logging.info("      Res: %s" % res) 
-            if res: 
-                return(OK) 
-        except: 
-            logging.info(self.report('Imgur', title, idPost, sys.exc_info()))
-            return(self.report('Imgur', title, idPost, sys.exc_info()))
-
-        return(FAIL)
-
        
     def publishPost(self, post, idPost, comment=''):
+        # This method publishes (as public post) some gallery that is in draft
+        # mode
         logging.info("     Publishing in Imgur...")
-        logging.info("     Publishing: %s" % post) 
-        # Very dirty, we need to work on this. 
-        # Sometimes we need identifiers
-        #idPost = link
-        #idPost = self.getPostId(post)
-        #logging.info("     Publishing: {} {}".format(idPost2, idPost)) 
-        #if idPost != idPost:
-        #    logging.warning("idPost differ!")
-        #    idPost = idPost2
-        #idPost = self.posts[j].id 
-
         api = self.getClient() 
         if True: 
             res = api.share_on_imgur(idPost, post, terms=0)            
@@ -142,6 +113,7 @@ class moduleImgur(Content,Queue):
         logging.info("servicename %s" %self.service)
         idPost = self.posts[j].id
         title = self.getPostTitle(self.posts[j])
+        idPost = self.getPostId(self.posts[j])
         
         api = self.getClient()
         try:
