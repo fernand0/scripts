@@ -4,7 +4,6 @@ import os
 import requests
 import shutil
 import urllib
-from PIL import Image
 
 HOME = os.path.expanduser("~")
 LOGDIR = HOME + "/usr/var/log"
@@ -74,6 +73,7 @@ def updateLastLink(url, link, socialNetwork=()):
             f.write(link[0])
 
 def resizeImage(imgUrl):
+    from PIL import Image
     print(imgUrl)
     response = requests.get(imgUrl, stream=True)
 
