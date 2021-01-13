@@ -18,7 +18,7 @@ fi
 
 sudo apt-get update $YES && echo "" && \
 sudo apt-get safe-upgrade $YES || sudo apt-get upgrade $YES && echo "" && \
-sudo apt-get dselect-upgrade && \
+#sudo apt-get dselect-upgrade && \
 sudo apt-get autoremove $YES && echo "" && \
 sudo localepurge || echo "localepurge not available" && echo "" && \
 sudo deborphan | xargs sudo dpkg --purge $YES && echo "" && \
