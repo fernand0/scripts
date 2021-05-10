@@ -1,15 +1,22 @@
-
 from bs4 import BeautifulSoup
 import configparser
 import requests
 import time
-import moduleForum
+import sys
 
+sys.path.append('/home/ftricas/usr/src/socialModules')
+import moduleForum
 from moduleContent import *
 from configMod import *
 
 
 def main(): 
+
+
+
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO, 
+            format='%(asctime)s %(message)s')
+
     config = configparser.ConfigParser()
     config.read(CONFIGDIR + '/.rssForums') 
     
@@ -31,12 +38,14 @@ def main():
             numPosts = numPosts + 1
             #print(pos)
             #print(len(forum.getPosts()))
+            link = None
             for post in forum.getPosts()[pos:]:
                 #print(post)
                 title = post[0].split('\n')[0]
                 link  = post[1]
                 posts.append((title, link, ''))
-            updateLastLink(forum.url,link)
+            if link: 
+                updateLastLink(forum.url,link)
         thePosts[name] = posts
         continue
 
@@ -46,8 +55,8 @@ def main():
         for update in thePosts[socialNetwork]:
             if update:
                 if len(update)>0:
-                    logging.info("Update %s " % str(update))
-                    logging.info("Update %s " % update[0])
+                    logging.debug("Update %s " % str(update))
+                    logging.debug("Update %s " % update[0])
                     if update[0]:
                         theUpdatetxt = update[0].replace('_','\_')
                     else:
@@ -79,7 +88,6 @@ def main():
                         'nameSocialNetwork': rep[1], 
                         'updates': rep[2]})
 
- 
     if numPosts > 0:
         import moduleSmtp
         smtpServer = moduleSmtp.moduleSmtp()

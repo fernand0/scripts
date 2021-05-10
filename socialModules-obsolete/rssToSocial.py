@@ -336,7 +336,6 @@ def main():
                         link = blog.cache[socialNetwork].addPosts(listPosts)
 
                         time.sleep(1)
-                        print(link)
                         delayedBlogs.append((blog, socialNetwork, 1, timeSlots))
 
 
