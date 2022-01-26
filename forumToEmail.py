@@ -9,12 +9,9 @@ import moduleForum
 from moduleContent import *
 from configMod import *
 
-
 def main(): 
 
-
-
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO, 
+    logging.basicConfig(stream=sys.stdout, level=logging.WARNING, 
             format='%(asctime)s %(message)s')
 
     config = configparser.ConfigParser()
@@ -24,34 +21,48 @@ def main():
 
     numPosts = 0
     for i,forumData in enumerate(config.sections()): 
+        # if not (forumData == 'https://cactuspro.com/forum/'):
+        #     print(f"Skipping {forumData}")
+        #     continue
         name = (str(i), forumData)
         forum = moduleForum.moduleForum() 
         forum.setClient(forumData) 
+        forum.setPostsType('posts')
         forum.setPosts()
         lastLink, lastTime = checkLastLink(forum.url)
+        logging.debug(f"lastLink {lastLink}")
         pos = forum.getLinkPosition(lastLink)
-        posts = []
+        posts = forum.getPosts()
+        if posts: 
+            logging.debug(f"Position: {pos} Len: {len(posts)}")
 
-        if pos == len(forum.getPosts()) - 1:
-            posts.append(("No new posts!",'',''))
-        else: 
-            numPosts = numPosts + 1
-            #print(pos)
-            #print(len(forum.getPosts()))
-            link = None
-            for post in forum.getPosts()[pos:]:
-                #print(post)
-                title = post[0].split('\n')[0]
-                link  = post[1]
-                posts.append((title, link, ''))
-            if link: 
-                updateLastLink(forum.url,link)
+            if pos == len(forum.getPosts()):
+                posts.append(("No new posts!",'',''))
+            else: 
+                link = None
+                posts = []
+                for post in forum.getPosts()[pos:]:
+                    numPosts = numPosts + 1
+                    title = post[0].split('\n')[0]
+                    link  = post[1]
+                    posts.append((title, link, ''))
+                logging.debug(f"Posts: {posts}")
+                logging.debug(f"Forum: {forum.url}")
+                logging.debug(f"Link: {link}")
+
+                if link: 
+                    updateLastLink(forum.url,link)
+        else:
+            logging.debug(f"No posts")
+
         thePosts[name] = posts
-        continue
 
     compResponse = []
     for socialNetwork in thePosts.keys():
         theUpdates = []
+        if not thePosts[socialNetwork]:
+            continue
+        # print(f"sN: {socialNetwork} thePosts: {thePosts[socialNetwork]}")
         for update in thePosts[socialNetwork]:
             if update:
                 if len(update)>0:
@@ -88,7 +99,7 @@ def main():
                         'nameSocialNetwork': rep[1], 
                         'updates': rep[2]})
 
-    if numPosts > 0:
+    if numPosts > len(config.sections()):
         import moduleSmtp
         smtpServer = moduleSmtp.moduleSmtp()
 
