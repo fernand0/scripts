@@ -4,6 +4,9 @@ import logging
 import pathlib
 import sys
 
+import socialModules
+import socialModules.moduleRules
+
 # You need to have installed the socialModules (branch dist provides the package installed with its requirements):
 #
 # https://github.com/fernand0/socialModules/tree/dist
@@ -53,7 +56,6 @@ def main():
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
             format='%(asctime)s %(message)s')
 
-    import socialModules.moduleRules
     rules = socialModules.moduleRules.moduleRules()
     rules.checkRules(configFile = '.rssElmundo')
 
@@ -74,14 +76,22 @@ def main():
 
         apiSrc.setPosts()
         posts = apiSrc.getPosts()
+        print(f"Posts: {posts}")
         if posts and apiSrc.getPostsType():
             i = i + 1
-            # print(f"{i})-> Posts: {posts}")
             postFile = myFilePath.joinpath(f'2022-10-01-post-{i:02}.md')
             with open(postFile,'w') as fSal:
                 fSal.write(f'---\n')
                 fSal.write(f'layout: post\n')
                 fSal.write(f'title:  "{apiSrc.getSiteTitle()}"\n')
+                if posts:
+                    if hasattr(apiSrc, 'getPostTime'):
+                        timePost = apiSrc.getPostTime(posts[0])
+                        if timePost:
+                            print(f"Time post: {timePost}")
+                            fSal.write(f"date:  {timePost}\n")
+
+                
                 hasService = True
                 for service in knownServices:
                     if service in apiSrc.getUrl():

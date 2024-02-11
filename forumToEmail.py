@@ -4,15 +4,18 @@ import requests
 import time
 import sys
 
-sys.path.append('/home/ftricas/usr/src/socialModules')
-import moduleForum
-from moduleContent import *
-from configMod import *
+import socialModules
+from socialModules.configMod import *
+import socialModules.moduleForum
+from socialModules.moduleContent import *
 
 def main(): 
 
-    logging.basicConfig(stream=sys.stdout, level=logging.WARNING, 
-            format='%(asctime)s %(message)s')
+    import socialModules
+    
+    logging.basicConfig(stream=sys.stdout, 
+                        level=logging.INFO, 
+                        format='%(asctime)s %(message)s')
 
     config = configparser.ConfigParser()
     config.read(CONFIGDIR + '/.rssForums') 
@@ -20,12 +23,10 @@ def main():
     thePosts = {}
 
     numPosts = 0
+    numForums = 0
     for i,forumData in enumerate(config.sections()): 
-        # if not (forumData == 'https://cactuspro.com/forum/'):
-        #     print(f"Skipping {forumData}")
-        #     continue
         name = (str(i), forumData)
-        forum = moduleForum.moduleForum() 
+        forum = socialModules.moduleForum.moduleForum() 
         forum.setClient(forumData) 
         forum.setPostsType('posts')
         forum.setPosts()
@@ -34,6 +35,7 @@ def main():
         pos = forum.getLinkPosition(lastLink)
         posts = forum.getPosts()
         if posts: 
+            numForums = numForums + 1
             logging.debug(f"Position: {pos} Len: {len(posts)}")
 
             if pos == len(forum.getPosts()):
@@ -51,7 +53,8 @@ def main():
                 logging.debug(f"Link: {link}")
 
                 if link: 
-                    updateLastLink(forum.url,link)
+                    # As in buffer.py (err-buffer)
+                    updateLastLink(forum.url, link)
         else:
             logging.debug(f"No posts")
 
@@ -73,7 +76,11 @@ def main():
                     else:
                         # This should not happen
                         theUpdatetxt = ''
-                    theUpdates.append((theUpdatetxt, update[1], update[2])) 
+                    if len(update)>2:
+                        theUpdates.append((theUpdatetxt, update[1], update[2])) 
+                    else:
+                        theUpdates.append((theUpdatetxt, update[1], '')) 
+
                         #time.strftime("%Y-%m-%d-%H:%m", 
         if thePosts[socialNetwork]: 
             if theUpdates[0][0] != 'Empty': 
@@ -86,9 +93,9 @@ def main():
         tt = 'pending'
         if theUpdates: 
             compResponse.append((tt, 
-                socialNetwork[0].capitalize()+' ('+socialNetwork[1]+')', theUpdates))
+                socialNetwork[0].capitalize()
+                                 +' ('+socialNetwork[1]+')', theUpdates))
 
-    #print(compResponse)
     from jinja2 import Environment, FileSystemLoader
     env = Environment( 
             loader=FileSystemLoader(searchpath="/home/ftricas/usr/src/scripts/")) 
@@ -98,13 +105,25 @@ def main():
         response = response + template.render({'type': rep[0],
                         'nameSocialNetwork': rep[1], 
                         'updates': rep[2]})
+    response = f"{response}"
 
-    if numPosts > len(config.sections()):
-        import moduleSmtp
-        smtpServer = moduleSmtp.moduleSmtp()
+    logging.info(f"Resp: {response}")
+    from datetime import date
+    today = date.today()
+    response = f"Forums: {today}\n{response}"
+    logging.info(f"Sending mail. numPosts {numPosts} {numForums}")
 
-        smtpServer.setClient('fernand0')
-        smtpServer.publishPost(response, 'Forums {}'.format(time.asctime()), 'fernand0@elmundoesimperfecto.com')
+    # logging.info(f"Response: {response}")
+
+    if numPosts > numForums: #There is an inactive forum
+        import socialModules.moduleSmtp
+        smtpServer = socialModules.moduleSmtp.moduleSmtp()
+
+        smtpServer.setClient('ftricas@elmundoesimperfecto.com')
+        logging.info(smtpServer.publishPost(response, 
+                                            f"Forums {format(time.asctime())}",  
+                                            f'<html><body>{response}'
+                                            f'</body></html>'))
 
 if __name__ == '__main__':
     main()
