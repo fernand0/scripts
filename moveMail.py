@@ -1,5 +1,3 @@
-import moduleImap
-import moduleGmail
 import email
 import base64
 import io
@@ -15,15 +13,18 @@ from oauth2client import file, client, tools
 from apiclient.http import MediaIoBaseUpload
 from email.parser import BytesParser
 
+import socialModules.moduleImap
+import socialModules.moduleGmail
+
 # This program moves all mails with a given label between selected accounts.
 # It needs several configuration files:
 #
 # .oauth.cfg will contain the relevant data of configured accounts:
 #
-# [ACC1] 
+# [ACC1]
 # server:server1
 # user:user1
-# [ACC2] 
+# [ACC2]
 # server:server2
 # user:user2
 #
@@ -33,11 +34,11 @@ from email.parser import BytesParser
 # .server_user.json
 # for example: .server2_user2.json
 # in the adequate directory
-# 
+#
 # You can call it with:
 #
 # python moveMail.py
-# 
+#
 # It will ask about the tag and the account.
 # Use it at your own risk
 
@@ -49,14 +50,14 @@ def main():
     logging.basicConfig(filename=os.path.expanduser('~/usr/var/' + PREFIX +
         '.log'), level=logging.INFO, format='%(asctime)s %(message)s')
 
-    try: 
+    try:
         from configMod import CONFIGDIR
     except:
         CONFIGDIR = '·/'
 
-    config = configparser.ConfigParser() 
+    config = configparser.ConfigParser()
     config.read(CONFIGDIR + '/.oauthG.cfg')
- 
+
     label = input('Label to move? ')
     print(config.sections()[1])
     for (i, acc) in enumerate(config.sections()):
@@ -67,10 +68,10 @@ def main():
     print("Moving from: %s" % config.get(origSec,'user')+'@'+config.get(origSec,'server'))
     print("         to: %s" % config.get(destSec,'user')+'@'+config.get(destSec,'server'))
 
-    serviceOrig = moduleGmail.moduleGmail()
+    serviceOrig = socialModules.moduleGmail.moduleGmail()
     serviceOrig.setClient(origSec)
     serviceOrig.setLabels()
-    serviceDest = moduleGmail.moduleGmail()
+    serviceDest = socialModules.moduleGmail.moduleGmail()
     serviceDest.setClient(destSec)
     serviceDest.setLabels()
     labels = serviceOrig.getLabelsIds(label)
@@ -86,13 +87,13 @@ def main():
             print("Msg: %d" % j)
             if 'raw' in msg:
                 logging.info("i: %d, Snippet: %s" % (i, msg['raw']['snippet']))
-                logging.info("Result: %s" % 
+                logging.info("Result: %s" %
                         serviceDest.copyMessage(msg['raw'], [label]))
                 serviceOrig.trash(i,'message')
         serviceOrig.setPosts(label=labels, mode='raw')
         print("Waiting ...")
         time.sleep(5)
-       
-  
+
+
 if __name__ == "__main__":
     main()

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Modificaciones basadas en 
+# Modificaciones basadas en
 # http://geekytheory.com/actualiza-y-limpia-tu-linux-con-una-sola-orden/
 # En general, no me gusta la opción -y así que la dejo como opción
 # In general, I don't like to use -y, so I'll let the user decide
@@ -16,15 +16,15 @@ then
 	YES=""
 fi
 
-sudo apt-get update $YES && echo "" && \
-sudo apt-get upgrade $YES && echo "" && \
+sudo -S apt update $YES && echo "" && \
+sudo -S apt upgrade $YES && echo "" && \
 #sudo apt-get dselect-upgrade && \
-sudo apt-get autoremove $YES && echo "" && \
-sudo localepurge || echo "localepurge not available" && echo "" && \
-sudo deborphan | xargs sudo dpkg --purge $YES && echo "" && \
-sudo apt-get clean $YES && echo "" 
+sudo -S aptautoremove $YES && echo "" && \
+sudo -S localepurge || echo "localepurge not available" && echo "" && \
+sudo -S deborphan | xargs sudo dpkg --purge $YES && echo "" && \
+sudo -S apt clean $YES && echo ""
 sudo /usr/lib/update-notifier/update-motd-updates-available --force
 sudo /usr/lib/update-notifier/update-motd-reboot-required --force
-sudo apt-get moo
+sudo -S apt-get moo
 sudo needrestart
 
