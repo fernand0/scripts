@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import dateparser
 import logging
 import pathlib
 import sys
@@ -76,20 +77,26 @@ def main():
 
         apiSrc.setPosts()
         posts = apiSrc.getPosts()
-        print(f"Posts: {posts}")
         if posts and apiSrc.getPostsType():
             i = i + 1
             postFile = myFilePath.joinpath(f'2022-10-01-post-{i:02}.md')
             with open(postFile,'w') as fSal:
                 fSal.write(f'---\n')
                 fSal.write(f'layout: post\n')
-                fSal.write(f'title:  "{apiSrc.getSiteTitle()}"\n')
+                title = apiSrc.getSiteTitle()
+                if not title:
+                    title = f"{apiSrc.getService()} - {apiSrc.getNick()}"
+                if not title:
+                    title = f"{apiSrc.getService()} - {apiSrc.getUrl()}"
+                fSal.write(f'title:  "{title}"\n')
                 if posts:
                     if hasattr(apiSrc, 'getPostTime'):
                         timePost = apiSrc.getPostTime(posts[0])
-                        if timePost:
-                            print(f"Time post: {timePost}")
-                            fSal.write(f"date:  {timePost}\n")
+                    if not timePost:
+                        timePost = "2024-01-01 00:00:00+00:00"
+                    print(f"Time post: {timePost}")
+                    timePost = dateparser.parse(str(timePost))
+                    fSal.write(f"date:  {timePost}\n")
 
                 
                 hasService = True
