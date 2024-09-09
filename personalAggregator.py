@@ -48,17 +48,26 @@ import socialModules.moduleRules
 # posts:posts
 # html:
 
-knownServices = ['reddit', 'github', 'flickr', 'goodreads',
-                'youtube', 'wordpress', 'dev.to', 'tumblr',
-                ]
+knownServices = [
+    "reddit",
+    "github",
+    "flickr",
+    "goodreads",
+    "youtube",
+    "wordpress",
+    "dev.to",
+    "tumblr",
+]
+
 
 def main():
 
-    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
-            format='%(asctime)s %(message)s')
+    logging.basicConfig(
+        stream=sys.stdout, level=logging.DEBUG, format="%(asctime)s %(message)s"
+    )
 
     rules = socialModules.moduleRules.moduleRules()
-    rules.checkRules(configFile = '.rssElmundo')
+    rules.checkRules(configFile=".rssElmundo")
 
     i = 0
     if len(sys.argv) > 1:
@@ -66,11 +75,11 @@ def main():
     else:
         # We will write the messages in /tmp
         # Later we will move them to our Jekyll directory
-        fileName = '/tmp'
+        fileName = "/tmp"
         # /2022-10-01-post-
     myFilePath = pathlib.Path(fileName)
     if not myFilePath.is_dir():
-        sys.exit('The path should be a directory and it should exist')
+        sys.exit("The path should be a directory and it should exist")
 
     for key in rules.rules.keys():
         apiSrc = rules.readConfigSrc("", key, rules.more[key])
@@ -79,17 +88,17 @@ def main():
         posts = apiSrc.getPosts()
         if posts and apiSrc.getPostsType():
             i = i + 1
-            if hasattr(apiSrc, 'getPostTime'):
+            if hasattr(apiSrc, "getPostTime"):
                 timePost = apiSrc.getPostTime(posts[0])
             if not timePost:
                 timePost = "2024-01-01 00:00:00+00:00"
             print(f"Time post: {timePost}")
             timePost = dateparser.parse(str(timePost))
 
-            postFile = myFilePath.joinpath(f'{str(timePost)[:10]}-post-{i:02}.md')
-            with open(postFile,'w') as fSal:
-                fSal.write(f'---\n')
-                fSal.write(f'layout: post\n')
+            postFile = myFilePath.joinpath(f"{str(timePost)[:10]}-post-{i:02}.md")
+            with open(postFile, "w") as fSal:
+                fSal.write(f"---\n")
+                fSal.write(f"layout: post\n")
                 title = apiSrc.getSiteTitle()
                 if not title:
                     title = f"{apiSrc.getService()} - {apiSrc.getNick()}"
@@ -105,8 +114,8 @@ def main():
                         hasService = True
                         continue
                 if not hasService:
-                    fSal.write(f'categories: {key[0]}\n')
-                fSal.write(f'---\n')
+                    fSal.write(f"categories: {key[0]}\n")
+                fSal.write(f"---\n")
 
                 for post in posts[:10]:
                     title = apiSrc.getPostTitle(post)
@@ -115,9 +124,9 @@ def main():
                     # Some of my posts (mainly in social networks include
                     # a URL in the title. In these cases we will use this
                     # link for the title and the other in parentheses
-                    pos = title.find('http')
-                    posF = title.find(' ', pos + 1)
-                    if pos>=0:
+                    pos = title.find("http")
+                    posF = title.find(" ", pos + 1)
+                    if pos >= 0:
                         if posF < pos:
                             posF = len(title)
                         linkT = title[pos:posF]
@@ -125,20 +134,22 @@ def main():
                     else:
                         linkT = link
 
-                    title = (f" [{title}]({linkT})")
-                    title = title.replace('|','\|')
+                    title = f" [{title}]({linkT})"
+                    title = title.replace("|", "\|")
 
-                    lineFormat =  {'mastodon': f"* {title} ([toot]({link}))\n",
-                                   'twitter':  f"* {title} ([tweet]({link}))\n",
-                                   'general':  f"* {title}\n",
-                                   }
+                    lineFormat = {
+                        "mastodon": f"* {title} ([toot]({link}))\n",
+                        "twitter": f"* {title} ([tweet]({link}))\n",
+                        "general": f"* {title}\n",
+                    }
 
                     if key[0] in lineFormat:
                         fSal.write(lineFormat[key[0]])
                     else:
-                        fSal.write(lineFormat['general'])
+                        fSal.write(lineFormat["general"])
 
     return
+
 
 if __name__ == "__main__":
     main()
