@@ -8,7 +8,8 @@ import sys
 import socialModules
 import socialModules.moduleRules
 
-# You need to have installed the socialModules (branch dist provides the package installed with its requirements):
+# You need to have installed the socialModules (branch dist provides the
+# package installed with its requirements):
 #
 # https://github.com/fernand0/socialModules/tree/dist
 #
