@@ -10,6 +10,7 @@ POST_SCRIPT=""
 PRE_SCRIPT=""
 SCRIPT_NAME=""
 PYTHON_SCRIPT=""
+PYTHON_ARGS=""
 
 # --- Función de ayuda ---
 usage() {
@@ -24,6 +25,7 @@ usage() {
   echo "  -d, --deps "DEP1..."  Lista de dependencias de Python a instalar."
   echo "  -p, --post-script RUTA  Script a ejecutar después del script de Python."
   echo "  -e, --pre-script RUTA   Script a ejecutar antes del script de Python."
+  echo "  -a, --args "ARG1..."  Argumentos para el script de Python."
   echo "  -h, --help            Muestra esta ayuda."
   exit 1
 }
@@ -35,6 +37,7 @@ while [ "$#" -gt 0 ]; do
     -d|--deps) DEPS="$2"; shift 2;;
     -p|--post-script) POST_SCRIPT="$2"; shift 2;;
     -e|--pre-script) PRE_SCRIPT="$2"; shift 2;;
+    -a|--args) PYTHON_ARGS="$2"; shift 2;;
     -h|--help) usage;;
     -*) echo "Opción desconocida: $1"; usage;;
     *) 
@@ -104,8 +107,8 @@ if [ -n "$PRE_SCRIPT" ]; then
 fi
 
 # Ejecutar script principal de Python
-echo "Ejecutando script de Python: $PYTHON_SCRIPT" | tee -a "$LOG_FILE"
-"$VENV_DIR/bin/python" "$PYTHON_SCRIPT" 2> >(tee -a "$ERR_FILE" >&2) | tee -a "$LOG_FILE"
+echo "Ejecutando script de Python: $PYTHON_SCRIPT $PYTHON_ARGS" | tee -a "$LOG_FILE"
+"$VENV_DIR/bin/python" "$PYTHON_SCRIPT" $PYTHON_ARGS 2> >(tee -a "$ERR_FILE" >&2) | tee -a "$LOG_FILE"
 
 # Ejecutar post-script si se especificó
 if [ -n "$POST_SCRIPT" ]; then
