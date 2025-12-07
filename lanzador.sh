@@ -93,11 +93,8 @@ source "$VENV_DIR/bin/activate" || { echo "Error al activar el entorno virtual."
 # Instalar dependencias si se especificaron
 if [ -n "$DEPS" ]; then
   echo "Instalando/actualizando dependencias: $DEPS" | tee -a "$LOG_FILE"
-  if [[ "$DEPS" == *"git+"* ]]; then
-    uv pip install "$DEPS" 2>&1 | tee -a "$LOG_FILE"
-  else
-    uv pip install $DEPS 2>&1 | tee -a "$LOG_FILE"
-  fi
+  # shellcheck disable=SC2086
+  uv pip install $DEPS 2>&1 | tee -a "$LOG_FILE"
 fi
 
 # Ejecutar pre-script si se especificó
