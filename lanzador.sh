@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+# set -x
 # Salir inmediatamente si un comando falla.
 set -e
 
@@ -25,10 +25,7 @@ usage() {
   echo "  -d, --deps "DEP1..."  Lista de dependencias de Python a instalar."
   echo "  -p, --post-script RUTA  Script a ejecutar después del script de Python."
   echo "  -e, --pre-script RUTA   Script a ejecutar antes del script de Python."
-<<<<<<< HEAD
-=======
   echo "  -a, --args "ARG1..."  Argumentos para el script de Python."
->>>>>>> 4e3642138dffa5c488b65a70fe2b341ffa882564
   echo "  -h, --help            Muestra esta ayuda."
   exit 1
 }
@@ -43,7 +40,7 @@ while [ "$#" -gt 0 ]; do
     -a|--args) PYTHON_ARGS="$2"; shift 2;;
     -h|--help) usage;;
     -*) echo "Opción desconocida: $1"; usage;;
-    *)
+    *) 
       if [ -z "$SCRIPT_NAME" ]; then
         SCRIPT_NAME="$1"
       elif [ -z "$PYTHON_SCRIPT" ]; then
@@ -71,73 +68,40 @@ cleanup() {
   if [ -n "$VIRTUAL_ENV" ]; then
     deactivate
   fi
-
+  
   # Verificar si hubo errores y reportar
   if [ -s "$ERR_FILE" ]; then
     echo "ERROR en $SCRIPT_NAME. Ver log de errores: $ERR_FILE" >&2
     cat "$ERR_FILE" >&2
   else
-<<<<<<< HEAD
-    echo "$SCRIPT_NAME finalizado sin errores." >> "$LOG_FILE"
-  fi
-  echo "Log completo en: $LOG_FILE" >> "$LOG_FILE"
-=======
     echo "$SCRIPT_NAME finalizado sin errores." | tee -a "$LOG_FILE"
   fi
   echo "Log completo en: $LOG_FILE" | tee -a "$LOG_FILE"
->>>>>>> 4e3642138dffa5c488b65a70fe2b341ffa882564
 }
 trap cleanup EXIT
 
 # --- INICIO DEL SCRIPT ---
-<<<<<<< HEAD
-echo "Iniciando $SCRIPT_NAME a las $TIMESTAMP..." >> "$LOG_FILE"
-
-# Activar entorno virtual
-if [ ! -d "$VENV_DIR" ]; then
-  echo "Error: El directorio del entorno virtual '$VENV_DIR' no existe." >> "$LOG_FILE"
-=======
 echo "Iniciando $SCRIPT_NAME a las $TIMESTAMP..." | tee -a "$LOG_FILE"
 
 # Activar entorno virtual
 if [ ! -d "$VENV_DIR" ]; then
   echo "Error: El directorio del entorno virtual '$VENV_DIR' no existe." | tee -a "$LOG_FILE"
->>>>>>> 4e3642138dffa5c488b65a70fe2b341ffa882564
   exit 1
 fi
 source "$VENV_DIR/bin/activate" || { echo "Error al activar el entorno virtual."; exit 1; }
 
 # Instalar dependencias si se especificaron
 if [ -n "$DEPS" ]; then
-<<<<<<< HEAD
-  echo "Instalando/actualizando dependencias: $DEPS" >> "$LOG_FILE"
+  echo "Instalando/actualizando dependencias: $DEPS" | tee -a "$LOG_FILE"
   if [[ "$DEPS" == *"git+"* ]]; then
     uv pip install "$DEPS" >>"$LOG_FILE" 2>&1
   else
     uv pip install $DEPS >>"$LOG_FILE" 2>&1
   fi
-=======
-  echo "Instalando/actualizando dependencias: $DEPS" | tee -a "$LOG_FILE"
-  echo "$DEPS" | xargs uv pip install 2>&1 | tee -a "$LOG_FILE"
->>>>>>> 4e3642138dffa5c488b65a70fe2b341ffa882564
 fi
 
 # Ejecutar pre-script si se especificó
 if [ -n "$PRE_SCRIPT" ]; then
-<<<<<<< HEAD
-  echo "Ejecutando pre-script: $PRE_SCRIPT" >> "$LOG_FILE"
-  "$PRE_SCRIPT" >>"$LOG_FILE" 2>>"$ERR_FILE"
-fi
-
-# Ejecutar script principal de Python
-echo "Ejecutando script de Python: $PYTHON_SCRIPT" >> "$LOG_FILE"
-"$VENV_DIR/bin/python" "$PYTHON_SCRIPT" >>"$LOG_FILE" 2>>"$ERR_FILE"
-
-# Ejecutar post-script si se especificó
-if [ -n "$POST_SCRIPT" ]; then
-  echo "Ejecutando post-script: $POST_SCRIPT" >> "$LOG_FILE"
-  "$POST_SCRIPT" >>"$LOG_FILE" 2>>"$ERR_FILE"
-=======
   echo "Ejecutando pre-script: $PRE_SCRIPT" | tee -a "$LOG_FILE"
   "$PRE_SCRIPT" 2> >(tee -a "$ERR_FILE" >&2) | tee -a "$LOG_FILE"
 fi
@@ -150,5 +114,4 @@ echo "Ejecutando script de Python: $PYTHON_SCRIPT $PYTHON_ARGS" | tee -a "$LOG_F
 if [ -n "$POST_SCRIPT" ]; then
   echo "Ejecutando post-script: $POST_SCRIPT" | tee -a "$LOG_FILE"
   "$POST_SCRIPT" 2> >(tee -a "$ERR_FILE" >&2) | tee -a "$LOG_FILE"
->>>>>>> 4e3642138dffa5c488b65a70fe2b341ffa882564
 fi
