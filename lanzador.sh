@@ -93,10 +93,29 @@ source "$VENV_DIR/bin/activate" || { echo "Error al activar el entorno virtual."
 # Instalar dependencias si se especificaron
 if [ -n "$DEPS" ]; then
   echo "Instalando/actualizando dependencias: $DEPS" | tee -a "$LOG_FILE"
-  if [[ "$DEPS" == *"git+"* ]]; then
-    uv pip install "$DEPS" >>"$LOG_FILE" 2>&1
-  else
-    uv pip install $DEPS >>"$LOG_FILE" 2>&1
+  
+  # Parsear DEPS respetando comillas
+  eval "DEPS_ARRAY=($DEPS)"
+  
+  STANDARD_DEPS=()
+  COMPLEX_DEPS=()
+
+  for dep in "${DEPS_ARRAY[@]}"; do
+    if [[ "$dep" == *"@"* ]] || [[ "$dep" == *"git+"* ]]; then
+       COMPLEX_DEPS+=("$dep")
+    else
+       STANDARD_DEPS+=("$dep")
+    fi
+  done
+
+  if [ ${#STANDARD_DEPS[@]} -gt 0 ]; then
+    echo "Instalando dependencias estándar: ${STANDARD_DEPS[*]}" | tee -a "$LOG_FILE"
+    uv pip install "${STANDARD_DEPS[@]}" 2>&1 | tee -a "$LOG_FILE"
+  fi
+
+  if [ ${#COMPLEX_DEPS[@]} -gt 0 ]; then
+    echo "Instalando dependencias complejas (git/url): ${COMPLEX_DEPS[*]}" | tee -a "$LOG_FILE"
+    uv pip install "${COMPLEX_DEPS[@]}" 2>&1 | tee -a "$LOG_FILE"
   fi
 fi
 
