@@ -1,6 +1,8 @@
 #!/bin/bash
+# Run botElectrico.py with dependencies and automatic post-processing
 /home/ftricas/usr/src/scripts/lanzador.sh \
     --deps "matplotlib social-modules@git+https://github.com/fernand0/socialModules.git plotly pandas" \
+    --post-script "/home/ftricas/usr/src/scripts/postBotElectrico.sh" \
     "botElectrico" \
     "$HOME/usr/src/Python/deGitHub/botElectrico/botElectrico.py"
 #    --args "-s" \
