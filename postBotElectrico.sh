@@ -1,64 +1,108 @@
 #!/bin/bash
-# Salir inmediatamente si un comando falla.
-set -e
 
-home_bot="$HOME/usr/src/Python/deGitHub/botElectrico/"
-posts="docs/_posts/"
+# Configuration variables
+home_bot="${BOT_HOME:-$HOME/usr/src/Python/deGitHub/botElectrico/}"
+posts_dir="${POSTS_DIR:-docs/_posts/}"
+tmp_dir="${TMP_DIR:-/tmp}"
 
-echo "Iniciando postBotElectrico.sh..."
+# Logging function
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >&2
+}
 
-# Cambiar al directorio del repositorio
-cd "$home_bot" || { echo "Error: No se pudo cambiar al directorio del repositorio: $home_bot"; exit 1; }
+# Error handling function
+error_exit() {
+    log "ERROR: $1"
+    exit "${2:-1}"
+}
 
-# Verificar si es un repositorio Git
-if [ ! -d ".git" ]; then
-  echo "Error: El directorio $home_bot no es un repositorio Git."
-  exit 1
+# Function to safely execute git commands
+git_safe() {
+    log "Executing: git $*"
+    if ! git "$@"; then
+        error_exit "Git command failed: git $*"
+    fi
+}
+
+# Set script options
+set -euo pipefail  # Exit on error, undefined vars, and pipe failures
+
+log "Starting postBotElectrico.sh..."
+
+# Validate required directories
+if [[ ! -d "$home_bot" ]]; then
+    error_exit "Bot directory does not exist: $home_bot"
 fi
 
-# Obtener la fecha actual en el formato "aaa-mm-dd"
+# Change to the repository directory
+cd "$home_bot" || error_exit "Could not change to repository directory: $home_bot"
+
+# Verify it's a Git repository
+if [[ ! -d ".git" ]]; then
+    error_exit "Directory $home_bot is not a Git repository."
+fi
+
+# Get current date in "yyyy-mm-dd" format
 fecha_actual=$(date +%Y-%m-%d)
 
-# Ruta del archivo en /tmp
-archivo_tmp="/tmp/$fecha_actual-post.md"
+# Temporary file path
+archivo_tmp="$tmp_dir/$fecha_actual-post.md"
 
-# Ruta del directorio de destino
-directorio_destino="$home_bot$posts"
+# Destination directory
+directorio_destino="$home_bot$posts_dir"
 
-# Comprobar si el archivo existe en /tmp
-if [ -f "$archivo_tmp" ]; then
-  echo "Archivo temporal encontrado: $archivo_tmp"
+# Check if the temporary file exists
+if [[ -f "$archivo_tmp" ]]; then
+    log "Temporary file found: $archivo_tmp"
 
-  # Guardar la rama actual para volver a ella al final
-  current_branch=$(git rev-parse --abbrev-ref HEAD)
-  echo "Rama actual: $current_branch"
+    # Save the current branch to return to later
+    current_branch=$(git rev-parse --abbrev-ref HEAD)
+    log "Current branch: $current_branch"
 
-  # Mover el archivo al directorio de destino
-  echo "Cambiando a la rama gh-pages..."
-  git checkout gh-pages || { echo "Error: No se pudo cambiar a la rama gh-pages."; exit 1; }
+    # Store the original branch to return to
+    original_branch="$current_branch"
 
-  echo "Moviendo $archivo_tmp a $directorio_destino..."
-  mv "$archivo_tmp" "$directorio_destino" || { echo "Error: No se pudo mover el archivo."; exit 1; }
-  echo "Archivo movido."
+    # Switch to gh-pages branch
+    log "Switching to gh-pages branch..."
+    git_safe checkout gh-pages
 
-  echo "Realizando git pull en gh-pages..."
-  git pull || { echo "Advertencia: git pull falló en gh-pages. Intentando continuar..."; } # Pull puede fallar por red, no es crítico para el commit
+    # Move the file to destination
+    log "Moving $archivo_tmp to $directorio_destino..."
+    if ! mv "$archivo_tmp" "$directorio_destino"; then
+        # If move fails, switch back to original branch before exiting
+        git_safe checkout "$original_branch" || log "Warning: Could not return to original branch"
+        error_exit "Could not move file."
+    fi
+    log "File moved successfully."
 
-  echo "Añadiendo cambios a Git..."
-  git add "$directorio_destino" || { echo "Error: No se pudo añadir el directorio al staging."; exit 1; }
+    # Pull latest changes to avoid conflicts
+    log "Pulling latest changes from remote gh-pages..."
+    git_safe pull origin gh-pages || log "Warning: Pull failed, continuing anyway..."
 
-  echo "Realizando commit..."
-  git commit -am"Post: $fecha_actual" || { echo "Advertencia: No hay cambios para commitear o commit falló."; } # Commit puede fallar si no hay cambios
+    # Add changes to Git
+    log "Adding changes to Git..."
+    git_safe add "$directorio_destino"
 
-  echo "Realizando git push..."
-  git push || { echo "Error: git push falló. Verifique sus credenciales y conexión."; exit 1; }
+    # Check if there are actually changes to commit
+    if git diff-index --quiet HEAD --; then
+        log "No changes to commit."
+    else
+        # Perform commit
+        log "Committing changes..."
+        git_safe commit -m "Post: $fecha_actual"
 
-  echo "Volviendo a la rama original ($current_branch)..."
-  git checkout "$current_branch" || { echo "Error: No se pudo volver a la rama original."; exit 1; }
+        # Push changes
+        log "Pushing changes..."
+        git_safe push origin gh-pages
+    fi
 
-  echo "Proceso de publicación completado para $fecha_actual."
+    # Return to the original branch
+    log "Returning to original branch ($original_branch)..."
+    git_safe checkout "$original_branch"
+
+    log "Publication process completed for $fecha_actual."
 else
-  echo "No se encontró el archivo $archivo_tmp en /tmp. No hay post para publicar."
+    log "No file found at $archivo_tmp. Nothing to publish."
 fi
 
-echo "postBotElectrico.sh finalizado."
+log "postBotElectrico.sh finished."
