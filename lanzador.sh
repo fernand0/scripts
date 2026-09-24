@@ -1,16 +1,16 @@
 #!/bin/bash
 # set -x
 # Salir inmediatamente si un comando falla.
-set -e
+set -e -o pipefail
 
 # --- Argumentos por defecto ---
 VENV_DIR="$HOME/.socialBots"
-DEPS=""
+DEPS=()
 POST_SCRIPT=""
 PRE_SCRIPT=""
 SCRIPT_NAME=""
 PYTHON_SCRIPT=""
-PYTHON_ARGS=""
+PYTHON_ARGS=()
 
 # --- Función de ayuda ---
 usage() {
@@ -22,10 +22,10 @@ usage() {
   echo
   echo "Opciones:"
   echo "  -v, --venv RUTA       Ruta al entorno virtual (por defecto: $HOME/.socialBots)."
-  echo "  -d, --deps "DEP1..."  Lista de dependencias de Python a instalar."
+  echo "  -d, --deps DEP       Dependencia de Python a instalar; se puede repetir."
   echo "  -p, --post-script RUTA  Script a ejecutar después del script de Python."
   echo "  -e, --pre-script RUTA   Script a ejecutar antes del script de Python."
-  echo "  -a, --args "ARG1..."  Argumentos para el script de Python."
+  echo "  -a, --args ARG       Argumento para el script de Python; se puede repetir."
   echo "  -h, --help            Muestra esta ayuda."
   exit 1
 }
@@ -34,10 +34,10 @@ usage() {
 while [ "$#" -gt 0 ]; do
   case "$1" in
     -v|--venv) VENV_DIR="$2"; shift 2;;
-    -d|--deps) DEPS="$2"; shift 2;;
+    -d|--deps) DEPS+=("$2"); shift 2;;
     -p|--post-script) POST_SCRIPT="$2"; shift 2;;
     -e|--pre-script) PRE_SCRIPT="$2"; shift 2;;
-    -a|--args) PYTHON_ARGS="$2"; shift 2;;
+    -a|--args) PYTHON_ARGS+=("$2"); shift 2;;
     -h|--help) usage;;
     -*) echo "Opción desconocida: $1"; usage;;
     *) 
@@ -92,32 +92,9 @@ fi
 source "$VENV_DIR/bin/activate" || { echo "Error al activar el entorno virtual."; exit 1; }
 
 # Instalar dependencias si se especificaron
-if [ -n "$DEPS" ]; then
-  echo "Instalando/actualizando dependencias: $DEPS" | tee -a "$LOG_FILE"
-  
-  # Parsear DEPS respetando comillas
-  eval "DEPS_ARRAY=($DEPS)"
-  
-  STANDARD_DEPS=()
-  COMPLEX_DEPS=()
-
-  for dep in "${DEPS_ARRAY[@]}"; do
-    if [[ "$dep" == *"@"* ]] || [[ "$dep" == *"git+"* ]]; then
-       COMPLEX_DEPS+=("$dep")
-    else
-       STANDARD_DEPS+=("$dep")
-    fi
-  done
-
-  if [ ${#STANDARD_DEPS[@]} -gt 0 ]; then
-    echo "Instalando dependencias estándar: ${STANDARD_DEPS[*]}" | tee -a "$LOG_FILE"
-    uv pip install "${STANDARD_DEPS[@]}" 2>&1 | tee -a "$LOG_FILE"
-  fi
-
-  if [ ${#COMPLEX_DEPS[@]} -gt 0 ]; then
-    echo "Instalando dependencias complejas (git/url): ${COMPLEX_DEPS[*]}" | tee -a "$LOG_FILE"
-    uv pip install "${COMPLEX_DEPS[@]}" 2>&1 | tee -a "$LOG_FILE"
-  fi
+if [ ${#DEPS[@]} -gt 0 ]; then
+  echo "Instalando/actualizando dependencias: ${DEPS[*]}" | tee -a "$LOG_FILE"
+  uv pip install "${DEPS[@]}" 2>&1 | tee -a "$LOG_FILE"
 fi
 
 # Ejecutar pre-script si se especificó
@@ -127,8 +104,8 @@ if [ -n "$PRE_SCRIPT" ]; then
 fi
 
 # Ejecutar script principal de Python
-echo "Ejecutando script de Python: $PYTHON_SCRIPT $PYTHON_ARGS" | tee -a "$LOG_FILE"
-"$VENV_DIR/bin/python" "$PYTHON_SCRIPT" $PYTHON_ARGS 2> >(tee -a "$ERR_FILE" >&2) | tee -a "$LOG_FILE"
+echo "Ejecutando script de Python: $PYTHON_SCRIPT ${PYTHON_ARGS[*]}" | tee -a "$LOG_FILE"
+"$VENV_DIR/bin/python" "$PYTHON_SCRIPT" "${PYTHON_ARGS[@]}" 2> >(tee -a "$ERR_FILE" >&2) | tee -a "$LOG_FILE"
 
 # Ejecutar post-script si se especificó
 if [ -n "$POST_SCRIPT" ]; then

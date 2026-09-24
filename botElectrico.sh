@@ -1,6 +1,9 @@
 #!/bin/bash
 /home/ftricas/usr/src/scripts/lanzador.sh \
-    --deps "matplotlib social-modules@git+https://github.com/fernand0/socialModules.git plotly pandas" \
+    --deps matplotlib \
+    --deps "social-modules@git+https://github.com/fernand0/socialModules.git" \
+    --deps plotly \
+    --deps pandas \
     "botElectrico" \
     "$HOME/usr/src/Python/deGitHub/botElectrico/botElectrico.py"
 #    --args "-s" \
