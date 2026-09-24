@@ -5,7 +5,7 @@ set -e
 # Definir variables para facilitar la configuración
 VENV_DIR="$HOME/.clean"
 PYTHON_SCRIPT="$HOME/usr/src/Python/deGitHub/manage-imap/manage_imap.py"
-DEPS="social-modules@git+https://github.com/fernand0/socialModules.git"
+DEPS=" social-modules@git+https://github.com/fernand0/socialModules.git"
 LANZADOR_SCRIPT="/home/ftricas/usr/src/scripts/lanzador.sh"
 
 echo "Iniciando cleanImap.sh..."

@@ -57,6 +57,7 @@ if [ -z "$SCRIPT_NAME" ] || [ -z "$PYTHON_SCRIPT" ]; then
   echo "Error: Faltan argumentos obligatorios."
   usage
 fi
+export SCRIPT_NAME
 
 # --- Configuración de logs y TRAP ---
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
