@@ -6,7 +6,7 @@ if [ ! -d "$VENV_DIR" ]; then
   uv venv "$VENV_DIR"
 fi
 
-/home/ftricas/usr/src/scripts/lanzador.sh \
+"$(dirname "$0")/lanzador.sh" \
     --venv "$VENV_DIR" \
     --deps "social-modules@git+https://github.com/fernand0/socialModules.git" \
     cleanImap \

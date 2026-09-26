@@ -1,5 +1,5 @@
 #!/bin/bash
-/home/ftricas/usr/src/scripts/lanzador.sh \
+"$(dirname "$0")/lanzador.sh" \
     --deps 'FlightRadarAPI "social-modules @ git+https://github.com/fernand0/socialModules.git"' \
     --args "TEV" \
     aeropuertoTeruel \
