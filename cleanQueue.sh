@@ -8,6 +8,6 @@ fi
 
 "$(dirname "$0")/lanzador.sh" \
     --venv "$VENV_DIR" \
-    --deps "social-modules @ git+https://github.com/fernand0/socialModules.git@devel" \
+    --deps "social-modules @ git+https://github.com/fernand0/socialModules.git" \
     cleanQueue \
     "$HOME/usr/src/Python/cleaningQueue.py"
