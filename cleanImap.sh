@@ -1,27 +1,13 @@
-#!/bin/sh
-# Salir inmediatamente si un comando falla.
-set -e
-
-# Definir variables para facilitar la configuración
-VENV_DIR="$HOME/.clean"
-PYTHON_SCRIPT="$HOME/usr/src/Python/deGitHub/manage-imap/manage_imap.py"
-DEPS="social-modules@git+https://github.com/fernand0/socialModules.git"
-LANZADOR_SCRIPT="/home/ftricas/usr/src/scripts/lanzador.sh"
-
-echo "Iniciando cleanImap.sh..."
-
+#!/bin/bash
 # Crear el entorno virtual si no existe
+VENV_DIR="$HOME/.clean"
 if [ ! -d "$VENV_DIR" ]; then
   echo "El entorno virtual no existe. Creándolo en $VENV_DIR..."
   uv venv "$VENV_DIR"
-  echo "Entorno creado."
 fi
 
-# Ejecutar el script de Python usando lanzador.sh
-"$LANZADOR_SCRIPT" \
+/home/ftricas/usr/src/scripts/lanzador.sh \
     --venv "$VENV_DIR" \
-    --deps "$DEPS" \
+    --deps "social-modules@git+https://github.com/fernand0/socialModules.git" \
     cleanImap \
-    "$PYTHON_SCRIPT"
-
-echo "cleanImap.sh finalizado."
+    "$HOME/usr/src/Python/deGitHub/manage-imap/manage_imap.py"

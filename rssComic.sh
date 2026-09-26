@@ -1,6 +1,5 @@
 #!/bin/bash
-
-/home/ftricas/usr/bin/lanzador.sh \
+/home/ftricas/usr/src/scripts/lanzador.sh \
     --deps "requests beautifulsoup4" \
-    "rssComic" \
-    "/home/ftricas/usr/src/Python/comicsRss.py" > /tmp/rssComic.log
+    rssComic \
+    "$HOME/usr/src/Python/comicsRss.py"
