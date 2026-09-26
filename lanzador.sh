@@ -72,8 +72,8 @@ cleanup() {
   
   # Verificar si hubo errores y reportar
   if [ -s "$ERR_FILE" ]; then
-    echo "ERROR en $SCRIPT_NAME. Ver log de errores: $ERR_FILE" >&2
-    cat "$ERR_FILE" >&2
+    echo "ERROR en $SCRIPT_NAME. Ver log de errores: $ERR_FILE" | tee -a "$LOG_FILE"
+    cat "$ERR_FILE" | tee -a "$LOG_FILE"
   else
     echo "$SCRIPT_NAME finalizado sin errores." | tee -a "$LOG_FILE"
   fi
