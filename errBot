@@ -1,66 +1,20 @@
-#!/bin/sh
-# Salir inmediatamente si un comando falla.
+#!/bin/bash
 set -e
 
-# Definir el entorno virtual para errbot
 VENV_DIR="$HOME/.errbot-ve-new"
 ERRBOT_CONFIG="$HOME/usr/var/err/config.py"
-ERRBOT_DATA_DIR="/home/ftricas/usr/var/err/" # Directorio donde errbot espera sus datos
+ERRBOT_DATA_DIR="$HOME/usr/var/err/"
 
-# Dependencias para errbot (errbot y socialModules)
-# Asumimos que errbot es el paquete principal y socialModules es una dependencia.
-DEPS="errbot errbot[telegram] \"social-modules @ git+https://github.com/fernand0/socialModules.git\""
-
-# Definir rutas de log y error con marcas de tiempo
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-LOG_FILE="/tmp/errBot_${TIMESTAMP}.log"
-ERR_FILE="/tmp/errBot_error_${TIMESTAMP}.log"
-
-echo "Iniciando errBot a las $TIMESTAMP..." | tee -a "$LOG_FILE"
-
-## Esperar conectividad de red
-#echo "Esperando conectividad de red..." | tee -a "$LOG_FILE"
-#while ! ping -c1 www.google.com >/dev/null 2>&1; do
-#  echo "Sin conexión. Reintentando en 30 segundos..." | tee -a "$LOG_FILE"
-#  sleep 30
-#done
-#echo "Conectividad de red establecida." | tee -a "$LOG_FILE"
-
-# Crear el entorno virtual e instalar dependencias si no existe
+# Crear el entorno virtual si no existe
 if [ ! -d "$VENV_DIR" ]; then
-  echo "El entorno virtual '$VENV_DIR' no existe. Creándolo..." | tee -a "$LOG_FILE"
+  echo "El entorno virtual '$VENV_DIR' no existe. Creándolo..."
   uv venv "$VENV_DIR"
-  source "$VENV_DIR/bin/activate"
-  uv run python -m ensurepip
-  echo "Instalando dependencias: $DEPS" | tee -a "$LOG_FILE"
-  eval uv pip install $DEPS
-  deactivate
-  echo "Entorno creado y configurado." | tee -a "$LOG_FILE"
+  uv pip install --python "$VENV_DIR/bin/python" -m ensurepip
 fi
 
-# Activar el entorno y ejecutar errbot
-echo "Activando entorno '$VENV_DIR' y ejecutando errbot..." | tee -a "$LOG_FILE"
-source "$VENV_DIR/bin/activate" || { echo "Error: No se pudo activar el entorno virtual '$VENV_DIR'."; exit 1; }
+# Instalar/actualizar dependencias
+uv pip install --python "$VENV_DIR/bin/python" errbot 'errbot[telegram]' "social-modules @ git+https://github.com/fernand0/socialModules.git"
 
-# Opcional: Asegurarse de que las dependencias estén instaladas (rápido si ya existen)
-echo "Verificando/actualizando dependencias..." | tee -a "$LOG_FILE"
-eval uv pip install $DEPS
-
-# Cambiar al directorio de datos de errbot
-cd "$ERRBOT_DATA_DIR" || { echo "Error: No se pudo cambiar al directorio de datos de errbot: $ERRBOT_DATA_DIR"; exit 1; }
-
-# Ejecutar errbot
-# Asumimos que 'errbot -d' lo ejecuta como un demonio y maneja su propio logging interno.
-# Redirigimos stderr al fichero de errores.
-echo "Ejecutando errbot..." | tee -a "$LOG_FILE"
-"$VENV_DIR/bin/errbot" -c "$ERRBOT_CONFIG" -d 2> "$ERR_FILE"
-
-# Desactivar el entorno virtual (solo si errbot no se ejecuta en segundo plano y el script termina)
-# Si errbot se ejecuta como un daemon, el script principal terminará aquí.
-# deactivate # No es necesario si errbot se queda en segundo plano y el script padre termina.
-
-echo "errBot finalizado (errbot debería estar ejecutándose en segundo plano si -d lo permite)." | tee -a "$LOG_FILE"
-echo "Log completo en $LOG_FILE"
-if [ -s "$ERR_FILE" ]; then
-  echo "Errores (si los hay) en $ERR_FILE"
-fi
+# Ejecutar errbot como daemon
+cd "$ERRBOT_DATA_DIR"
+"$VENV_DIR/bin/errbot" -c "$ERRBOT_CONFIG" -d
