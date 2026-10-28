@@ -24,6 +24,7 @@ Pasos disponibles:
   imap        Procesa mensajes por IMAP (add -s imap)
   gmail       Procesa correos de Gmail (add -s gmail)
   web         Procesa fuentes web (add -s web)
+  img         Proces imágenes (add -s img -i)
   move        Mueve eventos entre calendarios (move -i)
 
 Opciones:
@@ -51,7 +52,7 @@ while [[ $# -gt 0 ]]; do
         -h|--help)
             usage
             ;;
-        imap|gmail|web|move)
+        imap|gmail|web|img|move)
             STEPS+=("$1")
             shift
             ;;
@@ -104,6 +105,10 @@ for step in "${STEPS[@]}"; do
         web)
             log "--- Paso: Añadir eventos desde Web ---"
             run_manage_agenda $VERBOSE add -s web || log "Advertencia: Falló el paso Web"
+            ;;
+        img)
+            log "--- Paso: Añadir eventos desde imágenes ---"
+            run_manage_agenda $VERBOSE add -s image -i || log "Advertencia: Falló el paso Img"
             ;;
         move)
             # Only run interactive move if standard input is a terminal or explicitly requested
