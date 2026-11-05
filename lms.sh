@@ -13,6 +13,7 @@ usage() {
     echo ""
     echo "Available commands:"
     echo "  wipecache          - Clear the server cache"
+    echo "  wipecache+netscan  - Clear cache then rescan library"
     echo "  rescan             - Rescan the music library"
     echo "  mixer volume <val> - Adjust volume (e.g., -2.5, +5, 50)"
     echo "  button <action>    - Send button command (jump_rew, jump_fwd, etc.)"
@@ -69,6 +70,12 @@ case "$COMMAND" in
     "wipecache")
         send_command "wipecache"
         ;;
+    "wipecache+netscan")
+        # Perform wipecache followed by rescan (netscan)
+        send_command "wipecache"
+        send_command "rescan"
+        ;;
+
     "rescan")
         send_command "rescan"
         ;;
