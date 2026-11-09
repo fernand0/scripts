@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# MAC address of player you want to control
+SSMAC=00:04:0C:00:00:10
+
+MAC=`echo -n ${SSMAC} | tr '[:upper:]' '[:lower:]' | sed 's/:/%3A/g'`
+
+# Exit if empty
+if [ -z ${MAC} ]; then
+    echo "MAC Empty"
+    exit
+fi
+
+SSHOST=sbsserver
+SSTCP="/dev/tcp/$SSHOST/9090"
+
+exec 8<>${SSTCP}
+echo -e "login userid password\r\n$MAC $1\r\nexit\r\n" >&8
+RESPONSE=`cat <&8`

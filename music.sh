@@ -26,7 +26,7 @@ trap cleanup EXIT
 
 # Rip the CD
 cd "$TEMP_DIR" || exit 1
-whipper cd rip -C file -k --unknown || whipper cd -d /dev/sr1 rip -C file -k --unknown || { echo "Failed to rip CD"; exit 1; }
+whipper cd rip -C file -k --unknown || whipper cd -d /dev/sr1 rip -C file -k --unknown || { echo "Failed to rip CD"; trap - EXIT; exit 1; }
 
 # whipper cd -d /dev/sr1 rip -C file  -k --unknown
 
